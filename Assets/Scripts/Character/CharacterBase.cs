@@ -3,7 +3,7 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class CharacterBase : MonoBehaviour, IDamageable, Interactable
+public class CharacterBase : MonoBehaviour, IDamageable
 {
     [Header("Input")]
     [SerializeField] InputActionAsset InputActionAsset;
@@ -68,7 +68,7 @@ public class CharacterBase : MonoBehaviour, IDamageable, Interactable
     private void Awake()
     {
         s_minHealth = s_maxHealth;
-
+        CheckCharacterAbilty();
         GetInput();
     }
 
@@ -77,6 +77,7 @@ public class CharacterBase : MonoBehaviour, IDamageable, Interactable
         if (isMoveAble)
         {
             UpdateInput();
+            CheckItemInteract();
         }
     }
 
@@ -138,6 +139,7 @@ public class CharacterBase : MonoBehaviour, IDamageable, Interactable
 
             if (m_interactAction.WasPressedThisFrame())
             {
+                Debug.Log("press E");
                 Interact();
             }
         }
@@ -192,21 +194,56 @@ public class CharacterBase : MonoBehaviour, IDamageable, Interactable
             }
         }
     }
-
+    #region Interact Zone
     public void Interact()
     {
         Vector2 player = transform.position;
         Collider2D hitInteractRadius = Physics2D.OverlapCircle(player, _interactRadius, LayerMask.GetMask("Interactable"));
-        
+
         if (hitInteractRadius != null)
         {
-            Interactable obj = hitInteractRadius.gameObject.GetComponent<Interactable>();
-            if (obj != null)
+            _isInteractAble = true;
+            Vector2 selfpos = new Vector2(transform.position.x, transform.position.y);
+            switch (hitInteractRadius.gameObject)
             {
-                obj.Interact();
+                case GameObject g when g.TryGetComponent<Interactable>(out var obj):
+                    Debug.Log("trigger interactable object");
+                    obj.Interact();
+                    break;
+
+                case GameObject g when g.TryGetComponent<MoveableObject>(out var moveobj):
+                    Debug.Log("trigger moveable object");
+                    moveobj.MoveInteract(selfpos);
+                    break;
+
+                default:
+                    Debug.Log("didn't found any trigger");
+                    break;
             }
         }
+        else
+        {
+            _isInteractAble = false;
+        }
     }
+
+    public void CheckItemInteract()
+    {
+        Vector2 player = transform.position;
+        Collider2D hitInteractRadius = Physics2D.OverlapCircle(player, _interactRadius, LayerMask.GetMask("Interactable"));
+
+        if (hitInteractRadius != null)
+        {
+            _isInteractAble = true;
+        }
+        else
+        {
+            _isInteractAble = false;
+        }
+    }
+
+    #endregion
+
 
     private void CarryCompanion()
     {
@@ -221,10 +258,7 @@ public class CharacterBase : MonoBehaviour, IDamageable, Interactable
 
 
     #region Skill
-    public void CombineDashAction(float weight)
-    {
-
-    }
+    
 
     #endregion
 
@@ -234,12 +268,12 @@ public class CharacterBase : MonoBehaviour, IDamageable, Interactable
     {
         if (_isDuck)
         {
-
+            Debug.Log("Duck");
         }
 
         if (_isEagle)
         {
-
+            Debug.Log("Eagle");
         }
     }
 

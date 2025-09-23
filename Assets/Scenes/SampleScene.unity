@@ -574,7 +574,7 @@ MonoBehaviour:
   s_weight: 0
   _isDash: 0
   _isJump: 0
-  _interactRadius: 0
+  _interactRadius: 1.7
   _interactColl: {fileID: 0}
   direction: {x: 0, y: 0}
   isMoveAble: 1
@@ -875,6 +875,7 @@ GameObject:
   - component: {fileID: 1976934092}
   - component: {fileID: 1976934091}
   - component: {fileID: 1976934090}
+  - component: {fileID: 1976934094}
   m_Layer: 6
   m_Name: Rock
   m_TagString: Untagged
@@ -1028,6 +1029,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1976934094
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1976934089}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bdf771ff3ae3a864db543cd703f48fe1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MoveableRock
+  knockbackForce: 100
+  rb2D: {fileID: 1976934090}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
