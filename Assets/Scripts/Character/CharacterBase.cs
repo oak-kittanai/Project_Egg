@@ -3,7 +3,7 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class CharacterBase : MonoBehaviour, IDamageable
+public class CharacterBase : MonoBehaviour, IDamageable, CharacterInteract
 {
     [Header("Input")]
     [SerializeField] InputActionAsset InputActionAsset;
@@ -28,6 +28,11 @@ public class CharacterBase : MonoBehaviour, IDamageable
     [SerializeField] bool _isJump;
     private bool _isGrounded;
     private bool _isInTheAir;
+
+    private bool _isGetCarry;
+    [SerializeField] GameObject _playerToCarry;
+    private bool _isCarry;
+    private bool _canCarry;
 
     [SerializeField] float _interactRadius;
     [SerializeField] Collider2D _interactColl;
@@ -70,6 +75,7 @@ public class CharacterBase : MonoBehaviour, IDamageable
         s_minHealth = s_maxHealth;
         CheckCharacterAbilty();
         GetInput();
+        s_weight = rb2D.mass;
     }
 
     private void Update()
@@ -79,6 +85,15 @@ public class CharacterBase : MonoBehaviour, IDamageable
             UpdateMoveInput();
             CheckItemInteract();
             UpdateActionInput();
+        }
+
+        if (_isCarry)
+        {
+            if (_playerToCarry == null)
+            {
+                _isCarry = false;
+                return;
+            }
         }
     }
 
@@ -120,7 +135,7 @@ public class CharacterBase : MonoBehaviour, IDamageable
                 s_speed = s_walkSpeed;
             }
 
-            Vector2 movement = _moveXAmt * s_speed * Time.deltaTime;
+            Vector2 movement = _moveXAmt * (s_speed - s_weight) * Time.deltaTime;
             rb2D.AddForce(movement, ForceMode2D.Force);
         }
     }
@@ -146,6 +161,22 @@ public class CharacterBase : MonoBehaviour, IDamageable
             {
                 Debug.Log("press E");
                 Interact();
+
+                if (_canCarry)
+                {
+                    if (_playerToCarry == null)
+                    {
+                        _playerToCarry = CharacterInteract();
+
+                        CarryCompanion(_playerToCarry);
+                    }
+
+                    if (_playerToCarry != null)
+                    {
+                        _playerToCarry = null;
+                    }
+
+                }
             }
         }
 
@@ -199,7 +230,26 @@ public class CharacterBase : MonoBehaviour, IDamageable
             }
         }
     }
+    #endregion
+
     #region Interact Zone
+
+    public void CheckItemInteract()
+    {
+        Vector2 player = transform.position;
+        Collider2D hitInteractRadius = Physics2D.OverlapCircle(player, _interactRadius, LayerMask.GetMask("Interactable"));
+
+        CheckPlayerInteract(hitInteractRadius);
+        if (hitInteractRadius != null)
+        {
+            _isInteractAble = true;
+        }
+        else
+        {
+            _isInteractAble = false;
+        }
+    }
+
     public void Interact()
     {
         Vector2 player = transform.position;
@@ -232,38 +282,49 @@ public class CharacterBase : MonoBehaviour, IDamageable
         }
     }
 
-    public void CheckItemInteract()
+    public void CheckPlayerInteract(Collider2D player)
     {
-        Vector2 player = transform.position;
-        Collider2D hitInteractRadius = Physics2D.OverlapCircle(player, _interactRadius, LayerMask.GetMask("Interactable"));
-
-        if (hitInteractRadius != null)
+        if (player != null)
         {
-            _isInteractAble = true;
+            _canCarry = true;
         }
         else
         {
-            _isInteractAble = false;
+            _canCarry = false;
         }
     }
 
     #endregion
-
-
-    private void CarryCompanion()
-    {
-        //if ()
-        if (s_minStamina != 0)
-        {
-
-        }
-    }
-
-    #endregion
-
 
     #region Skill
     
+    public GameObject CharacterInteract()
+    {
+        return this.gameObject;
+    }
+
+    private void CarryCompanion(GameObject carryObject)
+    {
+        if (carryObject != null)
+        {
+            if (s_minStamina != 0)
+            {
+                if (_isDuck)
+                {
+
+                    _isCarry = true;
+                }
+
+                if (_isEagle)
+                {
+
+                    _isCarry = true;
+                }
+            }
+            else { Debug.Log("out of stamina"); }
+        }
+        else { Debug.Log("can't find carryObject"); };
+    }
 
     #endregion
 
