@@ -110,8 +110,9 @@ public class CharacterBase : MonoBehaviour, IDamageable
 
         if (_moveXAmt != Vector2.zero)
         {
-            if (m_ShiftAction.WasPerformedThisDynamicUpdate())
+            if (m_ShiftAction.WasPerformedThisFrame())
             {
+                Debug.Log("Run");
                 s_speed = s_runSpeed;
             }
             else
