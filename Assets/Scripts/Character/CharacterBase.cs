@@ -76,8 +76,9 @@ public class CharacterBase : MonoBehaviour, IDamageable
     {
         if (isMoveAble)
         {
-            UpdateInput();
+            UpdateMoveInput();
             CheckItemInteract();
+            UpdateActionInput();
         }
     }
 
@@ -103,13 +104,13 @@ public class CharacterBase : MonoBehaviour, IDamageable
 
     }
 
-    public void UpdateInput()
+    public void UpdateMoveInput()
     {
         _moveXAmt = m_moveAction.ReadValue<Vector2>();
 
         if (_moveXAmt != Vector2.zero)
         {
-            if (m_ShiftAction.WasPressedThisFrame())
+            if (m_ShiftAction.WasPerformedThisDynamicUpdate())
             {
                 s_speed = s_runSpeed;
             }
@@ -121,14 +122,17 @@ public class CharacterBase : MonoBehaviour, IDamageable
             Vector2 movement = _moveXAmt * s_speed * Time.deltaTime;
             rb2D.AddForce(movement, ForceMode2D.Force);
         }
+    }
 
+    public void UpdateActionInput()
+    {
         if (_isJump)
         {
             if (m_jumpAction.WasPressedThisFrame())
             {
                 _isJump = false;
-                rb2D.AddForce(Vector2.up * jumpForce , ForceMode2D.Force);
-                
+                rb2D.AddForce(Vector2.up * jumpForce, ForceMode2D.Force);
+
                 _isInTheAir = true;
             }
         }
@@ -288,7 +292,6 @@ public class CharacterBase : MonoBehaviour, IDamageable
             _isJump = true;
             _isInTheAir = false;
         }
-
     }
 
     private void OnCollisionExit2D(Collision2D collision)
