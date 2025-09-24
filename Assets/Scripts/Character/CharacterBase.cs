@@ -29,20 +29,24 @@ public class CharacterBase : MonoBehaviour, IDamageable, CharacterInteract
     private bool _isGrounded;
     private bool _isInTheAir;
 
-    private bool _isGetCarry;
+    [SerializeField] bool _isGetCarry;
     [SerializeField] GameObject _playerToCarry;
-    private bool _isCarry;
-    private bool _canCarry;
+    [SerializeField] bool _isCarry;
+    [SerializeField] bool _canCarry;
 
     [SerializeField] float _interactRadius;
+    [SerializeField] float _interactPlayerRadius;
     [SerializeField] Collider2D _interactColl;
 
-    [SerializeField] Vector2 direction = Vector2.zero;
     [SerializeField] bool isMoveAble;
 
     [Header("CharacterSet")]
     [SerializeField] bool _isDuck;
     [SerializeField] bool _isEagle;
+
+    [SerializeField] Vector2 _duckPosition = new Vector2(-2f, 1);
+    [SerializeField] Vector2 _eaglePosition = new Vector2(-1.5f, -1.5f);
+    [SerializeField] Vector2 _positionToBe = Vector2.zero;
 
     [Header("Referent")]
     [SerializeField] Rigidbody2D rb2D;
@@ -78,11 +82,18 @@ public class CharacterBase : MonoBehaviour, IDamageable, CharacterInteract
         s_weight = rb2D.mass;
     }
 
+    // Fix Carry Character
+
     private void Update()
     {
         if (isMoveAble)
         {
-            UpdateMoveInput();
+            if (_isGetCarry)
+            {
+
+            }
+            else { UpdateMoveInput(); }
+
             CheckItemInteract();
             UpdateActionInput();
         }
@@ -92,8 +103,11 @@ public class CharacterBase : MonoBehaviour, IDamageable, CharacterInteract
             if (_playerToCarry == null)
             {
                 _isCarry = false;
+                Debug.Log("can't find _playerToCarry");
                 return;
             }
+
+            _playerToCarry.transform.position = _positionToBe;
         }
     }
 
@@ -164,14 +178,15 @@ public class CharacterBase : MonoBehaviour, IDamageable, CharacterInteract
 
                 if (_canCarry)
                 {
-                    if (_playerToCarry == null)
+                    if (_playerToCarry != null)
                     {
-                        _playerToCarry = CharacterInteract();
+                        Debug.Log("Start Carry");
 
                         CarryCompanion(_playerToCarry);
+                        _isCarry = true;
                     }
 
-                    if (_playerToCarry != null)
+                    if (_playerToCarry != null &&  _isCarry)
                     {
                         _playerToCarry = null;
                     }
@@ -237,10 +252,20 @@ public class CharacterBase : MonoBehaviour, IDamageable, CharacterInteract
     public void CheckItemInteract()
     {
         Vector2 player = transform.position;
-        Collider2D hitInteractRadius = Physics2D.OverlapCircle(player, _interactRadius, LayerMask.GetMask("Interactable"));
+        Collider2D itemhitInteract = Physics2D.OverlapCircle(player, _interactRadius, LayerMask.GetMask("Interactable"));
+        Collider2D playerHitInteract = Physics2D.OverlapCircle(player, _interactPlayerRadius, LayerMask.GetMask("Player"));
 
-        CheckPlayerInteract(hitInteractRadius);
-        if (hitInteractRadius != null)
+        if (playerHitInteract == this)
+        {
+            CheckPlayerInteract(null);
+        }
+        else if (playerHitInteract != this) 
+        {
+            Debug.Log(playerHitInteract);
+            CheckPlayerInteract(playerHitInteract); 
+        }
+
+        if (itemhitInteract != null)
         {
             _isInteractAble = true;
         }
@@ -284,13 +309,16 @@ public class CharacterBase : MonoBehaviour, IDamageable, CharacterInteract
 
     public void CheckPlayerInteract(Collider2D player)
     {
-        if (player != null)
+        switch (player.gameObject)
         {
-            _canCarry = true;
-        }
-        else
-        {
-            _canCarry = false;
+            case GameObject g when g.TryGetComponent<CharacterInteract>(out var character) && character != this:
+                _playerToCarry = character.CharacterInteract();
+                _canCarry = true;
+                break;
+
+            default:
+                _canCarry = false;
+                break;
         }
     }
 
@@ -311,17 +339,17 @@ public class CharacterBase : MonoBehaviour, IDamageable, CharacterInteract
             {
                 if (_isDuck)
                 {
-
+                    _positionToBe = _duckPosition;
                     _isCarry = true;
                 }
 
                 if (_isEagle)
                 {
-
+                    _positionToBe = _eaglePosition;
                     _isCarry = true;
                 }
             }
-            else { Debug.Log("out of stamina"); }
+            else { Debug.Log("out of stamina"); _isCarry = false; }
         }
         else { Debug.Log("can't find carryObject"); };
     }

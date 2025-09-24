@@ -445,12 +445,16 @@ MonoBehaviour:
   s_weight: 0
   _isDash: 0
   _isJump: 0
+  _playerToCarry: {fileID: 0}
+  _canCarry: 0
   _interactRadius: 0
   _interactColl: {fileID: 0}
-  direction: {x: 0, y: 0}
   isMoveAble: 0
   _isDuck: 0
   _isEagle: 1
+  _duckPosition: {x: 0, y: 0}
+  _eaglePosition: {x: 0, y: 0}
+  _positionToBe: {x: 0, y: 0}
   rb2D: {fileID: 0}
   s_minHealth: 0
   s_maxHealth: 5
@@ -527,7 +531,7 @@ Transform:
   m_GameObject: {fileID: 1191347528}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.59, y: 0.22, z: 0}
+  m_LocalPosition: {x: 0.99, y: 0.13, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -901,6 +905,26 @@ PrefabInstance:
     - target: {fileID: 1227391787974572706, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8293442804716023585, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
+      propertyPath: _isDuck
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8293442804716023585, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
+      propertyPath: _duckPosition.x
+      value: -2
+      objectReference: {fileID: 0}
+    - target: {fileID: 8293442804716023585, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
+      propertyPath: _duckPosition.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8293442804716023585, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
+      propertyPath: _eaglePosition.x
+      value: -1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 8293442804716023585, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
+      propertyPath: _eaglePosition.y
+      value: -1.5
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
