@@ -35,7 +35,6 @@ public class CharacterBase : MonoBehaviour, IDamageable, CharacterInteract
     [SerializeField] bool _canCarry;
 
     [SerializeField] float _interactRadius;
-    [SerializeField] float _interactPlayerRadius;
     [SerializeField] Collider2D _interactColl;
 
     [SerializeField] bool isMoveAble;
@@ -46,10 +45,11 @@ public class CharacterBase : MonoBehaviour, IDamageable, CharacterInteract
 
     [SerializeField] Vector2 _duckPosition = new Vector2(-2f, 1);
     [SerializeField] Vector2 _eaglePosition = new Vector2(-1.5f, -1.5f);
-    [SerializeField] Vector2 _positionToBe = Vector2.zero;
+    [SerializeField] Vector2 _positionToBe;
 
     [Header("Referent")]
     [SerializeField] Rigidbody2D rb2D;
+    [SerializeField] Collider2D rb2Coll;
 
     [Header("Network")]
     [SerializeField] int s_minHealth;
@@ -80,6 +80,15 @@ public class CharacterBase : MonoBehaviour, IDamageable, CharacterInteract
         CheckCharacterAbilty();
         GetInput();
         s_weight = rb2D.mass;
+        s_minStamina = s_maxStamina;
+        if (rb2Coll == null)
+        {
+            rb2Coll = this.gameObject.GetComponent<Collider2D>();
+            if (rb2Coll == null)
+            {
+                rb2Coll = this.gameObject.AddComponent<Collider2D>();
+            }
+        }
     }
 
     // Fix Carry Character
@@ -88,14 +97,14 @@ public class CharacterBase : MonoBehaviour, IDamageable, CharacterInteract
     {
         if (isMoveAble)
         {
+            CheckItemInteract();
+            UpdateActionInput();
+
             if (_isGetCarry)
             {
 
             }
             else { UpdateMoveInput(); }
-
-            CheckItemInteract();
-            UpdateActionInput();
         }
 
         if (_isCarry)
@@ -107,6 +116,7 @@ public class CharacterBase : MonoBehaviour, IDamageable, CharacterInteract
                 return;
             }
 
+            UpdateCarryPos();
             _playerToCarry.transform.position = _positionToBe;
         }
     }
@@ -167,34 +177,6 @@ public class CharacterBase : MonoBehaviour, IDamageable, CharacterInteract
             }
         }
 
-        if (_isInteractAble)
-        {
-            if (_busy) return;
-
-            if (m_interactAction.WasPressedThisFrame())
-            {
-                Debug.Log("press E");
-                Interact();
-
-                if (_canCarry)
-                {
-                    if (_playerToCarry != null)
-                    {
-                        Debug.Log("Start Carry");
-
-                        CarryCompanion(_playerToCarry);
-                        _isCarry = true;
-                    }
-
-                    if (_playerToCarry != null &&  _isCarry)
-                    {
-                        _playerToCarry = null;
-                    }
-
-                }
-            }
-        }
-
         if (_isAbleSkill)
         {
             if (_busy) return;
@@ -205,6 +187,39 @@ public class CharacterBase : MonoBehaviour, IDamageable, CharacterInteract
                 // do skill
 
                 // return _busy = false; return _busy to false
+            }
+        }
+    }
+
+    public void InteractAble(Collider2D hit)
+    {
+        if (_isInteractAble)
+        {
+            if (_busy) return;
+
+            if (m_interactAction.WasPressedThisFrame())
+            {
+                Debug.Log("press E");
+                Interact(hit);
+
+                if (!_isCarry)
+                {
+                    if (_canCarry && hit.gameObject.layer == LayerMask.NameToLayer("Player"))
+                    {
+                        if (_playerToCarry != null)
+                        {
+                            Debug.Log("Start Carry");
+
+                            CarryCompanion(_playerToCarry);
+                            _isCarry = true;
+                        }
+                    }
+                }
+                else
+                {
+                    _isCarry = false;
+                }
+
             }
         }
     }
@@ -252,39 +267,38 @@ public class CharacterBase : MonoBehaviour, IDamageable, CharacterInteract
     public void CheckItemInteract()
     {
         Vector2 player = transform.position;
-        Collider2D itemhitInteract = Physics2D.OverlapCircle(player, _interactRadius, LayerMask.GetMask("Interactable"));
-        Collider2D playerHitInteract = Physics2D.OverlapCircle(player, _interactPlayerRadius, LayerMask.GetMask("Player"));
+        int mask = LayerMask.GetMask("Player", "Interactable");
+        Collider2D[] itemhitInteract = Physics2D.OverlapCircleAll(player, _interactRadius, mask);
 
-        if (playerHitInteract == this)
+        foreach (Collider2D hit in itemhitInteract)
         {
-            CheckPlayerInteract(null);
-        }
-        else if (playerHitInteract != this) 
-        {
-            Debug.Log(playerHitInteract);
-            CheckPlayerInteract(playerHitInteract); 
-        }
+            if (hit == null || hit.gameObject == this.gameObject)
+                continue;
 
-        if (itemhitInteract != null)
-        {
             _isInteractAble = true;
-        }
-        else
-        {
-            _isInteractAble = false;
+            if (hit.gameObject.layer == LayerMask.NameToLayer("Player"))
+            {
+                CheckPlayerInteract(hit);
+            }
+
+            if (hit.gameObject.layer == LayerMask.NameToLayer("Interactable"))
+            {
+                Debug.Log("Hit an Item: " + hit.name);
+            }
+
+            InteractAble(hit);
         }
     }
 
-    public void Interact()
+    public void Interact(Collider2D hit)
     {
         Vector2 player = transform.position;
-        Collider2D hitInteractRadius = Physics2D.OverlapCircle(player, _interactRadius, LayerMask.GetMask("Interactable"));
 
-        if (hitInteractRadius != null)
+        if (hit != null)
         {
             _isInteractAble = true;
             Vector2 selfpos = new Vector2(transform.position.x, transform.position.y);
-            switch (hitInteractRadius.gameObject)
+            switch (hit.gameObject)
             {
                 case GameObject g when g.TryGetComponent<Interactable>(out var obj):
                     Debug.Log("trigger interactable object");
@@ -311,9 +325,15 @@ public class CharacterBase : MonoBehaviour, IDamageable, CharacterInteract
     {
         switch (player.gameObject)
         {
-            case GameObject g when g.TryGetComponent<CharacterInteract>(out var character) && character != this:
+            case GameObject g when g.TryGetComponent<CharacterInteract>(out var character):
                 _playerToCarry = character.CharacterInteract();
+                if (_isCarry)
+                {
+                    character.SetCollider(true);
+                }else { character.SetCollider(false); }
+
                 _canCarry = true;
+
                 break;
 
             default:
@@ -325,31 +345,37 @@ public class CharacterBase : MonoBehaviour, IDamageable, CharacterInteract
     #endregion
 
     #region Skill
-    
+
     public GameObject CharacterInteract()
     {
         return this.gameObject;
+    }
+
+    public void UpdateCarryPos()
+    {
+        Vector2 selfPos = new Vector2(transform.position.x, transform.position.y);
+        if (s_minStamina > 0)
+        {
+            if (_isDuck)
+            {
+                _positionToBe = _duckPosition + selfPos;
+                _isCarry = true;
+            }
+
+            if (_isEagle)
+            {
+                _positionToBe = _eaglePosition + selfPos;
+                _isCarry = true;
+            }
+        }
+        else { Debug.Log("out of stamina"); _isCarry = false; }
     }
 
     private void CarryCompanion(GameObject carryObject)
     {
         if (carryObject != null)
         {
-            if (s_minStamina != 0)
-            {
-                if (_isDuck)
-                {
-                    _positionToBe = _duckPosition;
-                    _isCarry = true;
-                }
-
-                if (_isEagle)
-                {
-                    _positionToBe = _eaglePosition;
-                    _isCarry = true;
-                }
-            }
-            else { Debug.Log("out of stamina"); _isCarry = false; }
+            UpdateCarryPos();
         }
         else { Debug.Log("can't find carryObject"); };
     }
@@ -394,6 +420,16 @@ public class CharacterBase : MonoBehaviour, IDamageable, CharacterInteract
         Gizmos.color = Color.red;
         Vector3 playerPosition = this.gameObject.transform.position;
         Gizmos.DrawWireSphere(playerPosition, _interactRadius);
+    }
+
+    public void DropCharacter()
+    {
+        throw new NotImplementedException(); // add to Drop
+    }
+
+    public void SetCollider(bool o)
+    {
+        rb2Coll.isTrigger = o;
     }
 }
 
