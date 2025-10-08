@@ -10,9 +10,12 @@ GameObject:
   m_Component:
   - component: {fileID: 1227391787974572706}
   - component: {fileID: 9153101824165123814}
-  - component: {fileID: 8293442804716023585}
   - component: {fileID: 1808580689401154541}
   - component: {fileID: 3574639439715626388}
+  - component: {fileID: 4294635882263509867}
+  - component: {fileID: 6713054206493656476}
+  - component: {fileID: 3527827913197110429}
+  - component: {fileID: 5098713133380636848}
   m_Layer: 7
   m_Name: Player ()
   m_TagString: Player
@@ -93,42 +96,6 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &8293442804716023585
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 121460977929437379}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b247a443e4639314990e8867a6bd47ec, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CharacterBase
-  InputActionAsset: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
-  _moveXAmt: {x: 0, y: 0}
-  _isInteractAble: 0
-  _isAbleSkill: 0
-  _busy: 0
-  s_name: 
-  s_weight: 0
-  _isDash: 0
-  _isJump: 0
-  _interactRadius: 1.7
-  _interactColl: {fileID: 0}
-  direction: {x: 0, y: 0}
-  isMoveAble: 1
-  _isDuck: 0
-  _isEagle: 0
-  rb2D: {fileID: 0}
-  s_minHealth: 0
-  s_maxHealth: 5
-  s_speed: 0
-  s_walkSpeed: 450
-  s_runSpeed: 750
-  s_jumpForce: 350
-  s_minStamina: 0
-  s_maxStamina: 30
 --- !u!50 &1808580689401154541
 Rigidbody2D:
   serializedVersion: 5
@@ -193,3 +160,78 @@ CapsuleCollider2D:
   m_Offset: {x: 0, y: 0}
   m_Size: {x: 1, y: 2}
   m_Direction: 0
+--- !u!114 &4294635882263509867
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 121460977929437379}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a4c4812acc434a4b91b02485ab16455, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CharacterAction
+--- !u!114 &6713054206493656476
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 121460977929437379}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dcccfda6fabfc90408032db146230708, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CharacterStats
+  s_minHealth: 0
+  s_maxHealth: 5
+  s_speed: 0
+  s_walkSpeed: 15
+  s_runSpeed: 30
+  s_jumpForce: 15
+  s_minStamina: 0
+  s_maxStamina: 30
+--- !u!114 &3527827913197110429
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 121460977929437379}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bdb776ca76c79774b8aecfba3ea471b7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CharacterManager
+  moveX: {x: 0, y: 0}
+  moveAble: 1
+  _isInteractAble: 0
+  _isAbleSkill: 0
+  _busy: 0
+  _isDash: 0
+  _isJump: 0
+  _interactRadius: 0
+  _isGetCarry: 0
+  _playerToCarry: {fileID: 0}
+  _isCarry: 0
+  _canCarry: 0
+  _isDuck: 1
+  _isEagle: 0
+  _duckPosition: {x: -2, y: 1}
+  _eaglePosition: {x: -1.5, y: -1.5}
+  _positionToBe: {x: 0, y: 0}
+--- !u!114 &5098713133380636848
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 121460977929437379}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6835583a25baa704499578568a806f40, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InputControl
+  actionAsset: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
+  _moveXAmt: {x: 0, y: 0}
