@@ -1,4 +1,5 @@
 using System;
+using Unity.VisualScripting.Antlr3.Runtime.Misc;
 using UnityEngine;
 
 public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
@@ -31,6 +32,9 @@ public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
     float walkSpeed => stats.WalkSpeed;
     float runSpeed => stats.RunSpeed;
 
+    float minStamina => stats.MinStamina;
+    float maxStamina => stats.MaxStamina;
+
     [Header("Interect")]
     [SerializeField] float _interactRadius;
 
@@ -60,7 +64,6 @@ public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
             UpdateActionInput();
             CheckItemInteract();
         }
-        
     }
 
     private void Setup()
@@ -107,7 +110,6 @@ public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
             }
 
             Vector2 movement = moveX * speed * Time.deltaTime;
-            Debug.Log("movement : " + movement);
             rb2D.AddForce(movement, ForceMode2D.Impulse);
         }
     }
@@ -121,7 +123,7 @@ public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
             if (input.JumpAction.WasPressedThisFrame() && _isGrounded)
             {
                 _isJump = false;
-                rb2D.AddForce(Vector2.up * stats.jumpForce, ForceMode2D.Force);
+                rb2D.AddForce(Vector2.up * stats.jumpForce, ForceMode2D.Impulse);
 
                 _isInTheAir = true;
             }
@@ -131,7 +133,10 @@ public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
         {
             if (_isEagle && !_isGrounded)
             {
-
+                if (input.JumpAction.WasPressedThisFrame() && minStamina != 0)
+                {
+                    
+                }
             }
         }
 
@@ -276,7 +281,7 @@ public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
     public void UpdateCarryPos()
     {
         Vector2 selfPos = new Vector2(transform.position.x, transform.position.y);
-        if (stats.MinStamina > 0)
+        if (minStamina > 0)
         {
             if (_isDuck)
             {
