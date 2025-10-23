@@ -6,10 +6,27 @@ public class CharacterAction : MonoBehaviour
     InputControl controller;
     CharacterStats stats;
 
+
+    public SkillSet characterSkillSet;
+
     public void Setup()
     {
         controller = GetComponent<InputControl>();
         stats = GetComponent<CharacterStats>();
+    }
+
+    public void Flying(float stamina, bool onground, float flyspeed, Rigidbody2D rb2D)
+    {
+        if ( stamina > 0 && !onground)
+        {
+            Debug.Log("Flyyy");
+            Vector2 movement = Vector2.up * flyspeed * Time.deltaTime;
+            rb2D.AddForce(movement, ForceMode2D.Impulse);
+        }
+        else
+        {
+            Debug.Log("not enough stamina");
+        }
     }
 }
 
@@ -51,6 +68,8 @@ public class SkillSet
             }
         }
     }
+
+    
 
     // Eagle
 

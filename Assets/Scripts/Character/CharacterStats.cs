@@ -1,3 +1,4 @@
+using Unity.VisualScripting.Antlr3.Runtime.Misc;
 using UnityEngine;
 
 public class CharacterStats : MonoBehaviour
@@ -5,6 +6,9 @@ public class CharacterStats : MonoBehaviour
     [Header("Referent")]
     InputControl controller;
     CharacterAction characterAction;
+
+    // Test Stamina
+    [SerializeField] RectTransform staminaBar;
 
     [Header("Network")]
     [SerializeField] int s_minHealth;
@@ -14,6 +18,7 @@ public class CharacterStats : MonoBehaviour
     [SerializeField] float s_walkSpeed;
     [SerializeField] float s_runSpeed;
     [SerializeField] float s_jumpForce;
+    [SerializeField] float s_flySpeed;
 
     [SerializeField] float s_minStamina;
     [SerializeField] float s_maxStamina = 30;
@@ -33,20 +38,20 @@ public class CharacterStats : MonoBehaviour
         characterAction = GetComponent<CharacterAction>();
 
         s_minHealth = s_maxHealth;
+        s_minStamina = s_maxStamina;
     }
 
     public float WalkSpeed => s_walkSpeed;
     public float RunSpeed => s_runSpeed;
+    public float FlySpeed => s_flySpeed;
     public float MinStamina => s_minStamina;
     public float MaxStamina => s_maxStamina;
 
-    public void RechargeStamina()
+    public void RechargeStamina(bool recharging)
     {
-        bool recharging = true;
         if (s_minStamina < s_maxStamina && recharging)
         {
-            s_minStamina += 1 * Time.deltaTime;
-            recharging = false;
+            recharging = StaminaRecharge(0);
         }
         else
         {
@@ -59,6 +64,27 @@ public class CharacterStats : MonoBehaviour
     public void TakeDamage(int damage)
     {
         s_minHealth -= damage;
+    }
+
+    public void StaminaReduce(float i)
+    {
+        if (s_minStamina > 0)
+        {
+            s_minStamina -= (1f + i) * Time.deltaTime;
+        }
+    }
+
+    public bool StaminaRecharge(float i)
+    {
+        if (s_minStamina == s_maxStamina)
+        {
+            return false;
+        }
+        else
+        {
+            s_minStamina += (1f + i) * Time.deltaTime;
+            return true;
+        }
     }
 
     public void HealPlayer(int amount)

@@ -1,5 +1,4 @@
 using System;
-using Unity.VisualScripting.Antlr3.Runtime.Misc;
 using UnityEngine;
 
 public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
@@ -21,16 +20,18 @@ public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
     [SerializeField] bool _isAbleSkill;
 
     [SerializeField] bool _busy;
+    [SerializeField] bool _staminaBusy;
 
     [SerializeField] bool _isDash;
     [SerializeField] bool _isJump;
-    private bool _isGrounded;
-    private bool _isInTheAir;
+    [SerializeField] bool _isGrounded;
+    [SerializeField] bool _isInTheAir;
 
     [Header("Set Value")]
     float speed;
     float walkSpeed => stats.WalkSpeed;
     float runSpeed => stats.RunSpeed;
+    float flySpeed => stats.FlySpeed;
 
     float minStamina => stats.MinStamina;
     float maxStamina => stats.MaxStamina;
@@ -47,7 +48,7 @@ public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
     [SerializeField] bool _isDuck;
     [SerializeField] bool _isEagle;
 
-    [SerializeField] Vector2 _duckPosition = new Vector2(-2f, 1);
+    [SerializeField] Vector2 _duckPosition = new Vector2(-2f, 1); // not use anymore i think
     [SerializeField] Vector2 _eaglePosition = new Vector2(-1.5f, -1.5f);
     [SerializeField] Vector2 _positionToBe;
 
@@ -63,6 +64,11 @@ public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
             UpdateMovement();
             UpdateActionInput();
             CheckItemInteract();
+        }
+
+        if (stats.MinStamina < stats.MaxStamina && !_staminaBusy)
+        {
+            stats.RechargeStamina(true);
         }
     }
 
@@ -103,6 +109,8 @@ public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
             {
                 Debug.Log("Run");
                 speed = runSpeed;
+                stats.StaminaReduce(1);
+                _staminaBusy = true;
             }
             else
             {
@@ -111,6 +119,10 @@ public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
 
             Vector2 movement = moveX * speed * Time.deltaTime;
             rb2D.AddForce(movement, ForceMode2D.Impulse);
+        }
+        else
+        {
+            _staminaBusy = false; // need to fix
         }
     }
 
@@ -126,6 +138,7 @@ public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
                 rb2D.AddForce(Vector2.up * stats.jumpForce, ForceMode2D.Impulse);
 
                 _isInTheAir = true;
+                _isGrounded = false;
             }
         }
 
@@ -133,9 +146,11 @@ public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
         {
             if (_isEagle && !_isGrounded)
             {
-                if (input.JumpAction.WasPressedThisFrame() && minStamina != 0)
+                if (input.JumpAction.WasPerformedThisFrame() && minStamina != 0)
                 {
-                    
+                    action.Flying(minStamina, _isGrounded, flySpeed, rb2D);
+                    stats.StaminaReduce(10);
+                    _staminaBusy = true;
                 }
             }
         }
@@ -175,6 +190,8 @@ public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
 
                             CarryCompanion(_playerToCarry);
                             _isCarry = true;
+                            stats.StaminaReduce(2);
+                            _staminaBusy = true;
                         }
                     }
                 }
@@ -210,7 +227,7 @@ public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
 
             if (hit.gameObject.layer == LayerMask.NameToLayer("Interactable"))
             {
-                Debug.Log("Hit an Item: " + hit.name);
+                //Debug.Log("Hit an Item: " + hit.name);
             }
 
             InteractAble(hit);
@@ -238,7 +255,7 @@ public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
                     break;
 
                 default:
-                    Debug.Log("didn't found any trigger");
+                    //Debug.Log("didn't found any trigger");
                     break;
             }
         }
@@ -327,11 +344,11 @@ public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
 
         stats.TakeDamage(dmg);
     }
+
     #endregion
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-
         if (collision.collider.tag == "Ground" || collision.collider.tag == "Platform")
         {
             _isJump = true;
