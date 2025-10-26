@@ -1,4 +1,3 @@
-using UnityEditor.Animations;
 using UnityEngine;
 
 public class CharacterAnimation : MonoBehaviour
@@ -21,33 +20,28 @@ public class CharacterAnimation : MonoBehaviour
         animator = GetComponentInChildren<Animator>();
         spriteRenderer = GetComponentInChildren<SpriteRenderer>();
 
-        if (characterManager.isDuck)
-        {
-            animator.runtimeAnimatorController = controller_Duck;
-        }
-        else if (characterManager.isEagle)
+        animator.runtimeAnimatorController = controller_Duck;
+        /*else if (characterManager.isEagle)
         {
             animator.runtimeAnimatorController = controller_Eagle;
         }
-        else Debug.Log("Error can't found Identify");
+        else Debug.Log("Error can't found Identify");*/
     }
 
     public void UpdateAnimation(Vector3 direction)
     {
-        /*animator.SetFloat("X", direction.x);
-if (direction.x < -0.01f)
-{
-    spriteRenderer.flipX = true;
-}
+        animator.SetFloat("X", direction.x);
+        if (direction.x < -0.01f)
+        {
+            spriteRenderer.flipX = false;
+        }
 
-if (direction.x > 0.01f)
-{
-    spriteRenderer.flipX = false;
-}
+        if (direction.x > 0.01f)
+        {
+            spriteRenderer.flipX = true;
+        }
 
-
-animator.SetFloat("Y", direction.y);
-*/
+        animator.SetFloat("Y", direction.y);
     }
 
     // jump & skill

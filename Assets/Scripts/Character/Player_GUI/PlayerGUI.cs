@@ -25,6 +25,15 @@ public class PlayerGUI : MonoBehaviour
     private void Update()
     {
         StaminaUpdate();
+
+        if (stats.MinStamina >= stats.MaxStamina)
+        {
+            staminaBar.gameObject.SetActive(false);
+        }
+        else
+        {
+            staminaBar.gameObject.SetActive(true);
+        }
     }
 
     public void StaminaUpdate()
