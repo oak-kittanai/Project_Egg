@@ -22,12 +22,17 @@ public class CharacterStats : MonoBehaviour
     [SerializeField] float s_minStamina;
     [SerializeField] float s_maxStamina = 30;
 
-    #region Public_value
+    #region Public_value_Networked
 
     public int hp => s_minHealth;
     public int maxHp => s_maxHealth;
     public float speed => s_speed;
     public float jumpForce => s_jumpForce;
+    public float WalkSpeed => s_walkSpeed;
+    public float RunSpeed => s_runSpeed;
+    public float FlySpeed => s_flySpeed;
+    public float MinStamina => s_minStamina;
+    public float MaxStamina => s_maxStamina;
 
     #endregion
 
@@ -39,12 +44,6 @@ public class CharacterStats : MonoBehaviour
         s_minHealth = s_maxHealth;
         s_minStamina = s_maxStamina;
     }
-
-    public float WalkSpeed => s_walkSpeed;
-    public float RunSpeed => s_runSpeed;
-    public float FlySpeed => s_flySpeed;
-    public float MinStamina => s_minStamina;
-    public float MaxStamina => s_maxStamina;
 
     public void RechargeStamina(bool recharging)
     {
