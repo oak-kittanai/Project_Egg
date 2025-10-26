@@ -7,6 +7,7 @@ public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
     CharacterStats stats;
     InputControl input;
     CharacterAction action;
+    CharacterAnimation cAnimation;
 
     // Mono
     Rigidbody2D rb2D;
@@ -45,8 +46,8 @@ public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
     [SerializeField] bool _canCarry;
 
     [Header("CharacterSet")]
-    [SerializeField] bool _isDuck;
-    [SerializeField] bool _isEagle;
+    public bool isDuck;
+    public bool isEagle;
 
     [SerializeField] Vector2 _duckPosition = new Vector2(-2f, 1); // not use anymore i think
     [SerializeField] Vector2 _eaglePosition = new Vector2(-1.5f, -1.5f);
@@ -97,6 +98,13 @@ public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
             action.Setup();
         }
         else Debug.LogError("can't find Action");
+
+        cAnimation = GetComponent<CharacterAnimation>();
+        if (cAnimation != null)
+        {
+            cAnimation.Setup();
+        }
+        else Debug.LogError("can't find CharacterAnimation");
     }
 
     private void UpdateMovement()
@@ -118,6 +126,7 @@ public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
             }
 
             Vector2 movement = moveX * speed * Time.deltaTime;
+            cAnimation.UpdateAnimation(movement);
             rb2D.AddForce(movement, ForceMode2D.Impulse);
         }
         else
@@ -136,6 +145,7 @@ public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
             {
                 _isJump = false;
                 rb2D.AddForce(Vector2.up * stats.jumpForce, ForceMode2D.Impulse);
+                cAnimation.UpdateActionAnimation(); // add jump
 
                 _isInTheAir = true;
                 _isGrounded = false;
@@ -144,11 +154,12 @@ public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
 
         if (_isInTheAir)
         {
-            if (_isEagle && !_isGrounded)
+            if (isEagle && !_isGrounded)
             {
                 if (input.JumpAction.WasPerformedThisFrame() && minStamina != 0)
                 {
                     action.Flying(minStamina, _isGrounded, flySpeed, rb2D);
+                    cAnimation.UpdateActionAnimation(); // add fly
                     stats.StaminaReduce(10);
                     _staminaBusy = true;
                 }
@@ -300,13 +311,13 @@ public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
         Vector2 selfPos = new Vector2(transform.position.x, transform.position.y);
         if (minStamina > 0)
         {
-            if (_isDuck)
+            if (isDuck)
             {
                 _positionToBe = _duckPosition + selfPos;
                 _isCarry = true;
             }
 
-            if (_isEagle)
+            if (isEagle)
             {
                 _positionToBe = _eaglePosition + selfPos;
                 _isCarry = true;
