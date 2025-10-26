@@ -34,19 +34,20 @@ public class CharacterAnimation : MonoBehaviour
 
     public void UpdateAnimation(Vector3 direction)
     {
-        animator.SetFloat("X", direction.x);
-        if (direction.x < -0.01f)
-        {
-            spriteRenderer.flipX = true;
-        }
+        /*animator.SetFloat("X", direction.x);
+if (direction.x < -0.01f)
+{
+    spriteRenderer.flipX = true;
+}
 
-        if (direction.x > 0.01f)
-        {
-            spriteRenderer.flipX = false;
-        }
+if (direction.x > 0.01f)
+{
+    spriteRenderer.flipX = false;
+}
 
 
-        animator.SetFloat("Y", direction.y);
+animator.SetFloat("Y", direction.y);
+*/
     }
 
     // jump & skill
