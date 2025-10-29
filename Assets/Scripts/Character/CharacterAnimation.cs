@@ -1,13 +1,9 @@
 using UnityEngine;
+using UnityEngine.UIElements;
 
 public class CharacterAnimation : MonoBehaviour
 {
     [Header("Referent")]
-    CharacterManager characterManager;
-    CharacterStats stats;
-    InputControl input;
-    CharacterAction action;
-
     Animator animator;
     SpriteRenderer spriteRenderer;
 
@@ -15,11 +11,13 @@ public class CharacterAnimation : MonoBehaviour
     [SerializeField] RuntimeAnimatorController controller_Eagle;
     [SerializeField] RuntimeAnimatorController controller_Duck;
 
+    [Header("Position")]
+    public Vector3 currentPosition;
+
     public void Setup()
     {
         animator = GetComponentInChildren<Animator>();
         spriteRenderer = GetComponentInChildren<SpriteRenderer>();
-        characterManager = GetComponent<CharacterManager>();
 
         animator.runtimeAnimatorController = controller_Duck;
         /*else if (characterManager.isEagle)
@@ -29,9 +27,24 @@ public class CharacterAnimation : MonoBehaviour
         else Debug.Log("Error can't found Identify");*/
     }
 
+
+    public void UpdatePosition(Vector3 position)
+    {
+        if (currentPosition.y != position.y)
+        {
+            if (currentPosition.y > (position.y + 0.1))
+            {
+                animator.Play("Float_Down",0);
+            }
+        }
+
+        currentPosition = position;
+    }
+
     public void UpdateAnimation(Vector3 direction)
     {
         animator.SetFloat("X", direction.x);
+
         if (direction.x < -0.01f)
         {
             spriteRenderer.flipX = false;
@@ -46,9 +59,17 @@ public class CharacterAnimation : MonoBehaviour
     }
 
     // jump & skill
-    public void UpdateActionAnimation()
+    public void UpdateActionAnimation(int i)
     {
-        Debug.Log("UpdateActionAnimation");
+        if (i == 1)
+        {
+            animator.Play("Jump", 0, 1);
+        }
+        else if (i == 2)
+        {
+            animator.Play("Fly", 0);
+        }
+        
     }
 
 }

@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
 {
@@ -71,6 +72,8 @@ public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
         {
             stats.RechargeStamina(true);
         }
+
+        cAnimation.UpdatePosition(this.transform.position);
     }
 
     private void Setup()
@@ -145,7 +148,7 @@ public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
             {
                 _isJump = false;
                 rb2D.AddForce(Vector2.up * stats.jumpForce, ForceMode2D.Impulse);
-                cAnimation.UpdateActionAnimation(); // add jump
+                cAnimation.UpdateActionAnimation(1); // add jump
 
                 _isInTheAir = true;
                 _isGrounded = false;
@@ -159,7 +162,7 @@ public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
                 if (input.JumpAction.WasPerformedThisFrame() && minStamina != 0)
                 {
                     action.Flying(minStamina, _isGrounded, flySpeed, rb2D);
-                    cAnimation.UpdateActionAnimation(); // add fly
+                    cAnimation.UpdateActionAnimation(2); // add fly
                     stats.StaminaReduce(10);
                     _staminaBusy = true;
                 }
@@ -370,7 +373,12 @@ public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
 
     private void OnCollisionExit2D(Collision2D collision)
     {
-
+        if (collision.collider.tag == "Ground" || collision.collider.tag == "Platform")
+        {
+            _isJump = false;
+            _isGrounded = false;
+            _isInTheAir = true;
+        }
     }
 
     private void OnDrawGizmos()

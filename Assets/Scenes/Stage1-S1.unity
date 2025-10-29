@@ -7912,7 +7912,6 @@ GameObject:
   m_Component:
   - component: {fileID: 168368058}
   - component: {fileID: 168368061}
-  - component: {fileID: 168368060}
   - component: {fileID: 168368059}
   m_Layer: 0
   m_Name: Main Camera
@@ -7980,14 +7979,6 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
---- !u!81 &168368060
-AudioListener:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 168368057}
-  m_Enabled: 1
 --- !u!20 &168368061
 Camera:
   m_ObjectHideFlags: 0
@@ -9875,7 +9866,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 121460977929437379, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1227391787974572706, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
       propertyPath: m_LocalScale.x
@@ -9936,7 +9927,7 @@ PrefabInstance:
     - target: {fileID: 3258201221068302135, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
       propertyPath: m_Controller
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 9100000, guid: 8373531bbce3cc7408ff614dc5ec4f25, type: 2}
     - target: {fileID: 3527827913197110429, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
       propertyPath: isDuck
       value: 1
@@ -9951,11 +9942,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5235713977121833181, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
       propertyPath: m_AnchorMax.x
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5235713977121833181, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 9153101824165123814, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
       propertyPath: m_Sprite
