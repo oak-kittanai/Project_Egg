@@ -13,7 +13,7 @@ public class TrapPressure : MonoBehaviour
             if (playerRb != null)
             {
                 Debug.Log("Push");
-                playerRb.AddForce(transform.up*pushForce, ForceMode2D.Impulse);
+                playerRb.AddForce(transform.up*pushForce, ForceMode2D.Force);
             }
         }
     }

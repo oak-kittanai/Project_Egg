@@ -235,8 +235,22 @@ public class CharacterBase : MonoBehaviour, IDamageable, CharacterInteract
             Debug.Log("Dodge");
             return;
         }
-
         Vector2 direction = (coll.transform.position - transform.position).normalized;
+        Vector2 knockbackDir = direction * knockbackForce;
+
+        rb2D.AddForce(knockbackDir, ForceMode2D.Force);
+
+        s_minHealth -= dmg;
+    }
+
+    public void TakeDamage(int dmg, float knockbackForce, Vector2 vec)
+    {
+        if (_isDash)
+        {
+            Debug.Log("Dodge");
+            return;
+        }
+        Vector2 direction = (vec - (Vector2)transform.position).normalized;
         Vector2 knockbackDir = direction * knockbackForce;
 
         rb2D.AddForce(knockbackDir, ForceMode2D.Force);

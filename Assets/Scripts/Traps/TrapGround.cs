@@ -6,14 +6,14 @@ public class TrapGround : MonoBehaviour
     [SerializeField] int trapDMG = 1;
     [SerializeField] float knockbackForce = 1.0f;
 
-    private void OnCollisionEnter2D(Collision2D collision)
+    private void OnTriggerEnter2D(Collider2D other)
     {
-        IDamageable damageable = collision.gameObject.GetComponent<IDamageable>();
+        IDamageable damageable = other.gameObject.GetComponent<IDamageable>();
 
         if (damageable != null)
         {
-            Debug.Log("≈Õß∑”¥“‡¡®");
-            damageable.TakeDamage(trapDMG, knockbackForce, collision);
+            Debug.Log("∑”¥“‡¡®«◊¥Ê");
+            damageable.TakeDamage(trapDMG, knockbackForce, transform.position);
         }
     }
 }
