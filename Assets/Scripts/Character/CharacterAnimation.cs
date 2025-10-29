@@ -20,6 +20,7 @@ public class CharacterAnimation : MonoBehaviour
     {
         animator = GetComponentInChildren<Animator>();
         spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+        characterManager = GetComponent<CharacterManager>();
 
         if (characterManager.isDuck)
         {
@@ -54,4 +55,5 @@ public class CharacterAnimation : MonoBehaviour
     {
         Debug.Log("UpdateActionAnimation");
     }
+
 }
