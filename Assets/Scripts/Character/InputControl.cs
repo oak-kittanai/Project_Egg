@@ -7,7 +7,7 @@ public class InputControl : MonoBehaviour
     [SerializeField] public InputActionAsset actionAsset;
     private InputAction m_moveAction;
     private InputAction m_jumpAction;
-    private InputAction m_ShiftAction;
+    //private InputAction m_ShiftAction;
     private InputAction m_interactAction;
     private InputAction m_skillActiveAction;
 
@@ -21,7 +21,7 @@ public class InputControl : MonoBehaviour
     public void GetInput()
     {
         m_moveAction = InputSystem.actions.FindAction("Move");
-        m_ShiftAction = InputSystem.actions.FindAction("Sprint");
+        //m_ShiftAction = InputSystem.actions.FindAction("Sprint");
         m_jumpAction = InputSystem.actions.FindAction("Jump");
         m_interactAction = InputSystem.actions.FindAction("Interact");
         m_skillActiveAction = InputSystem.actions.FindAction("SkillActive");
@@ -34,7 +34,7 @@ public class InputControl : MonoBehaviour
     }
 
     public InputAction JumpAction => m_jumpAction;
-    public InputAction ShiftAction => m_ShiftAction;
+    //public InputAction ShiftAction => m_ShiftAction;
     public InputAction InteractAction => m_interactAction;
     public InputAction SkillPressAction => m_skillActiveAction;
 }

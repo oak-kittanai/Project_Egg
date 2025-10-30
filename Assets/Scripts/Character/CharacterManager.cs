@@ -1,6 +1,5 @@
 using System;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
 {
@@ -116,7 +115,7 @@ public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
 
         if (moveX != Vector2.zero)
         {
-            if (input.ShiftAction.IsPressed())
+            /*if (input.ShiftAction.IsPressed())
             {
                 Debug.Log("Run");
                 speed = runSpeed;
@@ -125,8 +124,10 @@ public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
             }
             else
             {
-                speed = walkSpeed;
-            }
+                
+            }*/
+
+            speed = walkSpeed;
 
             Vector2 movement = moveX * speed * Time.deltaTime;
             cAnimation.UpdateAnimation(movement);
@@ -343,23 +344,6 @@ public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
 
     #region AdjustValue
 
-    public void TakeDamage(int dmg, float knockbackForce, Collision2D coll)
-    {
-        if (_isDash)
-        {
-            Debug.Log("Dodge");
-            return;
-        }
-
-        Vector2 direction = (coll.transform.position - transform.position).normalized;
-        Vector2 knockbackDir = direction * knockbackForce;
-
-        rb2D.AddForce(knockbackDir, ForceMode2D.Force);
-
-        stats.TakeDamage(dmg);
-
-    }
-
     public void TakeDamage(int dmg, float knockbackForce, Vector2 vec)
     {
         if (_isDash)
@@ -369,9 +353,9 @@ public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
         }
    
         Vector2 direction = (vec - (Vector2)transform.position).normalized;
-        Vector2 knockbackDir = direction * knockbackForce;
+        Vector2 knockbackDir = -direction * knockbackForce;
 
-        rb2D.AddForce(knockbackDir, ForceMode2D.Force);
+        rb2D.AddForce(knockbackDir, ForceMode2D.Impulse);
 
         stats.TakeDamage(dmg);
     }
