@@ -8,34 +8,11 @@ public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
     InputControl input;
     CharacterAction action;
     CharacterAnimation cAnimation;
+    MovementCharacter movement;
 
     // Mono
     Rigidbody2D rb2D;
     Collider2D coll2D;
-
-    [Header("Movement")]
-    [SerializeField] Vector2 moveX;
-    [SerializeField] bool moveAble;
-
-    [SerializeField] bool _isInteractAble;
-    [SerializeField] bool _isAbleSkill;
-
-    [SerializeField] bool _busy;
-    [SerializeField] bool _staminaBusy;
-
-    [SerializeField] bool _isDash;
-    [SerializeField] bool _isJump;
-    [SerializeField] bool _isGrounded;
-    [SerializeField] bool _isInTheAir;
-
-    [Header("Set Value")]
-    float speed;
-    float walkSpeed => stats.WalkSpeed;
-    float runSpeed => stats.RunSpeed;
-    float flySpeed => stats.FlySpeed;
-
-    float minStamina => stats.MinStamina;
-    float maxStamina => stats.MaxStamina;
 
     [Header("Interect")]
     [SerializeField] float _interactRadius;
@@ -45,13 +22,20 @@ public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
     [SerializeField] bool _isCarry;
     [SerializeField] bool _canCarry;
 
-    [Header("CharacterSet")]
-    public bool isDuck;
-    public bool isEagle;
+    [SerializeField] bool _staminaBusy;
+
+    [SerializeField] bool _isInteractAble;
+    [SerializeField] bool _isAbleSkill;
+
+    [SerializeField] bool _busy;
 
     [SerializeField] Vector2 _duckPosition = new Vector2(-2f, 1); // not use anymore i think
     [SerializeField] Vector2 _eaglePosition = new Vector2(-1.5f, -1.5f);
     [SerializeField] Vector2 _positionToBe;
+
+    [Header("Stats")]
+    public bool IsEagle => stats.isEagle;
+    public bool IsDuck => stats.isDuck;
 
     private void Awake() // Change to spawn
     {
@@ -60,19 +44,18 @@ public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
 
     private void Update()
     {
-        if (moveAble)
-        {
-            UpdateMovement();
-            UpdateActionInput();
-            CheckItemInteract();
-        }
+        UpdateActionInputSkill();
+        CheckItemInteract();
+        movement.UpdateMovement();
+        movement.UpdateActionInput();
+        movement.UpdateStates();
+        movement.UpdatePosition();
 
         if (stats.MinStamina < stats.MaxStamina && !_staminaBusy)
         {
             stats.RechargeStamina(true);
         }
 
-        cAnimation.UpdatePosition(this.transform.position);
     }
 
     private void Setup()
@@ -107,69 +90,18 @@ public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
             cAnimation.Setup();
         }
         else Debug.LogError("can't find CharacterAnimation");
-    }
 
-    private void UpdateMovement()
-    {
-        moveX = input.UpdateMoveInput();
-
-        if (moveX != Vector2.zero)
+        movement = GetComponent<MovementCharacter>();
+        if (movement != null)
         {
-            /*if (input.ShiftAction.IsPressed())
-            {
-                Debug.Log("Run");
-                speed = runSpeed;
-                stats.StaminaReduce(1);
-                _staminaBusy = true;
-            }
-            else
-            {
-                
-            }*/
-
-            speed = walkSpeed;
-
-            Vector2 movement = moveX * speed * Time.deltaTime;
-            cAnimation.UpdateAnimation(movement);
-            rb2D.AddForce(movement, ForceMode2D.Impulse);
+            movement.Setup();
         }
-        else
-        {
-            _staminaBusy = false; // need to fix
-        }
+        else Debug.Log("can't find MovementCharacter");
     }
 
     #region InputZone
-
-    public void UpdateActionInput()
+    public void UpdateActionInputSkill()
     {
-        if (_isJump)
-        {
-            if (input.JumpAction.WasPressedThisFrame() && _isGrounded)
-            {
-                _isJump = false;
-                rb2D.AddForce(Vector2.up * stats.jumpForce, ForceMode2D.Impulse);
-                cAnimation.UpdateActionAnimation(1); // add jump
-
-                _isInTheAir = true;
-                _isGrounded = false;
-            }
-        }
-
-        if (_isInTheAir)
-        {
-            if (isEagle && !_isGrounded)
-            {
-                if (input.JumpAction.WasPerformedThisFrame() && minStamina != 0)
-                {
-                    action.Flying(minStamina, _isGrounded, flySpeed, rb2D);
-                    cAnimation.UpdateActionAnimation(2); // add fly
-                    stats.StaminaReduce(10);
-                    _staminaBusy = true;
-                }
-            }
-        }
-
         if (_isAbleSkill)
         {
             if (_busy) return;
@@ -313,15 +245,15 @@ public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
     public void UpdateCarryPos()
     {
         Vector2 selfPos = new Vector2(transform.position.x, transform.position.y);
-        if (minStamina > 0)
+        if (stats.MinStamina > 0)
         {
-            if (isDuck)
+            if (IsDuck)
             {
                 _positionToBe = _duckPosition + selfPos;
                 _isCarry = true;
             }
 
-            if (isEagle)
+            if (IsEagle)
             {
                 _positionToBe = _eaglePosition + selfPos;
                 _isCarry = true;
@@ -343,15 +275,14 @@ public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
     #endregion
 
     #region AdjustValue
-
     public void TakeDamage(int dmg, float knockbackForce, Vector2 vec)
     {
-        if (_isDash)
+        if (movement.isDash)
         {
             Debug.Log("Dodge");
             return;
         }
-   
+
         Vector2 direction = (vec - (Vector2)transform.position).normalized;
         Vector2 knockbackDir = -direction * knockbackForce;
 
@@ -360,26 +291,6 @@ public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
         stats.TakeDamage(dmg);
     }
     #endregion
-
-    private void OnCollisionEnter2D(Collision2D collision)
-    {
-        if (collision.collider.tag == "Ground" || collision.collider.tag == "Platform")
-        {
-            _isJump = true;
-            _isGrounded = true;
-            _isInTheAir = false;
-        }
-    }
-
-    private void OnCollisionExit2D(Collision2D collision)
-    {
-        if (collision.collider.tag == "Ground" || collision.collider.tag == "Platform")
-        {
-            _isJump = false;
-            _isGrounded = false;
-            _isInTheAir = true;
-        }
-    }
 
     private void OnDrawGizmos()
     {

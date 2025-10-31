@@ -1,3 +1,4 @@
+
 using UnityEngine;
 
 public class CharacterStats : MonoBehaviour
@@ -9,18 +10,26 @@ public class CharacterStats : MonoBehaviour
     // Test Stamina
     [SerializeField] RectTransform staminaBar;
 
-    [Header("Network")]
+    [Header("Stats & Network")]
     [SerializeField] int s_minHealth;
     [SerializeField] int s_maxHealth = 5;
 
     [SerializeField] float s_speed;
     [SerializeField] float s_walkSpeed;
-    [SerializeField] float s_runSpeed;
     [SerializeField] float s_jumpForce;
     [SerializeField] float s_flySpeed;
 
     [SerializeField] float s_minStamina;
     [SerializeField] float s_maxStamina = 30;
+
+    [SerializeField] float _acceleration = 5f;
+    [SerializeField] float _deceleration = 5f;
+    [SerializeField] float _maxSpeed = 20f;
+
+    [Header("CharacterSet")]
+    public bool isDuck;
+    public bool isEagle;
+
 
     #region Public_value_Networked
 
@@ -29,10 +38,13 @@ public class CharacterStats : MonoBehaviour
     public float speed => s_speed;
     public float jumpForce => s_jumpForce;
     public float WalkSpeed => s_walkSpeed;
-    public float RunSpeed => s_runSpeed;
     public float FlySpeed => s_flySpeed;
     public float MinStamina => s_minStamina;
     public float MaxStamina => s_maxStamina;
+
+    public float Acceleration => _acceleration;
+    public float Deceleration => _deceleration;
+    public float MaxSpeed => _maxSpeed;
 
     #endregion
 

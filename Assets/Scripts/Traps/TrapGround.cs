@@ -13,7 +13,7 @@ public class TrapGround : MonoBehaviour
         if (damageable != null)
         {
             Vector2 newPos2D = new Vector2(transform.position.x, transform.position.y);
-            Debug.Log("trap hit");                                     
+            Debug.Log("trap hit");
             damageable.TakeDamage(trapDMG, knockbackForce, newPos2D);
         }
     }

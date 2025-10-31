@@ -11,9 +11,6 @@ public class CharacterAnimation : MonoBehaviour
     [SerializeField] RuntimeAnimatorController controller_Eagle;
     [SerializeField] RuntimeAnimatorController controller_Duck;
 
-    [Header("Position")]
-    public Vector3 currentPosition;
-
     public void Setup()
     {
         animator = GetComponentInChildren<Animator>();
@@ -25,20 +22,6 @@ public class CharacterAnimation : MonoBehaviour
             animator.runtimeAnimatorController = controller_Eagle;
         }
         else Debug.Log("Error can't found Identify");*/
-    }
-
-
-    public void UpdatePosition(Vector3 position)
-    {
-        if (currentPosition.y != position.y)
-        {
-            if (currentPosition.y > (position.y + 0.1))
-            {
-                animator.Play("Float_Down",0);
-            }
-        }
-
-        currentPosition = position;
     }
 
     public void UpdateAnimation(Vector3 direction)
@@ -63,13 +46,22 @@ public class CharacterAnimation : MonoBehaviour
     {
         if (i == 1)
         {
-            animator.Play("Jump", 0, 1);
+            animator.Play("Jump", 0);
         }
         else if (i == 2)
         {
             animator.Play("Fly", 0);
         }
-        
+
+        if (i == 3)
+        {
+            animator.Play("Float_Down", 0);
+            animator.SetBool("Falling", true);
+        }
     }
 
+    public void OnGroundCheck()
+    {
+        animator.SetBool("Falling", false);
+    }
 }
