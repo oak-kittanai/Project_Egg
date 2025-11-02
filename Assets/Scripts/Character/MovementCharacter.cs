@@ -169,7 +169,14 @@ public class MovementCharacter : MonoBehaviour
 
     public void UpdatePosition()
     {
-        if (rb2D.linearVelocity.y < -1f && !_isFly && !_isFloat)
+        if (_alreadyJump && !_isFly)
+        {
+            if (rb2D.linearVelocity.y < -1f)
+            {
+                rb2D.gravityScale = Mathf.Lerp(rb2D.gravityScale, 2f, Time.deltaTime * 2f);
+            }
+        }
+        else if (rb2D.linearVelocity.y < -1f && !_isFly && !_isFloat)
         {
             _isFalling = true;
             rb2D.gravityScale = Mathf.Lerp(rb2D.gravityScale, 2f, Time.deltaTime * 2f);
