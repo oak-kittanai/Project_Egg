@@ -1,3 +1,4 @@
+using System.Collections;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem.HID;
@@ -102,15 +103,27 @@ public class MovementCharacter : MonoBehaviour
     #region InputZone
     public void UpdateActionInput()
     {
-        if (_isGrounded && input.JumpAction.WasPressedThisFrame())
+        if (_isGrounded && _jumpAble && input.JumpAction.WasPressedThisFrame())
         {
             Jump();
+            if (_alreadyJump)
+            {
+                StartCoroutine(WaitForJump());
+            }
         }
 
         if (IsEagle && !_isGrounded && input.JumpAction.WasPerformedThisFrame() && minStamina > 0)
         {
             Fly();
         }
+    }
+
+    private IEnumerator WaitForJump()
+    {
+        Debug.Log("Wait for jump delay");
+        yield return new WaitForSeconds(1.5f);
+        _jumpAble = true;
+        _alreadyJump = false;
     }
 
     private void Jump()
@@ -128,7 +141,6 @@ public class MovementCharacter : MonoBehaviour
     {
         _isFly = true;
         _isFalling = false;
-        _alreadyJump = false;
 
         action.Flying(minStamina, _isGrounded, stats.FlySpeed, rb2D);
         cAnimation.UpdateActionAnimation(2);
@@ -145,23 +157,9 @@ public class MovementCharacter : MonoBehaviour
             _isFly = false;
             _isFalling = false;
             _isFloat = false;
-            _alreadyJump = false;
             cAnimation.OnGroundCheck();
             return;
         }
-
-        /*if (_alreadyJump && !_isFly)
-        {
-            if (rb2D.linearVelocity.y < -0.2f)
-            {
-                _isFalling = true;
-                rb2D.gravityScale = Mathf.Lerp(rb2D.gravityScale, 2f, Time.deltaTime * 2f);
-            }
-            else
-            {
-                rb2D.gravityScale = Mathf.Lerp(rb2D.gravityScale, 1f, Time.deltaTime * 2f);
-            }
-        }*/
 
         if (_isFly)
         {
@@ -206,7 +204,7 @@ public class MovementCharacter : MonoBehaviour
         LayerMask layerGround = LayerMask.GetMask("Ground");
 
         Vector2 playerPosition = transform.position;
-        Vector2 checkGroundPosition = transform.position + transform.up * rayDistance;
+        Vector2 checkGroundPosition = transform.up * rayDistance;
 
         hit2D = Physics2D.Raycast(playerPosition, checkGroundPosition);
 
@@ -214,10 +212,12 @@ public class MovementCharacter : MonoBehaviour
         {
             if (hit2D.collider.IsTouchingLayers(layerGround))
             {
-                Debug.Log("Hit Ground");
-                _jumpAble = true;
                 _isGrounded = true;
                 _isInTheAir = false;
+                if (!_alreadyJump)
+                {
+                    _jumpAble = true;
+                }
             }
             else
             {
