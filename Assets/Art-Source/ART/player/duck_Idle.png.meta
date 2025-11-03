@@ -20,6 +20,12 @@ TextureImporter:
   - first:
       213: -8134155860215120196
     second: duck Idle_5
+  - first:
+      213: -5738965696257961225
+    second: duck Idle_6
+  - first:
+      213: 6730793085101347527
+    second: duck Idle_7
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -157,12 +163,12 @@ TextureImporter:
       name: duck Idle_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 48
-        height: 48
+        x: 8
+        y: 2
+        width: 34
+        height: 43
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -179,12 +185,12 @@ TextureImporter:
       name: duck Idle_1
       rect:
         serializedVersion: 2
-        x: 48
-        y: 0
-        width: 48
-        height: 48
+        x: 55
+        y: 2
+        width: 35
+        height: 43
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -201,12 +207,12 @@ TextureImporter:
       name: duck Idle_2
       rect:
         serializedVersion: 2
-        x: 96
-        y: 0
-        width: 48
-        height: 48
+        x: 103
+        y: 2
+        width: 35
+        height: 42
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -223,12 +229,12 @@ TextureImporter:
       name: duck Idle_3
       rect:
         serializedVersion: 2
-        x: 144
-        y: 0
-        width: 48
-        height: 48
+        x: 152
+        y: 2
+        width: 34
+        height: 42
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -245,12 +251,12 @@ TextureImporter:
       name: duck Idle_4
       rect:
         serializedVersion: 2
-        x: 192
-        y: 0
-        width: 48
-        height: 48
+        x: 201
+        y: 2
+        width: 33
+        height: 41
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -267,12 +273,12 @@ TextureImporter:
       name: duck Idle_5
       rect:
         serializedVersion: 2
-        x: 240
-        y: 0
-        width: 48
-        height: 48
+        x: 248
+        y: 2
+        width: 34
+        height: 42
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -285,11 +291,55 @@ TextureImporter:
       indices: 
       edges: []
       weights: []
+    - serializedVersion: 2
+      name: duck Idle_6
+      rect:
+        serializedVersion: 2
+        x: 296
+        y: 2
+        width: 34
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7f254680b191b50b0800000000000000
+      internalID: -5738965696257961225
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: duck Idle_7
+      rect:
+        serializedVersion: 2
+        x: 344
+        y: 2
+        width: 34
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7c21f1e46a4986d50800000000000000
+      internalID: 6730793085101347527
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
     outline: []
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 7e3a4d52abb44ff40b6a9dc550edc966
+    spriteID: 
     internalID: 0
     vertices: []
     indices: 
@@ -297,9 +347,7 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     spriteCustomMetadata:
-      entries:
-      - key: SpriteEditor.SliceSettings
-        value: '{"sliceOnImport":false,"gridCellCount":{"x":6.0,"y":1.0},"gridSpriteSize":{"x":48.0,"y":48.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":2,"keepEmptyRects":false,"isAlternate":false}'
+      entries: []
     nameFileIdTable:
       duck Idle_0: -5224715236324516501
       duck Idle_1: 7001925560533945034
@@ -307,6 +355,8 @@ TextureImporter:
       duck Idle_3: -5472055995541784784
       duck Idle_4: -1772407243475163516
       duck Idle_5: -8134155860215120196
+      duck Idle_6: -5738965696257961225
+      duck Idle_7: 6730793085101347527
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

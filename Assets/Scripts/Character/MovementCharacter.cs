@@ -1,4 +1,6 @@
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.InputSystem.HID;
 
 public class MovementCharacter : MonoBehaviour
 {
@@ -40,6 +42,9 @@ public class MovementCharacter : MonoBehaviour
     [SerializeField] bool _isFloat;
 
     [SerializeField] bool _isFly;
+
+    [SerializeField] float rayDistance;
+    [SerializeField] RaycastHit2D hit2D;
 
     [Header("Position")]
     public Vector3 currentPosition;
@@ -90,6 +95,8 @@ public class MovementCharacter : MonoBehaviour
         rb2D.AddForce(Vector2.right * force, ForceMode2D.Force);
 
         cAnimation.UpdateAnimation(new Vector2(_moveX.x, rb2D.linearVelocity.y));
+
+        RayCast2DCheckGround();
     }
 
     #region InputZone
@@ -188,27 +195,48 @@ public class MovementCharacter : MonoBehaviour
 
     #region UpdateAction
 
-    
+
 
     #endregion
 
-    private void OnCollisionEnter2D(Collision2D collision)
+    #region RayCast
+
+    public void RayCast2DCheckGround()
     {
-        if (collision.collider.tag == "Ground" || collision.collider.tag == "Platform") // change to check reycast
+        LayerMask layerGround = LayerMask.GetMask("Ground");
+
+        Vector2 playerPosition = transform.position;
+        Vector2 checkGroundPosition = transform.position + transform.up * rayDistance;
+
+        hit2D = Physics2D.Raycast(playerPosition, checkGroundPosition);
+
+        if (hit2D.collider != null)
         {
-            _jumpAble = true;
-            _isGrounded = true;
-            _isInTheAir = false;
+            if (hit2D.collider.IsTouchingLayers(layerGround))
+            {
+                Debug.Log("Hit Ground");
+                _jumpAble = true;
+                _isGrounded = true;
+                _isInTheAir = false;
+            }
+            else
+            {
+                _jumpAble = false;
+                _isGrounded = false;
+                _isInTheAir = true;
+            }
         }
     }
 
-    private void OnCollisionExit2D(Collision2D collision)
+    #endregion
+
+    private void OnDrawGizmos()
     {
-        if (collision.collider.tag == "Ground" || collision.collider.tag == "Platform")
-        {
-            _jumpAble = false;
-            _isGrounded = false;
-            _isInTheAir = true;
-        }
+        Gizmos.color = Color.blue;
+
+        Vector2 start = transform.position;
+        Vector2 direction = -transform.up * rayDistance;
+
+        Gizmos.DrawRay(start, direction);
     }
 }
