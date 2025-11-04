@@ -6,6 +6,8 @@ public class TrapGround : MonoBehaviour
     [SerializeField] int trapDMG = 1;
     [SerializeField] float knockbackForce = 1.0f;
 
+    [Header("Hitbox")]
+    [SerializeField] Collider2D hitColl;
     private void OnTriggerEnter2D(Collider2D other)
     {
         IDamageable damageable = other.gameObject.GetComponent<IDamageable>();

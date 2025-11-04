@@ -210,7 +210,7 @@ public class MovementCharacter : MonoBehaviour
 
         if (hit2D.collider != null)
         {
-            if (hit2D.collider.IsTouchingLayers(layerGround))
+            if (hit2D.collider.IsTouchingLayers(layerGround) && hit2D.collider.IsTouchingLayers(layerGround))
             {
                 _isGrounded = true;
                 _isInTheAir = false;
@@ -224,6 +224,11 @@ public class MovementCharacter : MonoBehaviour
                 _jumpAble = false;
                 _isGrounded = false;
                 _isInTheAir = true;
+            }
+
+            if (hit2D.collider.tag == "Player")
+            {
+
             }
         }
     }
