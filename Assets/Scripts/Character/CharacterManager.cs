@@ -33,10 +33,6 @@ public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
     [SerializeField] Vector2 _eaglePosition = new Vector2(-1.5f, -1.5f);
     [SerializeField] Vector2 _positionToBe;
 
-    [Header("Stats")]
-    public bool IsEagle => stats.isEagle;
-    public bool IsDuck => stats.isDuck;
-
     private void Awake() // Change to spawn
     {
         Setup();
@@ -44,12 +40,15 @@ public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
 
     private void Update()
     {
-        UpdateActionInputSkill();
-        CheckItemInteract();
-        movement.UpdateMovement();
-        movement.UpdateActionInput();
-        movement.UpdateStates();
-        movement.UpdatePosition();
+        if (movement._moveAble)
+        {
+            UpdateActionInputSkill();
+            CheckItemInteract();
+            movement.UpdateMovement();
+            movement.UpdateActionInput();
+            movement.UpdateStates();
+            movement.UpdatePosition();
+        }
 
         if (stats.MinStamina < stats.MaxStamina && !_staminaBusy)
         {
@@ -169,7 +168,7 @@ public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
             _isInteractAble = true;
             if (hit.gameObject.layer == LayerMask.NameToLayer("Player"))
             {
-                CheckPlayerInteract(hit);
+                //CheckPlayerInteract(hit);
             }
 
             if (hit.gameObject.layer == LayerMask.NameToLayer("Interactable"))
@@ -212,7 +211,7 @@ public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
         }
     }
 
-    public void CheckPlayerInteract(Collider2D player)
+    /*public void CheckPlayerInteract(Collider2D player)
     {
         switch (player.gameObject)
         {
@@ -232,7 +231,7 @@ public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
                 _canCarry = false;
                 break;
         }
-    }
+    }*/
 
     #endregion
 
@@ -242,7 +241,7 @@ public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
         return this.gameObject;
     }
 
-    public void UpdateCarryPos()
+    /*public void UpdateCarryPos()
     {
         Vector2 selfPos = new Vector2(transform.position.x, transform.position.y);
         if (stats.MinStamina > 0)
@@ -260,13 +259,13 @@ public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
             }
         }
         else { Debug.Log("out of stamina"); _isCarry = false; }
-    }
+    }*/
 
     private void CarryCompanion(GameObject carryObject)
     {
         if (carryObject != null)
         {
-            UpdateCarryPos();
+            //UpdateCarryPos();
         }
         else { Debug.Log("can't find carryObject"); }
         ;

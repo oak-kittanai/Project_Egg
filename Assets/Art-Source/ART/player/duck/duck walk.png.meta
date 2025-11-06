@@ -1,25 +1,31 @@
 fileFormatVersion: 2
-guid: a407ea9a99fbade40a1f295016cdfc38
+guid: 4656d3b1debd1ef40bafef58536bbe8e
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -2786814436750252198
-    second: duck jump_0
+      213: 6954246618431418237
+    second: duck walk(1)_0
   - first:
-      213: 4998185376020747202
-    second: duck jump_1
+      213: 3366820503610082020
+    second: duck walk(1)_1
   - first:
-      213: -6575743875796789645
-    second: duck jump_2
+      213: 2782323570840996657
+    second: duck walk(1)_2
   - first:
-      213: 2435622589392302919
-    second: duck jump_3
+      213: -6984683630054226999
+    second: duck walk(1)_3
   - first:
-      213: 6758748143710609837
-    second: duck jump_4
+      213: -7832109489502291738
+    second: duck walk(1)_4
   - first:
-      213: 9126776579742732391
-    second: duck jump_5
+      213: 6586679847141324281
+    second: duck walk(1)_5
+  - first:
+      213: -2212577560340388879
+    second: duck walk(1)_6
+  - first:
+      213: 5260563860415491264
+    second: duck walk(1)_7
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -87,10 +93,10 @@ TextureImporter:
   platformSettings:
   - serializedVersion: 4
     buildTarget: DefaultTexturePlatform
-    maxTextureSize: 2048
+    maxTextureSize: 4096
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 1
+    textureCompression: 2
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -154,13 +160,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: duck jump_0
+      name: duck walk(1)_0
       rect:
         serializedVersion: 2
         x: 7
         y: 2
         width: 35
-        height: 38
+        height: 41
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -169,20 +175,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: a572292f80f3359d0800000000000000
-      internalID: -2786814436750252198
+      spriteID: d7fe01c4472728060800000000000000
+      internalID: 6954246618431418237
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: duck jump_1
+      name: duck walk(1)_1
       rect:
         serializedVersion: 2
-        x: 53
-        y: 3
-        width: 38
-        height: 40
+        x: 54
+        y: 2
+        width: 35
+        height: 41
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -191,63 +197,19 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 2c3d4433e1f1d5540800000000000000
-      internalID: 4998185376020747202
+      spriteID: 4e24e2ce86959be20800000000000000
+      internalID: 3366820503610082020
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: duck jump_2
+      name: duck walk(1)_2
       rect:
         serializedVersion: 2
-        x: 101
-        y: 5
-        width: 37
-        height: 40
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 3769e25e8c34eb4a0800000000000000
-      internalID: -6575743875796789645
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: duck jump_3
-      rect:
-        serializedVersion: 2
-        x: 148
-        y: 9
-        width: 39
-        height: 39
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 74335af27d11dc120800000000000000
-      internalID: 2435622589392302919
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: duck jump_4
-      rect:
-        serializedVersion: 2
-        x: 197
-        y: 6
-        width: 37
+        x: 103
+        y: 2
+        width: 34
         height: 42
       alignment: 0
       pivot: {x: 0, y: 0}
@@ -257,20 +219,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: da1a33890a5ebcd50800000000000000
-      internalID: 6758748143710609837
+      spriteID: 13b8c2adb8ccc9620800000000000000
+      internalID: 2782323570840996657
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: duck jump_5
+      name: duck walk(1)_3
       rect:
         serializedVersion: 2
-        x: 245
+        x: 152
         y: 2
-        width: 37
-        height: 43
+        width: 33
+        height: 41
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -279,8 +241,96 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 7609beb81f2d8ae70800000000000000
-      internalID: 9126776579742732391
+      spriteID: 9c3c122be3b611f90800000000000000
+      internalID: -6984683630054226999
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: duck walk(1)_4
+      rect:
+        serializedVersion: 2
+        x: 199
+        y: 2
+        width: 35
+        height: 41
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6e8ff346ae1ce4390800000000000000
+      internalID: -7832109489502291738
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: duck walk(1)_5
+      rect:
+        serializedVersion: 2
+        x: 246
+        y: 2
+        width: 35
+        height: 41
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9f5351a5c66986b50800000000000000
+      internalID: 6586679847141324281
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: duck walk(1)_6
+      rect:
+        serializedVersion: 2
+        x: 295
+        y: 2
+        width: 34
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1f329ed7e685b41e0800000000000000
+      internalID: -2212577560340388879
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: duck walk(1)_7
+      rect:
+        serializedVersion: 2
+        x: 344
+        y: 2
+        width: 33
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0cca25a95f6410940800000000000000
+      internalID: 5260563860415491264
       vertices: []
       indices: 
       edges: []
@@ -299,12 +349,14 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      duck jump_0: -2786814436750252198
-      duck jump_1: 4998185376020747202
-      duck jump_2: -6575743875796789645
-      duck jump_3: 2435622589392302919
-      duck jump_4: 6758748143710609837
-      duck jump_5: 9126776579742732391
+      duck walk(1)_0: 6954246618431418237
+      duck walk(1)_1: 3366820503610082020
+      duck walk(1)_2: 2782323570840996657
+      duck walk(1)_3: -6984683630054226999
+      duck walk(1)_4: -7832109489502291738
+      duck walk(1)_5: 6586679847141324281
+      duck walk(1)_6: -2212577560340388879
+      duck walk(1)_7: 5260563860415491264
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

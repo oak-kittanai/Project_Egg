@@ -27,7 +27,7 @@ public class MovementCharacter : MonoBehaviour
 
     [Header("Movement")]
     [SerializeField] Vector2 _moveX;
-    [SerializeField] bool _moveAble;
+    public bool _moveAble;
 
     [SerializeField] bool _busy;
     [SerializeField] bool _staminaBusy;
@@ -202,6 +202,7 @@ public class MovementCharacter : MonoBehaviour
     public void RayCast2DCheckGround()
     {
         LayerMask layerGround = LayerMask.GetMask("Ground");
+        LayerMask layerPlatform = LayerMask.GetMask("Platform");
 
         Vector2 playerPosition = transform.position;
         Vector2 checkGroundPosition = transform.up * rayDistance;
@@ -210,7 +211,7 @@ public class MovementCharacter : MonoBehaviour
 
         if (hit2D.collider != null)
         {
-            if (hit2D.collider.IsTouchingLayers(layerGround) && hit2D.collider.IsTouchingLayers(layerGround))
+            if (hit2D.collider.IsTouchingLayers(layerGround) || hit2D.collider.IsTouchingLayers(layerPlatform))
             {
                 _isGrounded = true;
                 _isInTheAir = false;

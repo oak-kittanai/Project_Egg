@@ -7,6 +7,10 @@ public class CharacterAnimation : MonoBehaviour
     Animator animator;
     SpriteRenderer spriteRenderer;
 
+    [Header("Character Set")]
+    [SerializeField] bool isEagle;
+    [SerializeField] bool isDuck;
+
     [Header("Controller Setting")]
     [SerializeField] RuntimeAnimatorController controller_Eagle;
     [SerializeField] RuntimeAnimatorController controller_Duck;
@@ -16,12 +20,15 @@ public class CharacterAnimation : MonoBehaviour
         animator = GetComponentInChildren<Animator>();
         spriteRenderer = GetComponentInChildren<SpriteRenderer>();
 
-        animator.runtimeAnimatorController = controller_Duck;
-        /*else if (characterManager.isEagle)
+        if (isDuck)
+        {
+            animator.runtimeAnimatorController = controller_Duck;
+        }
+        else if (isEagle)
         {
             animator.runtimeAnimatorController = controller_Eagle;
         }
-        else Debug.Log("Error can't found Identify");*/
+        else Debug.Log("Error can't found Identify");
     }
 
     public void UpdateAnimation(Vector3 direction)
