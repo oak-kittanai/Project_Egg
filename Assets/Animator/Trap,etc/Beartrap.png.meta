@@ -1,10 +1,31 @@
 fileFormatVersion: 2
-guid: a30c66e3ffba1c54faba8b8690a6be8b
+guid: e8af482613c6ea24287dbc5408188583
 TextureImporter:
   internalIDToNameTable:
   - first:
       213: -8135096131531685454
     second: Beartrap_0
+  - first:
+      213: -3910538798510469132
+    second: Beartrap_1
+  - first:
+      213: -3547957928726652166
+    second: Beartrap_2
+  - first:
+      213: -6384878676105754862
+    second: Beartrap_3
+  - first:
+      213: 6188167559664224498
+    second: Beartrap_4
+  - first:
+      213: -209532252607066490
+    second: Beartrap_5
+  - first:
+      213: -2716284135156064840
+    second: Beartrap_6
+  - first:
+      213: -6046215547980356155
+    second: Beartrap_7
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -51,7 +72,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 96
+  spritePixelsToUnits: 48
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -72,10 +93,10 @@ TextureImporter:
   platformSettings:
   - serializedVersion: 4
     buildTarget: DefaultTexturePlatform
-    maxTextureSize: 2048
+    maxTextureSize: 4096
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 1
+    textureCompression: 2
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -142,10 +163,10 @@ TextureImporter:
       name: Beartrap_0
       rect:
         serializedVersion: 2
-        x: 8
-        y: 47
-        width: 176
-        height: 32
+        x: 0
+        y: 0
+        width: 64
+        height: 64
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -160,11 +181,99 @@ TextureImporter:
       indices: 
       edges: []
       weights: []
+    - serializedVersion: 2
+      name: Beartrap_1
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 0
+        width: 64
+        height: 64
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4ff86628ea9fab9c0800000000000000
+      internalID: -3910538798510469132
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Beartrap_2
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 0
+        width: 64
+        height: 64
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: afa973ccf0f13cec0800000000000000
+      internalID: -3547957928726652166
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Beartrap_3
+      rect:
+        serializedVersion: 2
+        x: 192
+        y: 0
+        width: 64
+        height: 64
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 21700c03caa5467a0800000000000000
+      internalID: -6384878676105754862
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Beartrap_4
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 0
+        width: 64
+        height: 64
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2f8c164fb99c0e550800000000000000
+      internalID: 6188167559664224498
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
     outline: []
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 3b606cf7fa5942b4bb712852fd86a709
+    spriteID: 6f8f0ebaae91ac9438f26bf150b7a798
     internalID: 0
     vertices: []
     indices: 
@@ -172,9 +281,15 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     spriteCustomMetadata:
-      entries: []
+      entries:
+      - key: SpriteEditor.SliceSettings
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":64.0,"y":64.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":1,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
       Beartrap_0: -8135096131531685454
+      Beartrap_1: -3910538798510469132
+      Beartrap_2: -3547957928726652166
+      Beartrap_3: -6384878676105754862
+      Beartrap_4: 6188167559664224498
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

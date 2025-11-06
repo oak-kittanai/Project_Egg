@@ -291,7 +291,7 @@ public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
     }
     #endregion
 
-    private void OnDrawGizmos()
+    private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;
         Vector3 playerPosition = this.gameObject.transform.position;
