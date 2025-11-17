@@ -1,3 +1,4 @@
+using Fusion;
 using UnityEngine;
 
 public class CharacterStats : MonoBehaviour
@@ -26,24 +27,24 @@ public class CharacterStats : MonoBehaviour
     [SerializeField] float _maxSpeed = 20f;
 
     [Header("CharacterSet")]
-    public bool isDuck;
-    public bool isEagle;
+    [Networked] public bool isDuck {  get; set; }
+    [Networked] public bool isBird { get; set; }
 
 
     #region Public_value_Networked
 
-    public int hp => s_minHealth;
-    public int maxHp => s_maxHealth;
-    public float speed => s_speed;
-    public float jumpForce => s_jumpForce;
-    public float WalkSpeed => s_walkSpeed;
-    public float FlySpeed => s_flySpeed;
-    public float MinStamina => s_minStamina;
-    public float MaxStamina => s_maxStamina;
+    [Networked] public int hp => s_minHealth;
+    [Networked] public int maxHp => s_maxHealth;
+    [Networked] public float speed => s_speed;
+    [Networked] public float jumpForce => s_jumpForce;
+    [Networked] public float WalkSpeed => s_walkSpeed;
+    [Networked] public float FlySpeed => s_flySpeed;
+    [Networked] public float MinStamina => s_minStamina;
+    [Networked] public float MaxStamina => s_maxStamina;
 
-    public float Acceleration => _acceleration;
-    public float Deceleration => _deceleration;
-    public float MaxSpeed => _maxSpeed;
+    [Networked] public float Acceleration => _acceleration;
+    [Networked] public float Deceleration => _deceleration;
+    [Networked] public float MaxSpeed => _maxSpeed;
 
     #endregion
 

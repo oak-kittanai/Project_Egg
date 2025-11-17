@@ -1,7 +1,6 @@
+using Fusion;
 using System.Collections;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.InputSystem.HID;
 
 public class MovementCharacter : MonoBehaviour
 {
@@ -22,30 +21,30 @@ public class MovementCharacter : MonoBehaviour
     float minStamina => stats.MinStamina;
     float maxStamina => stats.MaxStamina;
 
-    bool IsEagle => stats.isEagle;
+    bool IsBird => stats.isBird;
     bool IsDuck => stats.isDuck;
 
     [Header("Movement")]
-    [SerializeField] Vector2 _moveX;
+    [Networked] public Vector2 _moveX {  get; set; }
     public bool _moveAble;
 
-    [SerializeField] bool _busy;
-    [SerializeField] bool _staminaBusy;
+    [Networked] public bool _busy { get; set; }
+    [Networked] public bool _staminaBusy { get; set; }
 
     public bool isDash;
-    [SerializeField] bool _jumpAble;
-    [SerializeField] bool _isGrounded;
-    [SerializeField] bool _isInTheAir;
+    [Networked] bool _jumpAble { get; set; }
+    [Networked] bool _isGrounded { get; set; }
+    [Networked] public bool _isInTheAir { get; set; }
 
     [Header("Data_Stats")]
-    [SerializeField] bool _alreadyJump;
-    [SerializeField] bool _isFalling;
-    [SerializeField] bool _isFloat;
+    [Networked] bool _alreadyJump { get; set; }
+    [Networked] bool _isFalling { get; set; }
+    [Networked] bool _isFloat { get; set; }
 
-    [SerializeField] bool _isFly;
+    [Networked] bool _isFly { get; set; }
 
-    [SerializeField] float rayDistance;
-    [SerializeField] RaycastHit2D hit2D;
+    [Networked] float rayDistance { get; set; }
+    [Networked] RaycastHit2D hit2D { get; set; }
 
     [Header("Position")]
     public Vector3 currentPosition;
@@ -112,7 +111,7 @@ public class MovementCharacter : MonoBehaviour
             }
         }
 
-        if (IsEagle && !_isGrounded && input.JumpAction.WasPerformedThisFrame() && minStamina > 0)
+        if (IsBird && !_isGrounded && input.JumpAction.WasPerformedThisFrame() && minStamina > 0)
         {
             Fly();
         }

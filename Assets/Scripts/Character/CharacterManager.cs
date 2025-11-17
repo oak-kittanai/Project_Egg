@@ -1,7 +1,8 @@
+using Fusion;
 using System;
 using UnityEngine;
 
-public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
+public class CharacterManager : NetworkBehaviour, CharacterInteract, IDamageable
 {
     [Header("Referent")]
     CharacterStats stats;
@@ -22,7 +23,7 @@ public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
     [SerializeField] bool _isCarry;
     [SerializeField] bool _canCarry;
 
-    [SerializeField] bool _staminaBusy;
+    bool StaminaBusy => movement._staminaBusy;
 
     [SerializeField] bool _isInteractAble;
     [SerializeField] bool _isAbleSkill;
@@ -33,7 +34,7 @@ public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
     [SerializeField] Vector2 _eaglePosition = new Vector2(-1.5f, -1.5f);
     [SerializeField] Vector2 _positionToBe;
 
-    private void Awake() // Change to spawn
+    public override void Spawned()
     {
         Setup();
     }
@@ -50,7 +51,7 @@ public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
             movement.UpdatePosition();
         }
 
-        if (stats.MinStamina < stats.MaxStamina && !_staminaBusy)
+        if (stats.MinStamina < stats.MaxStamina && !StaminaBusy)
         {
             stats.RechargeStamina(true);
         }
@@ -137,7 +138,6 @@ public class CharacterManager : MonoBehaviour, CharacterInteract, IDamageable
                             CarryCompanion(_playerToCarry);
                             _isCarry = true;
                             stats.StaminaReduce(2);
-                            _staminaBusy = true;
                         }
                     }
                 }

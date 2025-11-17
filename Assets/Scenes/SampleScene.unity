@@ -119,6 +119,70 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &17045258
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 17045261}
+  - component: {fileID: 17045260}
+  - component: {fileID: 17045259}
+  m_Layer: 0
+  m_Name: NetworkStructure
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &17045259
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 17045258}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
+  SortKey: 295384340
+  ObjectInterest: 1
+  Flags: 262145
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: 17045260}
+  ForceRemoteRenderTimeframe: 0
+--- !u!114 &17045260
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 17045258}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a166f62a38087d41b18346a4977409e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::INetworkStructure
+--- !u!4 &17045261
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 17045258}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.16042, y: 0.32503, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -669,6 +733,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Player (Test)
       objectReference: {fileID: 0}
+    - target: {fileID: 121460977929437379, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1227391787974572706, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
       propertyPath: m_LocalPosition.x
       value: 1.35
@@ -723,11 +791,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5235713977121833181, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
       propertyPath: m_AnchorMax.x
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5235713977121833181, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -914,6 +982,37 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MoveableRock
   knockbackForce: 100
   rb2D: {fileID: 1976934090}
+--- !u!1 &2015320409
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2015320410}
+  m_Layer: 0
+  m_Name: PlayerOnlineOutput
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2015320410
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2015320409}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -2.35749, y: -2.62699, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2061044477
 GameObject:
   m_ObjectHideFlags: 0
@@ -1093,8 +1192,46 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 121460977929437379, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4476740335040972037}
   m_SourcePrefab: {fileID: 100100000, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
+--- !u!1 &4476740335040972035 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 121460977929437379, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
+  m_PrefabInstance: {fileID: 4476740335040972034}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &4476740335040972036 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3527827913197110429, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
+  m_PrefabInstance: {fileID: 4476740335040972034}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4476740335040972035}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bdb776ca76c79774b8aecfba3ea471b7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CharacterManager
+--- !u!114 &4476740335040972037
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4476740335040972035}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
+  SortKey: 3494986501
+  ObjectInterest: 1
+  Flags: 262145
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: 4476740335040972036}
+  ForceRemoteRenderTimeframe: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -1108,3 +1245,5 @@ SceneRoots:
   - {fileID: 538095211}
   - {fileID: 604731268}
   - {fileID: 2061044480}
+  - {fileID: 2015320410}
+  - {fileID: 17045261}
