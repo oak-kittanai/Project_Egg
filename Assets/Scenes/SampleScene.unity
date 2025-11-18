@@ -193,7 +193,6 @@ GameObject:
   m_Component:
   - component: {fileID: 519420032}
   - component: {fileID: 519420031}
-  - component: {fileID: 519420029}
   - component: {fileID: 519420030}
   m_Layer: 0
   m_Name: Main Camera
@@ -202,14 +201,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!81 &519420029
-AudioListener:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 519420028}
-  m_Enabled: 1
 --- !u!114 &519420030
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -802,6 +793,72 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
+--- !u!1 &1829951301
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1829951303}
+  - component: {fileID: 1829951302}
+  - component: {fileID: 1829951304}
+  m_Layer: 0
+  m_Name: ForceStart
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1829951302
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1829951301}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 026cae8d438519946b33fb1266715fe8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ForceStart
+  PlayerSpawner: {fileID: 5822141069168714861, guid: 418821578df54e14caf49a68b735799f, type: 3}
+  NetworkRunner: {fileID: 4337480539873389715, guid: 428589c4c1cc8b84092ae1f64cccbf5f, type: 3}
+--- !u!4 &1829951303
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1829951301}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.86138, y: 0.69831, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1829951304
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1829951301}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
+  SortKey: 794069269
+  ObjectInterest: 1
+  Flags: 262145
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: 1829951302}
+  ForceRemoteRenderTimeframe: 0
 --- !u!1 &1976934089
 GameObject:
   m_ObjectHideFlags: 0
@@ -1119,7 +1176,7 @@ Transform:
   m_GameObject: {fileID: 2061044477}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 7.25, y: 0, z: -0.58046}
+  m_LocalPosition: {x: 12.77, y: -0.31, z: -0.58046}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1136,6 +1193,10 @@ PrefabInstance:
     - target: {fileID: 121460977929437379, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
       propertyPath: m_Name
       value: Player ()
+      objectReference: {fileID: 0}
+    - target: {fileID: 121460977929437379, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1227391787974572706, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
       propertyPath: m_LocalPosition.x
@@ -1183,11 +1244,11 @@ PrefabInstance:
       objectReference: {fileID: 9100000, guid: 8373531bbce3cc7408ff614dc5ec4f25, type: 2}
     - target: {fileID: 5235713977121833181, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
       propertyPath: m_AnchorMax.x
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5235713977121833181, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -1247,3 +1308,4 @@ SceneRoots:
   - {fileID: 2061044480}
   - {fileID: 2015320410}
   - {fileID: 17045261}
+  - {fileID: 1829951303}

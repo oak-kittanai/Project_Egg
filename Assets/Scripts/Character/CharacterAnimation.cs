@@ -11,6 +11,7 @@ public class CharacterAnimation : MonoBehaviour
     [Header("Position")]
     [Networked] public Vector3 Direction {  get; set; }
     [Networked] public int Action { get; set; }
+    [Networked] public bool FlipX { get; set; }
 
     [Header("Character Set")]
     [Networked] public bool isDuck { get; set; }
@@ -42,14 +43,15 @@ public class CharacterAnimation : MonoBehaviour
 
         if (Direction.x < -0.01f)
         {
-            spriteRenderer.flipX = false;
+            FlipX = false;
         }
 
         if (Direction.x > 0.01f)
         {
-            spriteRenderer.flipX = true;
+            FlipX = true;
         }
 
+        spriteRenderer.flipX = FlipX;
         animator.SetFloat("Y", Direction.y);
     }
 
