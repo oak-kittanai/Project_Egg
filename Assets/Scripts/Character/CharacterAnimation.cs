@@ -1,7 +1,7 @@
 using Fusion;
 using UnityEngine;
 
-public class CharacterAnimation : MonoBehaviour
+public class CharacterAnimation : NetworkBehaviour
 {
     [Header("Referent")]
     CharacterStats stats;
@@ -68,11 +68,11 @@ public class CharacterAnimation : MonoBehaviour
             animator.Play("Fly", 0);
         }
 
-        if (Action == 3)
+        /*if (Action == 3)
         {
             animator.Play("Float_Down", 0);
             animator.SetBool("Falling", true);
-        }
+        }*/
     }
 
     public void OnGroundCheck()

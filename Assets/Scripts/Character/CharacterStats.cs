@@ -1,7 +1,7 @@
 using Fusion;
 using UnityEngine;
 
-public class CharacterStats : MonoBehaviour
+public class CharacterStats : NetworkBehaviour
 {
     [Header("Referent")]
     InputControl controller;
@@ -11,20 +11,20 @@ public class CharacterStats : MonoBehaviour
     [SerializeField] RectTransform staminaBar;
 
     [Header("Stats & Network")]
-    [SerializeField] int s_minHealth;
-    [SerializeField] int s_maxHealth = 5;
+    [SerializeField] public int s_minHealth;
+    [SerializeField] public int s_maxHealth = 5;
 
-    [SerializeField] float s_speed;
-    [SerializeField] float s_walkSpeed;
-    [SerializeField] float s_jumpForce;
-    [SerializeField] float s_flySpeed;
+    [SerializeField] public float s_speed;
+    [SerializeField] public float s_walkSpeed;
+    [SerializeField] public float s_jumpForce;
+    [SerializeField] public float s_flySpeed;
 
-    [SerializeField] float s_minStamina;
-    [SerializeField] float s_maxStamina = 30;
+    [SerializeField] public float s_minStamina;
+    [SerializeField] public float s_maxStamina = 30;
 
-    [SerializeField] float _acceleration = 5f;
-    [SerializeField] float _deceleration = 5f;
-    [SerializeField] float _maxSpeed = 20f;
+    [SerializeField] public float _acceleration = 5f;
+    [SerializeField] public float _deceleration = 5f;
+    [SerializeField] public float _maxSpeed = 20f;
 
     [Header("CharacterSet")]
     [Networked] public bool isDuck {  get; set; }
@@ -32,19 +32,6 @@ public class CharacterStats : MonoBehaviour
 
 
     #region Public_value_Networked
-
-    [Networked] public int hp => s_minHealth;
-    [Networked] public int maxHp => s_maxHealth;
-    [Networked] public float speed => s_speed;
-    [Networked] public float jumpForce => s_jumpForce;
-    [Networked] public float WalkSpeed => s_walkSpeed;
-    [Networked] public float FlySpeed => s_flySpeed;
-    [Networked] public float MinStamina => s_minStamina;
-    [Networked] public float MaxStamina => s_maxStamina;
-
-    [Networked] public float Acceleration => _acceleration;
-    [Networked] public float Deceleration => _deceleration;
-    [Networked] public float MaxSpeed => _maxSpeed;
 
     #endregion
 

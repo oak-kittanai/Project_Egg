@@ -18,7 +18,7 @@ public class PlayerGUI : MonoBehaviour
         else
         {
             staminaBar.minValue = 0;
-            staminaBar.maxValue = stats.MaxStamina;
+            staminaBar.maxValue = stats.s_maxStamina;
         }
     }
 
@@ -26,7 +26,7 @@ public class PlayerGUI : MonoBehaviour
     {
         StaminaUpdate();
 
-        if (stats.MinStamina >= stats.MaxStamina)
+        if (stats.s_minStamina >= stats.s_maxStamina)
         {
             staminaBar.gameObject.SetActive(false);
         }
@@ -38,6 +38,6 @@ public class PlayerGUI : MonoBehaviour
 
     public void StaminaUpdate()
     {
-        staminaBar.value = stats.MinStamina;
+        staminaBar.value = stats.s_minStamina;
     }
 }

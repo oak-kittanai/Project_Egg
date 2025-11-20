@@ -4,13 +4,13 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class INetworkStructure : NetworkBehaviour, INetworkRunnerCallbacks
+public class INetworkStructure : MonoBehaviour ,INetworkRunnerCallbacks
 {
     #region OnConnected&Disconnected
 
     public void OnConnectedToServer(NetworkRunner runner)
     {
-
+        Debug.Log("Connect Success");
     }
 
     public void OnDisconnectedFromServer(NetworkRunner runner, NetDisconnectReason reason)
@@ -48,7 +48,10 @@ public class INetworkStructure : NetworkBehaviour, INetworkRunnerCallbacks
 
     public void OnPlayerJoined(NetworkRunner runner, PlayerRef player)
     {
-        Debug.Log("Player has Joined");
+        PlayerSpawn.Instance.SpawnPlayer(player);
+        Debug.Log("Try to spawnPlayer");
+
+        Debug.Log($"Player has {player.PlayerId} Joined");
     }
 
     public void OnPlayerLeft(NetworkRunner runner, PlayerRef player)

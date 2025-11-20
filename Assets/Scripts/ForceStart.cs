@@ -1,11 +1,15 @@
 using Fusion;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class ForceStart : NetworkBehaviour
 {
+    [SerializeField] INetworkStructure NetworkStructure;
     NetworkRunner runner;
-    [SerializeField] NetworkObject PlayerSpawner;
+    [SerializeField] GameObject PlayerSpawner;
     [SerializeField] GameObject NetworkRunner;
+
+    [SerializeField] Button ForceStartButton;
 
     private void Awake()
     {
@@ -19,12 +23,18 @@ public class ForceStart : NetworkBehaviour
         }
         else Debug.Log("Can't spawn runner");
 
-        ForceStartGame();
+        ForceStartButton.onClick.AddListener(ForceStartGame);
+    }
+
+    private void OnDestroy()
+    {
+        ForceStartButton.onClick.RemoveAllListeners();
     }
 
     private void ForceStartGame()
     {
         StartSession(runner);
+        Debug.Log("Start Session");
     }
 
     public async void StartSession(NetworkRunner runner)
@@ -36,17 +46,28 @@ public class ForceStart : NetworkBehaviour
         }
         else
         {
+            runner.ProvideInput = true;
+            var sceneInfo = new NetworkSceneInfo();
+            sceneInfo.AddSceneRef(SceneRef.FromIndex(0));
+
             await runner.StartGame(new StartGameArgs()
             {
                 GameMode = GameMode.AutoHostOrClient,
                 SessionName = "Testsever",
-                PlayerCount = 2
+                PlayerCount = 2,
+                Scene = sceneInfo,
+                SceneManager = gameObject.AddComponent<NetworkSceneManagerDefault>()
             });
 
-            NetworkObject goPlayerSpawner = runner.Spawn(PlayerSpawner);
-            PlayerSpawn playerSpawn = goPlayerSpawner.GetComponent<PlayerSpawn>();
-            playerSpawn.runner = runner;
-        }
+            if (runner.IsServer)
+            {
+                GameObject goPlayerSpawner = Instantiate(PlayerSpawner);
+                PlayerSpawn playerSpawn = goPlayerSpawner.GetComponent<PlayerSpawn>();
+                playerSpawn.runner = runner;
+                Debug.Log("Spawn PlayerSpawner");
+            }
 
+            ForceStartButton.gameObject.SetActive(false);
+        }
     }
 }

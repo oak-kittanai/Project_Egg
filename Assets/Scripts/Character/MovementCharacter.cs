@@ -15,11 +15,11 @@ public class MovementCharacter : MonoBehaviour
     Collider2D coll2D;
 
     [Header("Set Value")]
-    float acceleration => stats.Acceleration;
-    float deceleration => stats.Deceleration;
-    float MaxSpeed => stats.MaxSpeed;
-    float minStamina => stats.MinStamina;
-    float maxStamina => stats.MaxStamina;
+    float acceleration => stats._acceleration;
+    float deceleration => stats._deceleration;
+    float MaxSpeed => stats._maxSpeed;
+    float minStamina => stats.s_minStamina;
+    float maxStamina => stats.s_maxStamina;
 
     bool IsBird => stats.isBird;
     bool IsDuck => stats.isDuck;
@@ -132,7 +132,7 @@ public class MovementCharacter : MonoBehaviour
         _isInTheAir = true;
         _jumpAble = false;
 
-        rb2D.AddForce(Vector2.up * stats.jumpForce, ForceMode2D.Impulse);
+        rb2D.AddForce(Vector2.up * stats.s_jumpForce, ForceMode2D.Impulse);
         cAnimation.UpdateActionAnimation(1);
     }
 
@@ -141,7 +141,7 @@ public class MovementCharacter : MonoBehaviour
         _isFly = true;
         _isFalling = false;
 
-        action.Flying(minStamina, _isGrounded, stats.FlySpeed, rb2D);
+        action.Flying(minStamina, _isGrounded, stats.s_flySpeed, rb2D);
         cAnimation.UpdateActionAnimation(2);
 
         stats.StaminaReduce(10);

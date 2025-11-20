@@ -39,7 +39,7 @@ public class CharacterManager : NetworkBehaviour, CharacterInteract, IDamageable
         Setup();
     }
 
-    private void Update()
+    public override void FixedUpdateNetwork()
     {
         if (movement._moveAble)
         {
@@ -51,7 +51,7 @@ public class CharacterManager : NetworkBehaviour, CharacterInteract, IDamageable
             movement.UpdatePosition();
         }
 
-        if (stats.MinStamina < stats.MaxStamina && !StaminaBusy)
+        if (stats.s_minStamina < stats.s_maxStamina && !StaminaBusy)
         {
             stats.RechargeStamina(true);
         }

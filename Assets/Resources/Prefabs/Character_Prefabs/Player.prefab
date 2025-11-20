@@ -19,8 +19,9 @@ GameObject:
   - component: {fileID: 3258201221068302135}
   - component: {fileID: 3141284763445610261}
   - component: {fileID: 645833589779868426}
+  - component: {fileID: -2039167435644549920}
   m_Layer: 7
-  m_Name: Player ()
+  m_Name: Player
   m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -96,7 +97,7 @@ SpriteRenderer:
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 0.34, y: 0.43}
+  m_Size: {x: 0.7083333, y: 0.8958333}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
@@ -172,8 +173,19 @@ MonoBehaviour:
   _acceleration: 10
   _deceleration: 10
   _maxSpeed: 5
-  isDuck: 0
-  isEagle: 0
+  _isDuck: 0
+  _isBird: 0
+  _hp: 0
+  _maxHp: 0
+  _speed: 0
+  _jumpForce: 0
+  _WalkSpeed: 0
+  _FlySpeed: 0
+  _MinStamina: 0
+  _MaxStamina: 0
+  _Acceleration: 0
+  _Deceleration: 0
+  _MaxSpeed: 0
 --- !u!114 &3527827913197110429
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -191,7 +203,6 @@ MonoBehaviour:
   _playerToCarry: {fileID: 0}
   _isCarry: 0
   _canCarry: 0
-  _staminaBusy: 0
   _isInteractAble: 0
   _isAbleSkill: 0
   _busy: 0
@@ -211,19 +222,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MovementCharacter
   rb2D: {fileID: 0}
-  _moveX: {x: 0, y: 0}
-  _moveAble: 0
-  _busy: 0
-  _staminaBusy: 0
+  _moveAble: 1
   isDash: 0
-  _jumpAble: 0
-  _isGrounded: 0
-  _isInTheAir: 0
-  _alreadyJump: 0
-  _isFalling: 0
-  _isFloat: 0
-  _isFly: 0
-  rayDistance: 0.52
   currentPosition: {x: 0, y: 0, z: 0}
 --- !u!114 &5098713133380636848
 MonoBehaviour:
@@ -273,7 +273,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 25b94d2c154621a41bd39d67c0b8eac1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CharacterAnimation
-  controller_Eagle: {fileID: 0}
+  _Direction: {x: 0, y: 0, z: 0}
+  _Action: 0
+  _FlipX: 0
+  _isDuck: 0
+  controller_Eagle: {fileID: 9100000, guid: 746a9bf694c18b647ae6301927b9c315, type: 2}
   controller_Duck: {fileID: 9100000, guid: 8373531bbce3cc7408ff614dc5ec4f25, type: 2}
 --- !u!70 &645833589779868426
 CapsuleCollider2D:
@@ -309,9 +313,31 @@ CapsuleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: -0.029501198, y: -0.00071379414}
-  m_Size: {x: 0.6493287, y: 0.86448103}
+  m_Offset: {x: -0.029501198, y: 0.002748339}
+  m_Size: {x: 0.6493287, y: 0.8575568}
   m_Direction: 0
+--- !u!114 &-2039167435644549920
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 121460977929437379}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
+  SortKey: 1923420840
+  ObjectInterest: 1
+  Flags: 262145
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: 4294635882263509867}
+  - {fileID: 6713054206493656476}
+  - {fileID: 3527827913197110429}
+  - {fileID: 3141284763445610261}
+  ForceRemoteRenderTimeframe: 0
 --- !u!1 &174842300040866111
 GameObject:
   m_ObjectHideFlags: 0
@@ -408,7 +434,7 @@ Transform:
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -0.04, y: 0.44, z: -13.246789}
   m_LocalScale: {x: 1.3246789, y: 1.3246789, z: 1.3246789}
-  m_ConstrainProportionsScale: 0
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 1227391787974572706}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

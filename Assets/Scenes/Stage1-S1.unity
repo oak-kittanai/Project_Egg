@@ -10235,6 +10235,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 901789303}
     m_Modifications:
+    - target: {fileID: -2039167435644549920, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
+      propertyPath: SortKey
+      value: 2255939777
+      objectReference: {fileID: 0}
     - target: {fileID: 121460977929437379, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
       propertyPath: m_Name
       value: Player (Eagle)-Test
@@ -11021,21 +11025,13 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 901789303}
     m_Modifications:
+    - target: {fileID: -2039167435644549920, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
+      propertyPath: SortKey
+      value: 2129840773
+      objectReference: {fileID: 0}
     - target: {fileID: 121460977929437379, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
       propertyPath: m_Name
       value: Player (Duck)-Test
-      objectReference: {fileID: 0}
-    - target: {fileID: 467560212452839230, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
-      propertyPath: _moveAble
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 645833589779868426, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
-      propertyPath: m_Size.y
-      value: 0.8575568
-      objectReference: {fileID: 0}
-    - target: {fileID: 645833589779868426, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
-      propertyPath: m_Offset.y
-      value: 0.002748339
       objectReference: {fileID: 0}
     - target: {fileID: 1227391787974572706, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
       propertyPath: m_LocalPosition.x
@@ -11077,18 +11073,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 1972045629521261847, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
-      propertyPath: m_ConstrainProportionsScale
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 3141284763445610261, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
-      propertyPath: controller_Eagle
-      value: 
-      objectReference: {fileID: 9100000, guid: 746a9bf694c18b647ae6301927b9c315, type: 2}
-    - target: {fileID: 5099668636001666967, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
-      propertyPath: orthographic size
-      value: 4
-      objectReference: {fileID: 0}
     - target: {fileID: 5235713977121833181, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
       propertyPath: m_AnchorMax.x
       value: 0
@@ -11097,26 +11081,6 @@ PrefabInstance:
       propertyPath: m_AnchorMax.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 6713054206493656476, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
-      propertyPath: isDuck
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 9153101824165123814, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
-      propertyPath: m_Size.x
-      value: 0.7083333
-      objectReference: {fileID: 0}
-    - target: {fileID: 9153101824165123814, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
-      propertyPath: m_Size.y
-      value: 0.8958333
-      objectReference: {fileID: 0}
-    - target: {fileID: 9153101824165123814, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
-      propertyPath: m_Sprite
-      value: 
-      objectReference: {fileID: -5224715236324516501, guid: a0fdef8056e92e14e911068728c536b8, type: 3}
-    - target: {fileID: 9153101824165123814, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
-      propertyPath: 'm_Materials.Array.data[0]'
-      value: 
-      objectReference: {fileID: 2100000, guid: b6aae9ddce55c6d4c8bb52ed23067aac, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
