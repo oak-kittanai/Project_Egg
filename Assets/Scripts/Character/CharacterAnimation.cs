@@ -1,15 +1,20 @@
+using Fusion;
 using UnityEngine;
-using UnityEngine.UIElements;
 
-public class CharacterAnimation : MonoBehaviour
+public class CharacterAnimation : NetworkBehaviour
 {
     [Header("Referent")]
+    CharacterStats stats;
     Animator animator;
     SpriteRenderer spriteRenderer;
 
+    [Header("Position")]
+    [Networked] public Vector3 Direction {  get; set; }
+    [Networked] public int Action { get; set; }
+    [Networked] public bool FlipX { get; set; }
+
     [Header("Character Set")]
-    [SerializeField] bool isEagle;
-    [SerializeField] bool isDuck;
+    [Networked] public bool isDuck { get; set; }
 
     [Header("Controller Setting")]
     [SerializeField] RuntimeAnimatorController controller_Eagle;
@@ -19,52 +24,55 @@ public class CharacterAnimation : MonoBehaviour
     {
         animator = GetComponentInChildren<Animator>();
         spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+        stats = GetComponent<CharacterStats>();
 
-        if (isDuck)
+        if (stats.isDuck)
         {
             animator.runtimeAnimatorController = controller_Duck;
         }
-        else if (isEagle)
+        else
         {
             animator.runtimeAnimatorController = controller_Eagle;
         }
-        else Debug.Log("Error can't found Identify");
     }
 
     public void UpdateAnimation(Vector3 direction)
     {
-        animator.SetFloat("X", direction.x);
+        Direction = direction;
+        animator.SetFloat("X", Direction.x);
 
-        if (direction.x < -0.01f)
+        if (Direction.x < -0.01f)
         {
-            spriteRenderer.flipX = false;
+            FlipX = false;
         }
 
-        if (direction.x > 0.01f)
+        if (Direction.x > 0.01f)
         {
-            spriteRenderer.flipX = true;
+            FlipX = true;
         }
 
-        animator.SetFloat("Y", direction.y);
+        spriteRenderer.flipX = FlipX;
+        animator.SetFloat("Y", Direction.y);
     }
 
     // jump & skill
     public void UpdateActionAnimation(int i)
     {
-        if (i == 1)
+        Action = i;
+        if (Action == 1)
         {
             animator.Play("Jump", 0);
         }
-        else if (i == 2)
+        else if (Action == 2)
         {
             animator.Play("Fly", 0);
         }
 
-        if (i == 3)
+        /*if (Action == 3)
         {
             animator.Play("Float_Down", 0);
             animator.SetBool("Falling", true);
-        }
+        }*/
     }
 
     public void OnGroundCheck()

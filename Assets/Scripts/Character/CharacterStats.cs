@@ -1,6 +1,7 @@
+using Fusion;
 using UnityEngine;
 
-public class CharacterStats : MonoBehaviour
+public class CharacterStats : NetworkBehaviour
 {
     [Header("Referent")]
     InputControl controller;
@@ -10,40 +11,27 @@ public class CharacterStats : MonoBehaviour
     [SerializeField] RectTransform staminaBar;
 
     [Header("Stats & Network")]
-    [SerializeField] int s_minHealth;
-    [SerializeField] int s_maxHealth = 5;
+    [SerializeField] public int s_minHealth;
+    [SerializeField] public int s_maxHealth = 5;
 
-    [SerializeField] float s_speed;
-    [SerializeField] float s_walkSpeed;
-    [SerializeField] float s_jumpForce;
-    [SerializeField] float s_flySpeed;
+    [SerializeField] public float s_speed;
+    [SerializeField] public float s_walkSpeed;
+    [SerializeField] public float s_jumpForce;
+    [SerializeField] public float s_flySpeed;
 
-    [SerializeField] float s_minStamina;
-    [SerializeField] float s_maxStamina = 30;
+    [SerializeField] public float s_minStamina;
+    [SerializeField] public float s_maxStamina = 30;
 
-    [SerializeField] float _acceleration = 5f;
-    [SerializeField] float _deceleration = 5f;
-    [SerializeField] float _maxSpeed = 20f;
+    [SerializeField] public float _acceleration = 5f;
+    [SerializeField] public float _deceleration = 5f;
+    [SerializeField] public float _maxSpeed = 20f;
 
     [Header("CharacterSet")]
-    public bool isDuck;
-    public bool isEagle;
+    [Networked] public bool isDuck {  get; set; }
+    [Networked] public bool isBird { get; set; }
 
 
     #region Public_value_Networked
-
-    public int hp => s_minHealth;
-    public int maxHp => s_maxHealth;
-    public float speed => s_speed;
-    public float jumpForce => s_jumpForce;
-    public float WalkSpeed => s_walkSpeed;
-    public float FlySpeed => s_flySpeed;
-    public float MinStamina => s_minStamina;
-    public float MaxStamina => s_maxStamina;
-
-    public float Acceleration => _acceleration;
-    public float Deceleration => _deceleration;
-    public float MaxSpeed => _maxSpeed;
 
     #endregion
 

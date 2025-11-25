@@ -1,7 +1,8 @@
+using Fusion;
 using System;
 using UnityEngine;
 
-public class CharacterAction : MonoBehaviour
+public class CharacterAction : NetworkBehaviour
 {
     InputControl controller;
     CharacterStats stats;

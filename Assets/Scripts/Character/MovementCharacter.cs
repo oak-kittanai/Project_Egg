@@ -1,7 +1,6 @@
+using Fusion;
 using System.Collections;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.InputSystem.HID;
 
 public class MovementCharacter : MonoBehaviour
 {
@@ -16,36 +15,36 @@ public class MovementCharacter : MonoBehaviour
     Collider2D coll2D;
 
     [Header("Set Value")]
-    float acceleration => stats.Acceleration;
-    float deceleration => stats.Deceleration;
-    float MaxSpeed => stats.MaxSpeed;
-    float minStamina => stats.MinStamina;
-    float maxStamina => stats.MaxStamina;
+    float acceleration => stats._acceleration;
+    float deceleration => stats._deceleration;
+    float MaxSpeed => stats._maxSpeed;
+    float minStamina => stats.s_minStamina;
+    float maxStamina => stats.s_maxStamina;
 
-    bool IsEagle => stats.isEagle;
+    bool IsBird => stats.isBird;
     bool IsDuck => stats.isDuck;
 
     [Header("Movement")]
-    [SerializeField] Vector2 _moveX;
+    [Networked] public Vector2 _moveX {  get; set; }
     public bool _moveAble;
 
-    [SerializeField] bool _busy;
-    [SerializeField] bool _staminaBusy;
+    [Networked] public bool _busy { get; set; }
+    [Networked] public bool _staminaBusy { get; set; }
 
     public bool isDash;
-    [SerializeField] bool _jumpAble;
-    [SerializeField] bool _isGrounded;
-    [SerializeField] bool _isInTheAir;
+    [Networked] bool _jumpAble { get; set; }
+    [Networked] bool _isGrounded { get; set; }
+    [Networked] public bool _isInTheAir { get; set; }
 
     [Header("Data_Stats")]
-    [SerializeField] bool _alreadyJump;
-    [SerializeField] bool _isFalling;
-    [SerializeField] bool _isFloat;
+    [Networked] bool _alreadyJump { get; set; }
+    [Networked] bool _isFalling { get; set; }
+    [Networked] bool _isFloat { get; set; }
 
-    [SerializeField] bool _isFly;
+    [Networked] bool _isFly { get; set; }
 
-    [SerializeField] float rayDistance;
-    [SerializeField] RaycastHit2D hit2D;
+    [Networked] float rayDistance { get; set; }
+    [Networked] RaycastHit2D hit2D { get; set; }
 
     [Header("Position")]
     public Vector3 currentPosition;
@@ -112,7 +111,7 @@ public class MovementCharacter : MonoBehaviour
             }
         }
 
-        if (IsEagle && !_isGrounded && input.JumpAction.WasPerformedThisFrame() && minStamina > 0)
+        if (IsBird && !_isGrounded && input.JumpAction.WasPerformedThisFrame() && minStamina > 0)
         {
             Fly();
         }
@@ -133,7 +132,7 @@ public class MovementCharacter : MonoBehaviour
         _isInTheAir = true;
         _jumpAble = false;
 
-        rb2D.AddForce(Vector2.up * stats.jumpForce, ForceMode2D.Impulse);
+        rb2D.AddForce(Vector2.up * stats.s_jumpForce, ForceMode2D.Impulse);
         cAnimation.UpdateActionAnimation(1);
     }
 
@@ -142,7 +141,7 @@ public class MovementCharacter : MonoBehaviour
         _isFly = true;
         _isFalling = false;
 
-        action.Flying(minStamina, _isGrounded, stats.FlySpeed, rb2D);
+        action.Flying(minStamina, _isGrounded, stats.s_flySpeed, rb2D);
         cAnimation.UpdateActionAnimation(2);
 
         stats.StaminaReduce(10);
