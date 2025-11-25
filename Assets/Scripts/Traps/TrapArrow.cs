@@ -2,14 +2,22 @@ using UnityEngine;
 
 public class TrapArrow : MonoBehaviour
 {
-    [Header("Setting")]
-    [SerializeField] float detectRadiuse = 3f;
+    [Header("Detection Settings")]
+    [SerializeField] float detectRadius = 5f;   
+    [Range(0, 360)]
+    [SerializeField] float viewAngle = 45f; 
+
+    [Header("Firing Settings")]
     [SerializeField] float fireRate = 2.5f;
-    [SerializeField] float arrowSpeed = 8f;
+    [SerializeField] float arrowSpeed = 10f;
+    [Range(0, 90)]
+    [SerializeField] float launchAngle = 45f; 
+
+    [Header("References")]
     [SerializeField] LayerMask playerMask;
     [SerializeField] GameObject arrowPrefabe;
 
-    float fireTime; // เวลายิงล่าสุด
+    float fireTime;
 
     private void Update()
     {
@@ -18,39 +26,57 @@ public class TrapArrow : MonoBehaviour
 
     void detectFire()
     {
-        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, detectRadiuse, playerMask);
+        // 1. หาคนในระยะวงกลมก่อน (ประหยัด Performance)
+        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, detectRadius, playerMask);
 
-        if (hits.Length == 0) return; // ไม่เจอใครก็หยุด
+        if (hits.Length == 0) return;
 
         foreach (var hit in hits)
         {
             if (hit.TryGetComponent<IDamageable>(out var idamage))
             {
-                if (Time.time >= fireTime + fireRate)
+                Vector2 dirToTarget = (hit.transform.position - transform.position).normalized;
+                if (Vector2.Angle(transform.right, dirToTarget) < viewAngle / 2f)
                 {
-                    fireArrow(hit.transform);
-                    fireTime = Time.time; // อัพเดตเวลายิงล่าสุด
+                    if (Time.time >= fireTime + fireRate)
+                    {
+                        fireArrow(hit.transform);
+                        fireTime = Time.time;
+                    }
                 }
             }
-        }   
+        }
     }
+
     void fireArrow(Transform target)
     {
-        // ไม่เจอ Prefab ของธนู
         if (arrowPrefabe == null) return;
 
         GameObject arrow = Instantiate(arrowPrefabe, transform.position, Quaternion.identity);
-
-        Vector2 dir = (target.position - transform.position);
-
         Rigidbody2D rb = arrow.GetComponent<Rigidbody2D>();
-        rb.AddForce(dir * arrowSpeed, ForceMode2D.Impulse);
+
+        // 1. หาบทิศทางตรงๆ หาเป้าหมาย (Target - Start)
+        Vector2 direction = (target.position - transform.position).normalized;
+
+        // 2. หมุนหัวลูกธนูไปหาเป้าหมาย
+        // ใช้ Atan2 เพื่อหามุมจาก Vector
+        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+        arrow.transform.rotation = Quaternion.Euler(0, 0, angle);
+
+        // 3. ยิงออกไปตรงๆ
+        // แนะนำให้ใช้ velocity เพื่อความเร็วที่คงที่และพุ่งตรงทันที
+        rb.velocity = direction * arrowSpeed;
     }
 
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, detectRadiuse);
-    }
+        Gizmos.DrawWireSphere(transform.position, detectRadius);
+        Vector3 rightDir = transform.right;
+        Vector3 upperBoundary = Quaternion.Euler(0, 0, viewAngle / 2f) * rightDir;
+        Vector3 lowerBoundary = Quaternion.Euler(0, 0, -viewAngle / 2f) * rightDir;
 
+        Gizmos.DrawLine(transform.position, transform.position + upperBoundary * detectRadius);
+        Gizmos.DrawLine(transform.position, transform.position + lowerBoundary * detectRadius);
+    }
 }
