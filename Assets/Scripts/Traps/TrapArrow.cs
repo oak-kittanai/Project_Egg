@@ -55,16 +55,11 @@ public class TrapArrow : MonoBehaviour
         GameObject arrow = Instantiate(arrowPrefabe, transform.position, Quaternion.identity);
         Rigidbody2D rb = arrow.GetComponent<Rigidbody2D>();
 
-        // 1. หาบทิศทางตรงๆ หาเป้าหมาย (Target - Start)
         Vector2 direction = (target.position - transform.position).normalized;
 
-        // 2. หมุนหัวลูกธนูไปหาเป้าหมาย
-        // ใช้ Atan2 เพื่อหามุมจาก Vector
         float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
         arrow.transform.rotation = Quaternion.Euler(0, 0, angle);
 
-        // 3. ยิงออกไปตรงๆ
-        // แนะนำให้ใช้ velocity เพื่อความเร็วที่คงที่และพุ่งตรงทันที
         rb.velocity = direction * arrowSpeed;
     }
 
