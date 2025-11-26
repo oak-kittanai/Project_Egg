@@ -4,9 +4,8 @@ using UnityEngine.UI;
 
 public class ForceStart : NetworkBehaviour
 {
-    [SerializeField] INetworkStructure NetworkStructure;
     NetworkRunner runner;
-    [SerializeField] GameObject PlayerSpawner;
+    [SerializeField] NetworkObject PlayerSpawner;
     [SerializeField] GameObject NetworkRunner;
 
     [SerializeField] Button ForceStartButton;
@@ -50,20 +49,28 @@ public class ForceStart : NetworkBehaviour
             var sceneInfo = new NetworkSceneInfo();
             sceneInfo.AddSceneRef(SceneRef.FromIndex(0));
 
-            await runner.StartGame(new StartGameArgs()
+            var res = await runner.StartGame(new StartGameArgs()
             {
                 GameMode = GameMode.AutoHostOrClient,
-                SessionName = "Testsever",
-                PlayerCount = 2,
-                Scene = sceneInfo,
-                SceneManager = gameObject.AddComponent<NetworkSceneManagerDefault>()
+                SessionName = "TestServer",
+                PlayerCount = 20
             });
+            if (!res.Ok)
+            {
+                Debug.LogError($"Shutdown reason is {res.ShutdownReason}");
+            }
+            else
+            {
+                Debug.Log("Success create room");
+            }
 
             if (runner.IsServer)
             {
-                GameObject goPlayerSpawner = Instantiate(PlayerSpawner);
+                NetworkObject goPlayerSpawner = runner.Spawn(PlayerSpawner);
                 PlayerSpawn playerSpawn = goPlayerSpawner.GetComponent<PlayerSpawn>();
+                INetworkStructure networkStructure = runner.GetComponent<INetworkStructure>();
                 playerSpawn.runner = runner;
+                networkStructure.spawner = playerSpawn;
                 Debug.Log("Spawn PlayerSpawner");
             }
 

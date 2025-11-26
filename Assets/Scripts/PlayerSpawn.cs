@@ -5,13 +5,14 @@ using UnityEngine;
 public class PlayerSpawn : SingletonNetwork<PlayerSpawn>
 {
     public NetworkRunner runner;
-    INetworkStructure NetworkStructure;
 
     [SerializeField] public NetworkObject PlayerPrefab;
     [SerializeField] private NetworkObject PlayerPrefabPath;
 
     [SerializeField] int numPlayer;
 
+    [SerializeField] RuntimeAnimatorController controller_Bird;
+    [SerializeField] RuntimeAnimatorController controller_Duck;
     public void Setup()
     {
         Debug.Log("PS Awake Active");
@@ -61,21 +62,25 @@ public class PlayerSpawn : SingletonNetwork<PlayerSpawn>
         numPlayer = runner.SessionInfo.PlayerCount;
     }
 
-    public void SpawnPlayer(PlayerRef player)
+    [Rpc(RpcSources.StateAuthority, RpcTargets.StateAuthority)]
+    public void SpawnPlayer_RPC(PlayerRef player)
     {
         Debug.Log("Try Spawn Player");
-        if (!runner.IsServer)
-        {
-            Debug.Log("Not Server");
-            return;
-        }
-            
-        NetworkObject playerObj = runner.Spawn(PlayerPrefab, new Vector3(0, 1, 0), Quaternion.identity, player);
+        Vector2 startPos = new Vector2(0, 1);
+        NetworkObject playerObj = runner.Spawn(PlayerPrefab, startPos, Quaternion.identity, player);
         runner.SetPlayerObject(player, playerObj);
+        SetSpecis_RPC(playerObj, player);
+    }
 
+    [Rpc(RpcSources.All,RpcTargets.All)]
+    public void SetSpecis_RPC(NetworkObject playerObj, PlayerRef player)
+    {
         CharacterStats playerStats = playerObj.GetComponent<CharacterStats>();
+        CharacterAnimation playerAnimation = playerObj.GetComponent<CharacterAnimation>();
+
         if (player == runner.LocalPlayer)
         {
+            playerAnimation.onChangeSkin = controller_Duck;
             playerStats.isDuck = true;
             playerStats.isBird = false;
             playerObj.name = "Player (Duck)Host";
@@ -83,6 +88,7 @@ public class PlayerSpawn : SingletonNetwork<PlayerSpawn>
         }
         else
         {
+            playerAnimation.onChangeSkin = controller_Bird;
             playerStats.isDuck = false;
             playerStats.isBird = true;
             playerObj.name = "Player (Bird)Client";

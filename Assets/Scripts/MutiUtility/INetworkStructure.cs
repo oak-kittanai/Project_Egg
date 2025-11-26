@@ -3,9 +3,12 @@ using Fusion.Sockets;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
-public class INetworkStructure : MonoBehaviour ,INetworkRunnerCallbacks
+public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
 {
+    [SerializeField] public PlayerSpawn spawner;
+
     #region OnConnected&Disconnected
 
     public void OnConnectedToServer(NetworkRunner runner)
@@ -34,7 +37,49 @@ public class INetworkStructure : MonoBehaviour ,INetworkRunnerCallbacks
 
     public void OnInput(NetworkRunner runner, NetworkInput input)
     {
-        
+        var data = new NetworkdInputData();
+        if (Keyboard.current != null)
+        {
+            float moveX = 0;
+
+            if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed)
+            {
+                moveX = -1;
+            }
+            if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed)
+            {
+                moveX = 1;
+            }
+
+            bool jump = false;
+            if (Keyboard.current.spaceKey.isPressed || Keyboard.current.upArrowKey.isPressed)
+            {
+                jump = true;
+            }
+            else
+            {
+                jump = false;
+            }
+
+            // need to add skill
+            /*
+            bool skill1 = false;
+            if (Keyboard.current.spaceKey.isPressed || Keyboard.current.upArrowKey.isPressed)
+            {
+                skill = true;
+            }
+            else
+            {
+                skill = false;
+            }
+            data.skill_1 = skill1
+            */
+
+            data.horizontal = moveX;
+            data.jump = jump;
+        }
+
+        input.Set(data);
     }
 
     public void OnInputMissing(NetworkRunner runner, PlayerRef player, NetworkInput input)
@@ -48,8 +93,14 @@ public class INetworkStructure : MonoBehaviour ,INetworkRunnerCallbacks
 
     public void OnPlayerJoined(NetworkRunner runner, PlayerRef player)
     {
-        PlayerSpawn.Instance.SpawnPlayer(player);
-        Debug.Log("Try to spawnPlayer");
+        if (spawner != null)
+        {
+            if (runner.IsServer)
+            {
+                spawner.SpawnPlayer_RPC(player);
+                Debug.Log("Spawner is: " + spawner);
+            }
+        }
 
         Debug.Log($"Player has {player.PlayerId} Joined");
     }
@@ -121,4 +172,12 @@ public class INetworkStructure : MonoBehaviour ,INetworkRunnerCallbacks
     }
 
     #endregion
+}
+
+public struct NetworkdInputData : INetworkInput
+{
+    public float horizontal;
+    public bool jump;
+    //public bool skill_1;
+    //public bool skill_2;
 }

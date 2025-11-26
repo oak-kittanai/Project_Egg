@@ -46,8 +46,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerSpawn
   runner: {fileID: 0}
-  _PlayerPrefab: {fileID: -2039167435644549920, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
+  PlayerPrefab: {fileID: 0}
+  PlayerPrefabPath: {fileID: 0}
   numPlayer: 0
+  controller_Bird: {fileID: 9100000, guid: 746a9bf694c18b647ae6301927b9c315, type: 2}
+  controller_Duck: {fileID: 9100000, guid: 8373531bbce3cc7408ff614dc5ec4f25, type: 2}
 --- !u!114 &5822141069168714861
 MonoBehaviour:
   m_ObjectHideFlags: 0

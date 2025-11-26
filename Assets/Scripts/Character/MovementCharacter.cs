@@ -2,17 +2,17 @@ using Fusion;
 using System.Collections;
 using UnityEngine;
 
-public class MovementCharacter : MonoBehaviour
+public class MovementCharacter : NetworkBehaviour
 {
     [Header("Referent")]
     CharacterStats stats;
-    InputControl input;
     CharacterAnimation cAnimation;
     CharacterAction action;
 
     // Mono
-    public Rigidbody2D rb2D;
+    [SerializeField] Rigidbody2D rb2D;
     Collider2D coll2D;
+    [SerializeField] Camera playerCam;
 
     [Header("Set Value")]
     float acceleration => stats._acceleration;
@@ -26,28 +26,43 @@ public class MovementCharacter : MonoBehaviour
 
     [Header("Movement")]
     [Networked] public Vector2 _moveX {  get; set; }
+    public float InputMoveX;
     public bool _moveAble;
 
-    [Networked] public bool _busy { get; set; }
-    [Networked] public bool _staminaBusy { get; set; }
+    [SerializeField] public bool _busy { get; set; }
+    [SerializeField] public bool _staminaBusy { get; set; }
 
     public bool isDash;
-    [Networked] bool _jumpAble { get; set; }
-    [Networked] bool _isGrounded { get; set; }
-    [Networked] public bool _isInTheAir { get; set; }
+    [SerializeField] bool _jumpAble { get; set; }
+    [SerializeField] bool _isGrounded { get; set; }
+    [SerializeField] public bool _isInTheAir { get; set; }
 
     [Header("Data_Stats")]
-    [Networked] bool _alreadyJump { get; set; }
-    [Networked] bool _isFalling { get; set; }
-    [Networked] bool _isFloat { get; set; }
+    [SerializeField] bool _alreadyJump { get; set; }
+    [SerializeField] bool _isFalling { get; set; }
+    [SerializeField] bool _isFloat { get; set; }
 
-    [Networked] bool _isFly { get; set; }
+    [SerializeField] bool _isFly { get; set; }
 
-    [Networked] float rayDistance { get; set; }
-    [Networked] RaycastHit2D hit2D { get; set; }
+    [SerializeField] float rayDistance { get; set; }
+    [SerializeField] RaycastHit2D hit2D { get; set; }
 
     [Header("Position")]
     public Vector3 currentPosition;
+
+    public override void Spawned()
+    {
+        if (!HasInputAuthority)
+        {
+            playerCam.gameObject.SetActive(false);
+            
+        }
+        else
+        {
+            playerCam.gameObject.SetActive(true);
+            Setup();
+        }
+    }
 
     public void Setup()
     {
@@ -60,13 +75,6 @@ public class MovementCharacter : MonoBehaviour
             stats.Setup();
         }
         else Debug.LogError("can't find Stats");
-
-        input = GetComponent<InputControl>();
-        if (input != null)
-        {
-            input.Setup();
-        }
-        else Debug.LogError("can't find Input");
 
         cAnimation = GetComponent<CharacterAnimation>();
         if (cAnimation != null)
@@ -83,35 +91,57 @@ public class MovementCharacter : MonoBehaviour
         else Debug.LogError("can't find CharacterAction");
     }
 
+    public override void FixedUpdateNetwork()
+    {
+        if (_moveAble)
+        {
+            UpdateMovement();
+            UpdateStates();
+            UpdatePosition();
+
+            if (stats.s_minStamina < stats.s_maxStamina && !_staminaBusy)
+            {
+                stats.RechargeStamina(true);
+            }
+        }
+    }
+
     public void UpdateMovement()
     {
-        _moveX = input.UpdateMoveInput();
+        if (GetInput(out NetworkdInputData input))
+        {
+            float moveX = input.horizontal;
+            InputMoveX = moveX;
 
-        float targetSpeed = _moveX.x * MaxSpeed;
-        float speedDiff = targetSpeed - rb2D.linearVelocity.x;
-        float accelRate = Mathf.Abs(targetSpeed) > 0.01f ? acceleration : deceleration;
+            float targetSpeed = InputMoveX * MaxSpeed;
+            float speedDiff = targetSpeed - rb2D.linearVelocity.x;
+            float accelRate = Mathf.Abs(targetSpeed) > 0.01f ? acceleration : deceleration;
 
-        float force = speedDiff * accelRate;
-        rb2D.AddForce(Vector2.right * force, ForceMode2D.Force);
+            float force = speedDiff * accelRate;
+            rb2D.AddForce(Vector2.right * force, ForceMode2D.Force);
 
-        cAnimation.UpdateAnimation(new Vector2(_moveX.x, rb2D.linearVelocity.y));
+            cAnimation.UpdateAnimation(new Vector2(moveX, rb2D.linearVelocity.y));
+            UpdateActionInput(input.jump);
+        }
+
+        _moveX = this.transform.position;
 
         RayCast2DCheckGround();
     }
 
     #region InputZone
-    public void UpdateActionInput()
+    public void UpdateActionInput(bool Jump)
     {
-        if (_isGrounded && _jumpAble && input.JumpAction.WasPressedThisFrame())
+        if (_isGrounded && _jumpAble && Jump)
         {
-            Jump();
+            JumpAction();
             if (_alreadyJump)
             {
                 StartCoroutine(WaitForJump());
             }
         }
 
-        if (IsBird && !_isGrounded && input.JumpAction.WasPerformedThisFrame() && minStamina > 0)
+        if (IsBird && !_isGrounded && Jump && minStamina > 0)
         {
             Fly();
         }
@@ -125,7 +155,7 @@ public class MovementCharacter : MonoBehaviour
         _alreadyJump = false;
     }
 
-    private void Jump()
+    private void JumpAction()
     {
         _isGrounded = false;
         _alreadyJump = true;

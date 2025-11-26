@@ -1,7 +1,8 @@
+using Fusion;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class InputControl : MonoBehaviour
+public class InputControl : NetworkBehaviour
 {
     [Header("ActionAssets")]
     [SerializeField] public InputActionAsset actionAsset;

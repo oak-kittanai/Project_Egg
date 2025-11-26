@@ -1,11 +1,17 @@
 using Fusion;
+using Fusion.Addons.Physics;
+using Unity.VisualScripting.Antlr3.Runtime.Misc;
 using UnityEngine;
 
-public class CharacterStats : NetworkBehaviour
+public class CharacterStats : NetworkBehaviour, IDamageable
 {
     [Header("Referent")]
     InputControl controller;
     CharacterAction characterAction;
+    MovementCharacter movement;
+
+    Rigidbody2D rb2D;
+    [Networked] NetworkRigidbody2D netRB2D {  get; set; }
 
     // Test Stamina
     [SerializeField] RectTransform staminaBar;
@@ -26,19 +32,25 @@ public class CharacterStats : NetworkBehaviour
     [SerializeField] public float _deceleration = 5f;
     [SerializeField] public float _maxSpeed = 20f;
 
+    bool StaminaBusy => movement._staminaBusy;
+
     [Header("CharacterSet")]
     [Networked] public bool isDuck {  get; set; }
     [Networked] public bool isBird { get; set; }
 
-
-    #region Public_value_Networked
-
-    #endregion
+    public override void Spawned()
+    {
+        if (HasInputAuthority)
+        {
+            Setup();
+        }
+    }
 
     public void Setup()
     {
         controller = GetComponent<InputControl>();
         characterAction = GetComponent<CharacterAction>();
+        movement = GetComponent<MovementCharacter>();
 
         s_minHealth = s_maxHealth;
         s_minStamina = s_maxStamina;
@@ -99,6 +111,24 @@ public class CharacterStats : NetworkBehaviour
                 s_minHealth = s_maxHealth;
             }
         }
+    }
+    #endregion
+
+    #region AdjustValue
+    public void TakeDamage(int dmg, float knockbackForce, Vector2 vec)
+    {
+        if (movement.isDash)
+        {
+            Debug.Log("Dodge");
+            return;
+        }
+
+        Vector2 direction = (vec - (Vector2)transform.position).normalized;
+        Vector2 knockbackDir = -direction * knockbackForce;
+
+        rb2D.AddForce(knockbackDir, ForceMode2D.Impulse);
+
+        TakeDamage(dmg);
     }
     #endregion
 }

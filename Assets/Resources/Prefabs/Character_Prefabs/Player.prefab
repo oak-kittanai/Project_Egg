@@ -13,13 +13,13 @@ GameObject:
   - component: {fileID: 1808580689401154541}
   - component: {fileID: 4294635882263509867}
   - component: {fileID: 6713054206493656476}
-  - component: {fileID: 3527827913197110429}
   - component: {fileID: 467560212452839230}
-  - component: {fileID: 5098713133380636848}
   - component: {fileID: 3258201221068302135}
   - component: {fileID: 3141284763445610261}
   - component: {fileID: 645833589779868426}
   - component: {fileID: -2039167435644549920}
+  - component: {fileID: -7947786426853800306}
+  - component: {fileID: 8694276330885244838}
   m_Layer: 7
   m_Name: Player
   m_TagString: Player
@@ -149,6 +149,10 @@ MonoBehaviour:
     floatingSpeed: 0
     isDive: 0
     diveSpeed: 0
+  _isInteractAble: 0
+  _isAbleSkill: 0
+  _interactRadius: 0
+  _busy: 0
 --- !u!114 &6713054206493656476
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -175,40 +179,6 @@ MonoBehaviour:
   _maxSpeed: 5
   _isDuck: 0
   _isBird: 0
-  _hp: 0
-  _maxHp: 0
-  _speed: 0
-  _jumpForce: 0
-  _WalkSpeed: 0
-  _FlySpeed: 0
-  _MinStamina: 0
-  _MaxStamina: 0
-  _Acceleration: 0
-  _Deceleration: 0
-  _MaxSpeed: 0
---- !u!114 &3527827913197110429
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 121460977929437379}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bdb776ca76c79774b8aecfba3ea471b7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CharacterManager
-  _interactRadius: 2
-  _isGetCarry: 0
-  _playerToCarry: {fileID: 0}
-  _isCarry: 0
-  _canCarry: 0
-  _isInteractAble: 0
-  _isAbleSkill: 0
-  _busy: 0
-  _duckPosition: {x: -2, y: 1}
-  _eaglePosition: {x: -1.5, y: -1.5}
-  _positionToBe: {x: 0, y: 0}
 --- !u!114 &467560212452839230
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -222,23 +192,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MovementCharacter
   rb2D: {fileID: 0}
+  playerCam: {fileID: 5099668636001666967}
+  __moveX: {x: 0, y: 0}
+  InputMoveX: 0
   _moveAble: 1
   isDash: 0
   currentPosition: {x: 0, y: 0, z: 0}
---- !u!114 &5098713133380636848
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 121460977929437379}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6835583a25baa704499578568a806f40, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::InputControl
-  actionAsset: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
-  _moveXAmt: {x: 0, y: 0}
 --- !u!95 &3258201221068302135
 Animator:
   serializedVersion: 7
@@ -276,9 +235,8 @@ MonoBehaviour:
   _Direction: {x: 0, y: 0, z: 0}
   _Action: 0
   _FlipX: 0
-  _isDuck: 0
-  controller_Eagle: {fileID: 9100000, guid: 746a9bf694c18b647ae6301927b9c315, type: 2}
-  controller_Duck: {fileID: 9100000, guid: 8373531bbce3cc7408ff614dc5ec4f25, type: 2}
+  onChangeSkin: {fileID: 0}
+  onBirdSkin: {fileID: 9100000, guid: 746a9bf694c18b647ae6301927b9c315, type: 2}
 --- !u!70 &645833589779868426
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
@@ -335,9 +293,50 @@ MonoBehaviour:
   NetworkedBehaviours:
   - {fileID: 4294635882263509867}
   - {fileID: 6713054206493656476}
-  - {fileID: 3527827913197110429}
+  - {fileID: 467560212452839230}
   - {fileID: 3141284763445610261}
+  - {fileID: -7947786426853800306}
   ForceRemoteRenderTimeframe: 0
+--- !u!114 &-7947786426853800306
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 121460977929437379}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c5e690b5fb1084f5ab1c86457af401d4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Addons.Physics::Fusion.Addons.Physics.NetworkRigidbody2D
+  _stateAuthorityChangeErrorCorrectionDelta: 0
+  SyncScale: 0
+  SyncParent: 1
+  _interpolationTarget: {fileID: 0}
+  UsePreciseRotation: 0
+  UseRenderSleepThresholds: 1
+  RenderThresholds:
+    UseEnergy: 1
+    Position: 0.01
+    Rotation: 0.01
+    Scale: 0.01
+--- !u!114 &8694276330885244838
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 121460977929437379}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a9fd79d79a0fb459ababab9a78f00caa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Addons.Physics::Fusion.Addons.Physics.RunnerSimulatePhysics2D
+  _physicsAuthority: 2
+  _physicsTiming: 3
+  ClientPhysicsSimulation: 0
+  DeltaTimeMultiplier: 1
+  SetUnityFixedTimestep: 0
 --- !u!1 &174842300040866111
 GameObject:
   m_ObjectHideFlags: 0
@@ -414,7 +413,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1972045629521261847}
   - component: {fileID: 5099668636001666967}
-  - component: {fileID: 1930173753596827086}
   - component: {fileID: 146692513518075897}
   m_Layer: 0
   m_Name: Main Camera
@@ -489,14 +487,6 @@ Camera:
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
   m_StereoSeparation: 0.022
---- !u!81 &1930173753596827086
-AudioListener:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3020338236366186645}
-  m_Enabled: 1
 --- !u!114 &146692513518075897
 MonoBehaviour:
   m_ObjectHideFlags: 0
