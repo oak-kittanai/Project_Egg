@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: a407ea9a99fbade40a1f295016cdfc38
+guid: 472c43fa7562dda4a8af70abf7ac849d
 TextureImporter:
   internalIDToNameTable:
   - first:
@@ -20,6 +20,12 @@ TextureImporter:
   - first:
       213: 9126776579742732391
     second: duck jump_5
+  - first:
+      213: -7693417172853601685
+    second: duck jump_6
+  - first:
+      213: 4222508311062189904
+    second: duck jump_7
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -157,10 +163,10 @@ TextureImporter:
       name: duck jump_0
       rect:
         serializedVersion: 2
-        x: 7
+        x: 6
         y: 2
         width: 35
-        height: 38
+        height: 40
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -179,10 +185,10 @@ TextureImporter:
       name: duck jump_1
       rect:
         serializedVersion: 2
-        x: 53
-        y: 3
-        width: 38
-        height: 40
+        x: 56
+        y: 2
+        width: 33
+        height: 37
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -201,10 +207,10 @@ TextureImporter:
       name: duck jump_2
       rect:
         serializedVersion: 2
-        x: 101
-        y: 5
-        width: 37
-        height: 40
+        x: 106
+        y: 2
+        width: 33
+        height: 41
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -223,10 +229,10 @@ TextureImporter:
       name: duck jump_3
       rect:
         serializedVersion: 2
-        x: 148
-        y: 9
-        width: 39
-        height: 39
+        x: 149
+        y: 3
+        width: 37
+        height: 43
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -245,10 +251,10 @@ TextureImporter:
       name: duck jump_4
       rect:
         serializedVersion: 2
-        x: 197
-        y: 6
-        width: 37
-        height: 42
+        x: 193
+        y: 7
+        width: 42
+        height: 41
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -267,10 +273,10 @@ TextureImporter:
       name: duck jump_5
       rect:
         serializedVersion: 2
-        x: 245
-        y: 2
-        width: 37
-        height: 43
+        x: 243
+        y: 8
+        width: 38
+        height: 40
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -281,6 +287,50 @@ TextureImporter:
       bones: []
       spriteID: 7609beb81f2d8ae70800000000000000
       internalID: 9126776579742732391
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: duck jump_6
+      rect:
+        serializedVersion: 2
+        x: 289
+        y: 5
+        width: 42
+        height: 41
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b6acb2fb7dd7b3590800000000000000
+      internalID: -7693417172853601685
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: duck jump_7
+      rect:
+        serializedVersion: 2
+        x: 339
+        y: 2
+        width: 38
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0571ff5efec599a30800000000000000
+      internalID: 4222508311062189904
       vertices: []
       indices: 
       edges: []
@@ -305,6 +355,8 @@ TextureImporter:
       duck jump_3: 2435622589392302919
       duck jump_4: 6758748143710609837
       duck jump_5: 9126776579742732391
+      duck jump_6: -7693417172853601685
+      duck jump_7: 4222508311062189904
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

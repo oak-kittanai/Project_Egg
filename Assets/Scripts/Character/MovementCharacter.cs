@@ -1,54 +1,68 @@
+using Fusion;
 using System.Collections;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.InputSystem.HID;
 
-public class MovementCharacter : MonoBehaviour
+public class MovementCharacter : NetworkBehaviour
 {
     [Header("Referent")]
     CharacterStats stats;
-    InputControl input;
     CharacterAnimation cAnimation;
     CharacterAction action;
 
     // Mono
-    public Rigidbody2D rb2D;
+    [SerializeField] Rigidbody2D rb2D;
     Collider2D coll2D;
+    [SerializeField] Camera playerCam;
 
     [Header("Set Value")]
-    float acceleration => stats.Acceleration;
-    float deceleration => stats.Deceleration;
-    float MaxSpeed => stats.MaxSpeed;
-    float minStamina => stats.MinStamina;
-    float maxStamina => stats.MaxStamina;
+    float acceleration => stats._acceleration;
+    float deceleration => stats._deceleration;
+    float MaxSpeed => stats._maxSpeed;
+    float minStamina => stats.s_minStamina;
+    float maxStamina => stats.s_maxStamina;
 
-    bool IsEagle => stats.isEagle;
+    bool IsBird => stats.isBird;
     bool IsDuck => stats.isDuck;
 
     [Header("Movement")]
-    [SerializeField] Vector2 _moveX;
+    [Networked] public Vector2 _moveX {  get; set; }
+    public float InputMoveX;
     public bool _moveAble;
 
-    [SerializeField] bool _busy;
-    [SerializeField] bool _staminaBusy;
+    [SerializeField] public bool _busy { get; set; }
+    [SerializeField] public bool _staminaBusy { get; set; }
 
     public bool isDash;
-    [SerializeField] bool _jumpAble;
-    [SerializeField] bool _isGrounded;
-    [SerializeField] bool _isInTheAir;
+    [SerializeField] bool _jumpAble { get; set; }
+    [SerializeField] bool _isGrounded { get; set; }
+    [SerializeField] public bool _isInTheAir { get; set; }
 
     [Header("Data_Stats")]
-    [SerializeField] bool _alreadyJump;
-    [SerializeField] bool _isFalling;
-    [SerializeField] bool _isFloat;
+    [SerializeField] bool _alreadyJump { get; set; }
+    [SerializeField] bool _isFalling { get; set; }
+    [SerializeField] bool _isFloat { get; set; }
 
-    [SerializeField] bool _isFly;
+    [SerializeField] bool _isFly { get; set; }
 
-    [SerializeField] float rayDistance;
-    [SerializeField] RaycastHit2D hit2D;
+    [SerializeField] float rayDistance { get; set; }
+    [SerializeField] RaycastHit2D hit2D { get; set; }
 
     [Header("Position")]
     public Vector3 currentPosition;
+
+    public override void Spawned()
+    {
+        if (!HasInputAuthority)
+        {
+            playerCam.gameObject.SetActive(false);
+            
+        }
+        else
+        {
+            playerCam.gameObject.SetActive(true);
+            Setup();
+        }
+    }
 
     public void Setup()
     {
@@ -61,13 +75,6 @@ public class MovementCharacter : MonoBehaviour
             stats.Setup();
         }
         else Debug.LogError("can't find Stats");
-
-        input = GetComponent<InputControl>();
-        if (input != null)
-        {
-            input.Setup();
-        }
-        else Debug.LogError("can't find Input");
 
         cAnimation = GetComponent<CharacterAnimation>();
         if (cAnimation != null)
@@ -84,35 +91,57 @@ public class MovementCharacter : MonoBehaviour
         else Debug.LogError("can't find CharacterAction");
     }
 
+    public override void FixedUpdateNetwork()
+    {
+        if (_moveAble)
+        {
+            UpdateMovement();
+            UpdateStates();
+            UpdatePosition();
+
+            if (stats.s_minStamina < stats.s_maxStamina && !_staminaBusy)
+            {
+                stats.RechargeStamina(true);
+            }
+        }
+    }
+
     public void UpdateMovement()
     {
-        _moveX = input.UpdateMoveInput();
+        if (GetInput(out NetworkdInputData input))
+        {
+            float moveX = input.horizontal;
+            InputMoveX = moveX;
 
-        float targetSpeed = _moveX.x * MaxSpeed;
-        float speedDiff = targetSpeed - rb2D.linearVelocity.x;
-        float accelRate = Mathf.Abs(targetSpeed) > 0.01f ? acceleration : deceleration;
+            float targetSpeed = InputMoveX * MaxSpeed;
+            float speedDiff = targetSpeed - rb2D.linearVelocity.x;
+            float accelRate = Mathf.Abs(targetSpeed) > 0.01f ? acceleration : deceleration;
 
-        float force = speedDiff * accelRate;
-        rb2D.AddForce(Vector2.right * force, ForceMode2D.Force);
+            float force = speedDiff * accelRate;
+            rb2D.AddForce(Vector2.right * force, ForceMode2D.Force);
 
-        cAnimation.UpdateAnimation(new Vector2(_moveX.x, rb2D.linearVelocity.y));
+            cAnimation.UpdateAnimation(new Vector2(moveX, rb2D.linearVelocity.y));
+            UpdateActionInput(input.jump);
+        }
+
+        _moveX = this.transform.position;
 
         RayCast2DCheckGround();
     }
 
     #region InputZone
-    public void UpdateActionInput()
+    public void UpdateActionInput(bool Jump)
     {
-        if (_isGrounded && _jumpAble && input.JumpAction.WasPressedThisFrame())
+        if (_isGrounded && _jumpAble && Jump)
         {
-            Jump();
+            JumpAction();
             if (_alreadyJump)
             {
                 StartCoroutine(WaitForJump());
             }
         }
 
-        if (IsEagle && !_isGrounded && input.JumpAction.WasPerformedThisFrame() && minStamina > 0)
+        if (IsBird && !_isGrounded && Jump && minStamina > 0)
         {
             Fly();
         }
@@ -126,14 +155,14 @@ public class MovementCharacter : MonoBehaviour
         _alreadyJump = false;
     }
 
-    private void Jump()
+    private void JumpAction()
     {
         _isGrounded = false;
         _alreadyJump = true;
         _isInTheAir = true;
         _jumpAble = false;
 
-        rb2D.AddForce(Vector2.up * stats.jumpForce, ForceMode2D.Impulse);
+        rb2D.AddForce(Vector2.up * stats.s_jumpForce, ForceMode2D.Impulse);
         cAnimation.UpdateActionAnimation(1);
     }
 
@@ -142,7 +171,7 @@ public class MovementCharacter : MonoBehaviour
         _isFly = true;
         _isFalling = false;
 
-        action.Flying(minStamina, _isGrounded, stats.FlySpeed, rb2D);
+        action.Flying(minStamina, _isGrounded, stats.s_flySpeed, rb2D);
         cAnimation.UpdateActionAnimation(2);
 
         stats.StaminaReduce(10);
