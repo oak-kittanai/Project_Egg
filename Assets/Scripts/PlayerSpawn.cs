@@ -66,7 +66,7 @@ public class PlayerSpawn : SingletonNetwork<PlayerSpawn>
     public void SpawnPlayer_RPC(PlayerRef player)
     {
         Debug.Log("Try Spawn Player");
-        Vector2 startPos = new Vector2(0, 1);
+        Vector2 startPos = new Vector2(5.19f, -0.38f);
         NetworkObject playerObj = runner.Spawn(PlayerPrefab, startPos, Quaternion.identity, player);
         runner.SetPlayerObject(player, playerObj);
         SetSpecis_RPC(playerObj, player);
