@@ -97,7 +97,7 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
         {
             if (runner.IsServer)
             {
-                spawner.SpawnPlayer_RPC(player);
+                spawner.SpawnPlayer(player);
                 Debug.Log("Spawner is: " + spawner);
             }
         }

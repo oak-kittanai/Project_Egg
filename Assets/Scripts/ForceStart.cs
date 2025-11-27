@@ -19,6 +19,7 @@ public class ForceStart : NetworkBehaviour
         if (runner != null)
         {
             Debug.Log("Successful spawn runner");
+            runner = FindFirstObjectByType<NetworkRunner>();
         }
         else Debug.Log("Can't spawn runner");
 
@@ -48,12 +49,14 @@ public class ForceStart : NetworkBehaviour
             runner.ProvideInput = true;
             var sceneInfo = new NetworkSceneInfo();
             sceneInfo.AddSceneRef(SceneRef.FromIndex(0));
+            runner.ProvideInput = true;
 
             var res = await runner.StartGame(new StartGameArgs()
             {
                 GameMode = GameMode.AutoHostOrClient,
                 SessionName = "TestServer",
-                PlayerCount = 20
+                PlayerCount = 20,
+                
             });
             if (!res.Ok)
             {

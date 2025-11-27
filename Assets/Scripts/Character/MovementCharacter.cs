@@ -50,17 +50,20 @@ public class MovementCharacter : NetworkBehaviour
     [Header("Position")]
     public Vector3 currentPosition;
 
+    private void Awake()
+    {
+        Setup();
+    }
+
     public override void Spawned()
     {
-        if (!HasInputAuthority)
+        if (HasInputAuthority)
         {
-            playerCam.gameObject.SetActive(false);
-            
+            playerCam.gameObject.SetActive(true);
         }
         else
         {
-            playerCam.gameObject.SetActive(true);
-            Setup();
+            playerCam.gameObject.SetActive(false);
         }
     }
 
@@ -113,7 +116,7 @@ public class MovementCharacter : NetworkBehaviour
             float moveX = input.horizontal;
             InputMoveX = moveX;
 
-            float targetSpeed = InputMoveX * MaxSpeed;
+            float targetSpeed = moveX * MaxSpeed;
             float speedDiff = targetSpeed - rb2D.linearVelocity.x;
             float accelRate = Mathf.Abs(targetSpeed) > 0.01f ? acceleration : deceleration;
 

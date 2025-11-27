@@ -20,7 +20,6 @@ public class CharacterAnimation : NetworkBehaviour
 
     [Header("Controller Setting")]
     [SerializeField] public RuntimeAnimatorController onChangeSkin;
-    [SerializeField] public RuntimeAnimatorController onBirdSkin;
 
     public override void Spawned()
     {

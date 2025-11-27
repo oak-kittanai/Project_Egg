@@ -208,7 +208,7 @@ Animator:
   m_GameObject: {fileID: 121460977929437379}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 8373531bbce3cc7408ff614dc5ec4f25, type: 2}
+  m_Controller: {fileID: 9100000, guid: 746a9bf694c18b647ae6301927b9c315, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -236,7 +236,6 @@ MonoBehaviour:
   _Action: 0
   _FlipX: 0
   onChangeSkin: {fileID: 0}
-  onBirdSkin: {fileID: 9100000, guid: 746a9bf694c18b647ae6301927b9c315, type: 2}
 --- !u!70 &645833589779868426
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
@@ -334,7 +333,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Fusion.Addons.Physics::Fusion.Addons.Physics.RunnerSimulatePhysics2D
   _physicsAuthority: 2
   _physicsTiming: 3
-  ClientPhysicsSimulation: 0
+  ClientPhysicsSimulation: 2
   DeltaTimeMultiplier: 1
   SetUnityFixedTimestep: 0
 --- !u!1 &174842300040866111
