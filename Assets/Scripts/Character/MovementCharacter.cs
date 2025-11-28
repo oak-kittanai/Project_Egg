@@ -101,6 +101,7 @@ public class MovementCharacter : NetworkBehaviour
             UpdateMovement();
             UpdateStates();
             UpdatePosition();
+            cAnimation.UpdateFilp();
 
             if (stats.s_minStamina < stats.s_maxStamina && !_staminaBusy)
             {

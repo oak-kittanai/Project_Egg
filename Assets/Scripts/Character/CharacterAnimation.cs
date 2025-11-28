@@ -24,16 +24,17 @@ public class CharacterAnimation : NetworkBehaviour
 
     public override void Spawned()
     {
-        if (HasInputAuthority)
+        UpdateSkin(stats.skinType);
+        if (HasStateAuthority)
         {
-            UpdateSkin(stats.skinType);
+            
         }
     }
 
     public void Setup()
     {
-        animator = GetComponentInChildren<Animator>();
-        spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+        animator = GetComponent<Animator>();
+        spriteRenderer = GetComponent<SpriteRenderer>();
         stats = GetComponent<CharacterStats>();
     }
 
@@ -47,6 +48,11 @@ public class CharacterAnimation : NetworkBehaviour
         {
             animator.runtimeAnimatorController = BirdController;
         }
+    }
+
+    public void UpdateFilp()
+    {
+        spriteRenderer.flipX = FlipX;
     }
 
     public void UpdateAnimation(Vector2 direction)

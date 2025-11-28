@@ -48,7 +48,6 @@ public class ForceStart : NetworkBehaviour
         {
             runner.ProvideInput = true;
             var sceneInfo = new NetworkSceneInfo();
-            sceneInfo.AddSceneRef(SceneRef.FromIndex(0));
             runner.ProvideInput = true;
 
             var res = await runner.StartGame(new StartGameArgs()
