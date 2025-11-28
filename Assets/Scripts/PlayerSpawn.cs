@@ -70,7 +70,6 @@ public class PlayerSpawn : SingletonNetwork<PlayerSpawn>
         if (runner != null)
         {
             NetworkObject playerObj = runner.Spawn(PlayerPrefab, startPos, Quaternion.identity, player, InitializeObjBeforeSpawn);
-            //OnPlayerAttached(player, playerObj);
             runner.SetPlayerObject(player, playerObj);
         }
         else Debug.Log("can't find Runner to spawn player");
@@ -80,45 +79,19 @@ public class PlayerSpawn : SingletonNetwork<PlayerSpawn>
     {
         CharacterStats playerStats = playerObj.GetComponent<CharacterStats>();
         CharacterAnimation playerAnimation = playerObj.GetComponent<CharacterAnimation>();
-        if (runner.IsServer)
+        if (playerObj.InputAuthority == runner.LocalPlayer)
         {
-            playerAnimation.onChangeSkin = controller_Duck;
-            playerStats.isDuck = true;
-            playerStats.isBird = false;
-            playerObj.name = "Player (Duck)Host";
-            Debug.Log("Spawn Player Host");
-        }
-        else if (runner.IsClient)
-        {
-            playerAnimation.onChangeSkin = controller_Bird;
-            playerStats.isDuck = false;
-            playerStats.isBird = true;
-            playerObj.name = "Player (Bird)Client";
-            Debug.Log("Spawn Player Client");
-        }
-        Debug.Log("Local player configured: " + playerObj.name);
-    }
-
-    /*public void OnPlayerAttached (PlayerRef player, NetworkObject playerObj)
-    {
-        CharacterStats playerStats = playerObj.GetComponent<CharacterStats>();
-        CharacterAnimation playerAnimation = playerObj.GetComponent<CharacterAnimation>();
-
-        if (player == runner.LocalPlayer)
-        {
-            playerAnimation.onChangeSkin = controller_Duck;
-            playerStats.isDuck = true;
-            playerStats.isBird = false;
+            playerStats.skinType = SkinType.Duck;
             playerObj.name = "Player (Duck)Host";
             Debug.Log("Spawn Player Host");
         }
         else
         {
-            playerAnimation.onChangeSkin = controller_Bird;
-            playerStats.isDuck = false;
-            playerStats.isBird = true;
+            playerStats.skinType = SkinType.Bird;
             playerObj.name = "Player (Bird)Client";
             Debug.Log("Spawn Player Client");
         }
-    }*/
+
+        Debug.Log("Local player configured: " + playerObj.name);
+    }
 }

@@ -1,5 +1,4 @@
 using Fusion;
-using System.Collections;
 using UnityEngine;
 
 public class CharacterAnimation : NetworkBehaviour
@@ -14,18 +13,20 @@ public class CharacterAnimation : NetworkBehaviour
     [Networked] public int Action { get; set; }
     [Networked] public bool FlipX { get; set; }
 
-    [Header("Character Set")]
-    public bool isDuck => stats.isDuck;
-    public bool isBird => stats.isBird;
-
     [Header("Controller Setting")]
-    [SerializeField] public RuntimeAnimatorController onChangeSkin;
+    [SerializeField] public RuntimeAnimatorController DuckController;
+    [SerializeField] public RuntimeAnimatorController BirdController;
+
+    private void Awake()
+    {
+        Setup();
+    }
 
     public override void Spawned()
     {
         if (HasInputAuthority)
         {
-            Setup();
+            UpdateSkin(stats.skinType);
         }
     }
 
@@ -34,16 +35,20 @@ public class CharacterAnimation : NetworkBehaviour
         animator = GetComponentInChildren<Animator>();
         spriteRenderer = GetComponentInChildren<SpriteRenderer>();
         stats = GetComponent<CharacterStats>();
-
-        StartCoroutine(WaitForLoad());
     }
 
-    IEnumerator WaitForLoad()
+    public void UpdateSkin(SkinType skin)
     {
-        yield return new WaitForSeconds(0.4f);
-        animator.runtimeAnimatorController = onChangeSkin;
+        if (skin == SkinType.Duck)
+        {
+            animator.runtimeAnimatorController = DuckController;
+        }
+        else
+        {
+            animator.runtimeAnimatorController = BirdController;
+        }
     }
-    
+
     public void UpdateAnimation(Vector2 direction)
     {
         Direction = direction;

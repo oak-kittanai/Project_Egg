@@ -177,8 +177,8 @@ MonoBehaviour:
   _acceleration: 10
   _deceleration: 10
   _maxSpeed: 5
-  _isDuck: 0
-  _isBird: 0
+  _skinType: 0
+  _skinIndex: 0
 --- !u!114 &467560212452839230
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -235,7 +235,8 @@ MonoBehaviour:
   _Direction: {x: 0, y: 0, z: 0}
   _Action: 0
   _FlipX: 0
-  onChangeSkin: {fileID: 0}
+  DuckController: {fileID: 9100000, guid: 8373531bbce3cc7408ff614dc5ec4f25, type: 2}
+  BirdController: {fileID: 9100000, guid: 746a9bf694c18b647ae6301927b9c315, type: 2}
 --- !u!70 &645833589779868426
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
@@ -333,7 +334,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Fusion.Addons.Physics::Fusion.Addons.Physics.RunnerSimulatePhysics2D
   _physicsAuthority: 2
   _physicsTiming: 3
-  ClientPhysicsSimulation: 2
+  ClientPhysicsSimulation: 1
   DeltaTimeMultiplier: 1
   SetUnityFixedTimestep: 0
 --- !u!1 &174842300040866111

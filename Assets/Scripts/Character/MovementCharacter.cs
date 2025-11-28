@@ -21,8 +21,8 @@ public class MovementCharacter : NetworkBehaviour
     float minStamina => stats.s_minStamina;
     float maxStamina => stats.s_maxStamina;
 
-    bool IsBird => stats.isBird;
-    bool IsDuck => stats.isDuck;
+    bool IsBird;
+    bool IsDuc;
 
     [Header("Movement")]
     [Networked] public Vector2 _moveX {  get; set; }

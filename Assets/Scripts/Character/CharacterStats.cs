@@ -1,7 +1,12 @@
 using Fusion;
 using Fusion.Addons.Physics;
-using Unity.VisualScripting.Antlr3.Runtime.Misc;
 using UnityEngine;
+
+public enum SkinType
+{
+    Duck,
+    Bird
+}
 
 public class CharacterStats : NetworkBehaviour, IDamageable
 {
@@ -9,6 +14,7 @@ public class CharacterStats : NetworkBehaviour, IDamageable
     InputControl controller;
     CharacterAction characterAction;
     MovementCharacter movement;
+    CharacterAnimation cAnimation;
 
     Rigidbody2D rb2D;
     [Networked] NetworkRigidbody2D netRB2D {  get; set; }
@@ -35,14 +41,19 @@ public class CharacterStats : NetworkBehaviour, IDamageable
     bool StaminaBusy => movement._staminaBusy;
 
     [Header("CharacterSet")]
-    [Networked] public bool isDuck {  get; set; }
-    [Networked] public bool isBird { get; set; }
+    [Networked] public SkinType skinType { get; set; }
+    [Networked] public int skinIndex { get; set; }
+
+    private void Awake()
+    {
+        Setup();
+    }
 
     public override void Spawned()
     {
         if (HasInputAuthority)
         {
-            Setup();
+            //Setup();
         }
     }
 
@@ -51,6 +62,7 @@ public class CharacterStats : NetworkBehaviour, IDamageable
         controller = GetComponent<InputControl>();
         characterAction = GetComponent<CharacterAction>();
         movement = GetComponent<MovementCharacter>();
+        cAnimation = GetComponent<CharacterAnimation>();
 
         s_minHealth = s_maxHealth;
         s_minStamina = s_maxStamina;
