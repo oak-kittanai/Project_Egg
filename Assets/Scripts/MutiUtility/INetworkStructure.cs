@@ -7,7 +7,9 @@ using UnityEngine.InputSystem;
 
 public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
 {
-    [SerializeField] public PlayerSpawn spawner;
+
+    [SerializeField] bool HasRoom = false;
+    //[SerializeField] public PlayerSpawn spawner;
 
     #region OnConnected&Disconnected
 
@@ -18,7 +20,7 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
 
     public void OnDisconnectedFromServer(NetworkRunner runner, NetDisconnectReason reason)
     {
-
+        Debug.LogError(reason.ToString());
     }
 
     public void OnConnectFailed(NetworkRunner runner, NetAddress remoteAddress, NetConnectFailedReason reason)
@@ -93,13 +95,29 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
 
     public void OnPlayerJoined(NetworkRunner runner, PlayerRef player)
     {
-        if (spawner != null)
+        /*if (spawner != null)
         {
             if (runner.IsServer)
             {
                 spawner.SpawnPlayer(player);
                 Debug.Log("Spawner is: " + spawner);
             }
+        }*/
+
+        
+
+        // -------------
+        // Add To CenterHost
+
+        if (CenterHost.Instance != null)
+        {
+            CenterHost.Instance.AddPlayerRef(runner, player);
+            CenterHost.Instance.CheckComponentPlayer(player);
+            Debug.Log("Center Success");
+        }
+        else
+        {
+            Debug.LogWarning("Can't find CenterHost");
         }
 
         Debug.Log($"Player has {player.PlayerId} Joined");
@@ -120,6 +138,29 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
     }
 
     public void OnSceneLoadStart(NetworkRunner runner)
+    {
+
+    }
+
+    #endregion
+
+    #region SessionLoad
+
+    public void OnSessionListUpdated(NetworkRunner runner, List<SessionInfo> sessionList)
+    {
+        if (sessionList.Count > 0)
+        {
+            HasRoom = true;
+            Debug.Log("Found room: " + sessionList[0].Name);
+        }
+        else
+        {
+            HasRoom = false;
+            Debug.Log("No room found");
+        }
+    }
+
+    public void OnReliableDataReceived(NetworkRunner runner, PlayerRef player, ReliableKey key, ArraySegment<byte> data)
     {
 
     }
@@ -147,16 +188,6 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
     }
 
     public void OnReliableDataProgress(NetworkRunner runner, PlayerRef player, ReliableKey key, float progress)
-    {
-
-    }
-
-    public void OnReliableDataReceived(NetworkRunner runner, PlayerRef player, ReliableKey key, ArraySegment<byte> data)
-    {
-
-    }
-
-    public void OnSessionListUpdated(NetworkRunner runner, List<SessionInfo> sessionList)
     {
 
     }

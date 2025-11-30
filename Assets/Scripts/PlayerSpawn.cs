@@ -62,6 +62,10 @@ public class PlayerSpawn : SingletonNetwork<PlayerSpawn>
         numPlayer = runner.SessionInfo.PlayerCount;
     }
 
+    public void SpawnHostCenter()
+    {
+
+    }
 
     public void SpawnPlayer(PlayerRef player)
     {

@@ -938,9 +938,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 026cae8d438519946b33fb1266715fe8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ForceStart
-  PlayerSpawner: {fileID: 5822141069168714861, guid: 418821578df54e14caf49a68b735799f, type: 3}
+  PlayerPrefabs: {fileID: -2039167435644549920, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
   NetworkRunner: {fileID: 4337480539873389715, guid: 428589c4c1cc8b84092ae1f64cccbf5f, type: 3}
+  CenterHost: {fileID: 7825853430673868469, guid: b92366ced5e27694eb387c1e3079caa5, type: 3}
   ForceStartButton: {fileID: 1790209523}
+  ServerIdInsert: {fileID: 0}
+  ServerId: 
 --- !u!4 &1829951303
 Transform:
   m_ObjectHideFlags: 0

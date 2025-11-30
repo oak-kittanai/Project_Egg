@@ -24,10 +24,8 @@ public class CharacterAnimation : NetworkBehaviour
 
     public override void Spawned()
     {
-        if (HasInputAuthority)
-        {
-            UpdateSkin(stats.skinType);
-        }
+        UpdateSkin(stats.skinType);
+
     }
 
     public void Setup()
