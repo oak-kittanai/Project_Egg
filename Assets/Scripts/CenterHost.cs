@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using Unity.VisualScripting.Antlr3.Runtime.Misc;
 using UnityEngine;
+using UnityEngine.Rendering.Universal;
 using UnityEngine.UI;
 
 public class CenterHost : SingletonNetwork<CenterHost>
@@ -182,16 +183,16 @@ public class CenterHost : SingletonNetwork<CenterHost>
         CharacterAnimation playerAnimation = playerObj.GetComponent<CharacterAnimation>();
         if (playerObj.InputAuthority == runner.LocalPlayer)
         {
-            playerStats.skinType = SkinType.Duck;
-            playerObj.name = "Player (Duck)Host";
+            playerStats.skinType = SkinType.Bird;
+            playerObj.name = $"Player ({playerStats.skinType})Host";
             Debug.Log("Spawn Player Host");
 
             hostStats = playerStats;
         }
         else
         {
-            playerStats.skinType = SkinType.Bird;
-            playerObj.name = "Player (Bird)Client";
+            playerStats.skinType = SkinType.Duck;
+            playerObj.name = $"Player ({playerStats.skinType})Client";
             Debug.Log("Spawn Player Client");
 
             clientStats = playerStats;

@@ -1,5 +1,6 @@
 using Fusion;
 using System;
+using System.Collections;
 using UnityEngine;
 
 public class CharacterAction : NetworkBehaviour, CharacterInteract
@@ -10,12 +11,15 @@ public class CharacterAction : NetworkBehaviour, CharacterInteract
     Rigidbody2D rb2D;
     Collider2D coll2D;
 
-    public SkillSet characterSkillSet;
-
     [SerializeField] bool _isInteractAble;
     [SerializeField] bool _isAbleSkill;
     [SerializeField] float _interactRadius;
     [SerializeField] bool _busy;
+
+    [Header("Test")]
+    public SkillSet characterSkillSet;
+
+    public bool fly;
 
     private void Awake()
     {
@@ -31,6 +35,11 @@ public class CharacterAction : NetworkBehaviour, CharacterInteract
         }
     }
 
+    public override void FixedUpdateNetwork()
+    {
+
+    }
+
     public void Setup()
     {
         controller = GetComponent<InputControl>();
@@ -40,20 +49,6 @@ public class CharacterAction : NetworkBehaviour, CharacterInteract
     public GameObject CharacterInteract()
     {
         return this.gameObject;
-    }
-
-    public void Flying(float stamina, bool onground, float flyspeed, Rigidbody2D rb2D)
-    {
-        if (stamina > 0 && !onground)
-        {
-            Debug.Log("Flyyy");
-            Vector2 movement = Vector2.up * flyspeed * Time.deltaTime;
-            rb2D.AddForce(movement, ForceMode2D.Impulse);
-        }
-        else
-        {
-            Debug.Log("not enough stamina");
-        }
     }
 
     #region InputZone
@@ -287,5 +282,4 @@ public class SkillSet
     
 
     // Eagle
-
 }
