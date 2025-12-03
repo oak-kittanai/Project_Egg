@@ -19,9 +19,6 @@ public class CharacterStats : NetworkBehaviour, IDamageable
     Rigidbody2D rb2D;
     [Networked] NetworkRigidbody2D netRB2D {  get; set; }
 
-    // Test Stamina
-    [SerializeField] RectTransform staminaBar;
-
     [Header("Stats & Network")]
     [SerializeField] public int s_minHealth;
     [SerializeField] public int s_maxHealth = 5;
@@ -34,9 +31,9 @@ public class CharacterStats : NetworkBehaviour, IDamageable
     [SerializeField] public float s_minStamina;
     [SerializeField] public float s_maxStamina = 30;
 
-    [SerializeField] public float _acceleration = 5f;
-    [SerializeField] public float _deceleration = 5f;
-    [SerializeField] public float _maxSpeed = 20f;
+    [SerializeField] public float acceleration = 5f;
+    [SerializeField] public float deceleration = 5f;
+    [SerializeField] public float maxSpeed = 20f;
 
     bool StaminaBusy => movement._staminaBusy;
 
