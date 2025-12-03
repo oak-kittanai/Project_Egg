@@ -40,6 +40,10 @@ public class SingletonNetwork<T> : NetworkBehaviour where T : NetworkBehaviour
             PlayerSpawn.Instance.Setup();
         }
 
+        if (Instance is CenterHost)
+        {
+            CenterHost.instance.GetRunner();
+        }
 
     }
 }

@@ -1,7 +1,8 @@
+using Fusion;
 using System.Collections;
 using UnityEngine;
 
-public class TrapGround : MonoBehaviour
+public class TrapGround : NetworkBehaviour
 {
     [Header("Animator")]
     [SerializeField] Animator animator;
@@ -10,7 +11,7 @@ public class TrapGround : MonoBehaviour
     [Header("Hitbox")]
     [SerializeField] GameObject hitColl;
 
-    private void Start()
+    private void Awake()
     {
         animator = GetComponent<Animator>();
         spriteRenderer = GetComponent<SpriteRenderer>();

@@ -13,6 +13,8 @@ GameObject:
   - component: {fileID: 8375711777842341637}
   - component: {fileID: 6590150637966079089}
   - component: {fileID: 3921394828833747935}
+  - component: {fileID: 8347546913742788566}
+  - component: {fileID: 7575449254838626053}
   m_Layer: 0
   m_Name: Trap_Ground
   m_TagString: Untagged
@@ -97,7 +99,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TrapGround
   animator: {fileID: 0}
   spriteRenderer: {fileID: 0}
-  childRenderer: {fileID: 0}
   hitColl: {fileID: 4529620114154594664}
 --- !u!95 &6590150637966079089
 Animator:
@@ -179,6 +180,44 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &8347546913742788566
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1064899092953503781}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 506319458, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkMecanimAnimator
+  Animator: {fileID: 6590150637966079089}
+  ApplyTiming: 2
+  SyncSettings: 79
+  StateHashes: 00000000aba486ceb6a34189591cf8b2e9ed47ec958341e27e40c91f
+  TriggerHashes: 00000000
+  TotalWords: 1
+--- !u!114 &7575449254838626053
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1064899092953503781}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
+  SortKey: 4143071096
+  ObjectInterest: 1
+  Flags: 262145
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: 8375711777842341637}
+  - {fileID: 8347546913742788566}
+  ForceRemoteRenderTimeframe: 0
 --- !u!1 &4529620114154594664
 GameObject:
   m_ObjectHideFlags: 0

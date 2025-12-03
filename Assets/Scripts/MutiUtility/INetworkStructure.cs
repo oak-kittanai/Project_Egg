@@ -7,8 +7,6 @@ using UnityEngine.InputSystem;
 
 public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
 {
-
-    [SerializeField] bool HasRoom = false;
     //[SerializeField] public PlayerSpawn spawner;
 
     #region OnConnected&Disconnected
@@ -150,12 +148,10 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
     {
         if (sessionList.Count > 0)
         {
-            HasRoom = true;
             Debug.Log("Found room: " + sessionList[0].Name);
         }
         else
         {
-            HasRoom = false;
             Debug.Log("No room found");
         }
     }

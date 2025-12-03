@@ -1,5 +1,6 @@
 using Fusion;
 using System.Collections;
+using System.Collections.Generic;
 using Unity.VisualScripting;
 using Unity.VisualScripting.Antlr3.Runtime.Misc;
 using UnityEngine;
@@ -21,14 +22,42 @@ public class CenterHost : SingletonNetwork<CenterHost>
     [SerializeField] PlayerRef clientPlayer;
     [SerializeField] CharacterStats clientStats;
 
-    public override void Spawned()
+    [Header("Object")]
+    public List<ObjectTransform> ObjTrans;
+
+    public NetworkObject Rock;
+
+    public void GetRunner()
     {
-        base.Spawned();
         if (hostRunner != null)
         {
             netStructure = hostRunner.GetComponent<INetworkStructure>();
         }
     }
+
+    public override void Spawned()
+    {
+        base.Spawned();
+        if (hostRunner != null)
+        {
+            Debug.Log("Host runner ready");
+        }
+
+        Debug.Log("SpawnObject");
+    }
+
+
+    public void CheckForTrapAndMoveAbleObject()
+    {
+        // Check The game for the object and then respawn them again 
+    }
+
+    public override void FixedUpdateNetwork()
+    {
+        
+    }
+
+    #region ComponentZone
 
     public void AddPlayerRef(NetworkRunner runner, PlayerRef player)
     {
@@ -60,11 +89,6 @@ public class CenterHost : SingletonNetwork<CenterHost>
         }
     }
 
-    public override void FixedUpdateNetwork()
-    {
-
-    }
-
     public void CheckComponentPlayer(PlayerRef player)
     {
         Debug.Log("Access to check componenet, player is : " + player);
@@ -82,11 +106,11 @@ public class CenterHost : SingletonNetwork<CenterHost>
         {
             if (PlayerPrefab == null)
             {
-                Debug.LogError("can't find NetworkObject of host");
+                Debug.LogWarning("can't find NetworkObject of host");
                 TryReComponent(ref PlayerPrefab);
                 if (PlayerPrefab == null)
                 {
-                    Debug.LogError("can't get NetworkObject of host");
+                    Debug.LogWarning("can't get NetworkObject of host");
                     return;
                 }
                 else
@@ -130,6 +154,9 @@ public class CenterHost : SingletonNetwork<CenterHost>
         }
     }
 
+    #endregion
+
+    #region SpawnZone
     IEnumerator WaitForSecToSpawn(PlayerRef player)
     {
         yield return new WaitForSeconds(0.4f);
@@ -173,6 +200,8 @@ public class CenterHost : SingletonNetwork<CenterHost>
         Debug.Log("Local player configured: " + playerObj.name);
     }
 
+    #endregion
+
     #region ReTry Zone
 
     private void TryGetComponentFromNetObject<T>(NetworkObject netObj, ref T com) where T : Component
@@ -196,4 +225,11 @@ public class CenterHost : SingletonNetwork<CenterHost>
     }
 
     #endregion
+}
+
+
+public class ObjectTransform
+{
+    public Transform OldPosition;
+    public Transform SpawnPosition;
 }
