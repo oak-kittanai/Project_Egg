@@ -5,10 +5,14 @@ using UnityEngine.UI;
 public class ForceStart : NetworkBehaviour
 {
     NetworkRunner runner;
-    [SerializeField] NetworkObject PlayerSpawner;
+    [SerializeField] NetworkObject PlayerPrefabs;
     [SerializeField] GameObject NetworkRunner;
 
+    [SerializeField] NetworkObject CenterHost;
+
     [SerializeField] Button ForceStartButton;
+    [SerializeField] InputField ServerIdInsert;
+    [SerializeField] string ServerId = "ServerTest";
 
     private void Awake()
     {
@@ -19,6 +23,7 @@ public class ForceStart : NetworkBehaviour
         if (runner != null)
         {
             Debug.Log("Successful spawn runner");
+            runner = FindFirstObjectByType<NetworkRunner>();
         }
         else Debug.Log("Can't spawn runner");
 
@@ -32,11 +37,11 @@ public class ForceStart : NetworkBehaviour
 
     private void ForceStartGame()
     {
-        StartSession(runner);
+        StartSession(runner, ServerId);
         Debug.Log("Start Session");
     }
 
-    public async void StartSession(NetworkRunner runner)
+    public async void StartSession(NetworkRunner runner, string ServerId)
     {
         if (runner == null)
         {
@@ -45,18 +50,22 @@ public class ForceStart : NetworkBehaviour
         }
         else
         {
-            runner.ProvideInput = true;
             var sceneInfo = new NetworkSceneInfo();
             sceneInfo.AddSceneRef(SceneRef.FromIndex(0));
+            runner.ProvideInput = true;
 
-            var res = await runner.StartGame(new StartGameArgs()
+            string serverName = ServerId;
+            StartGameArgs StartServer = new StartGameArgs()
             {
                 GameMode = GameMode.AutoHostOrClient,
-                SessionName = "TestServer",
-                PlayerCount = 20
-            });
+                SessionName = serverName,
+                PlayerCount = 20,
+            };
+
+            var res = await runner.StartGame(StartServer);
             if (!res.Ok)
             {
+
                 Debug.LogError($"Shutdown reason is {res.ShutdownReason}");
             }
             else
@@ -66,12 +75,15 @@ public class ForceStart : NetworkBehaviour
 
             if (runner.IsServer)
             {
-                NetworkObject goPlayerSpawner = runner.Spawn(PlayerSpawner);
-                PlayerSpawn playerSpawn = goPlayerSpawner.GetComponent<PlayerSpawn>();
+                //PlayerSpawn playerSpawn = goPlayerSpawner.GetComponent<PlayerSpawn>();
+                /*playerSpawn.runner = runner;
+                networkStructure.spawner = playerSpawn;*/
+
                 INetworkStructure networkStructure = runner.GetComponent<INetworkStructure>();
-                playerSpawn.runner = runner;
-                networkStructure.spawner = playerSpawn;
-                Debug.Log("Spawn PlayerSpawner");
+
+                NetworkObject noCenter = runner.Spawn(CenterHost);
+                CenterHost CH = noCenter.GetComponent<CenterHost>();
+                CH.AddComponent(runner, networkStructure, PlayerPrefabs);
             }
 
             ForceStartButton.gameObject.SetActive(false);

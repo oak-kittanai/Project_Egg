@@ -1,4 +1,5 @@
 using Fusion;
+using Fusion.Addons.Physics;
 using System.Collections;
 using UnityEngine;
 
@@ -11,6 +12,7 @@ public class MovementCharacter : NetworkBehaviour
 
     // Mono
     [SerializeField] Rigidbody2D rb2D;
+    [SerializeField] NetworkRigidbody2D netRb2D;
     Collider2D coll2D;
     [SerializeField] Camera playerCam;
 
@@ -21,8 +23,8 @@ public class MovementCharacter : NetworkBehaviour
     float minStamina => stats.s_minStamina;
     float maxStamina => stats.s_maxStamina;
 
-    bool IsBird => stats.isBird;
-    bool IsDuck => stats.isDuck;
+    bool IsBird;
+    bool IsDuc;
 
     [Header("Movement")]
     [Networked] public Vector2 _moveX {  get; set; }
@@ -33,34 +35,37 @@ public class MovementCharacter : NetworkBehaviour
     [SerializeField] public bool _staminaBusy { get; set; }
 
     public bool isDash;
-    [SerializeField] bool _jumpAble { get; set; }
-    [SerializeField] bool _isGrounded { get; set; }
-    [SerializeField] public bool _isInTheAir { get; set; }
+    [Networked] public bool _jumpAble { get; set; }
+    [Networked] public bool _isGrounded { get; set; }
+    [Networked] public bool _isInTheAir { get; set; }
 
     [Header("Data_Stats")]
-    [SerializeField] bool _alreadyJump { get; set; }
-    [SerializeField] bool _isFalling { get; set; }
-    [SerializeField] bool _isFloat { get; set; }
+    [Networked] public bool _alreadyJump { get; set; }
+    [Networked] public bool _isFalling { get; set; }
+    [Networked] public bool _isFloat { get; set; }
 
-    [SerializeField] bool _isFly { get; set; }
+    [Networked] public bool _isFly { get; set; }
 
-    [SerializeField] float rayDistance { get; set; }
+    [SerializeField] public float rayDistance { get; set; }
     [SerializeField] RaycastHit2D hit2D { get; set; }
 
     [Header("Position")]
     public Vector3 currentPosition;
 
+    private void Awake()
+    {
+        Setup();
+    }
+
     public override void Spawned()
     {
-        if (!HasInputAuthority)
+        if (HasInputAuthority)
         {
-            playerCam.gameObject.SetActive(false);
-            
+            playerCam.gameObject.SetActive(true);
         }
         else
         {
-            playerCam.gameObject.SetActive(true);
-            Setup();
+            playerCam.gameObject.SetActive(false);
         }
     }
 
@@ -68,6 +73,7 @@ public class MovementCharacter : NetworkBehaviour
     {
         coll2D = GetComponent<Collider2D>();
         rb2D = GetComponent<Rigidbody2D>();
+        netRb2D = GetComponent<NetworkRigidbody2D>();
 
         stats = GetComponent<CharacterStats>();
         if (stats != null)
@@ -96,14 +102,19 @@ public class MovementCharacter : NetworkBehaviour
         if (_moveAble)
         {
             UpdateMovement();
-            UpdateStates();
-            UpdatePosition();
 
             if (stats.s_minStamina < stats.s_maxStamina && !_staminaBusy)
             {
                 stats.RechargeStamina(true);
             }
         }
+    }
+
+    private void Update()
+    {
+        UpdateStates();
+        UpdatePosition();
+        cAnimation.UpdateAnimation(new Vector2(InputMoveX, rb2D.linearVelocity.y));
     }
 
     public void UpdateMovement()
@@ -113,20 +124,19 @@ public class MovementCharacter : NetworkBehaviour
             float moveX = input.horizontal;
             InputMoveX = moveX;
 
-            float targetSpeed = InputMoveX * MaxSpeed;
+            float targetSpeed = moveX * MaxSpeed;
             float speedDiff = targetSpeed - rb2D.linearVelocity.x;
             float accelRate = Mathf.Abs(targetSpeed) > 0.01f ? acceleration : deceleration;
 
             float force = speedDiff * accelRate;
             rb2D.AddForce(Vector2.right * force, ForceMode2D.Force);
 
-            cAnimation.UpdateAnimation(new Vector2(moveX, rb2D.linearVelocity.y));
             UpdateActionInput(input.jump);
         }
 
-        _moveX = this.transform.position;
-
         RayCast2DCheckGround();
+
+        _moveX = this.transform.position;
     }
 
     #region InputZone
@@ -149,7 +159,6 @@ public class MovementCharacter : NetworkBehaviour
 
     private IEnumerator WaitForJump()
     {
-        Debug.Log("Wait for jump delay");
         yield return new WaitForSeconds(1.5f);
         _jumpAble = true;
         _alreadyJump = false;
@@ -234,11 +243,11 @@ public class MovementCharacter : NetworkBehaviour
         LayerMask layerPlatform = LayerMask.GetMask("Platform");
 
         Vector2 playerPosition = transform.position;
-        Vector2 checkGroundPosition = transform.up * rayDistance;
+        Vector2 checkGroundPosition = Vector2.down * rayDistance;
 
         hit2D = Physics2D.Raycast(playerPosition, checkGroundPosition);
 
-        if (hit2D.collider != null)
+        if (hit2D.collider != null && HasStateAuthority)
         {
             if (hit2D.collider.IsTouchingLayers(layerGround) || hit2D.collider.IsTouchingLayers(layerPlatform))
             {
@@ -270,7 +279,7 @@ public class MovementCharacter : NetworkBehaviour
         Gizmos.color = Color.blue;
 
         Vector2 start = transform.position;
-        Vector2 direction = -transform.up * rayDistance;
+        Vector2 direction = Vector2.down * rayDistance;
 
         Gizmos.DrawRay(start, direction);
     }

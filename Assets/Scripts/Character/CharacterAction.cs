@@ -17,12 +17,17 @@ public class CharacterAction : NetworkBehaviour, CharacterInteract
     [SerializeField] float _interactRadius;
     [SerializeField] bool _busy;
 
+    private void Awake()
+    {
+        Setup();
+    }
+
     public override void Spawned()
     {
         base.Spawned();
         if (HasInputAuthority)
         {
-            Setup();
+
         }
     }
 

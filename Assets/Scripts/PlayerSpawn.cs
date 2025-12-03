@@ -1,5 +1,6 @@
 using Fusion;
 using System.Collections;
+using System.Threading.Tasks;
 using UnityEngine;
 
 public class PlayerSpawn : SingletonNetwork<PlayerSpawn>
@@ -9,10 +10,13 @@ public class PlayerSpawn : SingletonNetwork<PlayerSpawn>
     [SerializeField] public NetworkObject PlayerPrefab;
     [SerializeField] private NetworkObject PlayerPrefabPath;
 
+
+    [SerializeField] Vector2 startPos;
     [SerializeField] int numPlayer;
 
     [SerializeField] RuntimeAnimatorController controller_Bird;
     [SerializeField] RuntimeAnimatorController controller_Duck;
+
     public void Setup()
     {
         Debug.Log("PS Awake Active");
@@ -33,17 +37,7 @@ public class PlayerSpawn : SingletonNetwork<PlayerSpawn>
         {
             Debug.Log("can't find PlayerPath");
         }
-    }
 
-    public override void Spawned()
-    {
-        Debug.Log("PS Spawned active");
-        StartCoroutine(WaitForSpawnInput());
-    }
-
-    IEnumerator WaitForSpawnInput()
-    {
-        yield return new WaitForSeconds(0.3f);
         if (runner == null)
         {
             Debug.Log("PlayerSpawner can't find Runner");
@@ -57,42 +51,51 @@ public class PlayerSpawn : SingletonNetwork<PlayerSpawn>
         }
     }
 
+    public override void Spawned()
+    {
+        Debug.Log("PS Spawned");
+    }
+
+
     public override void FixedUpdateNetwork()
     {
         numPlayer = runner.SessionInfo.PlayerCount;
     }
 
-    [Rpc(RpcSources.StateAuthority, RpcTargets.StateAuthority)]
-    public void SpawnPlayer_RPC(PlayerRef player)
+    public void SpawnHostCenter()
     {
-        Debug.Log("Try Spawn Player");
-        Vector2 startPos = new Vector2(5.19f, -0.38f);
-        NetworkObject playerObj = runner.Spawn(PlayerPrefab, startPos, Quaternion.identity, player);
-        runner.SetPlayerObject(player, playerObj);
-        SetSpecis_RPC(playerObj, player);
+
     }
 
-    [Rpc(RpcSources.All,RpcTargets.All)]
-    public void SetSpecis_RPC(NetworkObject playerObj, PlayerRef player)
+    public void SpawnPlayer(PlayerRef player)
+    {
+        Debug.Log("Try Spawn Player");
+        Vector2 spawnPos = startPos;
+        if (runner != null)
+        {
+            NetworkObject playerObj = runner.Spawn(PlayerPrefab, startPos, Quaternion.identity, player, InitializeObjBeforeSpawn);
+            runner.SetPlayerObject(player, playerObj);
+        }
+        else Debug.Log("can't find Runner to spawn player");
+    }
+
+    private void InitializeObjBeforeSpawn(NetworkRunner runner, NetworkObject playerObj)
     {
         CharacterStats playerStats = playerObj.GetComponent<CharacterStats>();
         CharacterAnimation playerAnimation = playerObj.GetComponent<CharacterAnimation>();
-
-        if (player == runner.LocalPlayer)
+        if (playerObj.InputAuthority == runner.LocalPlayer)
         {
-            playerAnimation.onChangeSkin = controller_Duck;
-            playerStats.isDuck = true;
-            playerStats.isBird = false;
+            playerStats.skinType = SkinType.Duck;
             playerObj.name = "Player (Duck)Host";
             Debug.Log("Spawn Player Host");
         }
         else
         {
-            playerAnimation.onChangeSkin = controller_Bird;
-            playerStats.isDuck = false;
-            playerStats.isBird = true;
+            playerStats.skinType = SkinType.Bird;
             playerObj.name = "Player (Bird)Client";
             Debug.Log("Spawn Player Client");
         }
+
+        Debug.Log("Local player configured: " + playerObj.name);
     }
 }
