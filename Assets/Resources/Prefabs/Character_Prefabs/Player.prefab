@@ -16,10 +16,11 @@ GameObject:
   - component: {fileID: 467560212452839230}
   - component: {fileID: 3258201221068302135}
   - component: {fileID: 3141284763445610261}
+  - component: {fileID: -8724425470638208929}
   - component: {fileID: 645833589779868426}
   - component: {fileID: -2039167435644549920}
   - component: {fileID: -7947786426853800306}
-  - component: {fileID: 8694276330885244838}
+  - component: {fileID: 8404950163565752835}
   m_Layer: 7
   m_Name: Player
   m_TagString: Player
@@ -142,6 +143,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3a4c4812acc434a4b91b02485ab16455, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CharacterAction
+  _isInteractAble: 0
+  _isAbleSkill: 0
+  _interactRadius: 0
+  _busy: 0
   characterSkillSet:
     _flyDuration: 0
     _flySpeed: 0
@@ -149,10 +154,7 @@ MonoBehaviour:
     floatingSpeed: 0
     isDive: 0
     diveSpeed: 0
-  _isInteractAble: 0
-  _isAbleSkill: 0
-  _interactRadius: 0
-  _busy: 0
+  fly: 0
 --- !u!114 &6713054206493656476
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -165,18 +167,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dcccfda6fabfc90408032db146230708, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CharacterStats
-  staminaBar: {fileID: 0}
   s_minHealth: 0
   s_maxHealth: 5
   s_speed: 0
   s_walkSpeed: 6
-  s_jumpForce: 5
-  s_flySpeed: 10
+  s_jumpForce: 20
+  s_flySpeed: 5
   s_minStamina: 0
-  s_maxStamina: 30
-  _acceleration: 10
-  _deceleration: 10
-  _maxSpeed: 5
+  s_maxStamina: 15
+  acceleration: 2
+  deceleration: 10
+  maxSpeed: 5
   _skinType: 0
   _skinIndex: 0
 --- !u!114 &467560212452839230
@@ -192,11 +193,26 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MovementCharacter
   rb2D: {fileID: 0}
+  netRb2D: {fileID: 0}
   playerCam: {fileID: 5099668636001666967}
   __moveX: {x: 0, y: 0}
   InputMoveX: 0
   _moveAble: 1
+  _busy: 0
+  _staminaBusy: 0
   isDash: 0
+  __jumpAble: 0
+  __isGrounded: 0
+  __isInTheAir: 0
+  __alreadyJump: 0
+  __isFalling: 0
+  __isFloat: 0
+  flyAble: 0
+  __isFly: 0
+  _fly_Acceleration: 10
+  _fly_Deceleration: 10
+  rayDistance: 0.5
+  DoFly: 0
   currentPosition: {x: 0, y: 0, z: 0}
 --- !u!95 &3258201221068302135
 Animator:
@@ -237,6 +253,21 @@ MonoBehaviour:
   _FlipX: 0
   DuckController: {fileID: 9100000, guid: 8373531bbce3cc7408ff614dc5ec4f25, type: 2}
   BirdController: {fileID: 9100000, guid: 746a9bf694c18b647ae6301927b9c315, type: 2}
+--- !u!114 &-8724425470638208929
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 121460977929437379}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c51e27636beb9e442afe670191fe75f9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerGUI
+  staminaBar: {fileID: 8306764369613380655}
+  _minValue: 0
+  _maxValue: 0
 --- !u!70 &645833589779868426
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
@@ -295,7 +326,10 @@ MonoBehaviour:
   - {fileID: 6713054206493656476}
   - {fileID: 467560212452839230}
   - {fileID: 3141284763445610261}
+  - {fileID: -8724425470638208929}
   - {fileID: -7947786426853800306}
+  - {fileID: 8404950163565752835}
+  - {fileID: 2092508300723378036}
   ForceRemoteRenderTimeframe: 0
 --- !u!114 &-7947786426853800306
 MonoBehaviour:
@@ -320,7 +354,7 @@ MonoBehaviour:
     Position: 0.01
     Rotation: 0.01
     Scale: 0.01
---- !u!114 &8694276330885244838
+--- !u!114 &8404950163565752835
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -329,14 +363,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 121460977929437379}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a9fd79d79a0fb459ababab9a78f00caa, type: 3}
+  m_Script: {fileID: 506319458, guid: e725a070cec140c4caffb81624c8c787, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Fusion.Addons.Physics::Fusion.Addons.Physics.RunnerSimulatePhysics2D
-  _physicsAuthority: 2
-  _physicsTiming: 3
-  ClientPhysicsSimulation: 1
-  DeltaTimeMultiplier: 1
-  SetUnityFixedTimestep: 0
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkMecanimAnimator
+  Animator: {fileID: 3258201221068302135}
+  ApplyTiming: 2
+  SyncSettings: 79
+  StateHashes: 000000008a18fce4b9abd9d328a981077af3fe2eb36f0a5980dc2f6e53c5c76b2a0f54cd8b6169ae0f42bf41
+  TriggerHashes: 00000000
+  TotalWords: 3
 --- !u!1 &174842300040866111
 GameObject:
   m_ObjectHideFlags: 0
@@ -722,6 +757,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerGUI
   staminaBar: {fileID: 8306764369613380655}
+  _minValue: 0
+  _maxValue: 0
 --- !u!1 &5665860798212839671
 GameObject:
   m_ObjectHideFlags: 0

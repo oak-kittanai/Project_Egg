@@ -1,28 +1,41 @@
+using Fusion;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class PlayerGUI : MonoBehaviour
+public class PlayerGUI : NetworkBehaviour
 {
     [Header("Ref")]
     CharacterStats stats;
 
     [SerializeField] Slider staminaBar;
+    [Networked] public float minValue {  get; set; }
+    [Networked] public float maxValue {  get; set; }
 
     private void Awake()
     {
         stats = GetComponentInParent<CharacterStats>();
+    }
+
+    public override void Spawned()
+    {
         if (stats == null)
         {
             Debug.Log("stats in GUI not found");
         }
         else
         {
-            staminaBar.minValue = 0;
-            staminaBar.maxValue = stats.s_maxStamina;
+            if (HasStateAuthority)
+            {
+                minValue = 0;
+                maxValue = stats.s_maxStamina;
+            }
+
+            staminaBar.minValue = minValue;
+            staminaBar.maxValue = maxValue;
         }
     }
 
-    private void Update()
+    public override void FixedUpdateNetwork()
     {
         StaminaUpdate();
 
@@ -38,6 +51,10 @@ public class PlayerGUI : MonoBehaviour
 
     public void StaminaUpdate()
     {
-        staminaBar.value = stats.s_minStamina;
+        if (HasStateAuthority)
+        {
+            minValue = stats.s_minStamina;
+        }
+        staminaBar.value = minValue;
     }
 }

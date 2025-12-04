@@ -1,5 +1,7 @@
 using Fusion;
+using Fusion.Addons.Physics;
 using System.Collections;
+using System.Threading.Tasks;
 using UnityEngine;
 
 public class MovementCharacter : NetworkBehaviour
@@ -11,41 +13,46 @@ public class MovementCharacter : NetworkBehaviour
 
     // Mono
     [SerializeField] Rigidbody2D rb2D;
+    [SerializeField] NetworkRigidbody2D netRb2D;
     Collider2D coll2D;
     [SerializeField] Camera playerCam;
 
     [Header("Set Value")]
-    float acceleration => stats._acceleration;
-    float deceleration => stats._deceleration;
-    float MaxSpeed => stats._maxSpeed;
+    float acceleration => stats.acceleration;
+    float deceleration => stats.deceleration;
+    float MaxSpeed => stats.maxSpeed;
     float minStamina => stats.s_minStamina;
     float maxStamina => stats.s_maxStamina;
-
-    bool IsBird;
-    bool IsDuc;
 
     [Header("Movement")]
     [Networked] public Vector2 _moveX {  get; set; }
     public float InputMoveX;
     public bool _moveAble;
 
-    [SerializeField] public bool _busy { get; set; }
-    [SerializeField] public bool _staminaBusy { get; set; }
+    [SerializeField] public bool _busy;
+    [SerializeField] public bool _staminaBusy;
 
     public bool isDash;
-    [SerializeField] bool _jumpAble { get; set; }
-    [SerializeField] bool _isGrounded { get; set; }
-    [SerializeField] public bool _isInTheAir { get; set; }
+    [Networked] public bool _jumpAble { get; set; }
+    [Networked] public bool _isGrounded { get; set; }
+    [Networked] public bool _isInTheAir { get; set; }
 
     [Header("Data_Stats")]
-    [SerializeField] bool _alreadyJump { get; set; }
-    [SerializeField] bool _isFalling { get; set; }
-    [SerializeField] bool _isFloat { get; set; }
+    [Networked] public bool _alreadyJump { get; set; }
+    [Networked] public bool _isFalling { get; set; }
+    [Networked] public bool _isFloat { get; set; }
+    [SerializeField] public bool flyAble;
+    [Networked] public bool _isFly { get; set; }
 
-    [SerializeField] bool _isFly { get; set; }
+    [Networked] public float fly_Acceleration { get; set; }
+    [Networked] public float fly_Deceleration { get; set; }
 
-    [SerializeField] float rayDistance { get; set; }
-    [SerializeField] RaycastHit2D hit2D { get; set; }
+    [SerializeField] public float rayDistance;
+    [SerializeField] RaycastHit2D hit2D;
+
+
+    [SerializeField] bool DoFly;
+    public SkinType CurrentSkinType => stats.skinType;
 
     [Header("Position")]
     public Vector3 currentPosition;
@@ -71,6 +78,7 @@ public class MovementCharacter : NetworkBehaviour
     {
         coll2D = GetComponent<Collider2D>();
         rb2D = GetComponent<Rigidbody2D>();
+        netRb2D = GetComponent<NetworkRigidbody2D>();
 
         stats = GetComponent<CharacterStats>();
         if (stats != null)
@@ -99,15 +107,21 @@ public class MovementCharacter : NetworkBehaviour
         if (_moveAble)
         {
             UpdateMovement();
-            UpdateStates();
-            UpdatePosition();
-            cAnimation.UpdateFilp();
 
             if (stats.s_minStamina < stats.s_maxStamina && !_staminaBusy)
             {
                 stats.RechargeStamina(true);
             }
         }
+
+        HandleFlying();
+    }
+
+    private void Update()
+    {
+        UpdateStates();
+        UpdatePosition();
+        cAnimation.UpdateAnimation(new Vector2(InputMoveX, rb2D.linearVelocity.y));
     }
 
     public void UpdateMovement()
@@ -124,13 +138,12 @@ public class MovementCharacter : NetworkBehaviour
             float force = speedDiff * accelRate;
             rb2D.AddForce(Vector2.right * force, ForceMode2D.Force);
 
-            cAnimation.UpdateAnimation(new Vector2(moveX, rb2D.linearVelocity.y));
             UpdateActionInput(input.jump);
         }
 
-        _moveX = this.transform.position;
-
         RayCast2DCheckGround();
+
+        _moveX = this.transform.position;
     }
 
     #region InputZone
@@ -142,21 +155,43 @@ public class MovementCharacter : NetworkBehaviour
             if (_alreadyJump)
             {
                 StartCoroutine(WaitForJump());
+                StartCoroutine(WairToFly());
             }
         }
 
-        if (IsBird && !_isGrounded && Jump && minStamina > 0)
+        if (CurrentSkinType == SkinType.Bird && _isInTheAir && Jump && flyAble && _alreadyJump)
         {
             Fly();
         }
     }
 
+    private void HandleFlying()
+    {
+        if (DoFly && stats.s_minStamina > 0 && !_isGrounded)
+        {
+            Flying();
+        }
+        else
+        {
+            StopFlying();
+            DoFly = false;
+            _isFly = false;
+            _staminaBusy = false;
+        }
+    }
+
     private IEnumerator WaitForJump()
     {
-        Debug.Log("Wait for jump delay");
         yield return new WaitForSeconds(1.5f);
         _jumpAble = true;
         _alreadyJump = false;
+        flyAble = true;
+    }
+
+    private IEnumerator WairToFly()
+    {
+        yield return new WaitForSeconds(0.3f);
+        flyAble = true;
     }
 
     private void JumpAction()
@@ -172,14 +207,52 @@ public class MovementCharacter : NetworkBehaviour
 
     private void Fly()
     {
+        Debug.Log("Trigger fly");
+
         _isFly = true;
         _isFalling = false;
+        _staminaBusy = true;
 
-        action.Flying(minStamina, _isGrounded, stats.s_flySpeed, rb2D);
+        StartFly();
         cAnimation.UpdateActionAnimation(2);
 
-        stats.StaminaReduce(10);
-        _staminaBusy = true;
+        Debug.Log("complete fly");
+    }
+
+    public void StartFly()
+    {
+        if (stats.s_minStamina > 0 && !_isGrounded)
+        {
+            DoFly = true;
+            Debug.Log("Flyyy");
+        }
+        else
+        {
+            Debug.Log("not enough stamina");
+        }
+    }
+
+    public void Flying()
+    {
+        float currentY = rb2D.linearVelocity.y;
+        float targetY = stats.s_flySpeed;
+
+        float speedDiff = targetY - currentY;
+        float force = speedDiff * fly_Acceleration;
+
+        rb2D.AddForce(Vector2.up * force, ForceMode2D.Force);
+
+        stats.StaminaReduce(5f);
+    }
+
+    private void StopFlying()
+    {
+        if (rb2D.linearVelocity.y > 0.1f)
+        {
+            float speedDiff = 0 - rb2D.linearVelocity.y;
+            float force = speedDiff * fly_Deceleration;
+            rb2D.AddForce(Vector2.up * force, ForceMode2D.Force);
+        }
     }
 
     public void UpdateStates()
@@ -238,16 +311,16 @@ public class MovementCharacter : NetworkBehaviour
         LayerMask layerPlatform = LayerMask.GetMask("Platform");
 
         Vector2 playerPosition = transform.position;
-        Vector2 checkGroundPosition = transform.up * rayDistance;
+        Vector2 checkGroundPosition = Vector2.down * rayDistance;
 
         hit2D = Physics2D.Raycast(playerPosition, checkGroundPosition);
-
-        if (hit2D.collider != null)
+        if (hit2D.collider != null && HasStateAuthority)
         {
             if (hit2D.collider.IsTouchingLayers(layerGround) || hit2D.collider.IsTouchingLayers(layerPlatform))
             {
                 _isGrounded = true;
                 _isInTheAir = false;
+                flyAble = false;
                 if (!_alreadyJump)
                 {
                     _jumpAble = true;
@@ -272,10 +345,8 @@ public class MovementCharacter : NetworkBehaviour
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.blue;
-
         Vector2 start = transform.position;
-        Vector2 direction = -transform.up * rayDistance;
-
+        Vector2 direction = Vector2.down * rayDistance;
         Gizmos.DrawRay(start, direction);
     }
 }
