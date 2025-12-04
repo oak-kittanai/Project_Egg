@@ -51,7 +51,6 @@ public class ForceStart : NetworkBehaviour
         else
         {
             var sceneInfo = new NetworkSceneInfo();
-            sceneInfo.AddSceneRef(SceneRef.FromIndex(0));
             runner.ProvideInput = true;
 
             string serverName = ServerId;
