@@ -1,4 +1,5 @@
 using Fusion;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -19,11 +20,20 @@ public class CenterHost : SingletonNetwork<CenterHost>
     [SerializeField] PlayerRef clientPlayer;
     [SerializeField] CharacterStats clientStats;
 
+    [Header("Check&Spawn")]
+    [SerializeField] bool doneScan;
+    [SerializeField] bool readySpawn;
+    [SerializeField] bool firstStart;
+    [SerializeField] public List<ObjectTransform> ObjMoveAbleTrans = new List<ObjectTransform>();
+    [SerializeField] public List<ObjectTransform> ObjTrapTrans = new List<ObjectTransform>();
+    [SerializeField] public List<ObjectTransform> ObjEnemyTrans = new List<ObjectTransform>();
+
+    [SerializeField] bool RemoveOldObj;
+
     [Header("Object")]
-    public List<ObjectTransform> ObjTrans;
-
-    public NetworkObject Rock;
-
+    [Networked] NetworkObject RockPrefabs { get; set; }
+    [Networked] NetworkObject JellyPrefabs { get; set; }
+    [Networked] NetworkObject BearTrapPrefabs { get; set; }
     public void GetRunner()
     {
         if (hostRunner != null)
@@ -42,28 +52,193 @@ public class CenterHost : SingletonNetwork<CenterHost>
 
         if (HasStateAuthority)
         {
-            SpawnObjectTest();
+            firstStart = true;
+            StartCoroutine(StartCheckAndAdd());
         }
-    }
 
-    public void SpawnObjectTest()
-    {
-        if (Rock != null)
+        if (!RemoveOldObj & !HasStateAuthority)
         {
-            Vector2 spawnPosTest = new Vector2(0, 1);
-            Runner.Spawn(Rock, spawnPosTest);
+            DestroyAllObjectOfflien();
+            Destroy(this);
         }
     }
 
+    IEnumerator StartCheckAndAdd()
+    {
+        // Check The game for the object and then respawn them again
+        GameObject[] targetMoveAbleObject = GameObject.FindGameObjectsWithTag("MoveAble");
+
+        foreach (GameObject obj in targetMoveAbleObject)
+        {
+            NetworkObject netObj = obj.GetComponent<NetworkObject>();
+            if (netObj != null)
+            {
+                var Objecttransform = new ObjectTransform()
+                {
+                    obj = netObj,
+                    oldObj = obj,
+                    position = new Vector2(netObj.transform.position.x, netObj.transform.position.y),
+                    rotation = netObj.transform.rotation
+                };
+
+                ObjMoveAbleTrans.Add(Objecttransform);
+            }
+            else
+            {
+                Debug.Log(obj.name + " not network object");
+            }
+        }
+        bool firstLoop = true;
+
+        GameObject[] targetTrapObject = GameObject.FindGameObjectsWithTag("Trap");
+        foreach (GameObject obj in targetTrapObject)
+        {
+            NetworkObject netObj = obj.GetComponent<NetworkObject>();
+            if (netObj != null)
+            {
+                var Objecttransform = new ObjectTransform()
+                {
+                    obj = netObj,
+                    oldObj = obj,
+                    position = new Vector2(netObj.transform.position.x, netObj.transform.position.y),
+                    rotation = netObj.transform.rotation
+                };
+
+                ObjTrapTrans.Add(Objecttransform);
+            }
+            else
+            {
+                Debug.Log(obj.name + " not network object");
+            }
+        }
+        bool secondLoop = true;
+
+        GameObject[] targetEnemyObject = GameObject.FindGameObjectsWithTag("Enemy");
+        foreach (GameObject obj in targetEnemyObject)
+        {
+            NetworkObject netObj = obj.GetComponent<NetworkObject>();
+            if (netObj != null)
+            {
+                var Objecttransform = new ObjectTransform()
+                {
+                    obj = netObj,
+                    oldObj = obj,
+                    position = new Vector2(netObj.transform.position.x, netObj.transform.position.y),
+                    rotation = netObj.transform.rotation
+                };
+
+                ObjEnemyTrans.Add(Objecttransform);
+            }
+            else
+            {
+                Debug.Log(obj.name + " not network object");
+            }
+        }
+        bool thirdLoop = true;
+
+        if (firstLoop && secondLoop && thirdLoop)
+        {
+            doneScan = true;
+        }
+
+        yield return new WaitUntil(() => doneScan == true);
+
+    }
+
+    public void DestroyAllObjectOfflien()
+    {
+        GameObject[] targetMoveAbleObject = GameObject.FindGameObjectsWithTag("MoveAble");
+
+        foreach (GameObject obj in targetMoveAbleObject)
+        {
+            Destroy(obj);
+        }
+
+        GameObject[] targetTrapObject = GameObject.FindGameObjectsWithTag("Trap");
+        foreach (GameObject obj in targetTrapObject)
+        {
+            Destroy(obj);
+        }
+
+        GameObject[] targetEnemyObject = GameObject.FindGameObjectsWithTag("Enemy");
+        foreach (GameObject obj in targetEnemyObject)
+        {
+            Destroy(obj);
+        }
+        RemoveOldObj = true;
+    }
 
     public void CheckForTrapAndMoveAbleObject()
     {
-        // Check The game for the object and then respawn them again 
+        if (doneScan)
+        {
+            bool firstLoad;
+            bool secondLoad;
+            bool thirdLoad;
+            if (readySpawn && Runner != null && HasStateAuthority)
+            {
+                Debug.Log("Start Spawn");
+                foreach (ObjectTransform obj in ObjMoveAbleTrans)
+                {
+                    SpawnNetworkObject(obj.obj, obj.position, obj.rotation);
+                    RemoveOldObject(obj.oldObj);
+                }
+                firstLoad = true;
+
+                foreach (ObjectTransform obj in ObjTrapTrans)
+                {
+                    SpawnNetworkObject(obj.obj, obj.position, obj.rotation);
+                    RemoveOldObject(obj.oldObj);
+                }
+                secondLoad = true;
+
+                foreach (ObjectTransform obj in ObjEnemyTrans)
+                {
+                    SpawnNetworkObject(obj.obj, obj.position, obj.rotation);
+                    RemoveOldObject(obj.oldObj);
+                }
+                thirdLoad = true;
+
+                if (firstLoad && secondLoad && thirdLoad)
+                {
+                    Debug.Log("Success check & spawn item");
+                }
+            }
+        }
+    }
+
+    public void SpawnNetworkObject(NetworkObject obj, Vector2 pos, Quaternion rotation)
+    {
+        if (Runner != null) // Make it sreach for prefabs before spawn
+        {
+            Vector3 spawnPos = new Vector3(pos.x, pos.y, 0f);
+            Quaternion spawnRot = rotation;
+            Runner.Spawn(obj, spawnPos, spawnRot);
+        }
+    }
+
+    public void RemoveOldObject(GameObject obj)
+    {
+        Destroy(obj);
     }
 
     public override void FixedUpdateNetwork()
     {
-        
+        if (Runner.SessionInfo.PlayerCount == 2)
+        {
+            if (firstStart)
+            {
+                StartCoroutine(WaitForLoad());
+            }
+        }
+    }
+
+    IEnumerator WaitForLoad()
+    {
+        firstStart = false;
+        yield return new WaitForSeconds(5f);
+        readySpawn = true;
+        CheckForTrapAndMoveAbleObject();
     }
 
     #region ComponentZone
@@ -236,9 +411,11 @@ public class CenterHost : SingletonNetwork<CenterHost>
     #endregion
 }
 
-
+[Serializable]
 public class ObjectTransform
 {
-    public Transform OldPosition;
-    public Transform SpawnPosition;
+    public NetworkObject obj;
+    public GameObject oldObj;
+    public Vector2 position;
+    public Quaternion rotation;
 }
