@@ -2,15 +2,36 @@ using Fusion;
 using System;
 using System.Collections;
 using UnityEngine;
+using UnityEngine.Windows;
 
 public class CharacterAction : NetworkBehaviour, CharacterInteract
 {
+    [Header("Ref")]
     InputControl controller;
     CharacterStats stats;
-
     Rigidbody2D rb2D;
     Collider2D coll2D;
+    [SerializeField] Camera playerCam;
 
+    [Header("Value")]
+    [SerializeField] int rock;
+
+    [SerializeField] public bool canInteract;
+    [SerializeField] public bool pressed;
+
+    [Header("Throw")]
+    [SerializeField] public LineRenderer _lineRenderer;
+    [SerializeField] public Vector2 _worldPos;
+    [SerializeField] public bool _isDrawPathAvailable;
+    [SerializeField] public Transform _firePoint;
+    [SerializeField] public float _step;
+
+    [SerializeField] bool mouse1Press;
+    [SerializeField] bool mouse2Hold;
+
+    [SerializeField] float maxPointRadius;
+
+    [Header("Item Interact")]
     [SerializeField] bool _isInteractAble;
     [SerializeField] bool _isAbleSkill;
     [SerializeField] float _interactRadius;
@@ -28,22 +49,26 @@ public class CharacterAction : NetworkBehaviour, CharacterInteract
 
     public override void Spawned()
     {
-        base.Spawned();
         if (HasInputAuthority)
         {
-
+            playerCam.gameObject.SetActive(true);
+        }
+        else
+        {
+            playerCam.gameObject.SetActive(false);
         }
     }
 
     public override void FixedUpdateNetwork()
     {
-
+        CheckItemInteract();
     }
 
     public void Setup()
     {
         controller = GetComponent<InputControl>();
         stats = GetComponent<CharacterStats>();
+        playerCam = GetComponentInChildren<Camera>();
     }
 
     public GameObject CharacterInteract()
@@ -68,12 +93,148 @@ public class CharacterAction : NetworkBehaviour, CharacterInteract
         }
     }
 
-    public void InteractAble(Collider2D hit)
+    public void MouseInput(bool pressMouse2, bool pressMouse1)
+    {
+        mouse2Hold = pressMouse2;
+        if (pressMouse2)
+        {
+            _isDrawPathAvailable = true;
+        }else _isDrawPathAvailable = false;
+
+        mouse1Press = pressMouse1;
+    }
+
+    #region ProjectileCalculateMovement&DrawPath
+    private void DrawPath(float v0, float angle, float time, float step)
+    {
+        step = Mathf.Max(0.01f, step);
+        _lineRenderer.positionCount = (int)(time/step) + 2;
+        int count = 0;
+
+        for (float i = 0; i <= time; i += step)
+        {
+            float x = v0 * i * Mathf.Cos(angle);
+            float y = v0 * i * Mathf.Sin(angle) - 0.5f * -Physics.gravity.y * Mathf.Pow(i, 2);
+            _lineRenderer.SetPosition(count, _firePoint.position + new Vector3(x,y,0));
+            count++;
+        }
+        float xfinal = v0 * time * Mathf.Cos(angle);
+        float yfinal = v0 * time * Mathf.Sin(angle) - 0.5f * -Physics.gravity.y * Mathf.Pow(time, 2);
+        _lineRenderer.SetPosition(count, _firePoint.position + new Vector3(xfinal, yfinal, 0));
+    }
+
+    private float QuadraticEquation(float a, float b, float c, float sign)
+    {
+        return (-b + sign * Mathf.Sqrt(b * b - 4 * a * c)) / (2 * a);
+    }
+
+    private void CalculatePath(Vector3 targetPos, float h, out float v0, out float angle, out float time)
+    {
+        float xt = targetPos.x;
+        float yt = targetPos.y;
+        float g = -Physics.gravity.y;
+
+        float b = Mathf.Sqrt(2 * g * h);
+        float a = (-0.5f * g);
+        float c = -yt;
+
+        float tplus = QuadraticEquation(a, b, c, 1);
+        float tmin = QuadraticEquation(a, b, c, -1);
+        time = tplus > tmin ? tplus : tmin;
+
+        angle = Mathf.Atan(b * time / xt);
+
+        v0 = b / Mathf.Sin(angle);
+    }
+    #endregion
+
+    #region Throw
+
+    public void UpdateCursorPos(Vector2 pos)
+    {
+        if (playerCam == null)
+        {
+            Debug.Log("can't find playerCam");
+            return;
+        }
+
+        Vector3 mousePos = playerCam.ScreenToWorldPoint(pos);
+
+        _worldPos = mousePos - _firePoint.position;
+
+        if (mouse2Hold)
+        {
+            Vector3 targetPos = new Vector3(_worldPos.x, _worldPos.y, 0);
+            targetPos.z = 0;
+
+            float height = targetPos.y + targetPos.magnitude / 2f;
+            height = Mathf.Max(0.01f, height);
+            float angle;
+            float v0;
+            float time;
+            CalculatePath(targetPos, height, out v0, out angle, out time);
+            DrawPath(v0, angle, time, _step);
+
+            if (_isDrawPathAvailable)
+            {
+                _lineRenderer.enabled = true;
+
+            }
+            else
+            {
+                _lineRenderer.enabled = false;
+            }
+
+            if (mouse1Press)
+            {
+                // Start Throw and Play animation
+                StopAllCoroutines();
+                //StartCoroutine(Coroutine_Movement(groundDirection.normalized, v0, angle, totalTime));
+            }
+        }
+    }
+
+    IEnumerator Coroutine_Movement(Vector3 direction, float v0, float angle, float totalTime)
+    {
+        Vector3 startPos = transform.position;
+        Vector3 horizontalDir = new Vector3(direction.x, 0, direction.z).normalized;
+
+        float t = 0f;
+        while (t < totalTime)
+        {
+            float x = v0 * t * Mathf.Cos(angle);
+            float y = v0 * t * Mathf.Sin(angle) + 0.5f * Physics.gravity.y * t * t;
+
+            transform.position = startPos + horizontalDir * x + Vector3.up * y;
+
+            t += Time.deltaTime;
+            yield return null;
+        }
+
+        // Final snap to ground (use the same direction at totalTime)
+        float xfinal = v0 * totalTime * Mathf.Cos(angle);
+        transform.position = startPos + horizontalDir * xfinal + Vector3.up * 0f;
+    }
+
+    #endregion
+
+    public void InteractAble(bool press)
     {
         if (_isInteractAble)
         {
             if (_busy) return;
 
+            if (canInteract)
+            {
+                if (press)
+                {
+                    pressed = true;
+                }
+                else
+                {
+                    pressed = false;
+                }
+            }
             /*if (input.InteractAction.WasPressedThisFrame())
             {
                 Debug.Log("press E");
@@ -97,7 +258,6 @@ public class CharacterAction : NetworkBehaviour, CharacterInteract
                 {
                     _isCarry = false;
                 }
-
             }*/
         }
     }
@@ -109,7 +269,7 @@ public class CharacterAction : NetworkBehaviour, CharacterInteract
     public void CheckItemInteract()
     {
         Vector2 player = transform.position;
-        int mask = LayerMask.GetMask("Player", "Interactable");
+        int mask = LayerMask.GetMask("Player", "Interactable", "ThrowAble");
         Collider2D[] itemhitInteract = Physics2D.OverlapCircleAll(player, _interactRadius, mask);
 
         foreach (Collider2D hit in itemhitInteract)
@@ -120,15 +280,27 @@ public class CharacterAction : NetworkBehaviour, CharacterInteract
             _isInteractAble = true;
             if (hit.gameObject.layer == LayerMask.NameToLayer("Player"))
             {
-                //CheckPlayerInteract(hit);
+                Debug.Log("Detect Player");
+                canInteract = true;
+                Interact(hit);
             }
+            else canInteract = false;
 
             if (hit.gameObject.layer == LayerMask.NameToLayer("Interactable"))
             {
-                //Debug.Log("Hit an Item: " + hit.name);
+                Debug.Log("Detect Interactable Object");
+                canInteract = true;
+                Interact(hit);
             }
+            else canInteract = false;
 
-            InteractAble(hit);
+            if (hit.gameObject.layer == LayerMask.NameToLayer("ThrowAble"))
+            {
+                Debug.Log("Detect Throwable item");
+                canInteract = true;
+                Interact(hit);
+            }
+            else canInteract = false;
         }
     }
 
@@ -140,21 +312,29 @@ public class CharacterAction : NetworkBehaviour, CharacterInteract
         {
             _isInteractAble = true;
             Vector2 selfpos = new Vector2(transform.position.x, transform.position.y);
-            switch (hit.gameObject)
+            if (pressed && canInteract)
             {
-                case GameObject g when g.TryGetComponent<Interactable>(out var obj):
-                    Debug.Log("trigger interactable object");
-                    obj.Interact();
-                    break;
+                switch (hit.gameObject)
+                {
+                    case GameObject g when g.TryGetComponent<Interactable>(out var obj):
+                        Debug.Log("trigger interactable object");
+                        obj.Interact();
+                        break;
 
-                case GameObject g when g.TryGetComponent<MoveableObject>(out var moveobj):
-                    Debug.Log("trigger moveable object");
-                    moveobj.MoveInteract(selfpos);
-                    break;
+                    case GameObject g when g.TryGetComponent<MoveableObject>(out var moveobj):
+                        Debug.Log("trigger moveable object");
+                        moveobj.MoveInteract(selfpos);
+                        break;
 
-                default:
-                    //Debug.Log("didn't found any trigger");
-                    break;
+                    case GameObject g when g.TryGetComponent<ThrowAbleItem>(out var item):
+                        Debug.Log("Get ThrowItem");
+                        item.PickupItem();
+                        break;
+
+                    default:
+                        //Debug.Log("didn't found any trigger");
+                        break;
+                }
             }
         }
         else

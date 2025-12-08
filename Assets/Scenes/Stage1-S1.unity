@@ -26429,7 +26429,7 @@ Tilemap:
     second:
       serializedVersion: 2
       m_TileIndex: 24
-      m_TileSpriteIndex: 24
+      m_TileSpriteIndex: 51
       m_TileMatrixIndex: 0
       m_TileColorIndex: 0
       m_TileObjectToInstantiateIndex: 65535
@@ -46256,8 +46256,8 @@ Tilemap:
     m_Data: {fileID: 0}
   - m_RefCount: 0
     m_Data: {fileID: 0}
-  - m_RefCount: 1
-    m_Data: {fileID: -1801151654, guid: c99d9f341387e9b45bef3ec2ce4daadb, type: 3}
+  - m_RefCount: 0
+    m_Data: {fileID: 0}
   - m_RefCount: 0
     m_Data: {fileID: 0}
   - m_RefCount: 0
@@ -46310,8 +46310,8 @@ Tilemap:
     m_Data: {fileID: 0}
   - m_RefCount: 27
     m_Data: {fileID: -1732350295, guid: c99d9f341387e9b45bef3ec2ce4daadb, type: 3}
-  - m_RefCount: 0
-    m_Data: {fileID: 0}
+  - m_RefCount: 1
+    m_Data: {fileID: -1801151654, guid: c99d9f341387e9b45bef3ec2ce4daadb, type: 3}
   - m_RefCount: 29
     m_Data: {fileID: 8589684149436560959, guid: c99d9f341387e9b45bef3ec2ce4daadb, type: 3}
   - m_RefCount: 1
@@ -46856,7 +46856,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 121460977929437379, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 467560212452839230, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
       propertyPath: _moveAble
@@ -46932,11 +46932,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5235713977121833181, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
       propertyPath: m_AnchorMax.x
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5235713977121833181, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6713054206493656476, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
       propertyPath: isDuck
@@ -52994,7 +52994,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 121460977929437379, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 467560212452839230, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
       propertyPath: _moveAble
@@ -53062,11 +53062,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5235713977121833181, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
       propertyPath: m_AnchorMax.x
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5235713977121833181, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6713054206493656476, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
       propertyPath: isDuck
@@ -80057,9 +80057,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 026cae8d438519946b33fb1266715fe8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ForceStart
-  PlayerPrefabs: {fileID: 0}
+  PlayerPrefabs: {fileID: -2039167435644549920, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
   NetworkRunner: {fileID: 4337480539873389715, guid: 428589c4c1cc8b84092ae1f64cccbf5f, type: 3}
-  CenterHost: {fileID: 0}
+  CenterHost: {fileID: 7825853430673868469, guid: b92366ced5e27694eb387c1e3079caa5, type: 3}
   ForceStartButton: {fileID: 448720901}
   ServerIdInsert: {fileID: 0}
   ServerId: ServerTest

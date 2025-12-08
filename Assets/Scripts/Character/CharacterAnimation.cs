@@ -1,4 +1,5 @@
 using Fusion;
+using System.Collections;
 using UnityEngine;
 
 public class CharacterAnimation : NetworkBehaviour
@@ -10,12 +11,14 @@ public class CharacterAnimation : NetworkBehaviour
 
     [Header("Position")]
     [Networked] public Vector3 Direction {  get; set; }
-    [Networked] public int Action { get; set; }
+    [Networked] public int State { get; set; }
     [Networked] public bool FlipX { get; set; }
 
     [Header("Controller Setting")]
     [SerializeField] public RuntimeAnimatorController DuckController;
     [SerializeField] public RuntimeAnimatorController BirdController;
+
+    [SerializeField] SkinType currentSkin;
 
     private void Awake()
     {
@@ -25,7 +28,7 @@ public class CharacterAnimation : NetworkBehaviour
     public override void Spawned()
     {
         UpdateSkin(stats.skinType);
-
+        currentSkin = stats.skinType;
     }
 
     public void Setup()
@@ -37,7 +40,7 @@ public class CharacterAnimation : NetworkBehaviour
 
     public void UpdateSkin(SkinType skin)
     {
-        if (skin == SkinType.Duck)
+        if (skin == currentSkin)
         {
             animator.runtimeAnimatorController = DuckController;
         }
@@ -66,18 +69,73 @@ public class CharacterAnimation : NetworkBehaviour
         animator.SetFloat("Y", Direction.y);
     }
 
-    // jump & skill
     public void UpdateActionAnimation(int i)
     {
-        Action = i;
-        if (Action == 1)
+        State = i;
+
+        if (currentSkin == SkinType.Bird)
         {
-            animator.Play("Jump", 0);
+            if (State == 1)
+            {
+                animator.Play("Pre_Jump", 0);
+            }
+            else if (State == 2)
+            {
+                animator.Play("Fly", 0);
+            }
+            else if (State == 3)
+            {
+                animator.SetBool("Falling", true);
+            }
+            else if (State == 4)
+            {
+                animator.SetBool("Float", true);
+            }
+            else if (State == 5)
+            {
+                // Throwing
+            }
+            else
+            {
+                animator.SetBool("Falling", false);
+                animator.SetBool("Float", false);
+                animator.SetBool("Carrying", false);
+            }
         }
-        else if (Action == 2)
+        else
         {
-            animator.Play("Fly", 0);
+            if (State == 1)
+            {
+                animator.Play("Jump", 0);
+            }
+            else if (State == 2)
+            {
+                animator.Play("Floating", 0);
+                animator.SetBool("Float", true);
+                animator.SetBool("Carrying", false);
+            }
+            else if (State == 3)
+            {
+                animator.Play("Floating_carry", 0);
+                animator.SetBool("Float", true);
+                animator.SetBool("Carrying", true);
+            }
+            else if (State == 4)
+            {
+                animator.Play("Swim", 0);
+                animator.SetBool("InWater", true);
+                animator.SetBool("Float", false);
+                animator.SetBool("Carrying", false);
+            }
+            else
+            {
+                animator.SetBool("Falling", false);
+                animator.SetBool("Float", false);
+                animator.SetBool("InWater", false);
+                animator.SetBool("Carrying", false);
+            }
         }
+
 
         /*if (Action == 3)
         {

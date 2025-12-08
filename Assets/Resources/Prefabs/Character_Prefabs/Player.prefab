@@ -20,7 +20,7 @@ GameObject:
   - component: {fileID: 645833589779868426}
   - component: {fileID: -2039167435644549920}
   - component: {fileID: -7947786426853800306}
-  - component: {fileID: 8404950163565752835}
+  - component: {fileID: -8483412592095553774}
   m_Layer: 7
   m_Name: Player
   m_TagString: Player
@@ -44,6 +44,7 @@ Transform:
   - {fileID: 315858891247901001}
   - {fileID: 5032924971099962228}
   - {fileID: 1972045629521261847}
+  - {fileID: 3128535925138839279}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &9153101824165123814
@@ -143,6 +144,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3a4c4812acc434a4b91b02485ab16455, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CharacterAction
+  playerCam: {fileID: 0}
+  rock: 0
+  canInteract: 0
+  pressed: 0
+  _lineRenderer: {fileID: 6851344961069649357}
+  _worldPos: {x: 0, y: 0}
+  _isDrawPathAvailable: 0
+  _firePoint: {fileID: 1227391787974572706}
+  _step: 0
+  mouse1Press: 0
+  mouse2Hold: 0
+  maxPointRadius: 0
   _isInteractAble: 0
   _isAbleSkill: 0
   _interactRadius: 0
@@ -174,7 +187,7 @@ MonoBehaviour:
   s_jumpForce: 20
   s_flySpeed: 5
   s_minStamina: 0
-  s_maxStamina: 15
+  s_maxStamina: 10
   acceleration: 2
   deceleration: 10
   maxSpeed: 5
@@ -194,7 +207,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MovementCharacter
   rb2D: {fileID: 0}
   netRb2D: {fileID: 0}
-  playerCam: {fileID: 5099668636001666967}
   __moveX: {x: 0, y: 0}
   InputMoveX: 0
   _moveAble: 1
@@ -249,10 +261,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CharacterAnimation
   _Direction: {x: 0, y: 0, z: 0}
-  _Action: 0
+  _State: 0
   _FlipX: 0
   DuckController: {fileID: 9100000, guid: 8373531bbce3cc7408ff614dc5ec4f25, type: 2}
   BirdController: {fileID: 9100000, guid: 746a9bf694c18b647ae6301927b9c315, type: 2}
+  currentSkin: 0
 --- !u!114 &-8724425470638208929
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -328,7 +341,7 @@ MonoBehaviour:
   - {fileID: 3141284763445610261}
   - {fileID: -8724425470638208929}
   - {fileID: -7947786426853800306}
-  - {fileID: 8404950163565752835}
+  - {fileID: -8483412592095553774}
   - {fileID: 2092508300723378036}
   ForceRemoteRenderTimeframe: 0
 --- !u!114 &-7947786426853800306
@@ -354,7 +367,7 @@ MonoBehaviour:
     Position: 0.01
     Rotation: 0.01
     Scale: 0.01
---- !u!114 &8404950163565752835
+--- !u!114 &-8483412592095553774
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -407,6 +420,148 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: -20}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &1408784534961342040
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3128535925138839279}
+  - component: {fileID: 6851344961069649357}
+  m_Layer: 0
+  m_Name: Line
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3128535925138839279
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1408784534961342040}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 0.99579906, y: 0.99579906, z: 0.99579906}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1227391787974572706}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!120 &6851344961069649357
+LineRenderer:
+  serializedVersion: 2
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1408784534961342040}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 0
+  m_LightProbeUsage: 0
+  m_ReflectionProbeUsage: 0
+  m_RayTracingMode: 0
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: b56dca7d33865224d9950857f3cb8f42, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_Positions:
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 1}
+  m_Parameters:
+    serializedVersion: 3
+    widthMultiplier: 0.1
+    widthCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    colorGradient:
+      serializedVersion: 2
+      key0: {r: 1, g: 0, b: 0, a: 1}
+      key1: {r: 1, g: 0, b: 0, a: 1}
+      key2: {r: 1, g: 1, b: 1, a: 0}
+      key3: {r: 0, g: 0, b: 0, a: 0}
+      key4: {r: 0, g: 0, b: 0, a: 0}
+      key5: {r: 0, g: 0, b: 0, a: 0}
+      key6: {r: 0, g: 0, b: 0, a: 0}
+      key7: {r: 0, g: 0, b: 0, a: 0}
+      ctime0: 0
+      ctime1: 65535
+      ctime2: 65535
+      ctime3: 0
+      ctime4: 0
+      ctime5: 0
+      ctime6: 0
+      ctime7: 0
+      atime0: 0
+      atime1: 65535
+      atime2: 0
+      atime3: 0
+      atime4: 0
+      atime5: 0
+      atime6: 0
+      atime7: 0
+      m_Mode: 0
+      m_ColorSpace: 0
+      m_NumColorKeys: 2
+      m_NumAlphaKeys: 2
+    numCornerVertices: 0
+    numCapVertices: 0
+    alignment: 0
+    textureMode: 0
+    textureScale: {x: 1, y: 1}
+    shadowBias: 0.5
+    generateLightingData: 0
+  m_MaskInteraction: 0
+  m_UseWorldSpace: 1
+  m_Loop: 0
+  m_ApplyActiveColorSpace: 1
 --- !u!1 &1897898745222069969
 GameObject:
   m_ObjectHideFlags: 0
@@ -450,8 +605,8 @@ GameObject:
   - component: {fileID: 5099668636001666967}
   - component: {fileID: 146692513518075897}
   m_Layer: 0
-  m_Name: Main Camera
-  m_TagString: MainCamera
+  m_Name: PlayerCamera
+  m_TagString: Camera
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

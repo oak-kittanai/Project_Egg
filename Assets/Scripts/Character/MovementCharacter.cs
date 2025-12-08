@@ -1,7 +1,6 @@
 using Fusion;
 using Fusion.Addons.Physics;
 using System.Collections;
-using System.Threading.Tasks;
 using UnityEngine;
 
 public class MovementCharacter : NetworkBehaviour
@@ -15,7 +14,6 @@ public class MovementCharacter : NetworkBehaviour
     [SerializeField] Rigidbody2D rb2D;
     [SerializeField] NetworkRigidbody2D netRb2D;
     Collider2D coll2D;
-    [SerializeField] Camera playerCam;
 
     [Header("Set Value")]
     float acceleration => stats.acceleration;
@@ -40,13 +38,22 @@ public class MovementCharacter : NetworkBehaviour
     [Header("Data_Stats")]
     [Networked] public bool _alreadyJump { get; set; }
     [Networked] public bool _isFalling { get; set; }
+
     [Networked] public bool _isFloat { get; set; }
+
+    [Header("Duck Setting")]
+
+
+    [Header("Bird Setting")]
+    
     [SerializeField] public bool flyAble;
     [Networked] public bool _isFly { get; set; }
 
     [Networked] public float fly_Acceleration { get; set; }
     [Networked] public float fly_Deceleration { get; set; }
 
+
+    [Header("Ray")]
     [SerializeField] public float rayDistance;
     [SerializeField] RaycastHit2D hit2D;
 
@@ -66,11 +73,7 @@ public class MovementCharacter : NetworkBehaviour
     {
         if (HasInputAuthority)
         {
-            playerCam.gameObject.SetActive(true);
-        }
-        else
-        {
-            playerCam.gameObject.SetActive(false);
+
         }
     }
 
@@ -114,7 +117,10 @@ public class MovementCharacter : NetworkBehaviour
             }
         }
 
-        HandleFlying();
+        if (CurrentSkinType == SkinType.Bird)
+        {
+            HandleFlying();
+        }
     }
 
     private void Update()
@@ -137,10 +143,15 @@ public class MovementCharacter : NetworkBehaviour
 
             float force = speedDiff * accelRate;
             rb2D.AddForce(Vector2.right * force, ForceMode2D.Force);
-
-            UpdateActionInput(input.jump);
         }
-
+        if (HasInputAuthority)
+        {
+            UpdateActionInput(input.jump);
+            action.InteractAble(input.Keyboard_E);
+            action.MouseInput(input.mouse2, input.mouse1);
+            action.UpdateCursorPos(input.mousePos);
+        }
+        
         RayCast2DCheckGround();
 
         _moveX = this.transform.position;
@@ -151,11 +162,12 @@ public class MovementCharacter : NetworkBehaviour
     {
         if (_isGrounded && _jumpAble && Jump)
         {
+            cAnimation.UpdateActionAnimation(0);
             JumpAction();
             if (_alreadyJump)
             {
                 StartCoroutine(WaitForJump());
-                StartCoroutine(WairToFly());
+                StartCoroutine(WaitToFly());
             }
         }
 
@@ -164,6 +176,81 @@ public class MovementCharacter : NetworkBehaviour
             Fly();
         }
     }
+
+    private IEnumerator WaitForJump()
+    {
+        yield return new WaitForSeconds(1.5f);
+        _jumpAble = true;
+        _alreadyJump = false;
+    }
+
+    private void JumpAction()
+    {
+        _isGrounded = false;
+        _alreadyJump = true;
+        _isInTheAir = true;
+        _jumpAble = false;
+
+        cAnimation.UpdateActionAnimation(1);
+        if (CurrentSkinType == SkinType.Bird)
+        {
+            StartCoroutine(JumpWait());
+        }
+        else
+        {
+            rb2D.AddForce(Vector2.up * stats.s_jumpForce, ForceMode2D.Impulse);
+        }
+    }
+
+    IEnumerator JumpWait()
+    {
+        yield return new WaitForSeconds(0.55f);
+        rb2D.AddForce(Vector2.up * stats.s_jumpForce, ForceMode2D.Impulse);
+    }
+
+    public void UpdateStates()
+    {
+        if (_isGrounded)
+        {
+            rb2D.gravityScale = 1f;
+            _isFly = false;
+            _isFalling = false;
+            _isFloat = false;
+            cAnimation.OnGroundCheck();
+            return;
+        }
+
+        if (_isFly)
+        {
+            rb2D.gravityScale = 1f;
+        }
+
+        if (_isFalling)
+        {
+            cAnimation.UpdateActionAnimation(3);
+        }
+    }
+
+    public void UpdatePosition()
+    {
+        if (_alreadyJump && !_isFly)
+        {
+            if (rb2D.linearVelocity.y < -1f)
+            {
+                rb2D.gravityScale = Mathf.Lerp(rb2D.gravityScale, 2f, Time.deltaTime * 2f);
+            }
+        }
+        else if (rb2D.linearVelocity.y < -1f && !_isFly && !_isFloat)
+        {
+            _isFalling = true;
+            rb2D.gravityScale = Mathf.Lerp(rb2D.gravityScale, 2f, Time.deltaTime * 2f);
+            cAnimation.UpdateActionAnimation(3);
+        }
+    }
+
+    #endregion
+
+    #region Bird
 
     private void HandleFlying()
     {
@@ -178,31 +265,6 @@ public class MovementCharacter : NetworkBehaviour
             _isFly = false;
             _staminaBusy = false;
         }
-    }
-
-    private IEnumerator WaitForJump()
-    {
-        yield return new WaitForSeconds(1.5f);
-        _jumpAble = true;
-        _alreadyJump = false;
-        flyAble = true;
-    }
-
-    private IEnumerator WairToFly()
-    {
-        yield return new WaitForSeconds(0.3f);
-        flyAble = true;
-    }
-
-    private void JumpAction()
-    {
-        _isGrounded = false;
-        _alreadyJump = true;
-        _isInTheAir = true;
-        _jumpAble = false;
-
-        rb2D.AddForce(Vector2.up * stats.s_jumpForce, ForceMode2D.Impulse);
-        cAnimation.UpdateActionAnimation(1);
     }
 
     private void Fly()
@@ -255,44 +317,10 @@ public class MovementCharacter : NetworkBehaviour
         }
     }
 
-    public void UpdateStates()
+    private IEnumerator WaitToFly()
     {
-        if (_isGrounded)
-        {
-            rb2D.gravityScale = 1f;
-            _isFly = false;
-            _isFalling = false;
-            _isFloat = false;
-            cAnimation.OnGroundCheck();
-            return;
-        }
-
-        if (_isFly)
-        {
-            rb2D.gravityScale = 1f;
-        }
-
-        if (_isFalling)
-        {
-            cAnimation.UpdateActionAnimation(3);
-        }
-    }
-
-    public void UpdatePosition()
-    {
-        if (_alreadyJump && !_isFly)
-        {
-            if (rb2D.linearVelocity.y < -1f)
-            {
-                rb2D.gravityScale = Mathf.Lerp(rb2D.gravityScale, 2f, Time.deltaTime * 2f);
-            }
-        }
-        else if (rb2D.linearVelocity.y < -1f && !_isFly && !_isFloat)
-        {
-            _isFalling = true;
-            rb2D.gravityScale = Mathf.Lerp(rb2D.gravityScale, 2f, Time.deltaTime * 2f);
-            cAnimation.UpdateActionAnimation(3);
-        }
+        yield return new WaitForSeconds(0.3f);
+        flyAble = true;
     }
 
     #endregion
@@ -309,6 +337,7 @@ public class MovementCharacter : NetworkBehaviour
     {
         LayerMask layerGround = LayerMask.GetMask("Ground");
         LayerMask layerPlatform = LayerMask.GetMask("Platform");
+        LayerMask layerWater = LayerMask.GetMask("Water");
 
         Vector2 playerPosition = transform.position;
         Vector2 checkGroundPosition = Vector2.down * rayDistance;
@@ -333,7 +362,7 @@ public class MovementCharacter : NetworkBehaviour
                 _isInTheAir = true;
             }
 
-            if (hit2D.collider.tag == "Player")
+            if (hit2D.collider.IsTouchingLayers(layerWater))
             {
 
             }

@@ -61,6 +61,48 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
                 jump = false;
             }
 
+            bool mouseRight;
+            if (Mouse.current.rightButton.isPressed)
+            {
+                mouseRight = true;
+            }
+            else
+            {
+                mouseRight = false;
+            }
+
+            bool press_F;
+            if (Keyboard.current.fKey.isPressed)
+            {
+                press_F = true;
+            }
+            else
+            {
+                press_F = false;
+            }
+
+            bool mouseLeft;
+            if (Mouse.current.leftButton.isPressed)
+            {
+                mouseLeft = true;
+            }
+            else
+            {
+                mouseLeft = false;
+            }
+
+            bool press_E;
+            if (Keyboard.current.eKey.isPressed)
+            {
+                press_E = true;
+            }
+            else
+            {
+                press_E = false;
+            }
+
+            Vector2 mousePosition = Mouse.current.position.ReadValue();
+
             // need to add skill
             /*
             bool skill1 = false;
@@ -75,8 +117,13 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
             data.skill_1 = skill1
             */
 
+            data.mousePos = mousePosition;
+            data.mouse2 = mouseRight;
+            data.mouse1 = mouseLeft;
             data.horizontal = moveX;
             data.jump = jump;
+            data.Keyboard_F = press_F;
+            data.Keyboard_E = press_E;
         }
 
         input.Set(data);
@@ -203,8 +250,13 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
 
 public struct NetworkdInputData : INetworkInput
 {
+    public Vector2 mousePos;
     public float horizontal;
     public bool jump;
+    public bool mouse1;
+    public bool mouse2;
+    public bool Keyboard_F;
+    public bool Keyboard_E;
     //public bool skill_1;
     //public bool skill_2;
 }

@@ -24,11 +24,8 @@ public class PlayerGUI : NetworkBehaviour
         }
         else
         {
-            if (HasStateAuthority)
-            {
-                minValue = 0;
-                maxValue = stats.s_maxStamina;
-            }
+            minValue = 0;
+            maxValue = stats.s_maxStamina;
 
             staminaBar.minValue = minValue;
             staminaBar.maxValue = maxValue;
@@ -38,23 +35,22 @@ public class PlayerGUI : NetworkBehaviour
     public override void FixedUpdateNetwork()
     {
         StaminaUpdate();
-
-        if (stats.s_minStamina >= stats.s_maxStamina)
+        if (stats != null)
         {
-            staminaBar.gameObject.SetActive(false);
-        }
-        else
-        {
-            staminaBar.gameObject.SetActive(true);
+            if (stats.s_minStamina >= stats.s_maxStamina)
+            {
+                staminaBar.gameObject.SetActive(false);
+            }
+            else
+            {
+                staminaBar.gameObject.SetActive(true);
+            }
         }
     }
 
     public void StaminaUpdate()
     {
-        if (HasStateAuthority)
-        {
-            minValue = stats.s_minStamina;
-        }
+        minValue = stats.s_minStamina;
         staminaBar.value = minValue;
     }
 }

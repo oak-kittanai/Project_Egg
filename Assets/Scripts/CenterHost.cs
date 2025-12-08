@@ -1,11 +1,7 @@
 using Fusion;
 using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
-using Unity.VisualScripting.Antlr3.Runtime.Misc;
 using UnityEngine;
-using UnityEngine.Rendering.Universal;
-using UnityEngine.UI;
 
 public class CenterHost : SingletonNetwork<CenterHost>
 {
@@ -44,7 +40,19 @@ public class CenterHost : SingletonNetwork<CenterHost>
             Debug.Log("Host runner ready");
         }
 
-        Debug.Log("SpawnObject");
+        if (HasStateAuthority)
+        {
+            SpawnObjectTest();
+        }
+    }
+
+    public void SpawnObjectTest()
+    {
+        if (Rock != null)
+        {
+            Vector2 spawnPosTest = new Vector2(0, 1);
+            Runner.Spawn(Rock, spawnPosTest);
+        }
     }
 
 
