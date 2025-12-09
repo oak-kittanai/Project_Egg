@@ -73,10 +73,6 @@ public class ForceStart : NetworkBehaviour
 
             if (runner.IsServer)
             {
-                //PlayerSpawn playerSpawn = goPlayerSpawner.GetComponent<PlayerSpawn>();
-                /*playerSpawn.runner = runner;
-                networkStructure.spawner = playerSpawn;*/
-
                 INetworkStructure networkStructure = runner.GetComponent<INetworkStructure>();
 
                 NetworkObject noCenter = runner.Spawn(CenterHost);

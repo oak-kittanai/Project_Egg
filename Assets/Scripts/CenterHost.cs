@@ -28,12 +28,12 @@ public class CenterHost : SingletonNetwork<CenterHost>
     [SerializeField] public List<ObjectTransform> ObjTrapTrans = new List<ObjectTransform>();
     [SerializeField] public List<ObjectTransform> ObjEnemyTrans = new List<ObjectTransform>();
 
-    [SerializeField] bool RemoveOldObj;
+    [Networked] public bool RemoveOldObj { get; set; }
 
     [Header("Object")]
-    [Networked] NetworkObject RockPrefabs { get; set; }
-    [Networked] NetworkObject JellyPrefabs { get; set; }
-    [Networked] NetworkObject BearTrapPrefabs { get; set; }
+    [NetworkPrefab] public NetworkObject RockPrefabs;
+    [NetworkPrefab] public NetworkObject JellyPrefabs;
+    [NetworkPrefab] public NetworkObject BearTrapPrefabs;
     public void GetRunner()
     {
         if (hostRunner != null)
@@ -55,12 +55,11 @@ public class CenterHost : SingletonNetwork<CenterHost>
             firstStart = true;
             StartCoroutine(StartCheckAndAdd());
         }
+    }
 
-        if (!RemoveOldObj & !HasStateAuthority)
-        {
-            DestroyAllObjectOfflien();
-            Destroy(this);
-        }
+    public void LoadAssets()
+    {
+        //RockPrefabs = Runner.
     }
 
     IEnumerator StartCheckAndAdd()
@@ -75,7 +74,7 @@ public class CenterHost : SingletonNetwork<CenterHost>
             {
                 var Objecttransform = new ObjectTransform()
                 {
-                    obj = netObj,
+                    nameObj = obj.name,
                     oldObj = obj,
                     position = new Vector2(netObj.transform.position.x, netObj.transform.position.y),
                     rotation = netObj.transform.rotation
@@ -98,7 +97,7 @@ public class CenterHost : SingletonNetwork<CenterHost>
             {
                 var Objecttransform = new ObjectTransform()
                 {
-                    obj = netObj,
+                    nameObj = obj.name,
                     oldObj = obj,
                     position = new Vector2(netObj.transform.position.x, netObj.transform.position.y),
                     rotation = netObj.transform.rotation
@@ -121,7 +120,7 @@ public class CenterHost : SingletonNetwork<CenterHost>
             {
                 var Objecttransform = new ObjectTransform()
                 {
-                    obj = netObj,
+                    nameObj = obj.name,
                     oldObj = obj,
                     position = new Vector2(netObj.transform.position.x, netObj.transform.position.y),
                     rotation = netObj.transform.rotation
@@ -145,8 +144,9 @@ public class CenterHost : SingletonNetwork<CenterHost>
 
     }
 
-    public void DestroyAllObjectOfflien()
+    public void DestroyAllObjectOffline()
     {
+        Debug.Log("Start Destory");
         GameObject[] targetMoveAbleObject = GameObject.FindGameObjectsWithTag("MoveAble");
 
         foreach (GameObject obj in targetMoveAbleObject)
@@ -168,33 +168,34 @@ public class CenterHost : SingletonNetwork<CenterHost>
         RemoveOldObj = true;
     }
 
-    public void CheckForTrapAndMoveAbleObject()
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    public void CheckForTrapAndMoveAbleObject_RPC()
     {
         if (doneScan)
         {
             bool firstLoad;
             bool secondLoad;
             bool thirdLoad;
-            if (readySpawn && Runner != null && HasStateAuthority)
+            if (readySpawn && Runner != null)
             {
                 Debug.Log("Start Spawn");
                 foreach (ObjectTransform obj in ObjMoveAbleTrans)
                 {
-                    SpawnNetworkObject(obj.obj, obj.position, obj.rotation);
+                    SpawnNetworkObject(obj.nameObj, obj.oldObj, obj.position, obj.rotation);
                     RemoveOldObject(obj.oldObj);
                 }
                 firstLoad = true;
 
                 foreach (ObjectTransform obj in ObjTrapTrans)
                 {
-                    SpawnNetworkObject(obj.obj, obj.position, obj.rotation);
+                    SpawnNetworkObject(obj.nameObj, obj.oldObj, obj.position, obj.rotation);
                     RemoveOldObject(obj.oldObj);
                 }
                 secondLoad = true;
 
                 foreach (ObjectTransform obj in ObjEnemyTrans)
                 {
-                    SpawnNetworkObject(obj.obj, obj.position, obj.rotation);
+                    SpawnNetworkObject(obj.nameObj, obj.oldObj, obj.position, obj.rotation);
                     RemoveOldObject(obj.oldObj);
                 }
                 thirdLoad = true;
@@ -207,13 +208,32 @@ public class CenterHost : SingletonNetwork<CenterHost>
         }
     }
 
-    public void SpawnNetworkObject(NetworkObject obj, Vector2 pos, Quaternion rotation)
+    public void SpawnNetworkObject(string nameObj ,GameObject go, Vector2 pos, Quaternion rotation)
     {
-        if (Runner != null) // Make it sreach for prefabs before spawn
+        if (Runner != null)
         {
             Vector3 spawnPos = new Vector3(pos.x, pos.y, 0f);
             Quaternion spawnRot = rotation;
-            Runner.Spawn(obj, spawnPos, spawnRot);
+
+            switch (nameObj)
+            {
+                case "Rock":
+                    Runner.Spawn(RockPrefabs, spawnPos, spawnRot);
+                    break;
+
+                case "JellyTrap":
+                    Runner.Spawn(JellyPrefabs, spawnPos, spawnRot);
+                    break;
+
+                case "BearTrap":
+                    Runner.Spawn(BearTrapPrefabs, spawnPos, spawnRot);
+                    break;
+
+                default:
+                    Debug.Log("can't find the prefabe of " + go.name);
+                    break;
+            }
+            
         }
     }
 
@@ -234,11 +254,12 @@ public class CenterHost : SingletonNetwork<CenterHost>
     }
 
     IEnumerator WaitForLoad()
-    {
+    {   
         firstStart = false;
         yield return new WaitForSeconds(5f);
         readySpawn = true;
-        CheckForTrapAndMoveAbleObject();
+        CheckForTrapAndMoveAbleObject_RPC();
+        
     }
 
     #region ComponentZone
@@ -414,7 +435,7 @@ public class CenterHost : SingletonNetwork<CenterHost>
 [Serializable]
 public class ObjectTransform
 {
-    public NetworkObject obj;
+    public string nameObj;
     public GameObject oldObj;
     public Vector2 position;
     public Quaternion rotation;

@@ -52,7 +52,16 @@ MonoBehaviour:
   hostStats: {fileID: 0}
   clientRunner: {fileID: 0}
   clientStats: {fileID: 0}
-  Rock: {fileID: 7599381110968069507, guid: c7e65cb74e2a0264ba2f655b06f5d42e, type: 3}
+  doneScan: 0
+  readySpawn: 0
+  firstStart: 0
+  ObjMoveAbleTrans: []
+  ObjTrapTrans: []
+  ObjEnemyTrans: []
+  RemoveOldObj: 0
+  RockPrefabs: {fileID: 7599381110968069507, guid: c7e65cb74e2a0264ba2f655b06f5d42e, type: 3}
+  JellyPrefabs: {fileID: 0}
+  BearTrapPrefabs: {fileID: 0}
 --- !u!114 &7825853430673868469
 MonoBehaviour:
   m_ObjectHideFlags: 0

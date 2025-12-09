@@ -162,12 +162,11 @@ public class MovementCharacter : NetworkBehaviour
     {
         if (_isGrounded && _jumpAble && Jump)
         {
-            cAnimation.UpdateActionAnimation(0);
             JumpAction();
             if (_alreadyJump)
             {
                 StartCoroutine(WaitForJump());
-                StartCoroutine(WaitToFly());
+                StartCoroutine(WaitToFly()); // change to reach the top when jump then can fly
             }
         }
 
@@ -319,7 +318,7 @@ public class MovementCharacter : NetworkBehaviour
 
     private IEnumerator WaitToFly()
     {
-        yield return new WaitForSeconds(0.3f);
+        yield return new WaitForSeconds(0.5f);
         flyAble = true;
     }
 
