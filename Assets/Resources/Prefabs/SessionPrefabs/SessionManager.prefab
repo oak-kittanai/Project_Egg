@@ -1,0 +1,87 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &9084424422631087452
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8951876932146295832}
+  - component: {fileID: 7581363676634988447}
+  - component: {fileID: 4456705677759636132}
+  m_Layer: 0
+  m_Name: SessionManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8951876932146295832
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9084424422631087452}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1068.1223, y: 585.78687, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7581363676634988447
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9084424422631087452}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a96cd3de1c2e1b04882a7a3d0297b1bc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SessionManager
+  _playerColor: {fileID: 0}
+  _sessionKeyText: {fileID: 0}
+  _roomNumberInsertField: {fileID: 0}
+  _sessionKey: 
+  _inputRoomKey: 
+  _generateRoomNumber: {fileID: 0}
+  _startButton: {fileID: 0}
+  _joinRoomButton: {fileID: 0}
+  _leaveButton: {fileID: 0}
+  _showName: {fileID: 0}
+  _isAlreadyInRoom: 0
+  runnerPrefab: {fileID: 0}
+  _listText: {fileID: 0}
+  _listGameObject: {fileID: 0}
+  _namePrefab: {fileID: 0}
+  _listTransform: {fileID: 0}
+  networkRunner: {fileID: 0}
+  CenterHostObject: {fileID: 0}
+  playerHostColor: {r: 0, g: 0, b: 0, a: 0}
+  playerClientColor: {r: 0, g: 0, b: 0, a: 0}
+  Players: []
+--- !u!114 &4456705677759636132
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9084424422631087452}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
+  SortKey: 1621737369
+  ObjectInterest: 1
+  Flags: 262145
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: 7581363676634988447}
+  ForceRemoteRenderTimeframe: 0

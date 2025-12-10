@@ -140,21 +140,16 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
 
     public void OnPlayerJoined(NetworkRunner runner, PlayerRef player)
     {
-        /*if (spawner != null)
+        if (SessionManager.Instance != null)
         {
-            if (runner.IsServer)
-            {
-                spawner.SpawnPlayer(player);
-                Debug.Log("Spawner is: " + spawner);
-            }
-        }*/
+            SessionManager.Instance.GetData(player.PlayerId, player, runner);
+        }
+        if (SessionHub.Instance != null)
+        {
+            SessionHub.Instance.UpdateTMPText(player.PlayerId);
+        }
 
-        
-
-        // -------------
-        // Add To CenterHost
-
-        if (CenterHost.Instance != null)
+        /*if (CenterHost.Instance != null)
         {
             CenterHost.Instance.AddPlayerRef(runner, player);
             CenterHost.Instance.CheckComponentPlayer(player);
@@ -163,9 +158,9 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
         else
         {
             Debug.LogWarning("Can't find CenterHost");
-        }
+        }*/
 
-        Debug.Log($"Player has {player.PlayerId} Joined");
+        Debug.Log($"Player has {player.PlayerId} Joined the session");
     }
 
     public void OnPlayerLeft(NetworkRunner runner, PlayerRef player)
@@ -195,6 +190,7 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
     {
         if (sessionList.Count > 0)
         {
+            SessionHub.Instance.UpdateList(sessionList.Count);
             Debug.Log("Found room: " + sessionList[0].Name);
         }
         else
