@@ -50,5 +50,11 @@ public class SingletonNetwork<T> : NetworkBehaviour where T : NetworkBehaviour
             SessionManager.Instance.Setup();
         }
 
+        if (Instance is SessionHub)
+        {
+            SessionHub.Instance.Setup();
+
+        }
+
     }
 }

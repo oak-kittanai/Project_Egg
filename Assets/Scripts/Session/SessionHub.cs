@@ -2,12 +2,13 @@ using Fusion;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using static Unity.Collections.Unicode;
 
 public enum characterType
 {
+    unknow,
     Duck,
-    Bird,
-    unknow
+    Bird
 }
 
 public class SessionHub : SingletonNetwork<SessionHub>
@@ -17,21 +18,24 @@ public class SessionHub : SingletonNetwork<SessionHub>
     [SerializeField] string _sessionKey;
 
     [SerializeField] Button _leaveButton;
+    [SerializeField] Button _leaveButton2;
 
-    // JoinRoomZone
-    [SerializeField] TMP_InputField _sessionNumberInsertField;
     [SerializeField] string _inputRoomKey;
-    [SerializeField] Button _joinRoomButton;
 
-    [SerializeField] bool AlreadyJoin;
-
+    [SerializeField] bool AlreadyJoin => SessionManager.Instance._isAlreadyInRoom;
     [SerializeField] int _playerCount;
+
+    [SerializeField] Canvas _canvas;
+
+    [Header("Lobby")]
+    [SerializeField] Button _CreateSessionNumber;
+    [SerializeField] Button _joinSessionButton;
 
     [Header("JoinSession")]
     [SerializeField] GameObject JoinSession;
+    [SerializeField] TMP_InputField _sessionNumberInsertField;
 
-    [Header("Lobby")]
-    [SerializeField] Button _CreateRoomNumber;
+    [SerializeField] Button _JoinRoomButton;
 
     [Header("InLobby")]
     [SerializeField] GameObject LobbyGameObject;
@@ -63,33 +67,75 @@ public class SessionHub : SingletonNetwork<SessionHub>
     [SerializeField] public Sprite _playerBirdImage;
     [SerializeField] public Sprite unknownImage;
 
+    [SerializeField] public Button ChangeCharacterButtonForHost;
+    [SerializeField] public Button ChangeCharacterButtonForClient;
+
     [SerializeField] TMP_Text RoomCode;
 
     [SerializeField] Button _startButton;
 
-    public void SetupButton()
+    public void Setup()
     {
-        _joinRoomButton.onClick.AddListener(JoinSessionRoom);
-        _CreateRoomNumber.onClick.AddListener(CreateRoom);
+        _joinSessionButton.onClick.AddListener(JoinSessionRoom);
+        _CreateSessionNumber.onClick.AddListener(CreateRoom);
+        _JoinRoomButton.onClick.AddListener(JoinRoom);
+
+        _leaveButton.onClick.AddListener(LeaveRoom);
+        _leaveButton2.onClick.AddListener(LeaveRoom);
+        ChangeCharacterButtonForHost.onClick.AddListener(AddFromHost);
+        ChangeCharacterButtonForClient.onClick.AddListener(AddFromClient);
+
+        SetupAssets();
+        JoinSession.SetActive(false);
+
+        _CreateSessionNumber.gameObject.SetActive(true);
+        _joinSessionButton.gameObject.SetActive(true);
+        LobbyGameObject.gameObject.SetActive(false);
     }
 
     public void SetupAssets()
     {
-        Sprite Duck = Resources.Load<Sprite>("UI_Assets/SessionRoom/Profile/Kael_Profile.png");
+        /*Sprite Duck = Resources.Load<Sprite>("UI_Assets/SessionRoom/Profile/Kael_Profile.png");
         _playerDuckImage = Duck;
 
         Sprite Bird = Resources.Load<Sprite>("UI_Assets/SessionRoom/Profile/Mira_Profile.png");
         _playerBirdImage = Bird;
 
         Sprite unknow = Resources.Load<Sprite>("UI_Assets/SessionRoom/Profile/Unknow_Character.png");
-        unknownImage = unknow;
+        unknownImage = unknow;*/
     }
 
-    public override void FixedUpdateNetwork()
+    public void AddFromHost()
+    {
+        if (RuntimeUpdate.Instance != null)
+        {
+            RuntimeUpdate.Instance.ChangeTypeRequest_RPC(true);
+        }
+        else
+        {
+            Debug.Log("not ready");
+        }
+    }
+
+    public void AddFromClient()
+    {
+        if (RuntimeUpdate.Instance != null)
+        {
+            RuntimeUpdate.Instance.ChangeTypeRequest_RPC(false);
+        }
+        else
+        {
+            Debug.Log("not ready");
+        }
+    }
+
+    public void UpdateOverTime()
     {
         if (AlreadyJoin)
         {
             LobbyGameObject.SetActive(true);
+            RoomCode.text = _sessionKey;
+            JoinSession.SetActive(false);
         }
         else
         {
@@ -97,9 +143,22 @@ public class SessionHub : SingletonNetwork<SessionHub>
         }
     }
 
+    public void SetupButtonOnline(bool playerHost)
+    {
+        if (playerHost)
+        {
+            ChangeCharacterButtonForHost.interactable = true;
+            ChangeCharacterButtonForClient.interactable = false;
+        }
+        else
+        {
+            ChangeCharacterButtonForHost.interactable = false;
+            ChangeCharacterButtonForClient.interactable = true;
+        }
+    }
+
     public void UpdateTMPText(int playerNum)
     {
-        RoomCode.text = _sessionKey;
         if (HasStateAuthority)
         {
             CharacterNameText_h.text = CHT_left;
@@ -117,49 +176,60 @@ public class SessionHub : SingletonNetwork<SessionHub>
             s_playerClientName = "Player2";
             playerClientName.text = s_playerClientName;
         }
-
     }
 
-    public void UpdateIcon(int playerNum) // Update Icon when change
+    public void ChangeType(int playerNum ,int o)
+    {
+        characterType newType = (characterType)o;
+
+        if (playerNum == 1)
+        {
+            hostType = newType;
+            UpdateIcon(1);
+            Debug.Log("HostType = " + hostType);
+        }
+        else if (playerNum == 2)
+        {
+            clientType = newType;
+            UpdateIcon(2);
+            Debug.Log("ClientType = " + clientType);
+        }
+        else
+        {
+            Debug.Log("can't find playerNum");
+        }
+    }
+    public void UpdateIcon(int playerNum)
     {
         if (playerNum == 1)
         {
-            switch (hostType)
-            {
-                case characterType.Duck:
-                    CharacterHostIcon.sprite = _playerDuckImage;
-                    break;
-                case characterType.Bird:
-                    CharacterHostIcon.sprite = _playerDuckImage;
-                    break;
-                default:
-                    CharacterHostIcon.sprite = unknownImage;
-                    break;
-            }
+            CharacterHostIcon.sprite = GetSpriteFromType(hostType);
         }
-
-        if (playerNum == 2)
+        else if (playerNum == 2)
         {
-            switch (clientType)
-            {
-                case characterType.Duck:
-                    CharacterClientIcon.sprite = _playerDuckImage;
-                    break;
-                case characterType.Bird:
-                    CharacterClientIcon.sprite = _playerDuckImage;
-                    break;
-                default:
-                    CharacterClientIcon.sprite = unknownImage;
-                    break;
-            }
+            CharacterClientIcon.sprite = GetSpriteFromType(clientType);
         }
+    }
 
+    private Sprite GetSpriteFromType(characterType type)
+    {
+        switch (type)
+        {
+            case characterType.Duck:
+                return _playerDuckImage;
+
+            case characterType.Bird:
+                return _playerBirdImage;
+
+            default:
+                return unknownImage;
+        }
     }
 
     public void SetMainButtonOff(bool o)
     {
-        _joinRoomButton.gameObject.SetActive(o);
-        _CreateRoomNumber.gameObject.SetActive(o);
+        _joinSessionButton.gameObject.SetActive(o);
+        _CreateSessionNumber.gameObject.SetActive(o);
     }
 
     public void JoinSessionRoom()
@@ -178,16 +248,18 @@ public class SessionHub : SingletonNetwork<SessionHub>
         {
             string key = _sessionNumberInsertField.text;
 
-            AlreadyJoin = SessionManager.Instance.JoinSession(key);
+            SessionManager.Instance.JoinSession(key);
 
             if (AlreadyJoin)
             {
+                JoinSession.SetActive(false);
                 _startButton.gameObject.SetActive(false);
+                LobbyGameObject.SetActive(true);
                 SetMainButtonOff(false);
             }
             else
             {
-                _startButton.gameObject.SetActive(true);
+                _startButton.gameObject.SetActive(false);
             }
         }
     }
@@ -212,32 +284,32 @@ public class SessionHub : SingletonNetwork<SessionHub>
             _sessionKey = "";
             if (string.IsNullOrEmpty(_sessionKey))
             {
-                _joinRoomButton.gameObject.SetActive(true);
-                _sessionKeyText.text = "Session key is : " + _sessionKey;
+                _joinSessionButton.gameObject.SetActive(true);
             }
+        }
+    }
+
+    public void GetKey(string key)
+    {
+        if (!string.IsNullOrEmpty(key))
+        {
+            _sessionKey = key;
+            Debug.Log($"Create session Key : {_sessionKey}");
+        }
+        else
+        {
+            Debug.Log("Session key is : Null");
         }
     }
 
     public void CreateRoom()
     {
-        string roomKey = SessionManager.Instance.GenerateCode();
+        SessionManager.Instance.GenerateCode();
 
-        roomKey = _sessionKey;
-        LobbyGameObject.SetActive(true);
-
-        _joinRoomButton.gameObject.SetActive(false);
+        _joinSessionButton.gameObject.SetActive(false);
         _leaveButton.gameObject.SetActive(true);
 
         _startButton.gameObject.SetActive(true);
-
-        if (!string.IsNullOrEmpty(roomKey))
-        {
-            Debug.Log($"Create session Key : {_sessionKey}");
-        }
-        else
-        {
-            Debug.Log($"Session key is : {_sessionKey}");
-        }
     }
 
     public void UpdateList(int playerCount)
@@ -248,5 +320,20 @@ public class SessionHub : SingletonNetwork<SessionHub>
     public void StartTheGame()
     {
         SessionManager.Instance.StartGame();
+    }
+
+    private void OnDestroy()
+    {
+        DesetButton();
+    }
+
+    public void DesetButton()
+    {
+        _joinSessionButton.onClick.RemoveAllListeners();
+        _CreateSessionNumber.onClick.RemoveAllListeners();
+        _JoinRoomButton.onClick.RemoveAllListeners();
+
+        _leaveButton.onClick.RemoveAllListeners();
+        _leaveButton2.onClick.RemoveAllListeners();
     }
 }

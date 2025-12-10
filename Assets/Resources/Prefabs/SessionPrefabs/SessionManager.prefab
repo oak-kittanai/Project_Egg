@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8951876932146295832}
   - component: {fileID: 7581363676634988447}
+  - component: {fileID: 44562366507545555}
   - component: {fileID: 4456705677759636132}
   m_Layer: 0
   m_Name: SessionManager
@@ -45,18 +46,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a96cd3de1c2e1b04882a7a3d0297b1bc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SessionManager
-  _playerColor: {fileID: 0}
-  _sessionKeyText: {fileID: 0}
-  _roomNumberInsertField: {fileID: 0}
   _sessionKey: 
-  _inputRoomKey: 
-  _generateRoomNumber: {fileID: 0}
-  _startButton: {fileID: 0}
-  _joinRoomButton: {fileID: 0}
-  _leaveButton: {fileID: 0}
-  _showName: {fileID: 0}
   _isAlreadyInRoom: 0
-  runnerPrefab: {fileID: 0}
+  runnerPrefab: {fileID: 4337480539873389715, guid: 428589c4c1cc8b84092ae1f64cccbf5f, type: 3}
+  runtimeUpdate: {fileID: 1630280130843689598, guid: 038de37593ee7d142bd9ce74de2bdec5, type: 3}
+  runTime: {fileID: 0}
   _listText: {fileID: 0}
   _listGameObject: {fileID: 0}
   _namePrefab: {fileID: 0}
@@ -66,6 +60,52 @@ MonoBehaviour:
   playerHostColor: {r: 0, g: 0, b: 0, a: 0}
   playerClientColor: {r: 0, g: 0, b: 0, a: 0}
   Players: []
+--- !u!114 &44562366507545555
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9084424422631087452}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 992c5029e0675854fb08d82dbd390bed, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SessionHub
+  _sessionKeyText: {fileID: 0}
+  _sessionKey: 
+  _leaveButton: {fileID: 0}
+  _leaveButton2: {fileID: 0}
+  _inputRoomKey: 
+  _playerCount: 0
+  _canvas: {fileID: 0}
+  _CreateSessionNumber: {fileID: 0}
+  _joinSessionButton: {fileID: 0}
+  JoinSession: {fileID: 0}
+  _sessionNumberInsertField: {fileID: 0}
+  _JoinRoomButton: {fileID: 0}
+  LobbyGameObject: {fileID: 9084424422631087452}
+  _playerHost: {fileID: 0}
+  playerHostName: {fileID: 0}
+  _playerClient: {fileID: 0}
+  playerClientName: {fileID: 0}
+  CharacterNameText_h: {fileID: 0}
+  CHT_right: 
+  CharacterNameText_c: {fileID: 0}
+  CHT_left: 
+  s_playerHostName: 
+  s_playerClientName: 
+  hostType: 0
+  clientType: 0
+  CharacterHostIcon: {fileID: 0}
+  CharacterClientIcon: {fileID: 0}
+  characterDuck: Kael
+  characterBird: Mira
+  _playerDuckImage: {fileID: 21300000, guid: ba1c9ec8c15c4da499ea2bd23e303731, type: 3}
+  _playerBirdImage: {fileID: 21300000, guid: dfa917ee9d55632428e023539b9d99f0, type: 3}
+  unknownImage: {fileID: -4077342139342232643, guid: ffa2ed2ca9bf69a4095c34ef94d2a7a5, type: 3}
+  RoomCode: {fileID: 0}
+  _startButton: {fileID: 0}
 --- !u!114 &4456705677759636132
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -84,4 +124,5 @@ MonoBehaviour:
   NestedObjects: []
   NetworkedBehaviours:
   - {fileID: 7581363676634988447}
+  - {fileID: 44562366507545555}
   ForceRemoteRenderTimeframe: 0

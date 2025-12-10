@@ -147,6 +147,14 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
         if (SessionHub.Instance != null)
         {
             SessionHub.Instance.UpdateTMPText(player.PlayerId);
+            if (runner.IsServer)
+            {
+                SessionHub.Instance.SetupButtonOnline(true);
+            }
+            else
+            {
+                SessionHub.Instance.SetupButtonOnline(false);
+            }
         }
 
         /*if (CenterHost.Instance != null)
@@ -190,6 +198,7 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
     {
         if (sessionList.Count > 0)
         {
+            SessionManager.Instance.UpdatePlayerCount(runner);
             SessionHub.Instance.UpdateList(sessionList.Count);
             Debug.Log("Found room: " + sessionList[0].Name);
         }
