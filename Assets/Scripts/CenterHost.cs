@@ -1,3 +1,4 @@
+using ExitGames.Client.Photon.StructWrapping;
 using Fusion;
 using System;
 using System.Collections;
@@ -52,8 +53,8 @@ public class CenterHost : SingletonNetwork<CenterHost>
 
         if (HasStateAuthority)
         {
+            StartCheckAndAdd();
             firstStart = true;
-            StartCoroutine(StartCheckAndAdd());
         }
     }
 
@@ -62,30 +63,24 @@ public class CenterHost : SingletonNetwork<CenterHost>
         //RockPrefabs = Runner.
     }
 
-    IEnumerator StartCheckAndAdd()
+    private void StartCheckAndAdd()
     {
-        // Check The game for the object and then respawn them again
         GameObject[] targetMoveAbleObject = GameObject.FindGameObjectsWithTag("MoveAble");
 
         foreach (GameObject obj in targetMoveAbleObject)
         {
             NetworkObject netObj = obj.GetComponent<NetworkObject>();
-            if (netObj != null)
-            {
-                var Objecttransform = new ObjectTransform()
-                {
-                    nameObj = obj.name,
-                    oldObj = obj,
-                    position = new Vector2(netObj.transform.position.x, netObj.transform.position.y),
-                    rotation = netObj.transform.rotation
-                };
 
-                ObjMoveAbleTrans.Add(Objecttransform);
-            }
-            else
+            var Objecttransform = new ObjectTransform()
             {
-                Debug.Log(obj.name + " not network object");
-            }
+                nameObj = obj.name,
+                oldObj = obj,
+                netObj = netObj,
+                position = new Vector2(obj.transform.position.x, obj.transform.position.y),
+                rotation = obj.transform.rotation
+            };
+
+            ObjTrapTrans.Add(Objecttransform);
         }
         bool firstLoop = true;
 
@@ -93,22 +88,17 @@ public class CenterHost : SingletonNetwork<CenterHost>
         foreach (GameObject obj in targetTrapObject)
         {
             NetworkObject netObj = obj.GetComponent<NetworkObject>();
-            if (netObj != null)
-            {
-                var Objecttransform = new ObjectTransform()
-                {
-                    nameObj = obj.name,
-                    oldObj = obj,
-                    position = new Vector2(netObj.transform.position.x, netObj.transform.position.y),
-                    rotation = netObj.transform.rotation
-                };
 
-                ObjTrapTrans.Add(Objecttransform);
-            }
-            else
+            var Objecttransform = new ObjectTransform()
             {
-                Debug.Log(obj.name + " not network object");
-            }
+                nameObj = obj.name,
+                oldObj = obj,
+                netObj = netObj,
+                position = new Vector2(obj.transform.position.x, obj.transform.position.y),
+                rotation = obj.transform.rotation
+            };
+
+            ObjTrapTrans.Add(Objecttransform);
         }
         bool secondLoop = true;
 
@@ -116,87 +106,57 @@ public class CenterHost : SingletonNetwork<CenterHost>
         foreach (GameObject obj in targetEnemyObject)
         {
             NetworkObject netObj = obj.GetComponent<NetworkObject>();
-            if (netObj != null)
-            {
-                var Objecttransform = new ObjectTransform()
-                {
-                    nameObj = obj.name,
-                    oldObj = obj,
-                    position = new Vector2(netObj.transform.position.x, netObj.transform.position.y),
-                    rotation = netObj.transform.rotation
-                };
 
-                ObjEnemyTrans.Add(Objecttransform);
-            }
-            else
+            var Objecttransform = new ObjectTransform()
             {
-                Debug.Log(obj.name + " not network object");
-            }
+                nameObj = obj.name,
+                oldObj = obj,
+                netObj = netObj,
+                position = new Vector2(obj.transform.position.x, obj.transform.position.y),
+                rotation = obj.transform.rotation
+            };
+
+            ObjEnemyTrans.Add(Objecttransform);
         }
         bool thirdLoop = true;
 
         if (firstLoop && secondLoop && thirdLoop)
         {
             doneScan = true;
+            firstStart = false;
         }
 
-        yield return new WaitUntil(() => doneScan == true);
-
+        //yield return new WaitUntil(() => doneScan == true);
     }
 
-    public void DestroyAllObjectOffline()
-    {
-        Debug.Log("Start Destory");
-        GameObject[] targetMoveAbleObject = GameObject.FindGameObjectsWithTag("MoveAble");
-
-        foreach (GameObject obj in targetMoveAbleObject)
-        {
-            Destroy(obj);
-        }
-
-        GameObject[] targetTrapObject = GameObject.FindGameObjectsWithTag("Trap");
-        foreach (GameObject obj in targetTrapObject)
-        {
-            Destroy(obj);
-        }
-
-        GameObject[] targetEnemyObject = GameObject.FindGameObjectsWithTag("Enemy");
-        foreach (GameObject obj in targetEnemyObject)
-        {
-            Destroy(obj);
-        }
-        RemoveOldObj = true;
-    }
-
-    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    public void CheckForTrapAndMoveAbleObject_RPC()
+    public void CheckToSpawnObject()
     {
         if (doneScan)
         {
             bool firstLoad;
             bool secondLoad;
             bool thirdLoad;
-            if (readySpawn && Runner != null)
+            if (readySpawn && Runner != null && HasStateAuthority)
             {
                 Debug.Log("Start Spawn");
                 foreach (ObjectTransform obj in ObjMoveAbleTrans)
                 {
                     SpawnNetworkObject(obj.nameObj, obj.oldObj, obj.position, obj.rotation);
-                    RemoveOldObject(obj.oldObj);
+                    DestoryObject(obj.oldObj);
                 }
                 firstLoad = true;
 
                 foreach (ObjectTransform obj in ObjTrapTrans)
                 {
                     SpawnNetworkObject(obj.nameObj, obj.oldObj, obj.position, obj.rotation);
-                    RemoveOldObject(obj.oldObj);
+                    DestoryObject(obj.oldObj);
                 }
                 secondLoad = true;
 
                 foreach (ObjectTransform obj in ObjEnemyTrans)
                 {
                     SpawnNetworkObject(obj.nameObj, obj.oldObj, obj.position, obj.rotation);
-                    RemoveOldObject(obj.oldObj);
+                    DestoryObject(obj.oldObj);
                 }
                 thirdLoad = true;
 
@@ -208,7 +168,7 @@ public class CenterHost : SingletonNetwork<CenterHost>
         }
     }
 
-    public void SpawnNetworkObject(string nameObj ,GameObject go, Vector2 pos, Quaternion rotation)
+    public void SpawnNetworkObject(string nameObj, GameObject go, Vector2 pos, Quaternion rotation)
     {
         if (Runner != null)
         {
@@ -233,13 +193,12 @@ public class CenterHost : SingletonNetwork<CenterHost>
                     Debug.Log("can't find the prefabe of " + go.name);
                     break;
             }
-            
         }
     }
 
-    public void RemoveOldObject(GameObject obj)
+    public void DestoryObject(GameObject go)
     {
-        Destroy(obj);
+        Destroy(go.gameObject);
     }
 
     public override void FixedUpdateNetwork()
@@ -254,11 +213,11 @@ public class CenterHost : SingletonNetwork<CenterHost>
     }
 
     IEnumerator WaitForLoad()
-    {   
+    {
         firstStart = false;
         yield return new WaitForSeconds(5f);
         readySpawn = true;
-        CheckForTrapAndMoveAbleObject_RPC();
+        CheckToSpawnObject();
         
     }
 
@@ -436,6 +395,7 @@ public class CenterHost : SingletonNetwork<CenterHost>
 public class ObjectTransform
 {
     public string nameObj;
+    public NetworkObject netObj;
     public GameObject oldObj;
     public Vector2 position;
     public Quaternion rotation;

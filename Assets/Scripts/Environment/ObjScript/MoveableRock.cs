@@ -8,6 +8,10 @@ public class MoveableRock : NetworkBehaviour , MoveableObject
     [SerializeField] Rigidbody2D rb2D;
     [SerializeField] NetworkRigidbody2D netRb2D;
 
+    [SerializeField] NetworkObject netObj;
+    public bool StartDestory;
+    public bool DoneDestory;
+
     [Header("Stats")]
     [Networked] public Vector2 seltTrans {  get; set; }
 
