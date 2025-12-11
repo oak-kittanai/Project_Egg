@@ -8,14 +8,14 @@ public class CharacterAnimation : NetworkBehaviour
     CharacterStats stats;
     Animator animator;
     SpriteRenderer spriteRenderer;
+    CharacterAction action;
 
     [Header("Position")]
     [Networked] public Vector3 Direction {  get; set; }
     [Networked] public int State { get; set; }
     [Networked] public bool FlipX { get; set; }
 
-    [Networked] public bool hostCarrying { get; set; }
-    [Networked] public bool clientCarrying { get; set; }
+    [SerializeField] public bool Carrying => action.isCarry;
 
     [Header("Controller Setting")]
     [SerializeField] public RuntimeAnimatorController DuckController;
@@ -39,6 +39,7 @@ public class CharacterAnimation : NetworkBehaviour
         animator = GetComponentInChildren<Animator>();
         spriteRenderer = GetComponentInChildren<SpriteRenderer>();
         stats = GetComponent<CharacterStats>();
+        action = GetComponentInChildren<CharacterAction>();
     }
 
     public void UpdateSkin(characterType skin)
@@ -76,12 +77,37 @@ public class CharacterAnimation : NetworkBehaviour
 
     public void JumpAnimation()
     {
-        animator.Play("Pre_Jump", 0);
+        animator.Play("Jump", 0);
     }
 
-    public void FallingAndFloatAnimation()
+    public void FallingAndFloatAnimation(bool isFalling)
     {
-
+        if (Carrying)
+        {
+            if (isFalling)
+            {
+                animator.SetBool("Carrying", false);
+                animator.SetBool("Falling", true);
+            }
+            else
+            {
+                animator.SetBool("Carrying", true);
+                animator.Play("Floating_carry", 0);
+            }
+        }
+        else
+        {
+            if (isFalling)
+            {
+                animator.SetBool("Falling", true);
+                animator.SetBool("Float", false);
+            }
+            else
+            {
+                animator.SetBool("Float", true);
+                animator.SetBool("Falling", false);
+            }
+        }
     }
 
     // Duck
@@ -93,100 +119,26 @@ public class CharacterAnimation : NetworkBehaviour
 
     public void SwimAnimation()
     {
-
+        animator.Play("Swim", 0);
     }
 
     public void DiveAnimation()
     {
-
+        animator.SetBool("InWater", true);
     }
 
     // Bird
 
     public void ThrowAnimation()
     {
-
+        animator.SetBool("Throwing", true);
     }
 
     public void FlyAnimation()
     {
+        animator.Play("Fly", 0);
 
-    }
-
-
-    public void UpdateActionAnimation(int i)
-    {
-        State = i;
-
-        if (currentSkin == characterType.Bird)
-        {
-            if (State == 1)
-            {
-                
-            }
-            else if (State == 2)
-            {
-                animator.Play("Fly", 0);
-            }
-            else if (State == 3)
-            {
-                animator.SetBool("Falling", true);
-            }
-            else if (State == 4)
-            {
-                animator.SetBool("Float", true);
-            }
-            else if (State == 5)
-            {
-                // Throwing
-            }
-            else
-            {
-                animator.SetBool("Falling", false);
-                animator.SetBool("Float", false);
-                animator.SetBool("Carrying", false);
-            }
-        }
-        else
-        {
-            if (State == 1)
-            {
-                animator.Play("Jump", 0);
-            }
-            else if (State == 2)
-            {
-                animator.Play("Floating", 0);
-                animator.SetBool("Float", true);
-                animator.SetBool("Carrying", false);
-            }
-            else if (State == 3)
-            {
-                animator.Play("Floating_carry", 0);
-                animator.SetBool("Float", true);
-                animator.SetBool("Carrying", true);
-            }
-            else if (State == 4)
-            {
-                animator.Play("Swim", 0);
-                animator.SetBool("InWater", true);
-                animator.SetBool("Float", false);
-                animator.SetBool("Carrying", false);
-            }
-            else
-            {
-                animator.SetBool("Falling", false);
-                animator.SetBool("Float", false);
-                animator.SetBool("InWater", false);
-                animator.SetBool("Carrying", false);
-            }
-        }
-
-
-        /*if (Action == 3)
-        {
-            animator.Play("Float_Down", 0);
-            animator.SetBool("Falling", true);
-        }*/
+        animator.SetBool("Carrying", false);
     }
 
     public void OnGroundCheck()

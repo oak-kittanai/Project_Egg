@@ -26,7 +26,7 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
         if (SessionManager.Instance != null)
         {
             Debug.Log("Session not null");
-            SessionManager.Instance.DisconnedFromServer();
+            //SessionManager.Instance.DisconnedFromServer();
         }
     }
 
@@ -149,7 +149,7 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
 
     public void OnPlayerJoined(NetworkRunner runner, PlayerRef player)
     {
-        if (SessionManager.Instance != null)
+        /*if (SessionManager.Instance != null)
         {
             SessionManager.Instance.GetData(player.PlayerId, player, runner);
         }
@@ -165,9 +165,9 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
             {
                 SessionHub.Instance.SetupButtonOnline(false);
             }
-        }
+        }*/
 
-        /*if (CenterHost.Instance != null)
+        if (CenterHost.Instance != null)
         {
             CenterHost.Instance.AddPlayerRef(runner, player);
             CenterHost.Instance.CheckComponentPlayer(player);
@@ -176,7 +176,7 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
         else
         {
             Debug.LogWarning("Can't find CenterHost");
-        }*/
+        }
 
         Debug.Log($"Player has {player.PlayerId} Joined the session");
     }
@@ -206,7 +206,7 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
 
     public void OnSessionListUpdated(NetworkRunner runner, List<SessionInfo> sessionList)
     {
-        if (sessionList.Count > 0)
+        /*if (sessionList.Count > 0)
         {
             SessionManager.Instance.UpdatePlayerCount(runner);
             SessionHub.Instance.UpdateList(sessionList.Count);
@@ -215,7 +215,7 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
         else
         {
             Debug.Log("No room found");
-        }
+        }*/
     }
 
     public void OnReliableDataReceived(NetworkRunner runner, PlayerRef player, ReliableKey key, ArraySegment<byte> data)

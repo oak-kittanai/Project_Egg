@@ -26,6 +26,7 @@ public class MovementCharacter : NetworkBehaviour
     [Networked] public Vector2 _moveX {  get; set; }
     public float InputMoveX;
     public bool _moveAble;
+    public bool MoveAble;
 
     [SerializeField] public bool _busy;
     [SerializeField] public bool _staminaBusy;
@@ -115,6 +116,12 @@ public class MovementCharacter : NetworkBehaviour
             {
                 stats.RechargeStamina(true);
             }
+
+            if (action.carryRock)
+            {
+                MoveAble = false;
+            }
+            else MoveAble = true;
         }
 
         if (CurrentSkinType == characterType.Bird)
@@ -137,12 +144,15 @@ public class MovementCharacter : NetworkBehaviour
             float moveX = input.horizontal;
             InputMoveX = moveX;
 
-            float targetSpeed = moveX * MaxSpeed;
-            float speedDiff = targetSpeed - rb2D.linearVelocity.x;
-            float accelRate = Mathf.Abs(targetSpeed) > 0.01f ? acceleration : deceleration;
+            if (MoveAble)
+            {
+                float targetSpeed = moveX * MaxSpeed;
+                float speedDiff = targetSpeed - rb2D.linearVelocity.x;
+                float accelRate = Mathf.Abs(targetSpeed) > 0.01f ? acceleration : deceleration;
 
-            float force = speedDiff * accelRate;
-            rb2D.AddForce(Vector2.right * force, ForceMode2D.Force);
+                float force = speedDiff * accelRate;
+                rb2D.AddForce(Vector2.right * force, ForceMode2D.Force);
+            }
         }
         if (HasInputAuthority)
         {
@@ -174,6 +184,18 @@ public class MovementCharacter : NetworkBehaviour
         {
             Fly();
         }
+
+        if (_isInTheAir && !flyAble && _alreadyJump && Jump)
+        {
+            StartFloat();
+        }
+
+    }
+
+    private void StartFloat()
+    {
+        _isFloat = true;
+        cAnimation.FallingAndFloatAnimation(false);
     }
 
     private IEnumerator WaitForJump()
@@ -190,20 +212,13 @@ public class MovementCharacter : NetworkBehaviour
         _isInTheAir = true;
         _jumpAble = false;
 
-        cAnimation.UpdateActionAnimation(1);
-        if (CurrentSkinType == characterType.Bird)
-        {
-            StartCoroutine(JumpWait());
-        }
-        else
-        {
-            rb2D.AddForce(Vector2.up * stats.s_jumpForce, ForceMode2D.Impulse);
-        }
+        cAnimation.JumpAnimation();
+        StartCoroutine(JumpWait());
     }
 
     IEnumerator JumpWait()
     {
-        yield return new WaitForSeconds(0.55f);
+        yield return new WaitForSeconds(0.2f);
         rb2D.AddForce(Vector2.up * stats.s_jumpForce, ForceMode2D.Impulse);
     }
 
@@ -226,7 +241,7 @@ public class MovementCharacter : NetworkBehaviour
 
         if (_isFalling)
         {
-            cAnimation.UpdateActionAnimation(3);
+            cAnimation.FallingAndFloatAnimation(true);
         }
     }
 
@@ -243,7 +258,10 @@ public class MovementCharacter : NetworkBehaviour
         {
             _isFalling = true;
             rb2D.gravityScale = Mathf.Lerp(rb2D.gravityScale, 2f, Time.deltaTime * 2f);
-            cAnimation.UpdateActionAnimation(3);
+        }
+        else if (rb2D.linearVelocity.y < -1f && !_isFly && _isFloat)
+        {
+            rb2D.gravityScale = Mathf.Lerp(rb2D.gravityScale, 2f, Time.deltaTime * 2f);
         }
     }
 
@@ -275,7 +293,7 @@ public class MovementCharacter : NetworkBehaviour
         _staminaBusy = true;
 
         StartFly();
-        cAnimation.UpdateActionAnimation(2);
+        cAnimation.FlyAnimation();
 
         Debug.Log("complete fly");
     }

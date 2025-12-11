@@ -327,19 +327,20 @@ public class CenterHost : SingletonNetwork<CenterHost>
     IEnumerator WaitForSecToSpawn(PlayerRef player)
     {
         yield return new WaitForSeconds(0.4f);
+        SpawnPlayer(player);
     }
 
 
-    public void SpawnPlayer(PlayerRef player, characterType Type, bool isHost)
+    public void SpawnPlayer(PlayerRef player)// , characterType Type, bool isHost
     {
-        if (isHost)
+        /*if (isHost)
         {
             currentHost = Type;
         }
         else
         {
             currentClient = Type;
-        }
+        }*/
 
         Debug.Log("Try Spawn Player");
         Vector2 spawnPos = SpawnPos;
@@ -357,7 +358,7 @@ public class CenterHost : SingletonNetwork<CenterHost>
         CharacterAnimation playerAnimation = playerObj.GetComponent<CharacterAnimation>();
         if (playerObj.InputAuthority == runner.LocalPlayer)
         {
-            playerStats.skinType = currentHost;
+            playerStats.skinType = characterType.Bird;//currentHost
             playerObj.name = $"Player ({playerStats.skinType})Host";
             Debug.Log("Spawn Player Host");
 
@@ -365,7 +366,7 @@ public class CenterHost : SingletonNetwork<CenterHost>
         }
         else
         {
-            playerStats.skinType = currentClient;
+            playerStats.skinType = characterType.Duck;//currentClient
             playerObj.name = $"Player ({playerStats.skinType})Client";
             Debug.Log("Spawn Player Client");
 

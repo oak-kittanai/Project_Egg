@@ -14,10 +14,9 @@ public class CharacterAction : NetworkBehaviour, CharacterInteract
     [SerializeField] Camera playerCam;
 
     [Header("Value")]
-    [SerializeField] int rock;
-
     [SerializeField] public bool canInteract;
     [SerializeField] public bool pressed;
+    [SerializeField] public bool isCarry;
 
     [Header("Throw")]
     [SerializeField] public LineRenderer _lineRenderer;
@@ -39,6 +38,10 @@ public class CharacterAction : NetworkBehaviour, CharacterInteract
 
     [Header("Test")]
     public SkillSet characterSkillSet;
+
+    [Header("rock")]
+    [SerializeField] public bool carryRock;
+    [NetworkPrefab] public NetworkObject rockPrefab;
 
     public bool fly;
 
@@ -105,46 +108,56 @@ public class CharacterAction : NetworkBehaviour, CharacterInteract
     }
 
     #region ProjectileCalculateMovement&DrawPath
-    private void DrawPath(float v0, float angle, float time, float step)
+    private void DrawPath(Vector3 dir, float v0, float angle, float time, float step)
     {
+        float maxTime = time; // draw full arc
         step = Mathf.Max(0.01f, step);
-        _lineRenderer.positionCount = (int)(time/step) + 2;
-        int count = 0;
 
-        for (float i = 0; i <= time; i += step)
+        _lineRenderer.positionCount = (int)(maxTime / step) + 1;
+
+        int index = 0;
+        for (float t = 0; t <= maxTime; t += step)
         {
-            float x = v0 * i * Mathf.Cos(angle);
-            float y = v0 * i * Mathf.Sin(angle) - 0.5f * -Physics.gravity.y * Mathf.Pow(i, 2);
-            _lineRenderer.SetPosition(count, _firePoint.position + new Vector3(x,y,0));
-            count++;
+            float x = v0 * t * Mathf.Cos(angle);
+            float y = v0 * t * Mathf.Sin(angle) + 0.5f * Physics.gravity.y * t * t;
+
+            Vector3 pos = _firePoint.position + dir * x + new Vector3(0, y, 0);
+            _lineRenderer.SetPosition(index, pos);
+            index++;
         }
-        float xfinal = v0 * time * Mathf.Cos(angle);
-        float yfinal = v0 * time * Mathf.Sin(angle) - 0.5f * -Physics.gravity.y * Mathf.Pow(time, 2);
-        _lineRenderer.SetPosition(count, _firePoint.position + new Vector3(xfinal, yfinal, 0));
     }
 
-    private float QuadraticEquation(float a, float b, float c, float sign)
+    /*private float QuadraticEquation(float a, float b, float c, float sign)
     {
         return (-b + sign * Mathf.Sqrt(b * b - 4 * a * c)) / (2 * a);
-    }
+    }*/
 
-    private void CalculatePath(Vector3 targetPos, float h, out float v0, out float angle, out float time)
+    public void CalculatePath(Vector3 targetPos, float _unusedHeight, out float v0, out float angle, out float time)
     {
         float xt = targetPos.x;
         float yt = targetPos.y;
         float g = -Physics.gravity.y;
 
-        float b = Mathf.Sqrt(2 * g * h);
-        float a = (-0.5f * g);
-        float c = -yt;
+        // Choose a constant angle (your arc shape)
+        angle = 45f * Mathf.Deg2Rad; // you can change this if you want
 
-        float tplus = QuadraticEquation(a, b, c, 1);
-        float tmin = QuadraticEquation(a, b, c, -1);
-        time = tplus > tmin ? tplus : tmin;
+        float cosA = Mathf.Cos(angle);
+        float sinA = Mathf.Sin(angle);
 
-        angle = Mathf.Atan(b * time / xt);
+        float denom = 2f * cosA * cosA * (xt * Mathf.Tan(angle) - yt);
 
-        v0 = b / Mathf.Sin(angle);
+        if (denom <= 0f)
+        {
+            // no valid solution -> fallback
+            v0 = 0;
+            time = 0;
+            return;
+        }
+
+        v0 = Mathf.Sqrt(g * xt * xt / denom);
+
+        // total flight time
+        time = xt / (v0 * cosA);
     }
     #endregion
 
@@ -159,41 +172,38 @@ public class CharacterAction : NetworkBehaviour, CharacterInteract
         }
 
         Vector3 mousePos = playerCam.ScreenToWorldPoint(pos);
-
         _worldPos = mousePos - _firePoint.position;
 
-        if (mouse2Hold)
+        if (mouse2Hold && carryRock)
         {
             Vector3 targetPos = new Vector3(_worldPos.x, _worldPos.y, 0);
-            targetPos.z = 0;
+            Vector3 dir = targetPos.normalized;
 
-            float height = targetPos.y + targetPos.magnitude / 2f;
-            height = Mathf.Max(0.01f, height);
-            float angle;
-            float v0;
-            float time;
-            CalculatePath(targetPos, height, out v0, out angle, out time);
-            DrawPath(v0, angle, time, _step);
+            float v0, angle, time;
+            CalculatePath(targetPos, 0f, out v0, out angle, out time);
 
-            if (_isDrawPathAvailable)
-            {
-                _lineRenderer.enabled = true;
-
-            }
-            else
+            if (time <= 0f)
             {
                 _lineRenderer.enabled = false;
+                return;
             }
+
+            DrawPath(dir, v0, angle, time, _step);
+            _lineRenderer.enabled = _isDrawPathAvailable;
 
             if (mouse1Press)
             {
-                // Start Throw and Play animation
                 StopAllCoroutines();
-                //StartCoroutine(Coroutine_Movement(groundDirection.normalized, v0, angle, totalTime));
+                StartCoroutine(ThrowRockCoroutine(dir, v0, angle, time));
             }
+        }
+        else
+        {
+            _lineRenderer.enabled = false;
         }
     }
 
+    // Throw
     IEnumerator Coroutine_Movement(Vector3 direction, float v0, float angle, float totalTime)
     {
         Vector3 startPos = transform.position;
@@ -214,6 +224,26 @@ public class CharacterAction : NetworkBehaviour, CharacterInteract
         // Final snap to ground (use the same direction at totalTime)
         float xfinal = v0 * totalTime * Mathf.Cos(angle);
         transform.position = startPos + horizontalDir * xfinal + Vector3.up * 0f;
+    }
+
+    public IEnumerator ThrowRockCoroutine(Vector3 direction, float v0, float angleRad, float totalTime)
+    {
+        NetworkObject rockNetObj = Runner.Spawn(rockPrefab, _firePoint.position, Quaternion.identity);
+        Transform rock = rockNetObj.transform;
+
+        Vector3 startPos = _firePoint.position;
+        float t = 0f;
+
+        while (t < totalTime)
+        {
+            float x = v0 * t * Mathf.Cos(angleRad);
+            float y = v0 * t * Mathf.Sin(angleRad) + 0.5f * Physics.gravity.y * t * t;
+
+            rock.position = startPos + new Vector3(direction.x * x, y, 0);
+
+            t += Time.deltaTime;
+            yield return null;
+        }
     }
 
     #endregion

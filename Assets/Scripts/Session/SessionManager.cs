@@ -62,12 +62,12 @@ public class SessionManager : SingletonNetwork<SessionManager>
                 {
                     if (playerRef == playerRun.LocalPlayer)
                     {
-                        CH.SpawnPlayer(playerRef, CharacterTypeShip.Instance.currentHost, true);
+                        //CH.SpawnPlayer(playerRef, CharacterTypeShip.Instance.currentHost, true);
 
                     }
                     else
                     {
-                        CH.SpawnPlayer(playerRef, CharacterTypeShip.Instance.currentClient, false);
+                        //CH.SpawnPlayer(playerRef, CharacterTypeShip.Instance.currentClient, false);
                     }
                 }
                 else
