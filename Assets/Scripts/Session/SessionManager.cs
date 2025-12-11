@@ -3,18 +3,18 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using TMPro;
-using UnityEditor.ShaderGraph;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
 
 public class SessionManager : SingletonNetwork<SessionManager>
 {
     [Header("Session")]
     [SerializeField] string _sessionKey;
-    [SerializeField] bool _isAlreadyInRoom;
+    [SerializeField] public bool _isAlreadyInRoom;
 
     [SerializeField] GameObject runnerPrefab;
+    [NetworkPrefab] public NetworkObject runtimeUpdate;
+    [SerializeField] NetworkObject runTime;
 
     [Header("List")]
     [SerializeField] TMP_Text _listText;
@@ -25,9 +25,6 @@ public class SessionManager : SingletonNetwork<SessionManager>
 
     public NetworkRunner networkRunner;
     [SerializeField] NetworkObject CenterHostObject;
-
-    [SerializeField] Color playerHostColor;
-    [SerializeField] Color playerClientColor;
 
     [Header("StoreToSpawn")]
     public List<PlayersData> Players = new List<PlayersData>();
@@ -44,7 +41,7 @@ public class SessionManager : SingletonNetwork<SessionManager>
     {
         // Load Scene First
 
-        /*await LoadStartGame("Game");
+        /*await LoadStartGame("Game"); // LoadTo Scene Beta Test
 
         NetworkObject CHObject = networkRunner.Spawn(CenterHostObject);
         CenterHost CH = CHObject.GetComponent<CenterHost>();
@@ -127,7 +124,7 @@ public class SessionManager : SingletonNetwork<SessionManager>
 
     #region SessionRoom
 
-    public string GenerateCode()
+    public async void GenerateCode()
     {
         if (networkRunner == null)
         {
@@ -136,31 +133,23 @@ public class SessionManager : SingletonNetwork<SessionManager>
         else
         {
             _sessionKey = GenerateSessionCode();
-
-            StartSession(networkRunner, _sessionKey);
-
+            
+            await StartSession(networkRunner, _sessionKey);
+            
+            _isAlreadyInRoom = true;
             if (!string.IsNullOrEmpty(_sessionKey))
             {
+
+                SessionHub.Instance.GetKey(_sessionKey);
                 Debug.Log($"Create session Key : {_sessionKey}");
-                return _sessionKey;
             }
         }
-        return null;
     }
 
-
-    public bool JoinSession(string key)
+    public void JoinSession(string key)
     {
         JoinRoom(key);
         _isAlreadyInRoom = true;
-        if (_isAlreadyInRoom)
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
     }
 
     public void LeaveSession(bool inroom)
@@ -172,7 +161,13 @@ public class SessionManager : SingletonNetwork<SessionManager>
         }
     }
 
-    public async void StartSession(NetworkRunner runner, string sessionKey)
+    public void DisconnedFromServer()
+    {
+        _isAlreadyInRoom = false;
+        SessionHub.Instance.onDisconnected();
+    }
+
+    public async Task StartSession(NetworkRunner runner, string sessionKey)
     {
         Debug.Log("Start session Successfully");
         if (runner == null)
@@ -190,6 +185,13 @@ public class SessionManager : SingletonNetwork<SessionManager>
                 SessionName = sessionKey,
                 PlayerCount = 2
             });
+
+            runTime = runner.Spawn(runtimeUpdate);
+
+            if (runTime != null)
+            {
+                RuntimeUpdate.Instance.UpdateCode(sessionKey);
+            }
         }
 
     }
@@ -210,6 +212,8 @@ public class SessionManager : SingletonNetwork<SessionManager>
         }
         else if (res.Ok)
         {
+            SessionHub.Instance.DoneJoin();
+            SessionHub.Instance.GetKey(_sessionKey);
             Debug.Log("Successfully joined");
         };
     }
@@ -236,6 +240,14 @@ public class SessionManager : SingletonNetwork<SessionManager>
     {
         Debug.Log("Add runner");
         networkRunner = Instantiate(runnerPrefab).GetComponent<NetworkRunner>();
+        INetworkStructure structure = networkRunner.GetComponent<INetworkStructure>();
+        if (structure != null)
+        {
+            networkRunner.AddCallbacks(structure);
+            Debug.Log("success add Callbacks");
+        }
+        else Debug.Log("can't find INetworkStructure");
+
         if (runnerPrefab == null)
         {
             Debug.LogError("can't find runner Prefab");
@@ -244,6 +256,7 @@ public class SessionManager : SingletonNetwork<SessionManager>
         {
             Debug.Log("create runner");
         }
+
     }
 
     public async void ReStartNetworkRunner()
@@ -255,6 +268,11 @@ public class SessionManager : SingletonNetwork<SessionManager>
             await networkRunner.Shutdown();
             networkRunner = null;
             Debug.Log("Runner shutdown complete");
+        }
+
+        if (runTime != null)
+        {
+            networkRunner.Despawn(runTime);
         }
 
         await Task.Delay(100);
@@ -274,7 +292,7 @@ public class SessionManager : SingletonNetwork<SessionManager>
         else
         {
             _listText.text = $"Player list ({runner.SessionInfo.PlayerCount}/2)";
-            if (runner.SessionInfo.PlayerCount == 2 && runner.IsServer)
+            if (runner.IsServer && runner.SessionInfo.PlayerCount == 2)
             {
                 
             }

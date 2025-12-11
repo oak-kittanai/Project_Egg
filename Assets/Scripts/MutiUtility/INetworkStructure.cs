@@ -18,7 +18,16 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
 
     public void OnDisconnectedFromServer(NetworkRunner runner, NetDisconnectReason reason)
     {
-        Debug.LogError(reason.ToString());
+        Debug.Log($"Fusion: Disconnected from server reason + : {reason}");
+    }
+
+    public void OnShutdown(NetworkRunner runner, ShutdownReason shutdownReason)
+    {
+        if (SessionManager.Instance != null)
+        {
+            Debug.Log("Session not null");
+            SessionManager.Instance.DisconnedFromServer();
+        }
     }
 
     public void OnConnectFailed(NetworkRunner runner, NetAddress remoteAddress, NetConnectFailedReason reason)
@@ -147,6 +156,15 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
         if (SessionHub.Instance != null)
         {
             SessionHub.Instance.UpdateTMPText(player.PlayerId);
+            SessionHub.Instance.SetDefault(runner);
+            if (runner.IsServer)
+            {
+                SessionHub.Instance.SetupButtonOnline(true);
+            }
+            else
+            {
+                SessionHub.Instance.SetupButtonOnline(false);
+            }
         }
 
         /*if (CenterHost.Instance != null)
@@ -190,6 +208,7 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
     {
         if (sessionList.Count > 0)
         {
+            SessionManager.Instance.UpdatePlayerCount(runner);
             SessionHub.Instance.UpdateList(sessionList.Count);
             Debug.Log("Found room: " + sessionList[0].Name);
         }
@@ -227,11 +246,6 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
     }
 
     public void OnReliableDataProgress(NetworkRunner runner, PlayerRef player, ReliableKey key, float progress)
-    {
-
-    }
-
-    public void OnShutdown(NetworkRunner runner, ShutdownReason shutdownReason)
     {
 
     }
