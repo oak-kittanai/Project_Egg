@@ -2,12 +2,6 @@ using Fusion;
 using Fusion.Addons.Physics;
 using UnityEngine;
 
-public enum SkinType
-{
-    Duck,
-    Bird
-}
-
 public class CharacterStats : NetworkBehaviour, IDamageable
 {
     [Header("Referent")]
@@ -38,7 +32,7 @@ public class CharacterStats : NetworkBehaviour, IDamageable
     bool StaminaBusy => movement._staminaBusy;
 
     [Header("CharacterSet")]
-    [Networked] public SkinType skinType { get; set; }
+    [Networked] public characterType skinType { get; set; }
     [Networked] public int skinIndex { get; set; }
 
     private void Awake()

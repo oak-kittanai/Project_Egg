@@ -85,13 +85,13 @@ public class PlayerSpawn : SingletonNetwork<PlayerSpawn>
         CharacterAnimation playerAnimation = playerObj.GetComponent<CharacterAnimation>();
         if (playerObj.InputAuthority == runner.LocalPlayer)
         {
-            playerStats.skinType = SkinType.Duck;
+            playerStats.skinType = characterType.Duck;
             playerObj.name = "Player (Duck)Host";
             Debug.Log("Spawn Player Host");
-        }
+        }   
         else
         {
-            playerStats.skinType = SkinType.Bird;
+            playerStats.skinType = characterType.Bird;
             playerObj.name = "Player (Bird)Client";
             Debug.Log("Spawn Player Client");
         }

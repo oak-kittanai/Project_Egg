@@ -14,11 +14,14 @@ public class CharacterAnimation : NetworkBehaviour
     [Networked] public int State { get; set; }
     [Networked] public bool FlipX { get; set; }
 
+    [Networked] public bool hostCarrying { get; set; }
+    [Networked] public bool clientCarrying { get; set; }
+
     [Header("Controller Setting")]
     [SerializeField] public RuntimeAnimatorController DuckController;
     [SerializeField] public RuntimeAnimatorController BirdController;
 
-    [SerializeField] SkinType currentSkin;
+    [SerializeField] characterType currentSkin;
 
     private void Awake()
     {
@@ -38,7 +41,7 @@ public class CharacterAnimation : NetworkBehaviour
         stats = GetComponent<CharacterStats>();
     }
 
-    public void UpdateSkin(SkinType skin)
+    public void UpdateSkin(characterType skin)
     {
         if (skin == currentSkin)
         {
@@ -69,15 +72,57 @@ public class CharacterAnimation : NetworkBehaviour
         animator.SetFloat("Y", Direction.y);
     }
 
+    // Overall
+
+    public void JumpAnimation()
+    {
+        animator.Play("Pre_Jump", 0);
+    }
+
+    public void FallingAndFloatAnimation()
+    {
+
+    }
+
+    // Duck
+
+    public void SmashAnimation()
+    {
+
+    }
+
+    public void SwimAnimation()
+    {
+
+    }
+
+    public void DiveAnimation()
+    {
+
+    }
+
+    // Bird
+
+    public void ThrowAnimation()
+    {
+
+    }
+
+    public void FlyAnimation()
+    {
+
+    }
+
+
     public void UpdateActionAnimation(int i)
     {
         State = i;
 
-        if (currentSkin == SkinType.Bird)
+        if (currentSkin == characterType.Bird)
         {
             if (State == 1)
             {
-                animator.Play("Pre_Jump", 0);
+                
             }
             else if (State == 2)
             {

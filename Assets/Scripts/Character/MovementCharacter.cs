@@ -59,7 +59,7 @@ public class MovementCharacter : NetworkBehaviour
 
 
     [SerializeField] bool DoFly;
-    public SkinType CurrentSkinType => stats.skinType;
+    public characterType CurrentSkinType => stats.skinType;
 
     [Header("Position")]
     public Vector3 currentPosition;
@@ -117,7 +117,7 @@ public class MovementCharacter : NetworkBehaviour
             }
         }
 
-        if (CurrentSkinType == SkinType.Bird)
+        if (CurrentSkinType == characterType.Bird)
         {
             HandleFlying();
         }
@@ -170,7 +170,7 @@ public class MovementCharacter : NetworkBehaviour
             }
         }
 
-        if (CurrentSkinType == SkinType.Bird && _isInTheAir && Jump && flyAble && _alreadyJump)
+        if (CurrentSkinType == characterType.Bird && _isInTheAir && Jump && flyAble && _alreadyJump)
         {
             Fly();
         }
@@ -191,7 +191,7 @@ public class MovementCharacter : NetworkBehaviour
         _jumpAble = false;
 
         cAnimation.UpdateActionAnimation(1);
-        if (CurrentSkinType == SkinType.Bird)
+        if (CurrentSkinType == characterType.Bird)
         {
             StartCoroutine(JumpWait());
         }
