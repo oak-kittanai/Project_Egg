@@ -41,7 +41,7 @@ public class SessionManager : SingletonNetwork<SessionManager>
     {
         // Load Scene First
 
-        /*await LoadStartGame("Game");
+        /*await LoadStartGame("Game"); // LoadTo Scene Beta Test
 
         NetworkObject CHObject = networkRunner.Spawn(CenterHostObject);
         CenterHost CH = CHObject.GetComponent<CenterHost>();
@@ -146,7 +146,6 @@ public class SessionManager : SingletonNetwork<SessionManager>
         }
     }
 
-
     public void JoinSession(string key)
     {
         JoinRoom(key);
@@ -160,6 +159,12 @@ public class SessionManager : SingletonNetwork<SessionManager>
             ReStartNetworkRunner();
             _isAlreadyInRoom = false;
         }
+    }
+
+    public void DisconnedFromServer()
+    {
+        _isAlreadyInRoom = false;
+        SessionHub.Instance.onDisconnected();
     }
 
     public async Task StartSession(NetworkRunner runner, string sessionKey)
@@ -182,6 +187,11 @@ public class SessionManager : SingletonNetwork<SessionManager>
             });
 
             runTime = runner.Spawn(runtimeUpdate);
+
+            if (runTime != null)
+            {
+                RuntimeUpdate.Instance.UpdateCode(sessionKey);
+            }
         }
 
     }
@@ -202,6 +212,7 @@ public class SessionManager : SingletonNetwork<SessionManager>
         }
         else if (res.Ok)
         {
+            SessionHub.Instance.DoneJoin();
             SessionHub.Instance.GetKey(_sessionKey);
             Debug.Log("Successfully joined");
         };
@@ -229,6 +240,14 @@ public class SessionManager : SingletonNetwork<SessionManager>
     {
         Debug.Log("Add runner");
         networkRunner = Instantiate(runnerPrefab).GetComponent<NetworkRunner>();
+        INetworkStructure structure = networkRunner.GetComponent<INetworkStructure>();
+        if (structure != null)
+        {
+            networkRunner.AddCallbacks(structure);
+            Debug.Log("success add Callbacks");
+        }
+        else Debug.Log("can't find INetworkStructure");
+
         if (runnerPrefab == null)
         {
             Debug.LogError("can't find runner Prefab");
@@ -237,6 +256,7 @@ public class SessionManager : SingletonNetwork<SessionManager>
         {
             Debug.Log("create runner");
         }
+
     }
 
     public async void ReStartNetworkRunner()

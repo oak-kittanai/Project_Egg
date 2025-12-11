@@ -1,4 +1,5 @@
 using Fusion;
+using System.Collections;
 using UnityEngine;
 
 public class RuntimeUpdate : SingletonNetwork<RuntimeUpdate>
@@ -13,9 +14,11 @@ public class RuntimeUpdate : SingletonNetwork<RuntimeUpdate>
     [Networked] int _currentHostType { get; set; }
     [Networked] int _currentClientType { get; set; }
 
+    [Networked] string ServerCode { get; set; }
+
     public override void Spawned()
     {
-
+        RuntimeUpdate.Instance.CodeAnnouncement_RPC();
     }
 
     public override void FixedUpdateNetwork()
@@ -51,5 +54,25 @@ public class RuntimeUpdate : SingletonNetwork<RuntimeUpdate>
     {
         SessionHub.Instance.ChangeType(1, hostType);
         SessionHub.Instance.ChangeType(2, clientType);
+    }
+
+    public void UpdateCode(string code)
+    {
+        if (HasStateAuthority)
+        {
+            ServerCode = code;
+        }
+    }
+
+    [Rpc(RpcSources.InputAuthority, RpcTargets.All)]
+    public void CodeAnnouncement_RPC()
+    {
+        StartCoroutine(WaitFor());
+    }
+
+    IEnumerator WaitFor()
+    {
+        yield return new WaitForSeconds(1);
+        SessionHub.Instance.UpdateCode(ServerCode);
     }
 }

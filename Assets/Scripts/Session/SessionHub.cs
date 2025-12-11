@@ -28,7 +28,7 @@ public class SessionHub : SingletonNetwork<SessionHub>
     [SerializeField] Canvas _canvas;
 
     [Header("Lobby")]
-    [SerializeField] Button _CreateSessionNumber;
+    [SerializeField] Button _CreateSessionButton;
     [SerializeField] Button _joinSessionButton;
 
     [Header("JoinSession")]
@@ -77,7 +77,7 @@ public class SessionHub : SingletonNetwork<SessionHub>
     public void Setup()
     {
         _joinSessionButton.onClick.AddListener(JoinSessionRoom);
-        _CreateSessionNumber.onClick.AddListener(CreateRoom);
+        _CreateSessionButton.onClick.AddListener(CreateRoom);
         _JoinRoomButton.onClick.AddListener(JoinRoom);
 
         _leaveButton.onClick.AddListener(LeaveRoom);
@@ -88,7 +88,7 @@ public class SessionHub : SingletonNetwork<SessionHub>
         SetupAssets();
         JoinSession.SetActive(false);
 
-        _CreateSessionNumber.gameObject.SetActive(true);
+        _CreateSessionButton.gameObject.SetActive(true);
         _joinSessionButton.gameObject.SetActive(true);
         LobbyGameObject.gameObject.SetActive(false);
     }
@@ -103,6 +103,18 @@ public class SessionHub : SingletonNetwork<SessionHub>
 
         Sprite unknow = Resources.Load<Sprite>("UI_Assets/SessionRoom/Profile/Unknow_Character.png");
         unknownImage = unknow;*/
+    }
+
+    public void SetDefault(NetworkRunner runner)
+    {
+        if (runner.IsServer)
+        {
+            hostType = characterType.unknow;
+        }
+        else
+        {
+            clientType = characterType.unknow;
+        }
     }
 
     public void AddFromHost()
@@ -141,6 +153,12 @@ public class SessionHub : SingletonNetwork<SessionHub>
         {
             LobbyGameObject.SetActive(false);
         }
+    }
+
+    public void UpdateCode(string code)
+    {
+        RoomCode.text = code;
+        _sessionKey = code;
     }
 
     public void SetupButtonOnline(bool playerHost)
@@ -229,7 +247,7 @@ public class SessionHub : SingletonNetwork<SessionHub>
     public void SetMainButtonOff(bool o)
     {
         _joinSessionButton.gameObject.SetActive(o);
-        _CreateSessionNumber.gameObject.SetActive(o);
+        _CreateSessionButton.gameObject.SetActive(o);
     }
 
     public void JoinSessionRoom()
@@ -249,18 +267,28 @@ public class SessionHub : SingletonNetwork<SessionHub>
             string key = _sessionNumberInsertField.text;
 
             SessionManager.Instance.JoinSession(key);
+        }
+    }
 
-            if (AlreadyJoin)
-            {
-                JoinSession.SetActive(false);
-                _startButton.gameObject.SetActive(false);
-                LobbyGameObject.SetActive(true);
-                SetMainButtonOff(false);
-            }
-            else
-            {
-                _startButton.gameObject.SetActive(false);
-            }
+    public void onDisconnected()
+    {
+        _startButton.gameObject.SetActive(false);
+        LobbyGameObject.SetActive(false);
+        SetMainButtonOff(true);
+    }
+
+    public void DoneJoin()
+    {
+        if (AlreadyJoin)
+        {
+            JoinSession.SetActive(false);
+            _startButton.gameObject.SetActive(false);
+            LobbyGameObject.SetActive(true);
+            SetMainButtonOff(false);
+        }
+        else
+        {
+            _startButton.gameObject.SetActive(false);
         }
     }
 
@@ -274,7 +302,7 @@ public class SessionHub : SingletonNetwork<SessionHub>
 
         if (!AlreadyJoin)
         {
-            _startButton.gameObject.SetActive(true);
+            _startButton.gameObject.SetActive(false);
         }
 
         if (!string.IsNullOrEmpty(_sessionKey))
@@ -284,7 +312,9 @@ public class SessionHub : SingletonNetwork<SessionHub>
             _sessionKey = "";
             if (string.IsNullOrEmpty(_sessionKey))
             {
+                LobbyGameObject.SetActive(false);
                 _joinSessionButton.gameObject.SetActive(true);
+                _CreateSessionButton.gameObject.SetActive(true);
             }
         }
     }
@@ -330,7 +360,7 @@ public class SessionHub : SingletonNetwork<SessionHub>
     public void DesetButton()
     {
         _joinSessionButton.onClick.RemoveAllListeners();
-        _CreateSessionNumber.onClick.RemoveAllListeners();
+        _CreateSessionButton.onClick.RemoveAllListeners();
         _JoinRoomButton.onClick.RemoveAllListeners();
 
         _leaveButton.onClick.RemoveAllListeners();
