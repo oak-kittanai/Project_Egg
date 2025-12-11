@@ -2,17 +2,11 @@ using Fusion;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using static Unity.Collections.Unicode;
-
-public enum characterType
-{
-    unknow,
-    Duck,
-    Bird
-}
 
 public class SessionHub : SingletonNetwork<SessionHub>
 {
+    [SerializeField] public NetworkRunner networkRunner;
+
     [Header("SessionHub")]
     [SerializeField] TMP_Text _sessionKeyText;
     [SerializeField] string _sessionKey;
@@ -24,6 +18,7 @@ public class SessionHub : SingletonNetwork<SessionHub>
 
     [SerializeField] bool AlreadyJoin => SessionManager.Instance._isAlreadyInRoom;
     [SerializeField] int _playerCount;
+    [SerializeField] bool isReady;
 
     [SerializeField] Canvas _canvas;
 
@@ -47,15 +42,13 @@ public class SessionHub : SingletonNetwork<SessionHub>
     [SerializeField] TMP_Text playerClientName;
 
     [SerializeField] TMP_Text CharacterNameText_h;
-    [SerializeField] string CHT_right;
     [SerializeField] TMP_Text CharacterNameText_c;
-    [SerializeField] string CHT_left;
 
     [SerializeField] string s_playerHostName;
     [SerializeField] string s_playerClientName;
 
-    [SerializeField] characterType hostType;
-    [SerializeField] characterType clientType;
+    [SerializeField] public characterType hostType;
+    [SerializeField] public characterType clientType;
 
     [SerializeField] Image CharacterHostIcon;
     [SerializeField] Image CharacterClientIcon;
@@ -85,7 +78,9 @@ public class SessionHub : SingletonNetwork<SessionHub>
         ChangeCharacterButtonForHost.onClick.AddListener(AddFromHost);
         ChangeCharacterButtonForClient.onClick.AddListener(AddFromClient);
 
-        SetupAssets();
+        _startButton.onClick.AddListener(StartTheGame);
+        _startButton.interactable = false;
+
         JoinSession.SetActive(false);
 
         _CreateSessionButton.gameObject.SetActive(true);
@@ -93,16 +88,31 @@ public class SessionHub : SingletonNetwork<SessionHub>
         LobbyGameObject.gameObject.SetActive(false);
     }
 
-    public void SetupAssets()
+    public void StartTheGame()
     {
-        /*Sprite Duck = Resources.Load<Sprite>("UI_Assets/SessionRoom/Profile/Kael_Profile.png");
-        _playerDuckImage = Duck;
+        CharacterTypeShip.Instance.UpdateType(hostType, true);
+        CharacterTypeShip.Instance.UpdateType(clientType, false);
+        SessionManager.Instance.StartGame();
+    }
 
-        Sprite Bird = Resources.Load<Sprite>("UI_Assets/SessionRoom/Profile/Mira_Profile.png");
-        _playerBirdImage = Bird;
+    public void ReadyToPlay()
+    {
+        if (networkRunner.IsServer)
+        {
+            if (_startButton != null)
+            {
+                if (isReady)
+                {
+                    _startButton.gameObject.SetActive(true);
 
-        Sprite unknow = Resources.Load<Sprite>("UI_Assets/SessionRoom/Profile/Unknow_Character.png");
-        unknownImage = unknow;*/
+                    _startButton.interactable = true;
+                }
+                else
+                {
+                    _startButton.interactable = false;
+                }
+            }
+        }
     }
 
     public void SetDefault(NetworkRunner runner)
@@ -151,8 +161,14 @@ public class SessionHub : SingletonNetwork<SessionHub>
         }
         else
         {
-            LobbyGameObject.SetActive(false);
+            if (LobbyGameObject != null)
+            {
+                LobbyGameObject.SetActive(false);
+            }
         }
+
+        CheckCurrentType();
+        ReadyToPlay();
     }
 
     public void UpdateCode(string code)
@@ -177,12 +193,6 @@ public class SessionHub : SingletonNetwork<SessionHub>
 
     public void UpdateTMPText(int playerNum)
     {
-        if (HasStateAuthority)
-        {
-            CharacterNameText_h.text = CHT_left;
-            CharacterNameText_c.text = CHT_right;
-        }
-
         if (playerNum == 1)
         {
             s_playerHostName = "Player1";
@@ -196,34 +206,74 @@ public class SessionHub : SingletonNetwork<SessionHub>
         }
     }
 
-    public void ChangeType(int playerNum ,int o)
+    public void CheckCurrentType()
+    {
+        if (networkRunner.IsServer)
+        {
+            if (hostType != characterType.unknow && clientType != characterType.unknow)
+            {
+                if (hostType != clientType)
+                {
+                    isReady = true;
+                }
+                else
+                {
+                    isReady = false;
+                }
+            }
+        }
+    }
+
+    public void ChangeType(bool isHost, int o)
     {
         characterType newType = (characterType)o;
 
-        if (playerNum == 1)
+        if (isHost)
         {
             hostType = newType;
-            UpdateIcon(1);
+            UpdateIcon(true);
+            switch (hostType)
+            {
+                case characterType.unknow:
+                    CharacterNameText_h.text = "???";
+                    break;
+                case characterType.Duck:
+                    CharacterNameText_h.text = characterDuck;
+                    break;
+                case characterType.Bird:
+                    CharacterNameText_h.text = characterBird;
+                    break;
+            }
             Debug.Log("HostType = " + hostType);
-        }
-        else if (playerNum == 2)
-        {
-            clientType = newType;
-            UpdateIcon(2);
-            Debug.Log("ClientType = " + clientType);
         }
         else
         {
-            Debug.Log("can't find playerNum");
+            clientType = newType;
+            UpdateIcon(false);
+            switch (clientType)
+            {
+                case characterType.unknow:
+                    CharacterNameText_c.text = "???";
+                    break;
+                case characterType.Duck:
+                    CharacterNameText_c.text = characterDuck;
+                    break;
+                case characterType.Bird:
+                    CharacterNameText_c.text = characterBird;
+                    break;
+            }
+            Debug.Log("ClientType = " + clientType);
         }
+        RuntimeUpdate.Instance.UpdateType_RPC();
     }
-    public void UpdateIcon(int playerNum)
+    public void UpdateIcon(bool isHost)
     {
-        if (playerNum == 1)
+        if (isHost)
         {
             CharacterHostIcon.sprite = GetSpriteFromType(hostType);
         }
-        else if (playerNum == 2)
+
+        if (!isHost)
         {
             CharacterClientIcon.sprite = GetSpriteFromType(clientType);
         }
@@ -272,9 +322,16 @@ public class SessionHub : SingletonNetwork<SessionHub>
 
     public void onDisconnected()
     {
-        _startButton.gameObject.SetActive(false);
-        LobbyGameObject.SetActive(false);
-        SetMainButtonOff(true);
+
+        if (_startButton != null)
+        {
+            _startButton.gameObject.SetActive(false);
+        }
+        if (LobbyGameObject != null)
+        {
+            LobbyGameObject.SetActive(false);
+            SetMainButtonOff(true);
+        }
     }
 
     public void DoneJoin()
@@ -347,11 +404,6 @@ public class SessionHub : SingletonNetwork<SessionHub>
         _playerCount = playerCount;
     }
 
-    public void StartTheGame()
-    {
-        SessionManager.Instance.StartGame();
-    }
-
     private void OnDestroy()
     {
         DesetButton();
@@ -365,5 +417,6 @@ public class SessionHub : SingletonNetwork<SessionHub>
 
         _leaveButton.onClick.RemoveAllListeners();
         _leaveButton2.onClick.RemoveAllListeners();
+        _startButton.onClick.RemoveAllListeners();
     }
 }

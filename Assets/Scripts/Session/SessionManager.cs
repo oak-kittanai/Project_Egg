@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using static Unity.Collections.Unicode;
 
 public class SessionManager : SingletonNetwork<SessionManager>
 {
@@ -16,15 +17,14 @@ public class SessionManager : SingletonNetwork<SessionManager>
     [NetworkPrefab] public NetworkObject runtimeUpdate;
     [SerializeField] NetworkObject runTime;
 
-    [Header("List")]
-    [SerializeField] TMP_Text _listText;
-    [SerializeField] GameObject _listGameObject;
-    [SerializeField] GameObject _namePrefab;
-
     [SerializeField] Transform _listTransform;
 
+    [NetworkPrefab] public NetworkObject shipTypePrefabs;
+    [SerializeField] NetworkObject shipType;
+
     public NetworkRunner networkRunner;
-    [SerializeField] NetworkObject CenterHostObject;
+    [NetworkPrefab] public NetworkObject CenterHostObject;
+    [NetworkPrefab] public NetworkObject PlayerPrefabs;
 
     [Header("StoreToSpawn")]
     public List<PlayersData> Players = new List<PlayersData>();
@@ -37,30 +37,46 @@ public class SessionManager : SingletonNetwork<SessionManager>
         public PlayerRef playerRef;
     }
 
+    
+
     public async void StartGame()
     {
-        // Load Scene First
-
-        /*await LoadStartGame("Game"); // LoadTo Scene Beta Test
-
-        NetworkObject CHObject = networkRunner.Spawn(CenterHostObject);
-        CenterHost CH = CHObject.GetComponent<CenterHost>();
-
-        foreach (PlayersData player in Players)
+        _isAlreadyInRoom = false;
+        if (networkRunner.IsServer)
         {
-            NetworkRunner playerRun = player.runner;
-            PlayerRef playerRef = player.playerRef;
+            INetworkStructure networkStructure = networkRunner.GetComponent<INetworkStructure>();
 
-            if (playerRef == playerRun.LocalPlayer)
-            {
-                CH.SpawnPlayer(playerRef);
+            NetworkObject CHObject = networkRunner.Spawn(CenterHostObject);
+            CenterHost CH = CHObject.GetComponent<CenterHost>();
+            CH.AddComponent(networkRunner, networkStructure, PlayerPrefabs);
 
-            }
-            else
+            await LoadStartGame("SampleScene"); // LoadTo Scene Beta Test
+            _isAlreadyInRoom = false;
+
+            foreach (PlayersData player in Players)
             {
-                CH.SpawnPlayer(playerRef);
+                NetworkRunner playerRun = player.runner;
+                PlayerRef playerRef = player.playerRef;
+
+                if (RuntimeUpdate.Instance != null)
+                {
+                    if (playerRef == playerRun.LocalPlayer)
+                    {
+                        CH.SpawnPlayer(playerRef, CharacterTypeShip.Instance.currentHost, true);
+
+                    }
+                    else
+                    {
+                        CH.SpawnPlayer(playerRef, CharacterTypeShip.Instance.currentClient, false);
+                    }
+                }
+                else
+                {
+                    Debug.Log("runtime is null");
+                }
             }
-        }*/
+        }
+        SessionHub.Instance.DesetButton();
     }
 
     public void SelfDestory()
@@ -107,7 +123,6 @@ public class SessionManager : SingletonNetwork<SessionManager>
         {
             try
             {
-                networkRunner = GameObject.FindGameObjectWithTag("runner").GetComponent<NetworkRunner>();
                 ReStartNetworkRunner();
             }
             catch
@@ -192,8 +207,14 @@ public class SessionManager : SingletonNetwork<SessionManager>
             {
                 RuntimeUpdate.Instance.UpdateCode(sessionKey);
             }
-        }
 
+            if (shipTypePrefabs == null)
+            {
+                Debug.LogError("shipTypePrefabs is null! Did you assign it in Inspector and add it to NetworkRunner?");
+                
+            }
+            shipType = runner.Spawn(shipTypePrefabs);
+        }
     }
 
     public async void JoinRoom(string sessionKey)
@@ -241,6 +262,7 @@ public class SessionManager : SingletonNetwork<SessionManager>
         Debug.Log("Add runner");
         networkRunner = Instantiate(runnerPrefab).GetComponent<NetworkRunner>();
         INetworkStructure structure = networkRunner.GetComponent<INetworkStructure>();
+        SessionHub.Instance.networkRunner = networkRunner.GetComponent<NetworkRunner>();
         if (structure != null)
         {
             networkRunner.AddCallbacks(structure);
@@ -285,19 +307,6 @@ public class SessionManager : SingletonNetwork<SessionManager>
 
     public void UpdatePlayerCount(NetworkRunner runner)
     {
-        if (runner.SessionInfo.PlayerCount == 0)
-        {
-            _listText.text = "";
-        }
-        else
-        {
-            _listText.text = $"Player list ({runner.SessionInfo.PlayerCount}/2)";
-            if (runner.IsServer && runner.SessionInfo.PlayerCount == 2)
-            {
-                
-            }
-        }
-
         if (runner.IsServer && runner.SessionInfo.PlayerCount == 2)
         {
             runner.SessionInfo.IsOpen = false;
@@ -307,23 +316,6 @@ public class SessionManager : SingletonNetwork<SessionManager>
         {
             runner.SessionInfo.IsOpen = true;
             runner.SessionInfo.IsVisible = true;
-        }
-    }
-    public void InstantiatePlayerList(string name)
-    {
-        Instantiate(_namePrefab, _listTransform);
-        TMP_Text text = _namePrefab.GetComponentInChildren<TMP_Text>();
-        if (text != null)
-        {
-            text.text = name;
-        }
-    }
-
-    public void ResetList()
-    {
-        foreach (GameObject item in _listTransform)
-        {
-            Destroy(item);
         }
     }
 }

@@ -2292,6 +2292,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 4078889061336030019}
     - target: {fileID: 44562366507545555, guid: 2a585ce85a41bfe428999078832f2881, type: 3}
+      propertyPath: readyButton_true
+      value: 
+      objectReference: {fileID: 5120154190826415995, guid: 8df9ea2c818f4b541861a6f76d5f83e5, type: 3}
+    - target: {fileID: 44562366507545555, guid: 2a585ce85a41bfe428999078832f2881, type: 3}
       propertyPath: CharacterHostIcon
       value: 
       objectReference: {fileID: 5938424612813681642}
@@ -2339,6 +2343,26 @@ PrefabInstance:
       propertyPath: runTime
       value: 
       objectReference: {fileID: 0}
+    - target: {fileID: 7581363676634988447, guid: 2a585ce85a41bfe428999078832f2881, type: 3}
+      propertyPath: shipType
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 7581363676634988447, guid: 2a585ce85a41bfe428999078832f2881, type: 3}
+      propertyPath: PlayerPrefabs
+      value: 
+      objectReference: {fileID: -2039167435644549920, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
+    - target: {fileID: 7581363676634988447, guid: 2a585ce85a41bfe428999078832f2881, type: 3}
+      propertyPath: shipTypePrefabs
+      value: 
+      objectReference: {fileID: 6642753924437587227, guid: 308ddffb4fcf23a478e536a810b38d9f, type: 3}
+    - target: {fileID: 7581363676634988447, guid: 2a585ce85a41bfe428999078832f2881, type: 3}
+      propertyPath: CenterHostObject
+      value: 
+      objectReference: {fileID: 7825853430673868469, guid: b92366ced5e27694eb387c1e3079caa5, type: 3}
+    - target: {fileID: 7581363676634988447, guid: 2a585ce85a41bfe428999078832f2881, type: 3}
+      propertyPath: characterTypeShip
+      value: 
+      objectReference: {fileID: 4367164859237716352, guid: 308ddffb4fcf23a478e536a810b38d9f, type: 3}
     - target: {fileID: 8951876932146295832, guid: 2a585ce85a41bfe428999078832f2881, type: 3}
       propertyPath: m_LocalPosition.x
       value: 1068.1223
@@ -2520,7 +2544,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: New Text
+  m_text: ???
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -2902,7 +2926,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: New Text
+  m_text: ???
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -3355,7 +3379,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -6761366114553731384, guid: bbe0f8b8daeadce448f62acc4b5c464c, type: 3}
+  m_Sprite: {fileID: 5120154190826415995, guid: 8df9ea2c818f4b541861a6f76d5f83e5, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1

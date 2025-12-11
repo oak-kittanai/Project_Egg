@@ -1,4 +1,3 @@
-using ExitGames.Client.Photon.StructWrapping;
 using Fusion;
 using System;
 using System.Collections;
@@ -35,6 +34,9 @@ public class CenterHost : SingletonNetwork<CenterHost>
     [NetworkPrefab] public NetworkObject RockPrefabs;
     [NetworkPrefab] public NetworkObject JellyPrefabs;
     [NetworkPrefab] public NetworkObject BearTrapPrefabs;
+
+    [Networked] characterType currentHost { get; set; }
+    [Networked] characterType currentClient { get; set; }
     public void GetRunner()
     {
         if (hostRunner != null)
@@ -53,9 +55,10 @@ public class CenterHost : SingletonNetwork<CenterHost>
 
         if (HasStateAuthority)
         {
-            StartCheckAndAdd();
+            //StartCheckAndAdd();
             firstStart = true;
         }
+        DontDestroyOnLoad(gameObject);
     }
 
     public void LoadAssets()
@@ -63,7 +66,7 @@ public class CenterHost : SingletonNetwork<CenterHost>
         //RockPrefabs = Runner.
     }
 
-    private void StartCheckAndAdd()
+    /*private void StartCheckAndAdd()
     {
         GameObject[] targetMoveAbleObject = GameObject.FindGameObjectsWithTag("MoveAble");
 
@@ -196,22 +199,6 @@ public class CenterHost : SingletonNetwork<CenterHost>
         }
     }
 
-    public void DestoryObject(GameObject go)
-    {
-        Destroy(go.gameObject);
-    }
-
-    public override void FixedUpdateNetwork()
-    {
-        if (Runner.SessionInfo.PlayerCount == 2)
-        {
-            if (firstStart)
-            {
-                StartCoroutine(WaitForLoad());
-            }
-        }
-    }
-
     IEnumerator WaitForLoad()
     {
         firstStart = false;
@@ -221,6 +208,22 @@ public class CenterHost : SingletonNetwork<CenterHost>
         
     }
 
+    public void DestoryObject(GameObject go)
+    {
+        Destroy(go.gameObject);
+    }*/
+
+    public override void FixedUpdateNetwork()
+    {
+        /*if (Runner.SessionInfo.PlayerCount == 2)
+        {
+            if (firstStart)
+            {
+                StartCoroutine(WaitForLoad());
+            }
+        }*/
+    }
+    
     #region ComponentZone
 
     public void AddPlayerRef(NetworkRunner runner, PlayerRef player)
@@ -324,12 +327,20 @@ public class CenterHost : SingletonNetwork<CenterHost>
     IEnumerator WaitForSecToSpawn(PlayerRef player)
     {
         yield return new WaitForSeconds(0.4f);
-        SpawnPlayer(player);
     }
 
 
-    public void SpawnPlayer(PlayerRef player)
+    public void SpawnPlayer(PlayerRef player, characterType Type, bool isHost)
     {
+        if (isHost)
+        {
+            currentHost = Type;
+        }
+        else
+        {
+            currentClient = Type;
+        }
+
         Debug.Log("Try Spawn Player");
         Vector2 spawnPos = SpawnPos;
         if (hostRunner != null)
@@ -346,7 +357,7 @@ public class CenterHost : SingletonNetwork<CenterHost>
         CharacterAnimation playerAnimation = playerObj.GetComponent<CharacterAnimation>();
         if (playerObj.InputAuthority == runner.LocalPlayer)
         {
-            playerStats.skinType = SkinType.Bird;
+            playerStats.skinType = currentHost;
             playerObj.name = $"Player ({playerStats.skinType})Host";
             Debug.Log("Spawn Player Host");
 
@@ -354,7 +365,7 @@ public class CenterHost : SingletonNetwork<CenterHost>
         }
         else
         {
-            playerStats.skinType = SkinType.Duck;
+            playerStats.skinType = currentClient;
             playerObj.name = $"Player ({playerStats.skinType})Client";
             Debug.Log("Spawn Player Client");
 
