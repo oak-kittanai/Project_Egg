@@ -1,12 +1,29 @@
+using Fusion;
 using UnityEngine;
 
-public class ThrowAble : MonoBehaviour, ThrowAbleItem
+public class ThrowAble : NetworkBehaviour, ThrowAbleItem
 {
+    CharacterAction playerAction;
+
     [Header("Setting")]
     public string itemName;
+    [SerializeField] Vector3 selfPos;
+    [SerializeField] NetworkObject selfNet;
+    [Networked] public bool AlreadyThrow {get; set;}
 
-    public void PickupItem()
+    private void Awake()
     {
-        
+        selfNet = GetComponent<NetworkObject>();
+    }
+
+    public override void Spawned()
+    {
+        selfNet = GetComponent<NetworkObject>();
+    }
+
+    public bool PickupItem()
+    {
+        GameManager.Instance.SelfDeSpawn(selfNet, false, transform.position);
+        return true;
     }
 }

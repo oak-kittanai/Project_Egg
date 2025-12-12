@@ -7,7 +7,8 @@ using UnityEngine;
 public class CenterHost : SingletonNetwork<CenterHost>
 {
     [Header("Spawning")]
-    [SerializeField] Vector2 SpawnPos;
+    [SerializeField] Vector2 HostSpawnPos;
+    [SerializeField] Vector2 ClientSpawnPos;
     [SerializeField] NetworkObject PlayerPrefab;
 
     [Header("Set Player")] // has Access to go everywhere
@@ -29,11 +30,6 @@ public class CenterHost : SingletonNetwork<CenterHost>
     [SerializeField] public List<ObjectTransform> ObjEnemyTrans = new List<ObjectTransform>();
 
     [Networked] public bool RemoveOldObj { get; set; }
-
-    [Header("Object")]
-    [NetworkPrefab] public NetworkObject RockPrefabs;
-    [NetworkPrefab] public NetworkObject JellyPrefabs;
-    [NetworkPrefab] public NetworkObject BearTrapPrefabs;
 
     [Networked] characterType currentHost { get; set; }
     [Networked] characterType currentClient { get; set; }
@@ -60,158 +56,6 @@ public class CenterHost : SingletonNetwork<CenterHost>
         }
         DontDestroyOnLoad(gameObject);
     }
-
-    public void LoadAssets()
-    {
-        //RockPrefabs = Runner.
-    }
-
-    /*private void StartCheckAndAdd()
-    {
-        GameObject[] targetMoveAbleObject = GameObject.FindGameObjectsWithTag("MoveAble");
-
-        foreach (GameObject obj in targetMoveAbleObject)
-        {
-            NetworkObject netObj = obj.GetComponent<NetworkObject>();
-
-            var Objecttransform = new ObjectTransform()
-            {
-                nameObj = obj.name,
-                oldObj = obj,
-                netObj = netObj,
-                position = new Vector2(obj.transform.position.x, obj.transform.position.y),
-                rotation = obj.transform.rotation
-            };
-
-            ObjTrapTrans.Add(Objecttransform);
-        }
-        bool firstLoop = true;
-
-        GameObject[] targetTrapObject = GameObject.FindGameObjectsWithTag("Trap");
-        foreach (GameObject obj in targetTrapObject)
-        {
-            NetworkObject netObj = obj.GetComponent<NetworkObject>();
-
-            var Objecttransform = new ObjectTransform()
-            {
-                nameObj = obj.name,
-                oldObj = obj,
-                netObj = netObj,
-                position = new Vector2(obj.transform.position.x, obj.transform.position.y),
-                rotation = obj.transform.rotation
-            };
-
-            ObjTrapTrans.Add(Objecttransform);
-        }
-        bool secondLoop = true;
-
-        GameObject[] targetEnemyObject = GameObject.FindGameObjectsWithTag("Enemy");
-        foreach (GameObject obj in targetEnemyObject)
-        {
-            NetworkObject netObj = obj.GetComponent<NetworkObject>();
-
-            var Objecttransform = new ObjectTransform()
-            {
-                nameObj = obj.name,
-                oldObj = obj,
-                netObj = netObj,
-                position = new Vector2(obj.transform.position.x, obj.transform.position.y),
-                rotation = obj.transform.rotation
-            };
-
-            ObjEnemyTrans.Add(Objecttransform);
-        }
-        bool thirdLoop = true;
-
-        if (firstLoop && secondLoop && thirdLoop)
-        {
-            doneScan = true;
-            firstStart = false;
-        }
-
-        //yield return new WaitUntil(() => doneScan == true);
-    }
-
-    public void CheckToSpawnObject()
-    {
-        if (doneScan)
-        {
-            bool firstLoad;
-            bool secondLoad;
-            bool thirdLoad;
-            if (readySpawn && Runner != null && HasStateAuthority)
-            {
-                Debug.Log("Start Spawn");
-                foreach (ObjectTransform obj in ObjMoveAbleTrans)
-                {
-                    SpawnNetworkObject(obj.nameObj, obj.oldObj, obj.position, obj.rotation);
-                    DestoryObject(obj.oldObj);
-                }
-                firstLoad = true;
-
-                foreach (ObjectTransform obj in ObjTrapTrans)
-                {
-                    SpawnNetworkObject(obj.nameObj, obj.oldObj, obj.position, obj.rotation);
-                    DestoryObject(obj.oldObj);
-                }
-                secondLoad = true;
-
-                foreach (ObjectTransform obj in ObjEnemyTrans)
-                {
-                    SpawnNetworkObject(obj.nameObj, obj.oldObj, obj.position, obj.rotation);
-                    DestoryObject(obj.oldObj);
-                }
-                thirdLoad = true;
-
-                if (firstLoad && secondLoad && thirdLoad)
-                {
-                    Debug.Log("Success check & spawn item");
-                }
-            }
-        }
-    }
-
-    public void SpawnNetworkObject(string nameObj, GameObject go, Vector2 pos, Quaternion rotation)
-    {
-        if (Runner != null)
-        {
-            Vector3 spawnPos = new Vector3(pos.x, pos.y, 0f);
-            Quaternion spawnRot = rotation;
-
-            switch (nameObj)
-            {
-                case "Rock":
-                    Runner.Spawn(RockPrefabs, spawnPos, spawnRot);
-                    break;
-
-                case "JellyTrap":
-                    Runner.Spawn(JellyPrefabs, spawnPos, spawnRot);
-                    break;
-
-                case "BearTrap":
-                    Runner.Spawn(BearTrapPrefabs, spawnPos, spawnRot);
-                    break;
-
-                default:
-                    Debug.Log("can't find the prefabe of " + go.name);
-                    break;
-            }
-        }
-    }
-
-    IEnumerator WaitForLoad()
-    {
-        firstStart = false;
-        yield return new WaitForSeconds(5f);
-        readySpawn = true;
-        CheckToSpawnObject();
-        
-    }
-
-    public void DestoryObject(GameObject go)
-    {
-        Destroy(go.gameObject);
-    }*/
 
     public override void FixedUpdateNetwork()
     {
@@ -293,25 +137,8 @@ public class CenterHost : SingletonNetwork<CenterHost>
                 Debug.Log("Host Player Ready to spawn");
                 if (PlayerPrefab != null)
                 {
-                    StartCoroutine(WaitForSecToSpawn(player));
+                    //StartCoroutine(WaitForSecToSpawn(player));
                 }
-
-                /*if (hostStats == null)
-                {
-                    Debug.LogError("can't find PlayerStats of host");
-                    TryGetComponentFromNetObject(playerObjectPrefabs, ref hostStats);
-                    if (hostStats == null)
-                    {
-                        Debug.LogError("can't get stats from host");
-                        return;
-                    }
-                }
-                else
-                {
-                    
-                    // Do spawn host player
-                    //SpawnHostCharacter();
-                }*/
             }
         }
 
@@ -327,23 +154,33 @@ public class CenterHost : SingletonNetwork<CenterHost>
     IEnumerator WaitForSecToSpawn(PlayerRef player)
     {
         yield return new WaitForSeconds(0.4f);
-        SpawnPlayer(player);
+        //SpawnPlayer(player);
     }
 
 
-    public void SpawnPlayer(PlayerRef player)// , characterType Type, bool isHost
+    public void SpawnPlayer(PlayerRef player, characterType Type, bool isHost)
     {
-        /*if (isHost)
+        if (isHost)
         {
             currentHost = Type;
         }
         else
         {
             currentClient = Type;
-        }*/
+        }
 
+        Vector2 spawnPos = Vector2.zero;
         Debug.Log("Try Spawn Player");
-        Vector2 spawnPos = SpawnPos;
+        if (isHost)
+        {
+            spawnPos = HostSpawnPos;
+        }
+        else
+        {
+            spawnPos = ClientSpawnPos;
+        }
+
+
         if (hostRunner != null)
         {
             NetworkObject playerObj = hostRunner.Spawn(PlayerPrefab, spawnPos, Quaternion.identity, player, InitializeObjBeforeSpawn);
@@ -358,7 +195,7 @@ public class CenterHost : SingletonNetwork<CenterHost>
         CharacterAnimation playerAnimation = playerObj.GetComponent<CharacterAnimation>();
         if (playerObj.InputAuthority == runner.LocalPlayer)
         {
-            playerStats.skinType = characterType.Bird;//currentHost
+            playerStats.skinType = currentHost;
             playerObj.name = $"Player ({playerStats.skinType})Host";
             Debug.Log("Spawn Player Host");
 
@@ -366,7 +203,7 @@ public class CenterHost : SingletonNetwork<CenterHost>
         }
         else
         {
-            playerStats.skinType = characterType.Duck;//currentClient
+            playerStats.skinType = currentClient;
             playerObj.name = $"Player ({playerStats.skinType})Client";
             Debug.Log("Spawn Player Client");
 

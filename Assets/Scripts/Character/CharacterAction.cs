@@ -1,4 +1,5 @@
 using Fusion;
+using Fusion.Addons.Physics;
 using System;
 using System.Collections;
 using UnityEngine;
@@ -9,6 +10,7 @@ public class CharacterAction : NetworkBehaviour, CharacterInteract
     [Header("Ref")]
     InputControl controller;
     CharacterStats stats;
+    CharacterAnimation cAnimation;
     Rigidbody2D rb2D;
     Collider2D coll2D;
     [SerializeField] Camera playerCam;
@@ -24,6 +26,8 @@ public class CharacterAction : NetworkBehaviour, CharacterInteract
     [SerializeField] public bool _isDrawPathAvailable;
     [SerializeField] public Transform _firePoint;
     [SerializeField] public float _step;
+    [SerializeField] public float powerMultiplier = 10f;
+    public float maxThrowRange = 20f;
 
     [SerializeField] bool mouse1Press;
     [SerializeField] bool mouse2Hold;
@@ -72,6 +76,7 @@ public class CharacterAction : NetworkBehaviour, CharacterInteract
         controller = GetComponent<InputControl>();
         stats = GetComponent<CharacterStats>();
         playerCam = GetComponentInChildren<Camera>();
+        cAnimation = GetComponent<CharacterAnimation>();
     }
 
     public GameObject CharacterInteract()
@@ -108,56 +113,54 @@ public class CharacterAction : NetworkBehaviour, CharacterInteract
     }
 
     #region ProjectileCalculateMovement&DrawPath
-    private void DrawPath(Vector3 dir, float v0, float angle, float time, float step)
-    {
-        float maxTime = time; // draw full arc
-        step = Mathf.Max(0.01f, step);
 
-        _lineRenderer.positionCount = (int)(maxTime / step) + 1;
+    private void DrawPath(float v0, float angle, float time, float step)
+    {
+        step = Mathf.Max(0.01f, step);
+        _lineRenderer.positionCount = (int)(time / step) + 2;
 
         int index = 0;
-        for (float t = 0; t <= maxTime; t += step)
+        for (float t = 0; t <= time; t += step)
         {
             float x = v0 * t * Mathf.Cos(angle);
-            float y = v0 * t * Mathf.Sin(angle) + 0.5f * Physics.gravity.y * t * t;
+            float y = Mathf.Abs(v0) * t * Mathf.Sin(angle) + 0.5f * Physics.gravity.y * t * t;
 
-            Vector3 pos = _firePoint.position + dir * x + new Vector3(0, y, 0);
+            Vector3 pos = _firePoint.position + new Vector3(x, y, 0);
             _lineRenderer.SetPosition(index, pos);
             index++;
         }
+
+        float finalX = v0 * time * Mathf.Cos(angle);
+        float finalY = Mathf.Abs(v0) * time * Mathf.Sin(angle) + 0.5f * Physics.gravity.y * time * time;
+        _lineRenderer.SetPosition(index, _firePoint.position + new Vector3(finalX, finalY, 0));
     }
 
-    /*private float QuadraticEquation(float a, float b, float c, float sign)
+    public void CalculatePath(Vector3 targetPos, out float v0, out float angle, out float time)
     {
-        return (-b + sign * Mathf.Sqrt(b * b - 4 * a * c)) / (2 * a);
-    }*/
+        Vector3 dir = Vector3.ClampMagnitude(targetPos - _firePoint.position, 20f);
 
-    public void CalculatePath(Vector3 targetPos, float _unusedHeight, out float v0, out float angle, out float time)
-    {
-        float xt = targetPos.x;
-        float yt = targetPos.y;
+        float x = Mathf.Max(0.001f, Mathf.Abs(dir.x));
+        float y = dir.y;
         float g = -Physics.gravity.y;
 
-        // Choose a constant angle (your arc shape)
-        angle = 45f * Mathf.Deg2Rad; // you can change this if you want
+        float targetAngle = Mathf.Atan2(y, x);
+        angle = Mathf.Max(45f * Mathf.Deg2Rad, targetAngle + (10f * Mathf.Deg2Rad));
+        angle = Mathf.Clamp(angle, 0f, 85f * Mathf.Deg2Rad);
 
-        float cosA = Mathf.Cos(angle);
-        float sinA = Mathf.Sin(angle);
+        float cos = Mathf.Cos(angle);
+        float tan = Mathf.Tan(angle);
+        float heightDiff = x * tan - y;
 
-        float denom = 2f * cosA * cosA * (xt * Mathf.Tan(angle) - yt);
-
-        if (denom <= 0f)
+        if (heightDiff <= 0.001f)
         {
-            // no valid solution -> fallback
-            v0 = 0;
-            time = 0;
+            v0 = time = 0;
             return;
         }
 
-        v0 = Mathf.Sqrt(g * xt * xt / denom);
+        v0 = Mathf.Sqrt(g * x * x / (2f * cos * cos * heightDiff));
+        time = x / (v0 * cos);
 
-        // total flight time
-        time = xt / (v0 * cosA);
+        if (dir.x < 0) v0 = -v0;
     }
     #endregion
 
@@ -165,22 +168,24 @@ public class CharacterAction : NetworkBehaviour, CharacterInteract
 
     public void UpdateCursorPos(Vector2 pos)
     {
-        if (playerCam == null)
-        {
-            Debug.Log("can't find playerCam");
-            return;
-        }
+        if (playerCam == null) return;
 
         Vector3 mousePos = playerCam.ScreenToWorldPoint(pos);
-        _worldPos = mousePos - _firePoint.position;
+        mousePos.z = 0;
+
+        Vector3 directionToMouse = mousePos - _firePoint.position;
+
+        if (directionToMouse.magnitude > maxThrowRange)
+        {
+            directionToMouse = directionToMouse.normalized * maxThrowRange;
+        }
+
+        Vector3 targetPos = _firePoint.position + directionToMouse;
 
         if (mouse2Hold && carryRock)
         {
-            Vector3 targetPos = new Vector3(_worldPos.x, _worldPos.y, 0);
-            Vector3 dir = targetPos.normalized;
-
             float v0, angle, time;
-            CalculatePath(targetPos, 0f, out v0, out angle, out time);
+            CalculatePath(targetPos, out v0, out angle, out time);
 
             if (time <= 0f)
             {
@@ -188,13 +193,15 @@ public class CharacterAction : NetworkBehaviour, CharacterInteract
                 return;
             }
 
-            DrawPath(dir, v0, angle, time, _step);
-            _lineRenderer.enabled = _isDrawPathAvailable;
+            DrawPath(v0, angle, time, _step);
+            _lineRenderer.enabled = true;
 
             if (mouse1Press)
             {
-                StopAllCoroutines();
-                StartCoroutine(ThrowRockCoroutine(dir, v0, angle, time));
+                mouse2Hold = false;
+                _lineRenderer.enabled = false;
+                carryRock = false;
+                ThrowRock(v0, angle);
             }
         }
         else
@@ -203,46 +210,22 @@ public class CharacterAction : NetworkBehaviour, CharacterInteract
         }
     }
 
-    // Throw
-    IEnumerator Coroutine_Movement(Vector3 direction, float v0, float angle, float totalTime)
-    {
-        Vector3 startPos = transform.position;
-        Vector3 horizontalDir = new Vector3(direction.x, 0, direction.z).normalized;
-
-        float t = 0f;
-        while (t < totalTime)
-        {
-            float x = v0 * t * Mathf.Cos(angle);
-            float y = v0 * t * Mathf.Sin(angle) + 0.5f * Physics.gravity.y * t * t;
-
-            transform.position = startPos + horizontalDir * x + Vector3.up * y;
-
-            t += Time.deltaTime;
-            yield return null;
-        }
-
-        // Final snap to ground (use the same direction at totalTime)
-        float xfinal = v0 * totalTime * Mathf.Cos(angle);
-        transform.position = startPos + horizontalDir * xfinal + Vector3.up * 0f;
-    }
-
-    public IEnumerator ThrowRockCoroutine(Vector3 direction, float v0, float angleRad, float totalTime)
+    public void ThrowRock(float v0, float angleRad)
     {
         NetworkObject rockNetObj = Runner.Spawn(rockPrefab, _firePoint.position, Quaternion.identity);
-        Transform rock = rockNetObj.transform;
 
-        Vector3 startPos = _firePoint.position;
-        float t = 0f;
+        var nrb = rockNetObj.GetComponent<NetworkRigidbody2D>();
+        ThrowAble throwa = rockNetObj.GetBehaviour<ThrowAble>();
+        throwa.AlreadyThrow = true;
 
-        while (t < totalTime)
+        if (nrb != null)
         {
-            float x = v0 * t * Mathf.Cos(angleRad);
-            float y = v0 * t * Mathf.Sin(angleRad) + 0.5f * Physics.gravity.y * t * t;
+            float vx = v0 * Mathf.Cos(angleRad);
+            float vy = Mathf.Abs(v0) * Mathf.Sin(angleRad); // Abs(v0) ensures we always throw UP
 
-            rock.position = startPos + new Vector3(direction.x * x, y, 0);
+            Vector2 forceToApply = new Vector2(vx, vy) * nrb.Rigidbody.mass;
 
-            t += Time.deltaTime;
-            yield return null;
+            nrb.Rigidbody.AddForce(forceToApply, ForceMode2D.Impulse);
         }
     }
 
@@ -299,7 +282,7 @@ public class CharacterAction : NetworkBehaviour, CharacterInteract
     public void CheckItemInteract()
     {
         Vector2 player = transform.position;
-        int mask = LayerMask.GetMask("Player", "Interactable", "ThrowAble");
+        int mask = LayerMask.GetMask("Player", "Interactable", "ThrowAbleProjectile");
         Collider2D[] itemhitInteract = Physics2D.OverlapCircleAll(player, _interactRadius, mask);
 
         foreach (Collider2D hit in itemhitInteract)
@@ -310,7 +293,7 @@ public class CharacterAction : NetworkBehaviour, CharacterInteract
             _isInteractAble = true;
             if (hit.gameObject.layer == LayerMask.NameToLayer("Player"))
             {
-                Debug.Log("Detect Player");
+                //Debug.Log("Detect Player");
                 canInteract = true;
                 Interact(hit);
             }
@@ -324,10 +307,9 @@ public class CharacterAction : NetworkBehaviour, CharacterInteract
             }
             else canInteract = false;
 
-            if (hit.gameObject.layer == LayerMask.NameToLayer("ThrowAble"))
+            if (hit.gameObject.layer == LayerMask.NameToLayer("ThrowAbleProjectile"))
             {
-                Debug.Log("Detect Throwable item");
-                canInteract = true;
+                canInteract = true; // Work fine
                 Interact(hit);
             }
             else canInteract = false;
@@ -348,17 +330,24 @@ public class CharacterAction : NetworkBehaviour, CharacterInteract
                 {
                     case GameObject g when g.TryGetComponent<Interactable>(out var obj):
                         Debug.Log("trigger interactable object");
-                        obj.Interact();
+                        if (stats.skinType == characterType.Bird)
+                        {
+                            cAnimation.SmashAnimation();
+                            obj.Interact();
+                        }
                         break;
 
                     case GameObject g when g.TryGetComponent<MoveableObject>(out var moveobj):
                         Debug.Log("trigger moveable object");
                         moveobj.MoveInteract(selfpos);
                         break;
-
+                        
                     case GameObject g when g.TryGetComponent<ThrowAbleItem>(out var item):
-                        Debug.Log("Get ThrowItem");
-                        item.PickupItem();
+                        if (stats.skinType == characterType.Bird)
+                        {
+                            Debug.Log("Get ThrowItem");
+                            carryRock = item.PickupItem();
+                        }
                         break;
 
                     default:

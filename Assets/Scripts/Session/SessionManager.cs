@@ -2,7 +2,6 @@ using Fusion;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
-using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using static Unity.Collections.Unicode;
@@ -37,7 +36,10 @@ public class SessionManager : SingletonNetwork<SessionManager>
         public PlayerRef playerRef;
     }
 
-    
+    [Header("GameManger")]
+    [NetworkPrefab] public NetworkObject GameManagerPrefabs;
+    [SerializeField] public NetworkObject GM;
+    [SerializeField] public GameManager gameManager;
 
     public async void StartGame()
     {
@@ -50,8 +52,12 @@ public class SessionManager : SingletonNetwork<SessionManager>
             CenterHost CH = CHObject.GetComponent<CenterHost>();
             CH.AddComponent(networkRunner, networkStructure, PlayerPrefabs);
 
-            await LoadStartGame("SampleScene"); // LoadTo Scene Beta Test
+            await LoadStartGame("Stage1-S1"); // LoadTo Scene Beta Test
             _isAlreadyInRoom = false;
+
+            GM = networkRunner.Spawn(GameManagerPrefabs);
+            gameManager = GM.GetComponent<GameManager>();
+            gameManager.GetNetworkRunner(networkRunner);
 
             foreach (PlayersData player in Players)
             {
@@ -62,12 +68,12 @@ public class SessionManager : SingletonNetwork<SessionManager>
                 {
                     if (playerRef == playerRun.LocalPlayer)
                     {
-                        //CH.SpawnPlayer(playerRef, CharacterTypeShip.Instance.currentHost, true);
+                        CH.SpawnPlayer(playerRef, CharacterTypeShip.Instance.currentHost, true);
 
                     }
                     else
                     {
-                        //CH.SpawnPlayer(playerRef, CharacterTypeShip.Instance.currentClient, false);
+                        CH.SpawnPlayer(playerRef, CharacterTypeShip.Instance.currentClient, false);
                     }
                 }
                 else
@@ -208,11 +214,6 @@ public class SessionManager : SingletonNetwork<SessionManager>
                 RuntimeUpdate.Instance.UpdateCode(sessionKey);
             }
 
-            if (shipTypePrefabs == null)
-            {
-                Debug.LogError("shipTypePrefabs is null! Did you assign it in Inspector and add it to NetworkRunner?");
-                
-            }
             shipType = runner.Spawn(shipTypePrefabs);
         }
     }

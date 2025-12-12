@@ -1,10 +1,17 @@
+using Fusion;
 using UnityEngine;
 
-public class Arrow : MonoBehaviour
+public class Arrow : NetworkBehaviour
 {
+    [SerializeField] NetworkObject selfObj;
     [SerializeField] int damage = 1;
     [SerializeField] float lifeTime = 5f;
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+
+    private void Awake()
+    {
+        selfObj = GetComponent<NetworkObject>();
+    }
+
     void Start()
     {
         Destroy(gameObject, lifeTime);
@@ -15,7 +22,7 @@ public class Arrow : MonoBehaviour
         if (collision.TryGetComponent<IDamageable>(out var target))
         {
             target.TakeDamage(damage, 0, transform.position);
-            Destroy(gameObject);
+            GameManager.Instance.ProjectileDespawn(selfObj);
         }
     }
 }

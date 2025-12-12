@@ -1,6 +1,7 @@
+using Fusion;
 using UnityEngine;
 
-public class TrapArrow : MonoBehaviour
+public class TrapArrow : NetworkBehaviour
 {
     [Header("Detection Settings")]
     [SerializeField] float detectRadius = 5f;   
@@ -15,7 +16,7 @@ public class TrapArrow : MonoBehaviour
 
     [Header("References")]
     [SerializeField] LayerMask playerMask;
-    [SerializeField] GameObject arrowPrefabe;
+    [NetworkPrefab] public NetworkObject arrowPrefab;
 
     float fireTime;
 
@@ -26,7 +27,6 @@ public class TrapArrow : MonoBehaviour
 
     void detectFire()
     {
-        // 1. หาคนในระยะวงกลมก่อน (ประหยัด Performance)
         Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, detectRadius, playerMask);
 
         if (hits.Length == 0) return;
@@ -40,7 +40,7 @@ public class TrapArrow : MonoBehaviour
                 {
                     if (Time.time >= fireTime + fireRate)
                     {
-                        fireArrow(hit.transform);
+                        FireArrow(hit.transform);
                         fireTime = Time.time;
                     }
                 }
@@ -48,19 +48,15 @@ public class TrapArrow : MonoBehaviour
         }
     }
 
-    void fireArrow(Transform target)
+    public void FireArrow(Transform target)
     {
-        if (arrowPrefabe == null) return;
-
-        GameObject arrow = Instantiate(arrowPrefabe, transform.position, Quaternion.identity);
-        Rigidbody2D rb = arrow.GetComponent<Rigidbody2D>();
+        if (Object.HasStateAuthority == false) return;
 
         Vector2 direction = (target.position - transform.position).normalized;
-
         float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
-        arrow.transform.rotation = Quaternion.Euler(0, 0, angle);
+        Quaternion rotation = Quaternion.Euler(0, 0, angle);
 
-        rb.velocity = direction * arrowSpeed;
+        GameManager.Instance.ProjectileSpawn(arrowPrefab, transform.position, direction, rotation);
     }
 
     private void OnDrawGizmosSelected()

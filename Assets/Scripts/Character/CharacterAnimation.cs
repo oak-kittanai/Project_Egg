@@ -31,20 +31,30 @@ public class CharacterAnimation : NetworkBehaviour
     public override void Spawned()
     {
         UpdateSkin(stats.skinType);
-        currentSkin = stats.skinType;
+
+        
+        if (animator == null)
+        {
+            animator = GetComponent<Animator>();
+            Debug.LogError("Animator not found after spawn");
+            if (animator == null)
+            {
+                Debug.Log("can't get animator");
+            }
+        }
     }
 
     public void Setup()
     {
-        animator = GetComponentInChildren<Animator>();
-        spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+        animator = GetComponent<Animator>();
+        spriteRenderer = GetComponent<SpriteRenderer>();
         stats = GetComponent<CharacterStats>();
-        action = GetComponentInChildren<CharacterAction>();
+        action = GetComponent<CharacterAction>();
     }
 
     public void UpdateSkin(characterType skin)
     {
-        if (skin == currentSkin)
+        if (skin == characterType.Duck)
         {
             animator.runtimeAnimatorController = DuckController;
         }
@@ -54,9 +64,35 @@ public class CharacterAnimation : NetworkBehaviour
         }
     }
 
-    public void UpdateAnimation(Vector2 direction)
+    public void UpdateAnimationOnBird(Vector2 direction)
     {
         Direction = direction;
+
+        animator.SetFloat("X", Direction.x);
+
+        if (Direction.x < -0.01f)
+        {
+            FlipX = false;
+        }
+
+        if (Direction.x > 0.01f)
+        {
+            FlipX = true;
+        }
+
+        spriteRenderer.flipX = FlipX;
+        animator.SetFloat("Y", Direction.y);
+    }
+
+    public void UpdateAnimationOnDuck(Vector2 direction, bool isWaterGround)
+    {
+        Direction = direction;
+        if (isWaterGround)
+        {
+            animator.SetBool("OnWater", true);
+        }
+        else animator.SetBool("OnWater", false);
+
         animator.SetFloat("X", Direction.x);
 
         if (Direction.x < -0.01f)
@@ -114,7 +150,7 @@ public class CharacterAnimation : NetworkBehaviour
 
     public void SmashAnimation()
     {
-
+        animator.Play("Hit", 0);
     }
 
     public void SwimAnimation()
@@ -134,11 +170,17 @@ public class CharacterAnimation : NetworkBehaviour
         animator.SetBool("Throwing", true);
     }
 
-    public void FlyAnimation()
+    public void FlyAnimation(bool isFly)
     {
-        animator.Play("Fly", 0);
-
-        animator.SetBool("Carrying", false);
+        if (isFly)
+        {
+            animator.Play("Fly", 0);
+            animator.SetBool("Flying", true);
+        }
+        else
+        {
+            animator.SetBool("Flying", false);
+        }
     }
 
     public void OnGroundCheck()

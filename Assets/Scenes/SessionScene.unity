@@ -1860,9 +1860,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: '123123
-
-'
+  m_text: InputField
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -2363,6 +2361,10 @@ PrefabInstance:
       propertyPath: characterTypeShip
       value: 
       objectReference: {fileID: 4367164859237716352, guid: 308ddffb4fcf23a478e536a810b38d9f, type: 3}
+    - target: {fileID: 7581363676634988447, guid: 2a585ce85a41bfe428999078832f2881, type: 3}
+      propertyPath: GameManagerPrefabs
+      value: 
+      objectReference: {fileID: 861224361725939580, guid: ed0cb723a5912b64d9876a3f28a3df89, type: 3}
     - target: {fileID: 8951876932146295832, guid: 2a585ce85a41bfe428999078832f2881, type: 3}
       propertyPath: m_LocalPosition.x
       value: 1068.1223

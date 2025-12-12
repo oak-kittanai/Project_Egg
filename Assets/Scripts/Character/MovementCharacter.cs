@@ -34,6 +34,7 @@ public class MovementCharacter : NetworkBehaviour
     public bool isDash;
     [Networked] public bool _jumpAble { get; set; }
     [Networked] public bool _isGrounded { get; set; }
+    [Networked] public bool _isWaterGround {  get; set; }
     [Networked] public bool _isInTheAir { get; set; }
 
     [Header("Data_Stats")]
@@ -41,6 +42,7 @@ public class MovementCharacter : NetworkBehaviour
     [Networked] public bool _isFalling { get; set; }
 
     [Networked] public bool _isFloat { get; set; }
+    [SerializeField] public bool _floatAble;
 
     [Header("Duck Setting")]
 
@@ -49,6 +51,7 @@ public class MovementCharacter : NetworkBehaviour
     
     [SerializeField] public bool flyAble;
     [Networked] public bool _isFly { get; set; }
+    [SerializeField] public bool alreadyFly;
 
     [Networked] public float fly_Acceleration { get; set; }
     [Networked] public float fly_Deceleration { get; set; }
@@ -72,10 +75,7 @@ public class MovementCharacter : NetworkBehaviour
 
     public override void Spawned()
     {
-        if (HasInputAuthority)
-        {
-
-        }
+        
     }
 
     public void Setup()
@@ -134,7 +134,15 @@ public class MovementCharacter : NetworkBehaviour
     {
         UpdateStates();
         UpdatePosition();
-        cAnimation.UpdateAnimation(new Vector2(InputMoveX, rb2D.linearVelocity.y));
+        if (CurrentSkinType == characterType.Duck)
+        {
+            cAnimation.UpdateAnimationOnDuck(new Vector2(InputMoveX, rb2D.linearVelocity.y), _isWaterGround);
+        }
+        else
+        {
+            cAnimation.UpdateAnimationOnBird(new Vector2(InputMoveX, rb2D.linearVelocity.y));
+        }
+
     }
 
     public void UpdateMovement()
@@ -158,8 +166,11 @@ public class MovementCharacter : NetworkBehaviour
         {
             UpdateActionInput(input.jump);
             action.InteractAble(input.Keyboard_E);
-            action.MouseInput(input.mouse2, input.mouse1);
-            action.UpdateCursorPos(input.mousePos);
+            if (CurrentSkinType == characterType.Bird)
+            {
+                action.MouseInput(input.mouse2, input.mouse1);
+                action.UpdateCursorPos(input.mousePos);
+            }
         }
         
         RayCast2DCheckGround();
@@ -180,15 +191,15 @@ public class MovementCharacter : NetworkBehaviour
             }
         }
 
-        if (CurrentSkinType == characterType.Bird && _isInTheAir && Jump && flyAble && _alreadyJump)
+        if (_isInTheAir && Jump && flyAble && _alreadyJump) // CurrentSkinType == characterType.Bird && 
         {
             Fly();
         }
 
-        if (_isInTheAir && !flyAble && _alreadyJump && Jump)
+        /*if (_isInTheAir && !flyAble && _alreadyJump && Jump && _floatAble)
         {
             StartFloat();
-        }
+        }*/
 
     }
 
@@ -218,7 +229,7 @@ public class MovementCharacter : NetworkBehaviour
 
     IEnumerator JumpWait()
     {
-        yield return new WaitForSeconds(0.2f);
+        yield return new WaitForSeconds(0.1f);
         rb2D.AddForce(Vector2.up * stats.s_jumpForce, ForceMode2D.Impulse);
     }
 
@@ -277,7 +288,11 @@ public class MovementCharacter : NetworkBehaviour
         }
         else
         {
-            StopFlying();
+            if (alreadyFly)
+            {
+                StopFlying();
+            }
+            cAnimation.FlyAnimation(false);
             DoFly = false;
             _isFly = false;
             _staminaBusy = false;
@@ -293,8 +308,6 @@ public class MovementCharacter : NetworkBehaviour
         _staminaBusy = true;
 
         StartFly();
-        cAnimation.FlyAnimation();
-
         Debug.Log("complete fly");
     }
 
@@ -302,6 +315,7 @@ public class MovementCharacter : NetworkBehaviour
     {
         if (stats.s_minStamina > 0 && !_isGrounded)
         {
+            cAnimation.FlyAnimation(true);
             DoFly = true;
             Debug.Log("Flyyy");
         }
@@ -320,7 +334,7 @@ public class MovementCharacter : NetworkBehaviour
         float force = speedDiff * fly_Acceleration;
 
         rb2D.AddForce(Vector2.up * force, ForceMode2D.Force);
-
+        alreadyFly = true;
         stats.StaminaReduce(5f);
     }
 
@@ -367,21 +381,31 @@ public class MovementCharacter : NetworkBehaviour
                 _isGrounded = true;
                 _isInTheAir = false;
                 flyAble = false;
+                _isWaterGround = false;
+                alreadyFly = false;
                 if (!_alreadyJump)
                 {
                     _jumpAble = true;
                 }
             }
+            else if (hit2D.collider.IsTouchingLayers(layerWater))
+            {
+                if (CurrentSkinType == characterType.Duck)
+                {
+                    _isWaterGround = true;
+                    _isGrounded = false;
+                    _isInTheAir = false;
+                    _jumpAble = false;
+                }
+            }
             else
             {
-                _jumpAble = false;
-                _isGrounded = false;
-                _isInTheAir = true;
-            }
-
-            if (hit2D.collider.IsTouchingLayers(layerWater))
-            {
-
+                if (CurrentSkinType == characterType.Duck)
+                {
+                    _jumpAble = false;
+                    _isGrounded = false;
+                    _isInTheAir = true;
+                }
             }
         }
     }

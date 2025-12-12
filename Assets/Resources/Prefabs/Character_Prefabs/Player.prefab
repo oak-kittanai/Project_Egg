@@ -144,20 +144,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CharacterAction
   playerCam: {fileID: 0}
-  rock: 0
   canInteract: 0
   pressed: 0
+  isCarry: 0
   _lineRenderer: {fileID: 6851344961069649357}
   _worldPos: {x: 0, y: 0}
   _isDrawPathAvailable: 0
   _firePoint: {fileID: 1227391787974572706}
   _step: 0
+  powerMultiplier: 10
+  maxThrowRange: 20
   mouse1Press: 0
   mouse2Hold: 0
   maxPointRadius: 0
   _isInteractAble: 0
   _isAbleSkill: 0
-  _interactRadius: 0
+  _interactRadius: 0.7
   _busy: 0
   characterSkillSet:
     _flyDuration: 0
@@ -166,6 +168,8 @@ MonoBehaviour:
     floatingSpeed: 0
     isDive: 0
     diveSpeed: 0
+  carryRock: 0
+  rockPrefab: {fileID: 8905558000891786202, guid: 229902877e58bce4c99862c222ad07c3, type: 3}
   fly: 0
 --- !u!114 &6713054206493656476
 MonoBehaviour:
@@ -183,11 +187,11 @@ MonoBehaviour:
   s_maxHealth: 5
   s_speed: 0
   s_walkSpeed: 6
-  s_jumpForce: 20
+  s_jumpForce: 7
   s_flySpeed: 5
   s_minStamina: 0
   s_maxStamina: 10
-  acceleration: 2
+  acceleration: 3
   deceleration: 10
   maxSpeed: 5
   _skinType: 0
@@ -209,17 +213,21 @@ MonoBehaviour:
   __moveX: {x: 0, y: 0}
   InputMoveX: 0
   _moveAble: 1
+  MoveAble: 0
   _busy: 0
   _staminaBusy: 0
   isDash: 0
   __jumpAble: 0
   __isGrounded: 0
+  __isWaterGround: 0
   __isInTheAir: 0
   __alreadyJump: 0
   __isFalling: 0
   __isFloat: 0
+  _floatAble: 0
   flyAble: 0
   __isFly: 0
+  alreadyFly: 0
   _fly_Acceleration: 10
   _fly_Deceleration: 10
   rayDistance: 0.4
@@ -235,7 +243,7 @@ Animator:
   m_GameObject: {fileID: 121460977929437379}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 746a9bf694c18b647ae6301927b9c315, type: 2}
+  m_Controller: {fileID: 9100000, guid: 8373531bbce3cc7408ff614dc5ec4f25, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0

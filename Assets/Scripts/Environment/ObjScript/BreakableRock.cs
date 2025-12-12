@@ -1,10 +1,18 @@
+using Fusion;
 using UnityEngine;
 
-public class BreakableRock : MonoBehaviour, Interactable
+public class BreakableRock : NetworkBehaviour, Interactable
 {
-    [SerializeField] GameObject itemToDrop;
+    [SerializeField] NetworkObject selfNet;
+
+    [SerializeField] NetworkObject itemToDrop;
     [SerializeField] int dropAmount = 1;
     [SerializeField] float dropForce = 3f;
+
+    private void Awake()
+    {
+        selfNet = GetComponent<NetworkObject>();
+    }
 
     public void Interact()
     {
@@ -21,17 +29,11 @@ public class BreakableRock : MonoBehaviour, Interactable
             }
         }
 
-        Destroy(gameObject);
+        GameManager.Instance.SelfDeSpawn(selfNet, false, transform.position);
     }
 
-    void SpawnItem()
+    public void SpawnItem()
     {
-        GameObject item = Instantiate(itemToDrop, transform.position, Quaternion.identity);
-        Rigidbody2D rb = item.GetComponent<Rigidbody2D>();
-        if (rb != null)
-        {
-            Vector2 randomDir = new Vector2(Random.Range(-1f, 1f), Random.Range(0.5f, 1f)).normalized;
-            rb.AddForce(randomDir * dropForce, ForceMode2D.Impulse);
-        }
+        GameManager.Instance.SpawnDropItem(itemToDrop, transform.position);
     }
 }

@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &1570018463978248828
+--- !u!1 &2239348386222357431
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,74 +8,60 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 7479233231607966100}
-  - component: {fileID: 127063686194669633}
-  - component: {fileID: 7825853430673868469}
+  - component: {fileID: 1705734299688547994}
+  - component: {fileID: 7470223918846075730}
+  - component: {fileID: 861224361725939580}
   m_Layer: 0
-  m_Name: CenterHost
+  m_Name: GameManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &7479233231607966100
+--- !u!4 &1705734299688547994
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1570018463978248828}
+  m_GameObject: {fileID: 2239348386222357431}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.33472, y: 0.71923, z: 0}
+  m_LocalPosition: {x: 4.74791, y: -0.95778, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &127063686194669633
+--- !u!114 &7470223918846075730
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1570018463978248828}
+  m_GameObject: {fileID: 2239348386222357431}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 65ebbde90cf588f4cadb9da57094b82d, type: 3}
+  m_Script: {fileID: 11500000, guid: 0f4ef4b33a08217478c72e24ff4e5a02, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CenterHost
-  HostSpawnPos: {x: -22, y: -12}
-  ClientSpawnPos: {x: -22, y: -13}
-  PlayerPrefab: {fileID: 0}
-  hostRunner: {fileID: 0}
-  netStructure: {fileID: 0}
-  hostStats: {fileID: 0}
-  clientRunner: {fileID: 0}
-  clientStats: {fileID: 0}
-  doneScan: 0
-  readySpawn: 0
-  firstStart: 0
-  ObjMoveAbleTrans: []
-  ObjTrapTrans: []
-  ObjEnemyTrans: []
-  _RemoveOldObj: 0
---- !u!114 &7825853430673868469
+  m_EditorClassIdentifier: Assembly-CSharp::GameManager
+  NetworkRunner: {fileID: 0}
+--- !u!114 &861224361725939580
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1570018463978248828}
+  m_GameObject: {fileID: 2239348386222357431}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
-  SortKey: 2179351403
+  SortKey: 3845793570
   ObjectInterest: 1
   Flags: 262145
   NestedObjects: []
   NetworkedBehaviours:
-  - {fileID: 127063686194669633}
+  - {fileID: 7470223918846075730}
   ForceRemoteRenderTimeframe: 0
