@@ -191,7 +191,7 @@ public class MovementCharacter : NetworkBehaviour
             }
         }
 
-        if (_isInTheAir && Jump && flyAble && _alreadyJump) // CurrentSkinType == characterType.Bird && 
+        if (CurrentSkinType == characterType.Bird && _isInTheAir && Jump && flyAble && _alreadyJump)
         {
             Fly();
         }
