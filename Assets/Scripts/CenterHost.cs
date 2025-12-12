@@ -24,7 +24,6 @@ public class CenterHost : SingletonNetwork<CenterHost>
     [Header("Check&Spawn")]
     [SerializeField] bool doneScan;
     [SerializeField] bool readySpawn;
-    [SerializeField] bool firstStart;
     [SerializeField] public List<ObjectTransform> ObjMoveAbleTrans = new List<ObjectTransform>();
     [SerializeField] public List<ObjectTransform> ObjTrapTrans = new List<ObjectTransform>();
     [SerializeField] public List<ObjectTransform> ObjEnemyTrans = new List<ObjectTransform>();
@@ -49,11 +48,6 @@ public class CenterHost : SingletonNetwork<CenterHost>
             Debug.Log("Host runner ready");
         }
 
-        if (HasStateAuthority)
-        {
-            //StartCheckAndAdd();
-            firstStart = true;
-        }
         DontDestroyOnLoad(gameObject);
     }
 

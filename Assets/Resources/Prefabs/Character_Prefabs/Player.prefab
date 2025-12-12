@@ -20,6 +20,7 @@ GameObject:
   - component: {fileID: 645833589779868426}
   - component: {fileID: -2039167435644549920}
   - component: {fileID: -7947786426853800306}
+  - component: {fileID: 4112164643277785246}
   m_Layer: 7
   m_Name: Player
   m_TagString: Player
@@ -227,7 +228,6 @@ MonoBehaviour:
   _floatAble: 0
   flyAble: 0
   __isFly: 0
-  alreadyFly: 0
   _fly_Acceleration: 10
   _fly_Deceleration: 10
   rayDistance: 0.4
@@ -348,6 +348,7 @@ MonoBehaviour:
   - {fileID: 3141284763445610261}
   - {fileID: -8724425470638208929}
   - {fileID: -7947786426853800306}
+  - {fileID: 4112164643277785246}
   - {fileID: 2092508300723378036}
   ForceRemoteRenderTimeframe: 0
 --- !u!114 &-7947786426853800306
@@ -373,6 +374,24 @@ MonoBehaviour:
     Position: 0.01
     Rotation: 0.01
     Scale: 0.01
+--- !u!114 &4112164643277785246
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 121460977929437379}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 506319458, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkMecanimAnimator
+  Animator: {fileID: 3258201221068302135}
+  ApplyTiming: 2
+  SyncSettings: 79
+  StateHashes: 000000008a18fce4b9abd9d328a981077af3fe2eb36f0a5980dc2f6e56a4c5104c35fffa50877270bee5ba058ecc7e2edc96010720533a7390a2852da1609f62d8aa0cc4
+  TriggerHashes: 00000000
+  TotalWords: 3
 --- !u!1 &174842300040866111
 GameObject:
   m_ObjectHideFlags: 0

@@ -180,19 +180,35 @@ public class MovementCharacter : NetworkBehaviour
     #region InputZone
     public void UpdateActionInput(bool Jump)
     {
-        if (_isGrounded && _jumpAble && Jump && !_isWaterGround)
+        if (CurrentSkinType == characterType.Duck)
         {
-            JumpAction();
-            if (_alreadyJump)
+            if (_isGrounded && _jumpAble && Jump && !_isWaterGround)
             {
-                StartCoroutine(WaitForJump());
-                StartCoroutine(WaitToFly()); // change to reach the top when jump then can fly
+                JumpAction();
+                if (_alreadyJump)
+                {
+                    StartCoroutine(WaitForJump());
+                    StartCoroutine(WaitToFly());
+                }
             }
         }
 
-        if (CurrentSkinType == characterType.Bird && _isInTheAir && Jump && flyAble && _alreadyJump)
+        if (CurrentSkinType == characterType.Bird)
         {
-            Fly();
+            if (_isGrounded && _jumpAble && Jump)
+            {
+                JumpAction();
+                if (_alreadyJump)
+                {
+                    StartCoroutine(WaitForJump());
+                    StartCoroutine(WaitToFly());
+                }
+            }
+
+            if (_isInTheAir && Jump && flyAble && _alreadyJump)
+            {
+                Fly();
+            }
         }
 
         /*if (_isInTheAir && !flyAble && _alreadyJump && Jump && _floatAble)
@@ -360,7 +376,7 @@ public class MovementCharacter : NetworkBehaviour
 
     #region RayCast
 
-    public void RayCast2DCheckGround()
+    public void RayCast2DCheckGround() // make own duck and bird
     {
         LayerMask layerGround = LayerMask.GetMask("Ground");
         LayerMask layerPlatform = LayerMask.GetMask("Platform");
