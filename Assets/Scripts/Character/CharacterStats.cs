@@ -42,9 +42,9 @@ public class CharacterStats : NetworkBehaviour, IDamageable
 
     public override void Spawned()
     {
-        if (HasInputAuthority)
+        if (skinType == characterType.Bird)
         {
-            //Setup();
+            s_jumpForce += 1.5f;
         }
     }
 

@@ -51,7 +51,6 @@ public class MovementCharacter : NetworkBehaviour
     
     [SerializeField] public bool flyAble;
     [Networked] public bool _isFly { get; set; }
-    [SerializeField] public bool alreadyFly;
 
     [Networked] public float fly_Acceleration { get; set; }
     [Networked] public float fly_Deceleration { get; set; }
@@ -75,7 +74,7 @@ public class MovementCharacter : NetworkBehaviour
 
     public override void Spawned()
     {
-        
+
     }
 
     public void Setup()
@@ -181,7 +180,7 @@ public class MovementCharacter : NetworkBehaviour
     #region InputZone
     public void UpdateActionInput(bool Jump)
     {
-        if (_isGrounded && _jumpAble && Jump)
+        if (_isGrounded && _jumpAble && Jump && !_isWaterGround)
         {
             JumpAction();
             if (_alreadyJump)
@@ -219,6 +218,7 @@ public class MovementCharacter : NetworkBehaviour
     private void JumpAction()
     {
         _isGrounded = false;
+        _isWaterGround = false;
         _alreadyJump = true;
         _isInTheAir = true;
         _jumpAble = false;
@@ -288,10 +288,7 @@ public class MovementCharacter : NetworkBehaviour
         }
         else
         {
-            if (alreadyFly)
-            {
-                StopFlying();
-            }
+            StopFlying();
             cAnimation.FlyAnimation(false);
             DoFly = false;
             _isFly = false;
@@ -334,7 +331,6 @@ public class MovementCharacter : NetworkBehaviour
         float force = speedDiff * fly_Acceleration;
 
         rb2D.AddForce(Vector2.up * force, ForceMode2D.Force);
-        alreadyFly = true;
         stats.StaminaReduce(5f);
     }
 
@@ -382,7 +378,6 @@ public class MovementCharacter : NetworkBehaviour
                 _isInTheAir = false;
                 flyAble = false;
                 _isWaterGround = false;
-                alreadyFly = false;
                 if (!_alreadyJump)
                 {
                     _jumpAble = true;
