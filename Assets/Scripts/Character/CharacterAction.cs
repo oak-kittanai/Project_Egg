@@ -47,8 +47,6 @@ public class CharacterAction : NetworkBehaviour, CharacterInteract
     [SerializeField] public bool carryRock;
     [NetworkPrefab] public NetworkObject rockPrefab;
 
-    public bool fly;
-
     private void Awake()
     {
         Setup();
@@ -90,14 +88,6 @@ public class CharacterAction : NetworkBehaviour, CharacterInteract
         if (_isAbleSkill)
         {
             if (_busy) return;
-
-            /*if (input.SkillPressAction.WasPressedThisFrame())
-            {
-                _busy = true;
-                // do skill
-
-                // return _busy = false; return _busy to false
-            }*/
         }
     }
 

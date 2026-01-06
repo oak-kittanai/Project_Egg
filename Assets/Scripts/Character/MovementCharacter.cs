@@ -23,12 +23,16 @@ public class MovementCharacter : NetworkBehaviour
     float maxStamina => stats.s_maxStamina;
 
     [Header("Movement")]
-    [Networked] public Vector2 _moveX {  get; set; }
+
+    public bool MoveAble; // make sure you can move this character
+
+    [SerializeField] public float gravityTime = 1f; // gravity
+    [SerializeField] public Vector2 _moveX; // show where player at
+
+    // Universal Controls Mechanics
     public float InputMoveX;
     public bool _moveAble;
-    public bool MoveAble;
-    [SerializeField] public float gravityTime = 1f;
-
+    
     [SerializeField] public bool _busy;
     [SerializeField] public bool _staminaBusy;
 
@@ -37,32 +41,16 @@ public class MovementCharacter : NetworkBehaviour
     [Networked] public bool _isGrounded { get; set; }
     [Networked] public bool _isWaterGround {  get; set; }
     [Networked] public bool _isInTheAir { get; set; }
-
-    [Header("Data_Stats")]
     [Networked] public bool _alreadyJump { get; set; }
     [Networked] public bool _isFalling { get; set; }
 
-    [Networked] public bool _isFloat { get; set; }
-    [SerializeField] public bool _floatAble;
+    [Networked] private TickTimer jumpCooldown { get; set; }
+    [Networked] private TickTimer jumpDelayTimer { get; set; }
 
-    [Header("Duck Setting")]
-
-
-    [Header("Bird Setting")]
-    
-    [SerializeField] public bool flyAble;
-    [Networked] public bool _isFly { get; set; }
-
-    [Networked] public float fly_Acceleration { get; set; }
-    [Networked] public float fly_Deceleration { get; set; }
-
-
-    [Header("Ray")]
+    [Header("Ray")] // aka check ground
     [SerializeField] public float rayDistance;
     [SerializeField] RaycastHit2D hit2D;
 
-
-    [SerializeField] bool DoFly;
     public characterType CurrentSkinType => stats.skinType;
 
     [Header("Position")]
@@ -75,7 +63,7 @@ public class MovementCharacter : NetworkBehaviour
 
     public override void Spawned()
     {
-
+        _jumpAble = true;
     }
 
     public void Setup()
@@ -85,25 +73,12 @@ public class MovementCharacter : NetworkBehaviour
         netRb2D = GetComponent<NetworkRigidbody2D>();
 
         stats = GetComponent<CharacterStats>();
-        if (stats != null)
-        {
-            stats.Setup();
-        }
-        else Debug.LogError("can't find Stats");
-
         cAnimation = GetComponent<CharacterAnimation>();
-        if (cAnimation != null)
-        {
-            cAnimation.Setup();
-        }
-        else Debug.LogError("can't find CharacterAnimation");
-
         action = GetComponent<CharacterAction>();
-        if (action != null)
-        {
-            action.Setup();
-        }
-        else Debug.LogError("can't find CharacterAction");
+
+        if (stats != null) stats.Setup();
+        if (cAnimation != null) cAnimation.Setup();
+        if (action != null) action.Setup();
     }
 
     public override void FixedUpdateNetwork()
@@ -124,11 +99,6 @@ public class MovementCharacter : NetworkBehaviour
             else MoveAble = true;
         }
 
-        if (CurrentSkinType == characterType.Bird)
-        {
-            HandleFlying();
-        }
-
         if (CurrentSkinType == characterType.Duck)
         {
             cAnimation.UpdateAnimationOnDuck(new Vector2(InputMoveX, rb2D.linearVelocity.y), _isWaterGround);
@@ -139,230 +109,82 @@ public class MovementCharacter : NetworkBehaviour
         }
     }
 
-    private void Update()
-    {
-        UpdateStates();
-        UpdatePosition();
-    }
-
     public void UpdateMovement()
     {
-        if (GetInput(out NetworkdInputData input))
+        if (GetInput(out NetworkInputData input))
         {
-            float moveX = input.horizontal;
-            InputMoveX = moveX;
+            InputMoveX = input.horizontal;
 
             if (MoveAble)
             {
-                float targetSpeed = moveX * MaxSpeed;
+                float targetSpeed = InputMoveX * MaxSpeed;
                 float speedDiff = targetSpeed - rb2D.linearVelocity.x;
                 float accelRate = Mathf.Abs(targetSpeed) > 0.01f ? acceleration : deceleration;
 
                 float force = speedDiff * accelRate;
                 rb2D.AddForce(Vector2.right * force, ForceMode2D.Force);
+
+                HandleJump(input.jump);
+
+                if (HasInputAuthority) action.InteractAble(input.Keyboard_E);
             }
         }
-        if (HasInputAuthority)
-        {
-            UpdateActionInput(input.jump);
-            action.InteractAble(input.Keyboard_E);
-            if (CurrentSkinType == characterType.Bird)
-            {
-                action.MouseInput(input.mouse2, input.mouse1);
-                action.UpdateCursorPos(input.mousePos);
-            }
-        }
-        
         RayCast2DCheckGround();
+        HandleGravityAndFalling();
 
         _moveX = this.transform.position;
     }
 
     #region InputZone
-    public void UpdateActionInput(bool Jump)
+
+    private void HandleJump(bool jumpPressed)
     {
-        if (CurrentSkinType == characterType.Duck)
+        if (jumpDelayTimer.Expired(Runner))
         {
-            if (_isGrounded && _jumpAble && Jump && !_isWaterGround)
+            rb2D.AddForce(Vector2.up * stats.s_jumpForce, ForceMode2D.Impulse);
+            jumpDelayTimer = TickTimer.None;
+        }
+
+        if (_isGrounded && _jumpAble && jumpPressed && !_isWaterGround)
+        {
+            _isGrounded = false;
+            _isWaterGround = false;
+            _alreadyJump = true;
+            _isInTheAir = true;
+            _jumpAble = false;
+
+            cAnimation.JumpAnimation();
+
+            jumpDelayTimer = TickTimer.CreateFromSeconds(Runner, 0.1f);
+
+            jumpCooldown = TickTimer.CreateFromSeconds(Runner, 1.5f);
+        }
+
+        if (jumpCooldown.Expired(Runner) && !_jumpAble)
+        {
+            _jumpAble = true;
+            _alreadyJump = false;
+            jumpCooldown = TickTimer.None;
+        }
+    }
+
+    private void HandleGravityAndFalling()
+    {
+        if (_alreadyJump)
+        {
+            if (rb2D.linearVelocity.y < 0.8f)
             {
-                JumpAction();
-                if (_alreadyJump)
-                {
-                    StartCoroutine(WaitForJump());
-                    StartCoroutine(WaitToFly());
-                }
-            }
-        }
-
-        if (CurrentSkinType == characterType.Bird)
-        {
-            if (_isGrounded && _jumpAble && Jump)
-            {
-                JumpAction();
-                if (_alreadyJump)
-                {
-                    StartCoroutine(WaitForJump());
-                    StartCoroutine(WaitToFly());
-                }
-            }
-
-            if (_isInTheAir && Jump && flyAble && _alreadyJump)
-            {
-                Fly();
-            }
-        }
-
-        /*if (_isInTheAir && !flyAble && _alreadyJump && Jump && _floatAble)
-        {
-            StartFloat();
-        }*/
-
-    }
-
-    private void StartFloat()
-    {
-        _isFloat = true;
-        cAnimation.FallingAndFloatAnimation(false);
-    }
-
-    private IEnumerator WaitForJump()
-    {
-        yield return new WaitForSeconds(1.5f);
-        _jumpAble = true;
-        _alreadyJump = false;
-    }
-
-    private void JumpAction()
-    {
-        _isGrounded = false;
-        _isWaterGround = false;
-        _alreadyJump = true;
-        _isInTheAir = true;
-        _jumpAble = false;
-
-        cAnimation.JumpAnimation();
-        StartCoroutine(JumpWait());
-    }
-
-    IEnumerator JumpWait()
-    {
-        yield return new WaitForSeconds(0.1f);
-        rb2D.AddForce(Vector2.up * stats.s_jumpForce, ForceMode2D.Impulse);
-    }
-
-    public void UpdateStates()
-    {
-        if (_isGrounded)
-        {
-            rb2D.gravityScale = 1f;
-            _isFly = false;
-            _isFalling = false;
-            _isFloat = false;
-            cAnimation.OnGroundCheck();
-            return;
-        }
-
-        if (_isFly)
-        {
-            rb2D.gravityScale = 1f;
-        }
-
-        if (_isFalling)
-        {
-            cAnimation.FallingAndFloatAnimation(true);
-        }
-    }
-
-    public void UpdatePosition()
-    {
-        if (_alreadyJump && !_isFly && !_isFloat)
-        {
-            if (rb2D.linearVelocity.y < -0.8f)
-            {
-                rb2D.gravityScale = Mathf.Lerp(rb2D.gravityScale, 2f, Time.deltaTime * gravityTime);
+                rb2D.gravityScale = Mathf.Lerp(rb2D.gravityScale, 2f, Runner.DeltaTime * gravityTime);
                 _isFalling = true;
             }
         }
-    }
 
-    #endregion
-
-    #region UpdateAction
-
-    #region Bird
-
-    private void HandleFlying()
-    {
-        if (DoFly && stats.s_minStamina > 0 && !_isGrounded)
+        if (_isGrounded)
         {
-            Flying();
-        }
-        else
-        {
-            StopFlying();
-            cAnimation.FlyAnimation(false);
-            _isFly = false;
-            _staminaBusy = false;
+            rb2D.gravityScale = 1f;
+            _isFalling = false;
         }
     }
-
-    private void Fly()
-    {
-        Debug.Log("Trigger fly");
-
-        _isFly = true;
-        _isFalling = false;
-        _staminaBusy = true;
-
-        StartFly();
-        Debug.Log("complete fly");
-    }
-
-    public void StartFly()
-    {
-        if (stats.s_minStamina > 0 && !_isGrounded)
-        {
-            cAnimation.FlyAnimation(true);
-            DoFly = true;
-            Debug.Log("Flyyy");
-        }
-        else
-        {
-            Debug.Log("not enough stamina");
-        }
-    }
-
-    public void Flying()
-    {
-        float currentY = rb2D.linearVelocity.y;
-        float targetY = stats.s_flySpeed;
-
-        float speedDiff = targetY - currentY;
-        float force = speedDiff * fly_Acceleration;
-
-        rb2D.AddForce(Vector2.up * force, ForceMode2D.Force);
-        stats.StaminaReduce(5f);
-    }
-
-    private void StopFlying()
-    {
-        if (rb2D.linearVelocity.y > 0.1f)
-        {
-            float speedDiff = 0 - rb2D.linearVelocity.y;
-            float force = speedDiff * fly_Deceleration;
-            rb2D.AddForce(Vector2.up * force, ForceMode2D.Force);
-            DoFly = false;
-        }
-    }
-
-    private IEnumerator WaitToFly()
-    {
-        yield return new WaitForSeconds(0.5f);
-        flyAble = true;
-    }
-
-    #endregion
-
     #endregion
 
     #region RayCast
@@ -379,32 +201,41 @@ public class MovementCharacter : NetworkBehaviour
         hit2D = Physics2D.Raycast(playerPosition, checkGroundPosition);
         if (hit2D.collider != null)
         {
-            Debug.Log(hit2D.collider.name);
-            if (hit2D.collider.IsTouchingLayers(layerGround) || hit2D.collider.IsTouchingLayers(layerPlatform))
+            int hitLayer = hit2D.collider.gameObject.layer;
+
+            bool isGround = LayerMask.GetMask("Ground") == (LayerMask.GetMask("Ground") | (1 << hitLayer));
+            bool isPlatform = LayerMask.GetMask ("Platform") == (LayerMask.GetMask("Platform") | (1 << hitLayer));
+            bool isWater = LayerMask.GetMask("Water") == (LayerMask.GetMask("Water") | (1 << hitLayer));
+
+            if (isGround && isPlatform)
             {
                 _isGrounded = true;
                 _isInTheAir = false;
-                flyAble = false;
                 _isWaterGround = false;
-                if (!_alreadyJump)
+
+                if (jumpCooldown.ExpiredOrNotRunning(Runner))
                 {
                     _jumpAble = true;
                 }
+                else if (isWater)
+                {
+                    if (CurrentSkinType == characterType.Duck)
+                    {
+                        _isWaterGround = true;
+                        _isGrounded = false;
+                        _isInTheAir = false;
+                        _jumpAble = false;
+                    }
+                    else
+                    {
+                        Debug.Log("Rest in peace bird");
+                    }
+                }
             }
-
-            if (hit2D.collider.IsTouchingLayers(layerWater))
+            else
             {
-                if (CurrentSkinType == characterType.Duck)
-                {
-                    _isWaterGround = true;
-                    _isGrounded = false;
-                    _isInTheAir = false;
-                    _jumpAble = false;
-                }
-                else
-                {
-                    Debug.Log("rest in peace");
-                }
+                _isGrounded = false;
+                _isInTheAir = true;
             }
         }
     }
