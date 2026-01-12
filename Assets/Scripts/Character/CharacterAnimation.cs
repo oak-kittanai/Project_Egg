@@ -84,14 +84,18 @@ public class CharacterAnimation : NetworkBehaviour
         animator.SetFloat("Y", Direction.y);
     }
 
-    public void UpdateAnimationOnDuck(Vector2 direction, bool isWaterGround)
+    public void UpdateGroundTypeOnDuck(bool isWaterGround)
     {
-        Direction = direction;
         if (isWaterGround)
         {
             animator.SetBool("OnWater", true);
         }
         else animator.SetBool("OnWater", false);
+    }
+
+    public void UpdateAnimationOnDuck(Vector2 direction)
+    {
+        Direction = direction;
 
         animator.SetFloat("X", Direction.x);
 

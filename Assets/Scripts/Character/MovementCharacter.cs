@@ -6,14 +6,14 @@ using UnityEngine;
 public class MovementCharacter : NetworkBehaviour
 {
     [Header("Referent")]
-    CharacterStats stats;
-    CharacterAnimation cAnimation;
-    CharacterAction action;
+    [SerializeField] public CharacterStats stats;
+    [SerializeField] public CharacterAnimation cAnimation;
+    [SerializeField] public CharacterAction action;
 
     // Mono
     [SerializeField] Rigidbody2D rb2D;
     [SerializeField] NetworkRigidbody2D netRb2D;
-    Collider2D coll2D;
+    [SerializeField] public Collider2D coll2D;
 
     [Header("Set Value")]
     float acceleration => stats.acceleration;
@@ -44,6 +44,11 @@ public class MovementCharacter : NetworkBehaviour
     [Networked] public bool _alreadyJump { get; set; }
     [Networked] public bool _isFalling { get; set; }
 
+    [Header("Item Interact")]
+    [SerializeField] public float _interactRadius;
+    [SerializeField] public bool pressed;
+
+    [Header("Cooldown")]
     [Networked] private TickTimer jumpCooldown { get; set; }
     [Networked] private TickTimer jumpDelayTimer { get; set; }
 
@@ -64,6 +69,15 @@ public class MovementCharacter : NetworkBehaviour
     public override void Spawned()
     {
         _jumpAble = true;
+
+        if (CurrentSkinType == characterType.Duck)
+        {
+            
+        }
+        else
+        {
+            
+        }
     }
 
     public void Setup()
@@ -101,7 +115,7 @@ public class MovementCharacter : NetworkBehaviour
 
         if (CurrentSkinType == characterType.Duck)
         {
-            cAnimation.UpdateAnimationOnDuck(new Vector2(InputMoveX, rb2D.linearVelocity.y), _isWaterGround);
+            cAnimation.UpdateAnimationOnDuck(new Vector2(InputMoveX, rb2D.linearVelocity.y));
         }
         else
         {
@@ -125,6 +139,11 @@ public class MovementCharacter : NetworkBehaviour
                 rb2D.AddForce(Vector2.right * force, ForceMode2D.Force);
 
                 HandleJump(input.jump);
+
+                if (input.Keyboard_E)
+                {
+                    pressed = true;
+                }
 
                 if (HasInputAuthority) action.InteractAble(input.Keyboard_E);
             }

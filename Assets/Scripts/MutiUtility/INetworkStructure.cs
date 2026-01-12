@@ -70,16 +70,6 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
                 jump = false;
             }
 
-            bool mouseRight;
-            if (Mouse.current.rightButton.isPressed)
-            {
-                mouseRight = true;
-            }
-            else
-            {
-                mouseRight = false;
-            }
-
             bool press_F;
             if (Keyboard.current.fKey.isPressed)
             {
@@ -88,16 +78,6 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
             else
             {
                 press_F = false;
-            }
-
-            bool mouseLeft;
-            if (Mouse.current.leftButton.isPressed)
-            {
-                mouseLeft = true;
-            }
-            else
-            {
-                mouseLeft = false;
             }
 
             bool press_E;
@@ -127,8 +107,6 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
             */
 
             data.mousePos = mousePosition;
-            data.mouse2 = mouseRight;
-            data.mouse1 = mouseLeft;
             data.horizontal = moveX;
             data.jump = jump;
             data.Keyboard_F = press_F;
@@ -263,8 +241,6 @@ public struct NetworkInputData : INetworkInput
     public Vector2 mousePos;
     public float horizontal;
     public bool jump;
-    public bool mouse1;
-    public bool mouse2;
     public bool Keyboard_F;
     public bool Keyboard_E;
     //public bool skill_1;
