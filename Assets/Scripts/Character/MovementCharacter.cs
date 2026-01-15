@@ -1,271 +1,182 @@
 using Fusion;
 using Fusion.Addons.Physics;
-using System.Collections;
+using UnityEditor;
 using UnityEngine;
 
 public class MovementCharacter : NetworkBehaviour
 {
-    [Header("Referent")]
+    [Header("References")]
     [SerializeField] public CharacterStats stats;
     [SerializeField] public CharacterAnimation cAnimation;
-    [SerializeField] public CharacterAction action;
-
-    // Mono
     [SerializeField] Rigidbody2D rb2D;
-    [SerializeField] NetworkRigidbody2D netRb2D;
-    [SerializeField] public Collider2D coll2D;
+    [SerializeField] Collider2D coll2D;
 
-    [Header("Set Value")]
-    float acceleration => stats.acceleration;
-    float deceleration => stats.deceleration;
-    float MaxSpeed => stats.maxSpeed;
-    float minStamina => stats.s_minStamina;
-    float maxStamina => stats.s_maxStamina;
+    [Header("Movement Settings")]
+    public float gravityScale = 2f;
+    [Networked] public bool IsGrounded { get; set; }
+    [Networked] public bool IsInAir { get; set; }
+    [Networked] public Vector2 MoveInput { get; set; }
 
-    [Header("Movement")]
+    [Header("Carry System (The New Part)")]
+    [Networked] public NetworkId CarriedFriendId { get; set; }
+    [Networked] public bool IsCarrying { get; set; }
+    [Networked] public bool IsBeingCarried { get; set; }
 
-    public bool MoveAble; // make sure you can move this character
-
-    [SerializeField] public float gravityTime = 1f; // gravity
-    [SerializeField] public Vector2 _moveX; // show where player at
-
-    // Universal Controls Mechanics
-    public float InputMoveX;
-    public bool _moveAble;
-    
-    [SerializeField] public bool _busy;
-    [SerializeField] public bool _staminaBusy;
-
-    public bool isDash;
-    [Networked] public bool _jumpAble { get; set; }
-    [Networked] public bool _isGrounded { get; set; }
-    [Networked] public bool _isWaterGround {  get; set; }
-    [Networked] public bool _isInTheAir { get; set; }
-    [Networked] public bool _alreadyJump { get; set; }
-    [Networked] public bool _isFalling { get; set; }
-
-    [Header("Item Interact")]
-    [SerializeField] public float _interactRadius;
-    [SerializeField] public bool pressed;
-
-    [Header("Cooldown")]
-    [Networked] private TickTimer jumpCooldown { get; set; }
-    [Networked] private TickTimer jumpDelayTimer { get; set; }
-
-    [Header("Ray")] // aka check ground
-    [SerializeField] public float rayDistance;
-    [SerializeField] RaycastHit2D hit2D;
-
-    public characterType CurrentSkinType => stats.skinType;
-
-    [Header("Position")]
-    public Vector3 currentPosition;
-
-    private void Awake()
-    {
-        Setup();
-    }
+    // Local Variables
+    public float rayDistance = 1.2f;
+    public float interactRadius = 1.5f;
 
     public override void Spawned()
     {
-        _jumpAble = true;
-
-        if (CurrentSkinType == characterType.Duck)
-        {
-            
-        }
-        else
-        {
-            
-        }
-    }
-
-    public void Setup()
-    {
-        coll2D = GetComponent<Collider2D>();
-        rb2D = GetComponent<Rigidbody2D>();
-        netRb2D = GetComponent<NetworkRigidbody2D>();
-
-        stats = GetComponent<CharacterStats>();
-        cAnimation = GetComponent<CharacterAnimation>();
-        action = GetComponent<CharacterAction>();
-
-        if (stats != null) stats.Setup();
-        if (cAnimation != null) cAnimation.Setup();
-        if (action != null) action.Setup();
+        if (stats == null) stats = GetComponent<CharacterStats>();
+        if (cAnimation == null) cAnimation = GetComponent<CharacterAnimation>();
+        if (rb2D == null) rb2D = GetComponent<Rigidbody2D>();
     }
 
     public override void FixedUpdateNetwork()
     {
-        if (_moveAble)
+        if (IsBeingCarried)
         {
-            UpdateMovement();
-
-            if (stats.s_minStamina < stats.s_maxStamina && !_staminaBusy)
-            {
-                stats.RechargeStamina(true);
-            }
-
-            if (action.carryRock)
-            {
-                MoveAble = false;
-            }
-            else MoveAble = true;
-        }
-
-        if (CurrentSkinType == characterType.Duck)
-        {
-            cAnimation.UpdateAnimationOnDuck(new Vector2(InputMoveX, rb2D.linearVelocity.y));
+            rb2D.simulated = false; // Stop gravity/collisions
+            return;
         }
         else
         {
-            cAnimation.UpdateAnimationOnBird(new Vector2(InputMoveX, rb2D.linearVelocity.y));
+            rb2D.simulated = true;
         }
-    }
 
-    public void UpdateMovement()
-    {
         if (GetInput(out NetworkInputData input))
         {
-            InputMoveX = input.horizontal;
-
-            if (MoveAble)
-            {
-                float targetSpeed = InputMoveX * MaxSpeed;
-                float speedDiff = targetSpeed - rb2D.linearVelocity.x;
-                float accelRate = Mathf.Abs(targetSpeed) > 0.01f ? acceleration : deceleration;
-
-                float force = speedDiff * accelRate;
-                rb2D.AddForce(Vector2.right * force, ForceMode2D.Force);
-
-                HandleJump(input.jump);
-
-                if (input.Keyboard_E)
-                {
-                    pressed = true;
-                }
-
-                if (HasInputAuthority) action.InteractAble(input.Keyboard_E);
-            }
+            HandleMovement(input);
+            HandleJump(input);
+            HandleInteraction(input);
         }
-        RayCast2DCheckGround();
-        HandleGravityAndFalling();
 
-        _moveX = this.transform.position;
+        CheckGround();
+
+        if (IsCarrying)
+        {
+            UpdateCarriedFriendPosition();
+        }
+
+        OnFixedUpdateSpecific();
     }
 
-    #region InputZone
-
-    private void HandleJump(bool jumpPressed)
+    // Movement
+    private void HandleMovement(NetworkInputData input)
     {
-        if (jumpDelayTimer.Expired(Runner))
+        float targetSpeed = input.horizontal * stats.maxSpeed;
+        float currentSpeed = rb2D.linearVelocity.x;
+
+        float accelRate = Mathf.Abs(targetSpeed) > 0.01f ? stats.acceleration : stats.deceleration;
+
+        float speedDif = targetSpeed - currentSpeed;
+        rb2D.AddForce(Vector2.right * (speedDif * accelRate));
+
+        cAnimation.UpdateAnimationOnBird(new Vector2(input.horizontal, rb2D.linearVelocity.y));
+    }
+
+    protected virtual void HandleJump(NetworkInputData input)
+    {
+        if (input.jump && IsGrounded)
         {
             rb2D.AddForce(Vector2.up * stats.s_jumpForce, ForceMode2D.Impulse);
-            jumpDelayTimer = TickTimer.None;
-        }
-
-        if (_isGrounded && _jumpAble && jumpPressed && !_isWaterGround)
-        {
-            _isGrounded = false;
-            _isWaterGround = false;
-            _alreadyJump = true;
-            _isInTheAir = true;
-            _jumpAble = false;
-
-            cAnimation.JumpAnimation();
-
-            jumpDelayTimer = TickTimer.CreateFromSeconds(Runner, 0.1f);
-
-            jumpCooldown = TickTimer.CreateFromSeconds(Runner, 1.5f);
-        }
-
-        if (jumpCooldown.Expired(Runner) && !_jumpAble)
-        {
-            _jumpAble = true;
-            _alreadyJump = false;
-            jumpCooldown = TickTimer.None;
+            IsGrounded = false;
         }
     }
 
-    private void HandleGravityAndFalling()
+    private void HandleInteraction(NetworkInputData input)
     {
-        if (_alreadyJump)
+        if (input.Keyboard_E)
         {
-            if (rb2D.linearVelocity.y < 0.8f)
+            if (IsCarrying)
             {
-                rb2D.gravityScale = Mathf.Lerp(rb2D.gravityScale, 2f, Runner.DeltaTime * gravityTime);
-                _isFalling = true;
+                DropFriend();
+                return;
             }
-        }
 
-        if (_isGrounded)
-        {
-            rb2D.gravityScale = 1f;
-            _isFalling = false;
-        }
-    }
-    #endregion
-
-    #region RayCast
-
-    public void RayCast2DCheckGround()
-    {
-        LayerMask layerGround = LayerMask.GetMask("Ground");
-        LayerMask layerPlatform = LayerMask.GetMask("Platform");
-        LayerMask layerWater = LayerMask.GetMask("Water");
-
-        Vector2 playerPosition = transform.position;
-        Vector2 checkGroundPosition = Vector2.down * rayDistance;
-
-        hit2D = Physics2D.Raycast(playerPosition, checkGroundPosition);
-        if (hit2D.collider != null)
-        {
-            int hitLayer = hit2D.collider.gameObject.layer;
-
-            bool isGround = LayerMask.GetMask("Ground") == (LayerMask.GetMask("Ground") | (1 << hitLayer));
-            bool isPlatform = LayerMask.GetMask ("Platform") == (LayerMask.GetMask("Platform") | (1 << hitLayer));
-            bool isWater = LayerMask.GetMask("Water") == (LayerMask.GetMask("Water") | (1 << hitLayer));
-
-            if (isGround && isPlatform)
+            Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, 1.5f); // 1.5f is interactRadius
+            foreach (var hit in hits)
             {
-                _isGrounded = true;
-                _isInTheAir = false;
-                _isWaterGround = false;
+                if (hit.gameObject == gameObject) continue;
 
-                if (jumpCooldown.ExpiredOrNotRunning(Runner))
+                if (hit.TryGetComponent<MovementCharacter>(out var otherPlayer))
                 {
-                    _jumpAble = true;
+                    PickupFriend(otherPlayer);
+                    return;
                 }
-                else if (isWater)
+
+                if (hit.TryGetComponent<Interactable>(out var interactable))
                 {
-                    if (CurrentSkinType == characterType.Duck)
-                    {
-                        _isWaterGround = true;
-                        _isGrounded = false;
-                        _isInTheAir = false;
-                        _jumpAble = false;
-                    }
-                    else
-                    {
-                        Debug.Log("Rest in peace bird");
-                    }
+                    Debug.Log("Trigger interactable object");
+                    interactable.Interact();
+                    return;
                 }
             }
-            else
-            {
-                _isGrounded = false;
-                _isInTheAir = true;
-            }
         }
     }
 
-    #endregion
+    public void PickupFriend(MovementCharacter friend)
+    {
+        Debug.Log("Picking up friend!");
+        IsCarrying = true;
+        CarriedFriendId = friend.Object.Id;
 
-    private void OnDrawGizmos()
+        friend.SetCarriedState(true);
+    }
+
+    public void DropFriend()
+    {
+        if (Runner.TryFindObject(CarriedFriendId, out var obj))
+        {
+            if (obj.TryGetComponent<MovementCharacter>(out var friend))
+            {
+                friend.SetCarriedState(false);
+                // Optional: Throw them slightly forward
+                friend.GetComponent<Rigidbody2D>().AddForce(new Vector2(transform.localScale.x * 5, 5), ForceMode2D.Impulse);
+            }
+        }
+
+        IsCarrying = false;
+        CarriedFriendId = default;
+    }
+
+    // set state on clients
+    public void SetCarriedState(bool state)
+    {
+        IsBeingCarried = state;
+    }
+
+    private void UpdateCarriedFriendPosition()
+    {
+        if (Runner.TryFindObject(CarriedFriendId, out var obj))
+        {
+            // Snap position to above our head
+            obj.transform.position = transform.position + Vector3.up * 1.5f;
+        }
+    }
+
+    // Raycast
+    private void CheckGround()
+    {
+        LayerMask mask = LayerMask.GetMask("Ground", "Platform");
+        IsGrounded = Physics2D.Raycast(transform.position, Vector2.down, rayDistance, mask);
+        IsInAir = !IsGrounded;
+    }
+
+    protected virtual void OnFixedUpdateSpecific()
+    {
+
+    }
+
+    private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.blue;
         Vector2 start = transform.position;
         Vector2 direction = Vector2.down * rayDistance;
         Gizmos.DrawRay(start, direction);
+
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(start, interactRadius);
     }
 }

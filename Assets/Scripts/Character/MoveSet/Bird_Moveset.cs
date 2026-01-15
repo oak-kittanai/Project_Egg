@@ -1,142 +1,73 @@
 using Fusion;
-using System;
 using UnityEngine;
 
-public class Bird_Moveset : MovementCharacter, CharacterInteract
+public class Bird_Moveset : MovementCharacter
 {
-    [Header("OnTheWaterSetting")]
-    [SerializeField] bool onWater;
-    [SerializeField] bool diveIntoWater;
+    [Header("Bird Settings")]
+    [SerializeField] float normalFlyTime = 5f;
+    [SerializeField] float carryFlyTime = 3f;
 
-    [Header("Item Interact")]
-    [SerializeField] bool _isInteractAble;
-    [SerializeField] bool _isAbleSkill;
+    [Header("Bird State")]
+    [Networked] private TickTimer FlightTimer { get; set; }
+    [Networked] private bool IsFlying { get; set; }
+    [Networked] public bool IsAlreadyFly {  get; set; }
 
-    [Header("Value")]
-    [SerializeField] public bool canInteract;
-    [SerializeField] public bool isCarry;
-
-    [Header("rock")]
-    [SerializeField] public bool carryRock;
-    [NetworkPrefab] public NetworkObject rockPrefab;
-
-    private void Awake()
+    protected override void OnFixedUpdateSpecific()
     {
-        //cAnimation = GetComponent<CharacterAnimation>();
-    }
-
-    public override void FixedUpdateNetwork()
-    {
-        if (_isWaterGround)
+        if (GetInput(out NetworkInputData input))
         {
-            onWater = true;
-        }
-        else
-        {
-            onWater = false;
+            HandleFlightLogic(input);
         }
 
-        while (onWater)
+        // Update Animation
+        if (cAnimation != null)
         {
-            cAnimation.UpdateGroundTypeOnDuck(onWater);
+            cAnimation.FlyAnimation(IsFlying);
+        }
+
+        if (IsGrounded)
+        {
+            IsAlreadyFly = false;
         }
     }
 
-    #region Interact Zone
-
-    public GameObject CharacterInteract()
+    private void HandleFlightLogic(NetworkInputData input)
     {
-        return this.gameObject;
-    }
-
-    public void DropCharacter()
-    {
-        throw new NotImplementedException();
-    }
-
-    public void SetCollider(bool o)
-    {
-        coll2D.isTrigger = o;
-    }
-
-    public void CheckItemInteract()
-    {
-        Vector2 player = transform.position;
-        int mask = LayerMask.GetMask("Player", "Interactable", "ThrowAbleProjectile");
-        Collider2D[] itemhitInteract = Physics2D.OverlapCircleAll(player, _interactRadius, mask);
-
-        foreach (Collider2D hit in itemhitInteract)
+        if (input.jump && IsInAir && !IsFlying && FlightTimer.ExpiredOrNotRunning(Runner) && !IsAlreadyFly)
         {
-            if (hit == null || hit.gameObject == this.gameObject)
-                continue;
+            StartFlying();
+        }
 
-            _isInteractAble = true;
-            if (hit.gameObject.layer == LayerMask.NameToLayer("Player"))
+        if (IsFlying)
+        {
+            if (FlightTimer.Expired(Runner) || !input.jump)
             {
-                //Debug.Log("Detect Player");
-                canInteract = true;
-                Interact(hit);
+                StopFlying();
             }
-            else canInteract = false;
-
-            if (hit.gameObject.layer == LayerMask.NameToLayer("Interactable"))
+            else
             {
-                Debug.Log("Detect Interactable Object");
-                canInteract = true;
-                Interact(hit);
-            }
-            else canInteract = false;
+                Rigidbody2D rb = GetComponent<Rigidbody2D>();
+                rb.linearVelocity = new Vector2(rb.linearVelocity.x, stats.s_flySpeed);
 
-            if (hit.gameObject.layer == LayerMask.NameToLayer("ThrowAbleProjectile"))
-            {
-                canInteract = true; // Work fine
-                Interact(hit);
-            }
-            else canInteract = false;
-        }
-    }
-
-    public void Interact(Collider2D hit)
-    {
-        Vector2 player = transform.position;
-
-        if (hit != null)
-        {
-            _isInteractAble = true;
-            Vector2 selfpos = new Vector2(transform.position.x, transform.position.y);
-            if (pressed && canInteract)
-            {
-                switch (hit.gameObject)
-                {
-                    case GameObject g when g.TryGetComponent<Interactable>(out var obj):
-                        Debug.Log("trigger interactable object");
-                        if (stats.skinType == characterType.Bird)
-                        {
-                            cAnimation.SmashAnimation();
-                            obj.Interact();
-                        }
-                        break;
-
-                    case GameObject g when g.TryGetComponent<MoveableObject>(out var moveobj):
-                        Debug.Log("trigger moveable object");
-                        moveobj.MoveInteract(selfpos);
-                        break;
-
-                    case GameObject g when g.TryGetComponent<ThrowAbleItem>(out var item):
-                        Debug.Log("Get ThrowItem");
-                        carryRock = item.PickupItem();
-                        break;
-
-                    default:
-                        //Debug.Log("didn't found any trigger");
-                        break;
-                }
+                stats.ReduceStamina(5f);
             }
         }
-        else
-        {
-            _isInteractAble = false;
-        }
     }
-    #endregion
+
+    private void StartFlying()
+    {
+        IsAlreadyFly = true;
+        IsFlying = true;
+
+        float duration = IsCarrying ? carryFlyTime : normalFlyTime;
+
+        FlightTimer = TickTimer.CreateFromSeconds(Runner, duration);
+        Debug.Log($"Bird Flying! Duration: {duration}s (Carrying: {IsCarrying})");
+    }
+
+    private void StopFlying()
+    {
+        IsFlying = false;
+        FlightTimer = TickTimer.None;
+    }
 }

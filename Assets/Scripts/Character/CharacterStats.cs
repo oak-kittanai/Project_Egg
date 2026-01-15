@@ -1,137 +1,71 @@
 using Fusion;
-using Fusion.Addons.Physics;
 using UnityEngine;
 
 public class CharacterStats : NetworkBehaviour, IDamageable
 {
-    [Header("Referent")]
-    InputControl controller;
-    CharacterAction characterAction;
-    MovementCharacter movement;
-    CharacterAnimation cAnimation;
+    [Header("Ref")]
+    private Rigidbody2D rb2D;
 
-    Rigidbody2D rb2D;
-    [Networked] NetworkRigidbody2D netRB2D {  get; set; }
+    [Header("Networked Stats")]
+    [Networked] public int CurrentHealth { get; set; }
+    [Networked] public float CurrentStamina { get; set; }
 
-    [Header("Stats & Network")]
-    [SerializeField] public int s_minHealth;
-    [SerializeField] public int s_maxHealth = 5;
+    [Header("Base Config")]
+    public int s_maxHealth = 5;
+    public float s_maxStamina = 30f;
 
-    [SerializeField] public float s_speed;
-    [SerializeField] public float s_walkSpeed;
-    [SerializeField] public float s_jumpForce;
-    [SerializeField] public float s_flySpeed;
+    [Header("Movement Config")]
+    public float s_walkSpeed = 10f;
+    public float maxSpeed = 20f;
+    public float s_jumpForce = 12f;
+    public float acceleration = 5f;
+    public float deceleration = 5f;
 
-    [SerializeField] public float s_minStamina;
-    [SerializeField] public float s_maxStamina = 30;
+    public float s_flySpeed = 8f;
 
-    [SerializeField] public float acceleration = 5f;
-    [SerializeField] public float deceleration = 5f;
-    [SerializeField] public float maxSpeed = 20f;
-
-    bool StaminaBusy => movement._staminaBusy;
-
-    [Header("CharacterSet")]
+    [Header("Identity")]
     [Networked] public characterType skinType { get; set; }
-    [Networked] public int skinIndex { get; set; }
-
-    private void Awake()
-    {
-        Setup();
-    }
 
     public override void Spawned()
     {
-        if (skinType == characterType.Bird)
+        rb2D = GetComponent<Rigidbody2D>();
+
+        if (Object.HasStateAuthority)
         {
-            s_jumpForce += 1.5f;
+            CurrentHealth = s_maxHealth;
+            CurrentStamina = s_maxStamina;
         }
     }
 
-    public void Setup()
+    public void ReduceStamina(float amount)
     {
-        controller = GetComponent<InputControl>();
-        characterAction = GetComponent<CharacterAction>();
-        movement = GetComponent<MovementCharacter>();
-        cAnimation = GetComponent<CharacterAnimation>();
-
-        s_minHealth = s_maxHealth;
-        s_minStamina = s_maxStamina;
+        if (CurrentStamina > 0)
+        {
+            CurrentStamina -= amount * Runner.DeltaTime;
+        }
     }
 
     public void RechargeStamina(bool recharging)
     {
-        if (s_minStamina < s_maxStamina && recharging)
+        if (CurrentStamina < s_maxStamina && recharging)
         {
-            recharging = StaminaRecharge(0);
-        }
-        else
-        {
-            Debug.Log("Already on max stamina");
-            recharging = false;
+            CurrentStamina += 5f * Runner.DeltaTime;
         }
     }
 
-    #region AdjustValue
-    public void TakeDamage(int damage)
+    public void TakeDamage(int dmg, float knockbackForce, Vector2 vec)
     {
-        s_minHealth -= damage;
-    }
+        if (Object.HasStateAuthority)
+        {
+            CurrentHealth -= dmg;
+            Debug.Log($"HP: {CurrentHealth}");
 
-    public void StaminaReduce(float i)
-    {
-        if (s_minStamina > 0)
-        {
-            s_minStamina -= (1f + i) * Time.deltaTime;
-        }
-    }
-
-    public bool StaminaRecharge(float i)
-    {
-        if (s_minStamina == s_maxStamina)
-        {
-            return false;
-        }
-        else
-        {
-            s_minStamina += (1f + i) * Time.deltaTime;
-            return true;
-        }
-    }
-
-    public void HealPlayer(int amount)
-    {
-        if (s_minHealth == s_maxHealth)
-        {
-            Debug.Log("Health is already full");
-            return;
-        }
-        else if (s_minHealth < s_maxHealth)
-        {
-            s_minHealth += amount;
-            if (s_minHealth > s_maxHealth)
+            if (rb2D != null)
             {
-                s_minHealth = s_maxHealth;
+                Vector2 pushDirection = ((Vector2)transform.position - vec).normalized;
+
+                rb2D.AddForce(pushDirection * knockbackForce, ForceMode2D.Impulse);
             }
         }
     }
-    #endregion
-
-    #region AdjustValue
-    public void TakeDamage(int dmg, float knockbackForce, Vector2 vec)
-    {
-        if (movement.isDash)
-        {
-            Debug.Log("Dodge");
-            return;
-        }
-
-        Vector2 direction = (vec - (Vector2)transform.position).normalized;
-        Vector2 knockbackDir = -direction * knockbackForce;
-
-        rb2D.AddForce(knockbackDir, ForceMode2D.Impulse);
-
-        TakeDamage(dmg);
-    }
-    #endregion
 }

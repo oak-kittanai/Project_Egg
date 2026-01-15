@@ -37,20 +37,20 @@ public class PlayerGUI : NetworkBehaviour
         StaminaUpdate();
         if (stats != null)
         {
-            if (stats.s_minStamina >= stats.s_maxStamina)
+            /*if (stats.s_minStamina >= stats.s_maxStamina)
             {
                 staminaBar.gameObject.SetActive(false);
             }
             else
             {
                 staminaBar.gameObject.SetActive(true);
-            }
+            }*/
         }
     }
 
     public void StaminaUpdate()
     {
-        minValue = stats.s_minStamina;
-        staminaBar.value = minValue;
+        /*minValue = stats.s_minStamina;
+        staminaBar.value = minValue; */
     }
 }

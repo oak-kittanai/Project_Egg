@@ -187,12 +187,22 @@ public class CenterHost : SingletonNetwork<CenterHost>
     {
         CharacterStats playerStats = playerObj.GetComponent<CharacterStats>();
         CharacterAnimation playerAnimation = playerObj.GetComponent<CharacterAnimation>();
+        Bird_Moveset bird = playerObj.GetComponent<Bird_Moveset>();
+        Duck_Moveset duck = playerObj.GetComponent<Duck_Moveset>();
+
         if (playerObj.InputAuthority == runner.LocalPlayer)
         {
             playerStats.skinType = currentHost;
             playerObj.name = $"Player ({playerStats.skinType})Host";
             Debug.Log("Spawn Player Host");
-
+            if (playerStats.skinType == characterType.Duck)
+            {
+                Destroy(bird);
+            }
+            else
+            {
+                Destroy(duck);
+            }
             hostStats = playerStats;
         }
         else
@@ -200,7 +210,14 @@ public class CenterHost : SingletonNetwork<CenterHost>
             playerStats.skinType = currentClient;
             playerObj.name = $"Player ({playerStats.skinType})Client";
             Debug.Log("Spawn Player Client");
-
+            if (playerStats.skinType == characterType.Duck)
+            {
+                Destroy(bird);
+            }
+            else
+            {
+                Destroy(duck);
+            }
             clientStats = playerStats;
         }
 

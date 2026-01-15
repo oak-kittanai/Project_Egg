@@ -15,6 +15,8 @@ public class ForceStart : NetworkBehaviour
     [SerializeField] InputField ServerIdInsert;
     [SerializeField] string ServerId = "ServerTest";
 
+    [SerializeField] SpawnPlayer spawner;
+
     private void Awake()
     {
         GameObject goRunner = Instantiate(NetworkRunner);
