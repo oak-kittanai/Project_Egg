@@ -102,6 +102,15 @@ public class CharacterAnimation : NetworkBehaviour
         else animator.SetBool("InTheAir", false);
     }
 
+    public void UpdateFloatingOnBird(bool Floating)
+    {
+        if (Floating)
+        {
+            animator.SetBool("InTheAir", true);
+        }
+        else animator.SetBool("InTheAir", false);
+    }
+
     public void UpdateAnimationOnDuck(Vector2 direction)
     {
         Direction = direction;

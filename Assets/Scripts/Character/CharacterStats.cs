@@ -8,7 +8,6 @@ public class CharacterStats : NetworkBehaviour, IDamageable
 
     [Header("Networked Stats")]
     [Networked] public int CurrentHealth { get; set; }
-    [Networked] public float CurrentStamina { get; set; }
 
     [Header("Base Config")]
     public int s_maxHealth = 5;
@@ -33,23 +32,6 @@ public class CharacterStats : NetworkBehaviour, IDamageable
         if (Object.HasStateAuthority)
         {
             CurrentHealth = s_maxHealth;
-            CurrentStamina = s_maxStamina;
-        }
-    }
-
-    public void ReduceStamina(float amount)
-    {
-        if (CurrentStamina > 0)
-        {
-            CurrentStamina -= amount * Runner.DeltaTime;
-        }
-    }
-
-    public void RechargeStamina(bool recharging)
-    {
-        if (CurrentStamina < s_maxStamina && recharging)
-        {
-            CurrentStamina += 5f * Runner.DeltaTime;
         }
     }
 

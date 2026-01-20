@@ -8,19 +8,28 @@ public class MovementCharacter : NetworkBehaviour
     [Header("References")]
     [SerializeField] public CharacterStats stats;
     [SerializeField] public CharacterAnimation cAnimation;
-    [SerializeField] Rigidbody2D rb2D;
-    [SerializeField] Collider2D coll2D;
+    [SerializeField] public Rigidbody2D rb2D;
+    [SerializeField] public Collider2D coll2D;
 
     [Header("Movement Settings")]
-    public float gravityScale = 2f;
     [Networked] public bool IsGrounded { get; set; }
     [Networked] public bool IsInAir { get; set; }
     [Networked] public Vector2 MoveInput { get; set; }
+
+    // Falling
+    [Networked] public bool IsFalling { get; set; }
+    [Networked] public bool FallingBusy { get; set; }
+    [SerializeField] public bool isOptional;
+    [SerializeField] public float optionalGravity;
+    [SerializeField] public float normalGravity = 3.5f;
+    [SerializeField] public float heavyGravity = 6.5f;
+    [SerializeField] public float maxGravity = 19f;
 
     [Header("Carry System (The New Part)")]
     [Networked] public NetworkId CarriedFriendId { get; set; }
     [Networked] public bool IsCarrying { get; set; }
     [Networked] public bool IsBeingCarried { get; set; }
+
 
     // Local Variables
     public float rayDistance = 1.2f;
@@ -80,6 +89,7 @@ public class MovementCharacter : NetworkBehaviour
     {
         if (input.jump && IsGrounded)
         {
+            cAnimation.JumpAnimation();
             rb2D.AddForce(Vector2.up * stats.s_jumpForce, ForceMode2D.Impulse);
             IsGrounded = false;
         }
@@ -162,6 +172,40 @@ public class MovementCharacter : NetworkBehaviour
         LayerMask mask = LayerMask.GetMask("Ground", "Platform");
         IsGrounded = Physics2D.Raycast(transform.position, Vector2.down, rayDistance, mask);
         IsInAir = !IsGrounded;
+
+        if (IsGrounded)
+        {
+            isOptional = false;
+            FallingBusy = false;
+        }
+
+        if (IsInAir && rb2D.linearVelocity.y < 0 && !FallingBusy)
+        {
+            FallingCheck();
+        }
+        else
+        {
+            if (isOptional)
+            {
+                rb2D.gravityScale = optionalGravity;
+            }
+            else
+            {
+                rb2D.gravityScale = normalGravity;
+            }
+        }
+    }
+
+    private void FallingCheck()
+    {
+        float speedPercent = Mathf.Abs(rb2D.linearVelocity.y) / maxGravity;
+
+        rb2D.gravityScale = Mathf.Lerp(normalGravity, heavyGravity, speedPercent);
+
+
+        float cappedY = Mathf.Max(rb2D.linearVelocityY, -maxGravity);
+
+        rb2D.linearVelocity = new Vector2(rb2D.linearVelocityX, cappedY);
     }
 
     protected virtual void OnFixedUpdateSpecific()

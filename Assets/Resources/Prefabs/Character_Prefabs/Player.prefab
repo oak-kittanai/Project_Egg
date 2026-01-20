@@ -150,7 +150,7 @@ MonoBehaviour:
   s_maxStamina: 10
   s_walkSpeed: 6
   maxSpeed: 5
-  s_jumpForce: 0.5
+  s_jumpForce: 4.5
   acceleration: 3
   deceleration: 10
   s_flySpeed: 5
@@ -330,15 +330,19 @@ MonoBehaviour:
   cAnimation: {fileID: 0}
   rb2D: {fileID: 0}
   coll2D: {fileID: 0}
-  gravityScale: 2
   _IsGrounded: 0
   _IsInAir: 0
   _MoveInput: {x: 0, y: 0}
+  _IsFalling: 0
+  _FallingBusy: 0
+  normalGravity: 2
+  heavyGravity: 5.5
+  maxGravity: 16
   _CarriedFriendId:
     Raw: 0
   _IsCarrying: 0
   _IsBeingCarried: 0
-  rayDistance: 0.1
+  rayDistance: 0.47
   interactRadius: 0.8
   onWater: 0
 --- !u!114 &-8560203487497628801
@@ -357,15 +361,19 @@ MonoBehaviour:
   cAnimation: {fileID: 0}
   rb2D: {fileID: 0}
   coll2D: {fileID: 0}
-  gravityScale: 2
   _IsGrounded: 0
   _IsInAir: 0
   _MoveInput: {x: 0, y: 0}
+  _IsFalling: 0
+  _FallingBusy: 0
+  normalGravity: 2
+  heavyGravity: 5.5
+  maxGravity: 16
   _CarriedFriendId:
     Raw: 0
   _IsCarrying: 0
   _IsBeingCarried: 0
-  rayDistance: 0.1
+  rayDistance: 0.47
   interactRadius: 0.8
   normalFlyTime: 5
   carryFlyTime: 3

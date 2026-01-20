@@ -7,10 +7,13 @@ public class Bird_Moveset : MovementCharacter
     [SerializeField] float normalFlyTime = 5f;
     [SerializeField] float carryFlyTime = 3f;
 
+    [SerializeField] float floatingGravity = 0.5f;
+
     [Header("Bird State")]
     [Networked] private TickTimer FlightTimer { get; set; }
     [Networked] private bool IsFlying { get; set; }
     [Networked] public bool IsAlreadyFly {  get; set; }
+    [Networked] public bool _wasJumpPressed { get; set; }
 
     protected override void OnFixedUpdateSpecific()
     {
@@ -33,30 +36,51 @@ public class Bird_Moveset : MovementCharacter
 
     private void HandleFlightLogic(NetworkInputData input)
     {
-        if (input.jump && IsInAir && !IsFlying && FlightTimer.ExpiredOrNotRunning(Runner) && !IsAlreadyFly)
+        bool isFreshPress = input.jump && !_wasJumpPressed;
+
+        bool isNearPeak = Mathf.Abs(rb2D.linearVelocity.y) < 3f;
+
+        if (isFreshPress && IsInAir)
         {
-            StartFlying();
+            if (!IsFlying && !IsAlreadyFly && isNearPeak)
+            {
+                StartFlying();
+            }
+        }
+
+        if (IsAlreadyFly && input.jump)
+        {
+            StartFloating();
         }
 
         if (IsFlying)
         {
-            if (FlightTimer.Expired(Runner) || !input.jump)
+            if (FlightTimer.Expired(Runner))
             {
                 StopFlying();
+                IsAlreadyFly = true;
             }
             else
             {
-                Rigidbody2D rb = GetComponent<Rigidbody2D>();
-                rb.linearVelocity = new Vector2(rb.linearVelocity.x, stats.s_flySpeed);
-
-                stats.ReduceStamina(5f);
+                rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, stats.s_flySpeed);
             }
         }
+
+        _wasJumpPressed = input.jump;
+    }
+
+    private void StartFloating()
+    {
+        FallingBusy = true;
+
+        optionalGravity = floatingGravity;
+        isOptional = true;
+
+        cAnimation.UpdateFloatingOnBird(true);
     }
 
     private void StartFlying()
     {
-        IsAlreadyFly = true;
         IsFlying = true;
 
         float duration = IsCarrying ? carryFlyTime : normalFlyTime;
@@ -69,5 +93,6 @@ public class Bird_Moveset : MovementCharacter
     {
         IsFlying = false;
         FlightTimer = TickTimer.None;
+
     }
 }
