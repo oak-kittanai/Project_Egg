@@ -40,7 +40,7 @@ public class TrapArrow : NetworkBehaviour
                 {
                     if (Time.time >= fireTime + fireRate)
                     {
-                        FireArrow(hit.transform);
+                        //FireArrow(hit.transform);
                         fireTime = Time.time;
                     }
                 }

@@ -149,8 +149,8 @@ MonoBehaviour:
   s_maxStamina: 10
   s_walkSpeed: 6
   maxSpeed: 5
-  s_jumpForce: 4.5
-  acceleration: 3
+  s_jumpForce: 3.8
+  acceleration: 4
   deceleration: 10
   s_flySpeed: 5
   _skinType: 0
@@ -334,6 +334,8 @@ MonoBehaviour:
   _MoveInput: {x: 0, y: 0}
   _IsFalling: 0
   _FallingBusy: 0
+  isOptional: 0
+  optionalGravity: 0
   normalGravity: 2
   heavyGravity: 5.5
   maxGravity: 16
@@ -365,6 +367,8 @@ MonoBehaviour:
   _MoveInput: {x: 0, y: 0}
   _IsFalling: 0
   _FallingBusy: 0
+  isOptional: 0
+  optionalGravity: 0
   normalGravity: 2
   heavyGravity: 5.5
   maxGravity: 16
@@ -374,8 +378,9 @@ MonoBehaviour:
   _IsBeingCarried: 0
   rayDistance: 0.47
   interactRadius: 0.8
-  normalFlyTime: 2
-  carryFlyTime: 3
+  normalFlyTime: 1.5
+  carryFlyTime: 0.8
+  floatingGravity: 1
   _IsAlreadyFly: 0
   __wasJumpPressed: 0
 --- !u!1 &174842300040866111
