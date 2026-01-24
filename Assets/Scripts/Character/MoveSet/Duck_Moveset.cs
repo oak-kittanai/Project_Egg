@@ -11,13 +11,15 @@ public class Duck_Moveset : MovementCharacter
         if (IsGrounded == false)
         {
             // Simple check ground
-
+            isFloating = false;
+        }
+        else
+        {
+            cAnimation.UpdateGroundTypeOnDuck(onWater);
         }
 
         if (cAnimation != null)
         {
-            cAnimation.UpdateGroundTypeOnDuck(onWater);
-
             cAnimation.UpdateAnimationOnDuck(new Vector2(MoveInput.x, GetComponent<Rigidbody2D>().linearVelocity.y));
         }
     }

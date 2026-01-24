@@ -7,12 +7,13 @@ public class Bird_Moveset : MovementCharacter
     [SerializeField] float normalFlyTime = 5f;
     [SerializeField] float carryFlyTime = 3f;
 
-    [SerializeField] float floatingGravity = 0.5f;
+    [SerializeField] float floatingGravity = 0.1f;
 
     [Header("Bird State")]
     [Networked] private TickTimer FlightTimer { get; set; }
     [Networked] private bool IsFlying { get; set; }
     [Networked] public bool IsAlreadyFly {  get; set; }
+    [Networked] public bool AlreadyFloating { get; set; }
     [Networked] public bool _wasJumpPressed { get; set; }
 
     protected override void OnFixedUpdateSpecific()
@@ -36,11 +37,10 @@ public class Bird_Moveset : MovementCharacter
 
     private void HandleFlightLogic(NetworkInputData input)
     {
-        bool isFreshPress = input.jump && !_wasJumpPressed;
-
+        bool isPressed = input.jump && !_wasJumpPressed;
         bool isNearPeak = Mathf.Abs(rb2D.linearVelocity.y) < 3f;
 
-        if (isFreshPress && IsInAir)
+        if (isPressed && IsInAir)
         {
             if (!IsFlying && !IsAlreadyFly && isNearPeak)
             {
@@ -48,9 +48,16 @@ public class Bird_Moveset : MovementCharacter
             }
         }
 
-        if (IsAlreadyFly && input.jump)
+        if (isPressed)
         {
-            StartFloating();
+            if (AlreadyFloating)
+            {
+                StopFloating();
+            }
+            else if (IsAlreadyFly && !AlreadyFloating)
+            {
+                StartFloating();
+            }
         }
 
         if (IsFlying)
@@ -72,11 +79,27 @@ public class Bird_Moveset : MovementCharacter
     private void StartFloating()
     {
         FallingBusy = true;
+        AlreadyFloating = true;
 
         optionalGravity = floatingGravity;
         isOptional = true;
-
         cAnimation.UpdateFloatingOnBird(true);
+
+        rb2D.linearDamping = 5f;
+    }
+
+    private void StopFloating()
+    {
+        FallingBusy = false;
+        AlreadyFloating = false;
+
+        isOptional = false;
+
+        rb2D.linearDamping = 0f;
+
+        rb2D.gravityScale = normalGravity;
+
+        cAnimation.UpdateFloatingOnBird(false);
     }
 
     private void StartFlying()

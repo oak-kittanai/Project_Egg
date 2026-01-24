@@ -8,7 +8,6 @@ using UnityEngine.Windows;
 public class CharacterAction : NetworkBehaviour, CharacterInteract
 {
     [Header("Ref")]
-    InputControl controller;
     CharacterStats stats;
     CharacterAnimation cAnimation;
     Rigidbody2D rb2D;
@@ -71,7 +70,6 @@ public class CharacterAction : NetworkBehaviour, CharacterInteract
 
     public void Setup()
     {
-        controller = GetComponent<InputControl>();
         stats = GetComponent<CharacterStats>();
         playerCam = GetComponentInChildren<Camera>();
         cAnimation = GetComponent<CharacterAnimation>();

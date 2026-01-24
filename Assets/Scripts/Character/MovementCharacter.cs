@@ -15,6 +15,7 @@ public class MovementCharacter : NetworkBehaviour
     [Networked] public bool IsGrounded { get; set; }
     [Networked] public bool IsInAir { get; set; }
     [Networked] public Vector2 MoveInput { get; set; }
+    [Networked] public bool isFloating { get; set; }
 
     // Falling
     [Networked] public bool IsFalling { get; set; }
