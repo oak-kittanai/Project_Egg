@@ -154,9 +154,9 @@ public class SessionManager : SingletonNetwork<SessionManager>
         else
         {
             _sessionKey = GenerateSessionCode();
-            
+
             await StartSession(networkRunner, _sessionKey);
-            
+
             _isAlreadyInRoom = true;
             if (!string.IsNullOrEmpty(_sessionKey))
             {

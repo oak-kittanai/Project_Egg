@@ -127,7 +127,7 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
 
     public void OnPlayerJoined(NetworkRunner runner, PlayerRef player)
     {
-        /*if (SessionManager.Instance != null)
+        if (SessionManager.Instance != null)
         {
             SessionManager.Instance.GetData(player.PlayerId, player, runner);
         }
@@ -143,11 +143,10 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
             {
                 SessionHub.Instance.SetupButtonOnline(false);
             }
-        }*/
+        }
 
-        // for Test
-
-        if (SpawnPlayer.Instance != null)
+        // for test
+        /*if (SpawnPlayer.Instance != null)
         {
             SpawnPlayer.Instance.SpawnPlayerToPosition(player, runner);
             Debug.Log("Try spawn");
@@ -155,7 +154,7 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
         else
         {
             Debug.LogWarning("Can't find CenterHost");
-        }
+        }*/
 
         Debug.Log($"Player has {player.PlayerId} Joined the session");
     }
