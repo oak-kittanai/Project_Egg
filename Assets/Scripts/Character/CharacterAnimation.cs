@@ -8,14 +8,14 @@ public class CharacterAnimation : NetworkBehaviour
     CharacterStats stats;
     Animator animator;
     SpriteRenderer spriteRenderer;
-    CharacterAction action;
+    MovementCharacter movement;
 
     [Header("Position")]
     [Networked] public Vector3 Direction {  get; set; }
     [Networked] public int State { get; set; }
     [Networked] public bool FlipX { get; set; }
 
-    [SerializeField] public bool Carrying => action.isCarry;
+    [SerializeField] public bool Carrying => movement.IsCarrying;
 
     [Header("Controller Setting")]
     [SerializeField] public RuntimeAnimatorController DuckController;
@@ -32,7 +32,6 @@ public class CharacterAnimation : NetworkBehaviour
     {
         UpdateSkin(stats.skinType);
 
-        
         if (animator == null)
         {
             animator = GetComponent<Animator>();
@@ -42,6 +41,15 @@ public class CharacterAnimation : NetworkBehaviour
                 Debug.Log("can't get animator");
             }
         }
+        if (movement == null)
+        {
+            movement = GetComponent<MovementCharacter>();
+            Debug.LogError("MovementCharacter not found after spawn");
+            if (movement == null)
+            {
+                Debug.Log("can't get MovementCharacter");
+            }
+        }
     }
 
     public void Setup()
@@ -49,7 +57,6 @@ public class CharacterAnimation : NetworkBehaviour
         animator = GetComponent<Animator>();
         spriteRenderer = GetComponent<SpriteRenderer>();
         stats = GetComponent<CharacterStats>();
-        action = GetComponent<CharacterAction>();
     }
 
     public void UpdateSkin(characterType skin)
@@ -93,7 +100,7 @@ public class CharacterAnimation : NetworkBehaviour
         else animator.SetBool("OnWater", false);
     }
 
-    public void UpdateGroundTypeOnBird(bool isInTheAir)
+    public void UpdateOnGroundTypeOnBird(bool isInTheAir)
     {
         if (isInTheAir)
         {

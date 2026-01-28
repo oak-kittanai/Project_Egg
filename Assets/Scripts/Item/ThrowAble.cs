@@ -3,8 +3,6 @@ using UnityEngine;
 
 public class ThrowAble : NetworkBehaviour, ThrowAbleItem
 {
-    CharacterAction playerAction;
-
     [Header("Setting")]
     public string itemName;
     [SerializeField] Vector3 selfPos;

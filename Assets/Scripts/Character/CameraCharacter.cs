@@ -19,14 +19,14 @@ public class CameraCharacter : NetworkBehaviour
                 ParallaxBackground.Instance.SetCamera(this);
             }
 
-            gameObject.tag = "MainCamera";
+            gameObject.tag = "Camera";
         }
         else
         {
-            Camera cam = GetComponent<Camera>();
+            Camera cam = GetComponentInChildren<Camera>();
             if (cam != null) cam.enabled = false;
 
-            AudioListener listener = GetComponent<AudioListener>();
+            AudioListener listener = GetComponentInChildren<AudioListener>();
             if (listener != null) listener.enabled = false;
         }
     }

@@ -52,7 +52,7 @@ public class SessionManager : SingletonNetwork<SessionManager>
             CenterHost CH = CHObject.GetComponent<CenterHost>();
             CH.AddComponent(networkRunner, networkStructure, PlayerPrefabs);
 
-            await LoadStartGame("Stage1-S1"); // LoadTo Scene Beta Test
+            await LoadStartGame("Stage1-S1"); // Load To Scene Beta Test
             _isAlreadyInRoom = false;
 
             GM = networkRunner.Spawn(GameManagerPrefabs);
@@ -167,10 +167,11 @@ public class SessionManager : SingletonNetwork<SessionManager>
         }
     }
 
-    public void JoinSession(string key)
+    public bool JoinSession(string key)
     {
         JoinRoom(key);
         _isAlreadyInRoom = true;
+        return _isAlreadyInRoom;
     }
 
     public void LeaveSession(bool inroom)
@@ -200,13 +201,25 @@ public class SessionManager : SingletonNetwork<SessionManager>
         {
             _isAlreadyInRoom = true;
 
-            await runner.StartGame(new StartGameArgs()
+            var startSessionArgs = new StartGameArgs()
             {
                 GameMode = GameMode.Host,
                 SessionName = sessionKey,
                 PlayerCount = 2
-            });
+            };
 
+            var res = await networkRunner.StartGame(startSessionArgs);
+            if (!res.Ok)
+            {
+                SessionHub.Instance.ShowDebugText("Create Session Fail");
+                Debug.LogError($"JoinSession failed: {res.ShutdownReason}");
+                return;
+            }
+            else if (res.Ok)
+            {
+                SessionHub.Instance.ShowDebugText("Success Create Session");
+            };
+            
             runTime = runner.Spawn(runtimeUpdate);
 
             if (runTime != null)
@@ -220,20 +233,22 @@ public class SessionManager : SingletonNetwork<SessionManager>
 
     public async void JoinRoom(string sessionKey)
     {
-        var startArgs = new StartGameArgs()
+        var startJoiningArgs = new StartGameArgs()
         {
             GameMode = GameMode.Client,
             SessionName = sessionKey
         };
 
-        var res = await networkRunner.StartGame(startArgs);
+        var res = await networkRunner.StartGame(startJoiningArgs);
         if (!res.Ok)
         {
+            SessionHub.Instance.ShowDebugText("Join Session Fail");
             Debug.LogError($"JoinSession failed: {res.ShutdownReason}");
             return;
         }
         else if (res.Ok)
         {
+            SessionHub.Instance.ShowDebugText("Success Joining Session");
             SessionHub.Instance.DoneJoin();
             SessionHub.Instance.GetKey(_sessionKey);
             Debug.Log("Successfully joined");

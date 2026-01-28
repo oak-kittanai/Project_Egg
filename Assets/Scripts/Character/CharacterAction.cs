@@ -1,9 +1,7 @@
 using Fusion;
 using Fusion.Addons.Physics;
 using System;
-using System.Collections;
 using UnityEngine;
-using UnityEngine.Windows;
 
 public class CharacterAction : NetworkBehaviour, CharacterInteract
 {
