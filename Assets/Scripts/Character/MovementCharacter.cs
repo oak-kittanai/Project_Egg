@@ -83,7 +83,14 @@ public class MovementCharacter : NetworkBehaviour
         float speedDif = targetSpeed - currentSpeed;
         rb2D.AddForce(Vector2.right * (speedDif * accelRate));
 
-        cAnimation.UpdateAnimationOnBird(new Vector2(input.horizontal, rb2D.linearVelocity.y));
+        if (stats.skinType == characterType.Bird)
+        {
+            cAnimation.UpdateAnimationOnBird(new Vector2(input.horizontal, rb2D.linearVelocity.y));
+        }
+        else
+        {
+            cAnimation.UpdateAnimationOnDuck(new Vector2(input.horizontal, rb2D.linearVelocity.y));
+        }
     }
 
     protected virtual void HandleJump(NetworkInputData input)
