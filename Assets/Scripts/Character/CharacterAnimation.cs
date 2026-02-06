@@ -11,7 +11,6 @@ public class CharacterAnimation : NetworkBehaviour
     MovementCharacter movement;
 
     [Header("Position")]
-    [Networked] public Vector3 Direction {  get; set; }
     [Networked] public int State { get; set; }
     [Networked] public bool FlipX { get; set; }
 
@@ -30,24 +29,23 @@ public class CharacterAnimation : NetworkBehaviour
 
     public override void Spawned()
     {
-        UpdateSkin(stats.skinType);
-
         if (animator == null)
         {
             animator = GetComponent<Animator>();
-            Debug.LogError("Animator not found after spawn");
+            Debug.Log("Try to get Animator");
             if (animator == null)
             {
-                Debug.Log("can't get animator");
+                Debug.LogError("can't Get Animator");
             }
         }
+
         if (movement == null)
         {
             movement = GetComponent<MovementCharacter>();
-            Debug.LogError("MovementCharacter not found after spawn");
+            Debug.Log("Try to get MovementCharacter");
             if (movement == null)
             {
-                Debug.Log("can't get MovementCharacter");
+                Debug.LogError("can't Get MovementCharacter");
             }
         }
     }
@@ -71,24 +69,27 @@ public class CharacterAnimation : NetworkBehaviour
         }
     }
 
-    public void UpdateAnimationOnBird(Vector2 direction)
+    public void UpdateAnimationController(Vector2 direction)
     {
-        Direction = direction;
+        animator.SetFloat("X", direction.x);
 
-        animator.SetFloat("X", Direction.x);
-
-        if (Direction.x < -0.01f)
+        if (direction.x < -0.01f)
         {
             FlipX = false;
         }
 
-        if (Direction.x > 0.01f)
+        if (direction.x > 0.01f)
         {
             FlipX = true;
         }
 
         spriteRenderer.flipX = FlipX;
-        animator.SetFloat("Y", Direction.y);
+        animator.SetFloat("Y", direction.y);
+    }
+
+    public void ReturnToBlendAnimation()
+    {
+        animator.CrossFade("BlendAnimation", 0.1f);
     }
 
     public void UpdateGroundTypeOnDuck(bool isWaterGround)
@@ -116,26 +117,6 @@ public class CharacterAnimation : NetworkBehaviour
             animator.SetBool("InTheAir", true);
         }
         else animator.SetBool("InTheAir", false);
-    }
-
-    public void UpdateAnimationOnDuck(Vector2 direction)
-    {
-        Direction = direction;
-
-        animator.SetFloat("X", Direction.x);
-
-        if (Direction.x < -0.01f)
-        {
-            FlipX = false;
-        }
-
-        if (Direction.x > 0.01f)
-        {
-            FlipX = true;
-        }
-
-        spriteRenderer.flipX = FlipX;
-        animator.SetFloat("Y", Direction.y);
     }
 
     // Overall

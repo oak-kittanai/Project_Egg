@@ -130,7 +130,7 @@ GameObject:
   - component: {fileID: 416280257}
   - component: {fileID: 416280256}
   - component: {fileID: 416280258}
-  m_Layer: 4
+  m_Layer: 13
   m_Name: Water
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1250,9 +1250,9 @@ GameObject:
   - component: {fileID: 1687805391}
   - component: {fileID: 1687805390}
   - component: {fileID: 1687805392}
-  m_Layer: 13
+  m_Layer: 4
   m_Name: Deep_Water
-  m_TagString: Untagged
+  m_TagString: WaterZone
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1453,6 +1453,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: TestForceStart
       objectReference: {fileID: 0}
+    - target: {fileID: 6113011115148742135, guid: 2aff1e9404b5cb04fb43c4d6e2b7911b, type: 3}
+      propertyPath: PlayerPrefab
+      value: 
+      objectReference: {fileID: -2039167435644549920, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
     - target: {fileID: 7118114530547906762, guid: 2aff1e9404b5cb04fb43c4d6e2b7911b, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
