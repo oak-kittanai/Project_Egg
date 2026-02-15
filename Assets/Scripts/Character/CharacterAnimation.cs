@@ -97,6 +97,11 @@ public class CharacterAnimation : NetworkBehaviour
         if (isWaterGround)
         {
             animator.SetBool("OnWater", true);
+            if (Carrying)
+            {
+                animator.Play("Floating_carry", 0);
+            }
+            else animator.Play("Floating", 0);
         }
         else animator.SetBool("OnWater", false);
     }
@@ -158,6 +163,29 @@ public class CharacterAnimation : NetworkBehaviour
 
     // Duck
 
+    public void UpdateSwimFlip(Vector2 direction)
+    {
+        animator.SetFloat("X", direction.x);
+
+        if (direction.x < -0.01f)
+        {
+            FlipX = true;
+        }
+
+        if (direction.x > 0.01f)
+        {
+            FlipX = false;
+        }
+
+        spriteRenderer.flipX = FlipX;
+        animator.SetFloat("Y", direction.y);
+    }
+
+    public void SetFlipToFalse()
+    {
+        FlipX = false;
+    }
+
     public void SmashAnimation()
     {
         animator.Play("Hit", 0);
@@ -171,6 +199,11 @@ public class CharacterAnimation : NetworkBehaviour
     public void DiveAnimation()
     {
         animator.SetBool("InWater", true);
+    }
+
+    public void ReturnToSurface()
+    {
+        animator.Play("BackToSwim", 0); // make it ready to use
     }
 
     // Bird

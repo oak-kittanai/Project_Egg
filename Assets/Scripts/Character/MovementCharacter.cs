@@ -19,6 +19,7 @@ public class MovementCharacter : NetworkBehaviour
     [Networked] public bool IsInAir { get; set; }
     [Networked] public Vector2 MoveInput { get; set; }
     [Networked] public bool isFloating { get; set; }
+    [SerializeField] public bool isMoveAble;
 
     [SerializeField] public bool resetAnimation;
 
@@ -38,7 +39,6 @@ public class MovementCharacter : NetworkBehaviour
 
     [Networked] public bool IsInteractBusy { get; set; }
 
-
     // Local Variables
     public float rayDistance = 1.2f;
     public float interactRadius = 1.5f;
@@ -49,6 +49,7 @@ public class MovementCharacter : NetworkBehaviour
         if (stats == null) stats = GetComponent<CharacterStats>();
         if (cAnimation == null) cAnimation = GetComponent<CharacterAnimation>();
         if (rb2D == null) rb2D = GetComponent<Rigidbody2D>();
+        isMoveAble = true;
     }
 
     public override void Spawned()
@@ -97,15 +98,18 @@ public class MovementCharacter : NetworkBehaviour
     // Movement
     private void HandleMovement(NetworkInputData input)
     {
-        float targetSpeed = input.horizontal * stats.maxSpeed;
-        float currentSpeed = rb2D.linearVelocity.x;
+        if (isMoveAble)
+        {
+            float targetSpeed = input.horizontal * stats.maxSpeed;
+            float currentSpeed = rb2D.linearVelocity.x;
 
-        float accelRate = Mathf.Abs(targetSpeed) > 0.01f ? stats.acceleration : stats.deceleration;
+            float accelRate = Mathf.Abs(targetSpeed) > 0.01f ? stats.acceleration : stats.deceleration;
 
-        float speedDif = targetSpeed - currentSpeed;
-        rb2D.AddForce(Vector2.right * (speedDif * accelRate));
+            float speedDif = targetSpeed - currentSpeed;
+            rb2D.AddForce(Vector2.right * (speedDif * accelRate));
 
-        cAnimation.UpdateAnimationController(new Vector2(input.horizontal, rb2D.linearVelocity.y));
+            cAnimation.UpdateAnimationController(new Vector2(input.horizontal, rb2D.linearVelocity.y));
+        }
     }
 
     protected virtual void HandleJump(NetworkInputData input)

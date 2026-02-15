@@ -329,6 +329,7 @@ MonoBehaviour:
   _IsInAir: 0
   _MoveInput: {x: 0, y: 0}
   _isFloating: 0
+  isMoveAble: 0
   resetAnimation: 0
   _IsFalling: 0
   _FallingBusy: 0
@@ -345,9 +346,25 @@ MonoBehaviour:
   rayDistance: 0.47
   interactRadius: 0.8
   playerInteractRadius: 1
+  diveCooldownTimer: 2
+  swimSpeed: 10
+  swimAcceleration: 4
+  swimDeceleration: 5
+  swimMaxSpeed: 5
+  divingTime: 5
+  holdBreathTime: 5
   onWater: 0
-  _AlreadyFloating: 0
+  drive: 0
+  alreadyDive: 0
+  _onDiving: 0
+  nomalSwimSpeed: 0
+  fastSwimSpeed: 0
+  emergencyToggle: 0
+  emergencySwimTimer: 2
+  _alreadyFloating: 0
   __wasJumpPressed: 0
+  headOffset: 0.2
+  _IsHeadUnderwater: 0
 --- !u!114 &-8560203487497628801
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -370,6 +387,7 @@ MonoBehaviour:
   _IsInAir: 0
   _MoveInput: {x: 0, y: 0}
   _isFloating: 0
+  isMoveAble: 0
   resetAnimation: 0
   _IsFalling: 0
   _FallingBusy: 0

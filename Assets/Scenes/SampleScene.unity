@@ -1360,7 +1360,7 @@ BoxCollider2D:
   m_CallbackLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
@@ -1457,6 +1457,10 @@ PrefabInstance:
       propertyPath: PlayerPrefab
       value: 
       objectReference: {fileID: -2039167435644549920, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
+    - target: {fileID: 6113011115148742135, guid: 2aff1e9404b5cb04fb43c4d6e2b7911b, type: 3}
+      propertyPath: characterType
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7118114530547906762, guid: 2aff1e9404b5cb04fb43c4d6e2b7911b, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5

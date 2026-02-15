@@ -60,6 +60,17 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
                 moveX = 1;
             }
 
+            float moveY = 0;
+
+            if (Keyboard.current.wKey.isPressed || Keyboard.current.upArrowKey.isPressed)
+            {
+                moveY = 1;
+            }
+            if (Keyboard.current.sKey.isPressed || Keyboard.current.downArrowKey.isPressed)
+            {
+                moveY = -1;
+            }
+
             bool jump = false;
             if (Keyboard.current.spaceKey.isPressed || Keyboard.current.upArrowKey.isPressed)
             {
@@ -108,6 +119,7 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
 
             data.mousePos = mousePosition;
             data.horizontal = moveX;
+            data.vertical = moveY;
             data.jump = jump;
             data.Keyboard_F = press_F;
             data.Keyboard_E = press_E;
@@ -240,6 +252,7 @@ public struct NetworkInputData : INetworkInput
 {
     public Vector2 mousePos;
     public float horizontal;
+    public float vertical;
     public bool jump;
     public bool Keyboard_F;
     public bool Keyboard_E;
