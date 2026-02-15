@@ -5,6 +5,7 @@ public class CharacterStats : NetworkBehaviour, IDamageable
 {
     [Header("Ref")]
     private Rigidbody2D rb2D;
+    private CharacterAnimation cAnimation;
 
     [Header("Networked Stats")]
     [Networked] public int CurrentHealth { get; set; }
@@ -25,9 +26,21 @@ public class CharacterStats : NetworkBehaviour, IDamageable
     [Header("Identity")]
     [Networked] public characterType skinType { get; set; }
 
+    private void Awake()
+    {
+        cAnimation = GetComponent<CharacterAnimation>();
+    }
+
     public override void Spawned()
     {
         rb2D = GetComponent<Rigidbody2D>();
+
+        if (cAnimation != null)
+        {
+            cAnimation.UpdateSkin(skinType);
+            Debug.Log("UpdateSkin");
+        }
+        else Debug.LogError("can't find CharacterAnimation");
 
         if (Object.HasStateAuthority)
         {

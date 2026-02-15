@@ -11,11 +11,16 @@ public class MovementCharacter : NetworkBehaviour
     [SerializeField] public Rigidbody2D rb2D;
     [SerializeField] public Collider2D coll2D;
 
+    [Networked] public bool isBird {  get; set; }
+
     [Header("Movement Settings")]
     [Networked] public bool IsGrounded { get; set; }
+    [Networked] public bool isWaterSurface { get; set; }
     [Networked] public bool IsInAir { get; set; }
     [Networked] public Vector2 MoveInput { get; set; }
     [Networked] public bool isFloating { get; set; }
+
+    [SerializeField] public bool resetAnimation;
 
     // Falling
     [Networked] public bool IsFalling { get; set; }
@@ -31,16 +36,33 @@ public class MovementCharacter : NetworkBehaviour
     [Networked] public bool IsCarrying { get; set; }
     [Networked] public bool IsBeingCarried { get; set; }
 
+    [Networked] public bool IsInteractBusy { get; set; }
+
 
     // Local Variables
     public float rayDistance = 1.2f;
     public float interactRadius = 1.5f;
+    public float playerInteractRadius = 1f;
 
-    public override void Spawned()
+    private void Awake()
     {
         if (stats == null) stats = GetComponent<CharacterStats>();
         if (cAnimation == null) cAnimation = GetComponent<CharacterAnimation>();
         if (rb2D == null) rb2D = GetComponent<Rigidbody2D>();
+    }
+
+    public override void Spawned()
+    {
+        if (stats.skinType == characterType.Bird)
+        {
+            isBird = true;
+        }
+        else
+        {
+            isBird = false;
+        }
+
+        resetAnimation = true;
     }
 
     public override void FixedUpdateNetwork()
@@ -83,23 +105,19 @@ public class MovementCharacter : NetworkBehaviour
         float speedDif = targetSpeed - currentSpeed;
         rb2D.AddForce(Vector2.right * (speedDif * accelRate));
 
-        if (stats.skinType == characterType.Bird)
-        {
-            cAnimation.UpdateAnimationOnBird(new Vector2(input.horizontal, rb2D.linearVelocity.y));
-        }
-        else
-        {
-            cAnimation.UpdateAnimationOnDuck(new Vector2(input.horizontal, rb2D.linearVelocity.y));
-        }
+        cAnimation.UpdateAnimationController(new Vector2(input.horizontal, rb2D.linearVelocity.y));
     }
 
     protected virtual void HandleJump(NetworkInputData input)
     {
         if (input.jump && IsGrounded)
         {
+            IsInteractBusy = true;
             cAnimation.JumpAnimation();
+            resetAnimation = true;
             rb2D.AddForce(Vector2.up * stats.s_jumpForce, ForceMode2D.Impulse);
             IsGrounded = false;
+            IsInteractBusy = false;
         }
     }
 
@@ -113,16 +131,10 @@ public class MovementCharacter : NetworkBehaviour
                 return;
             }
 
-            Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, 1.5f); // 1.5f is interactRadius
-            foreach (var hit in hits)
+            Collider2D[] hitsItem = Physics2D.OverlapCircleAll(transform.position, interactRadius);
+            foreach (var hit in hitsItem)
             {
                 if (hit.gameObject == gameObject) continue;
-
-                if (hit.TryGetComponent<MovementCharacter>(out var otherPlayer))
-                {
-                    PickupFriend(otherPlayer);
-                    return;
-                }
 
                 if (hit.TryGetComponent<Interactable>(out var interactable))
                 {
@@ -131,11 +143,24 @@ public class MovementCharacter : NetworkBehaviour
                     return;
                 }
             }
+
+            Collider2D[] hitsPlayer = Physics2D.OverlapCircleAll(transform.position, playerInteractRadius);
+            foreach (var hit in hitsPlayer)
+            {
+                if (hit.gameObject == gameObject) continue;
+
+                if (hit.TryGetComponent<MovementCharacter>(out var otherPlayer))
+                {
+                    PickupFriend(otherPlayer);
+                    return;
+                }
+            }
         }
     }
 
     public void PickupFriend(MovementCharacter friend)
     {
+        IsInteractBusy = true;
         Debug.Log("Picking up friend!");
         IsCarrying = true;
         CarriedFriendId = friend.Object.Id;
@@ -151,11 +176,13 @@ public class MovementCharacter : NetworkBehaviour
             {
                 friend.SetCarriedState(false);
                 // Optional: Throw them slightly forward
-                friend.GetComponent<Rigidbody2D>().AddForce(new Vector2(transform.localScale.x * 5, 5), ForceMode2D.Impulse);
+                friend.GetComponent<Rigidbody2D>().AddForce(new Vector2(transform.localScale.x * 2, 2), ForceMode2D.Force);
             }
         }
 
         IsCarrying = false;
+        IsInteractBusy = false;
+        resetAnimation = true;
         CarriedFriendId = default;
     }
 
@@ -163,6 +190,15 @@ public class MovementCharacter : NetworkBehaviour
     public void SetCarriedState(bool state)
     {
         IsBeingCarried = state;
+        // play carry animation
+        if (state)
+        {
+            IsInteractBusy = true;
+        }
+        else
+        {
+            IsInteractBusy = false;
+        }
     }
 
     private void UpdateCarriedFriendPosition()
@@ -170,26 +206,54 @@ public class MovementCharacter : NetworkBehaviour
         if (Runner.TryFindObject(CarriedFriendId, out var obj))
         {
             // Snap position to above our head
-            obj.transform.position = transform.position + Vector3.up * 1.5f;
+            obj.transform.position = transform.position + Vector3.up * 1.1f;
         }
+    }
+
+    public void SetResetAnimation(bool o)
+    {
+        resetAnimation = o;
     }
 
     // Raycast
     private void CheckGround()
     {
         LayerMask mask = LayerMask.GetMask("Ground", "Platform");
+        LayerMask waterMask = LayerMask.GetMask("WaterSurface");
         IsGrounded = Physics2D.Raycast(transform.position, Vector2.down, rayDistance, mask);
+        isWaterSurface = Physics2D.Raycast(transform.position, Vector2.down, rayDistance, waterMask);
         IsInAir = !IsGrounded;
 
         if (IsGrounded)
         {
             isOptional = false;
             FallingBusy = false;
+            if (!IsInteractBusy)
+            {
+                if (resetAnimation)
+                {
+                    cAnimation.ReturnToBlendAnimation();
+
+                    if (!IsCarrying)
+                    {
+                        IsInteractBusy = false;
+                    }
+
+                    resetAnimation = false;
+                }
+            }
+        }
+
+        if (isWaterSurface)
+        {
+
         }
 
         if (IsInAir && rb2D.linearVelocity.y < 0 && !FallingBusy)
         {
             FallingCheck();
+            cAnimation.FallingAndFloatAnimation(true);
+            resetAnimation = true;
         }
         else
         {
@@ -210,7 +274,6 @@ public class MovementCharacter : NetworkBehaviour
 
         rb2D.gravityScale = Mathf.Lerp(normalGravity, heavyGravity, speedPercent);
 
-
         float cappedY = Mathf.Max(rb2D.linearVelocityY, -maxGravity);
 
         rb2D.linearVelocity = new Vector2(rb2D.linearVelocityX, cappedY);
@@ -230,5 +293,8 @@ public class MovementCharacter : NetworkBehaviour
 
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(start, interactRadius);
+
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(start, playerInteractRadius);
     }
 }

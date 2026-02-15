@@ -199,7 +199,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 25b94d2c154621a41bd39d67c0b8eac1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CharacterAnimation
-  _Direction: {x: 0, y: 0, z: 0}
   _State: 0
   _FlipX: 0
   DuckController: {fileID: 9100000, guid: 8373531bbce3cc7408ff614dc5ec4f25, type: 2}
@@ -320,14 +319,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cc8c7372b06429744bb6f85c3b13fe8a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Duck_Moveset
-  stats: {fileID: 0}
-  cAnimation: {fileID: 0}
-  rb2D: {fileID: 0}
-  coll2D: {fileID: 0}
+  stats: {fileID: 6713054206493656476, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
+  cAnimation: {fileID: 3141284763445610261, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
+  rb2D: {fileID: 1808580689401154541, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
+  coll2D: {fileID: 645833589779868426, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
+  _isBird: 0
   _IsGrounded: 0
+  _isWaterSurface: 0
   _IsInAir: 0
   _MoveInput: {x: 0, y: 0}
   _isFloating: 0
+  resetAnimation: 0
   _IsFalling: 0
   _FallingBusy: 0
   isOptional: 0
@@ -339,9 +341,13 @@ MonoBehaviour:
     Raw: 0
   _IsCarrying: 0
   _IsBeingCarried: 0
+  _IsInteractBusy: 0
   rayDistance: 0.47
   interactRadius: 0.8
+  playerInteractRadius: 1
   onWater: 0
+  _AlreadyFloating: 0
+  __wasJumpPressed: 0
 --- !u!114 &-8560203487497628801
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -354,14 +360,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1116ee0a158a0154780ddc9c1ef53a19, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Bird_Moveset
-  stats: {fileID: 0}
-  cAnimation: {fileID: 0}
-  rb2D: {fileID: 0}
-  coll2D: {fileID: 0}
+  stats: {fileID: 6713054206493656476, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
+  cAnimation: {fileID: 3141284763445610261, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
+  rb2D: {fileID: 1808580689401154541, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
+  coll2D: {fileID: 645833589779868426, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
+  _isBird: 0
   _IsGrounded: 0
+  _isWaterSurface: 0
   _IsInAir: 0
   _MoveInput: {x: 0, y: 0}
   _isFloating: 0
+  resetAnimation: 0
   _IsFalling: 0
   _FallingBusy: 0
   isOptional: 0
@@ -373,8 +382,10 @@ MonoBehaviour:
     Raw: 0
   _IsCarrying: 0
   _IsBeingCarried: 0
+  _IsInteractBusy: 0
   rayDistance: 0.47
   interactRadius: 0.8
+  playerInteractRadius: 1
   normalFlyTime: 1.5
   carryFlyTime: 0.8
   floatingGravity: 1

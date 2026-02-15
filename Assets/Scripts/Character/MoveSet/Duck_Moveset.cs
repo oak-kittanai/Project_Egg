@@ -6,21 +6,27 @@ public class Duck_Moveset : MovementCharacter
     [Header("Duck Settings")]
     [SerializeField] bool onWater;
 
+    [Networked] public bool AlreadyFloating { get; set; }
+
+    [Networked] public bool _wasJumpPressed { get; set; }
+
     protected override void OnFixedUpdateSpecific()
     {
-        if (IsGrounded == false)
+        if (GetInput(out NetworkInputData input))
         {
-            // Simple check ground
-            isFloating = false;
+            HandleWaterLogic(input);
         }
-        else
+
+        if (isWaterSurface)
         {
             cAnimation.UpdateGroundTypeOnDuck(onWater);
         }
+    }
 
-        if (cAnimation != null)
-        {
-            cAnimation.UpdateAnimationOnDuck(new Vector2(MoveInput.x, GetComponent<Rigidbody2D>().linearVelocity.y));
-        }
+    public void HandleWaterLogic(NetworkInputData input)
+    {
+        bool isPressed = input.jump && !_wasJumpPressed;
+
+        _wasJumpPressed = input.jump;
     }
 }

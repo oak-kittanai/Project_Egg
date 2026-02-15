@@ -116,6 +116,5 @@ public class Bird_Moveset : MovementCharacter
     {
         IsFlying = false;
         FlightTimer = TickTimer.None;
-
     }
 }
