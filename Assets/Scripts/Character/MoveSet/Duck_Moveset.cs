@@ -9,6 +9,8 @@ public class Duck_Moveset : MovementCharacter
     [Networked] bool ReadyToDive { get; set; }
 
     [Header("Dive Settings")]
+    private NetworkInteractableWater currentWater;
+
     [SerializeField] float swimSpeed = 5f;
 
     [SerializeField] float swimAcceleration = 1f;
@@ -144,9 +146,16 @@ public class Duck_Moveset : MovementCharacter
 
     public void StartDiveLogic()
     {
+        if (currentWater == null) return;
+
         isMoveAble = false; // make the Movement Logic stop
 
         // make the character dive into the water
+        rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, -swimSpeed * 1.5f);
+
+        // Trigger the Splash Effect
+        float impactForce = rb2D.mass * -swimSpeed;
+        currentWater.RPC_Splash(transform.position, impactForce);
 
         onDiving = true;
         onDivingControl = true;
@@ -154,7 +163,6 @@ public class Duck_Moveset : MovementCharacter
         emergencyToggle = true;
 
         float duration = divingTime;
-
         DiveTimer = TickTimer.CreateFromSeconds(Runner, duration);
         Debug.Log($"Duck Diving! Duration: {duration}s");
     }
@@ -236,7 +244,13 @@ public class Duck_Moveset : MovementCharacter
             }
             else
             {
-                // reach the surface
+                if (onDiving && currentWater != null)
+                {
+                    // Positive velocity for exit splash
+                    float exitForce = rb2D.mass * rb2D.linearVelocity.y;
+                    currentWater.RPC_Splash(transform.position, exitForce);
+                }
+
                 EndDiveLogic();
                 Debug.Log("Reach the surface");
             }
@@ -260,12 +274,25 @@ public class Duck_Moveset : MovementCharacter
     public void CheckWaterZone()
     {
         LayerMask waterMask = LayerMask.GetMask("Water");
-
         Vector2 headPosition = (Vector2)transform.position + (Vector2.up * headOffset);
 
+        Collider2D bodyCollider = Physics2D.OverlapCircle(transform.position, 0.5f, waterMask);
         IsHeadUnderwater = Physics2D.OverlapPoint(headPosition, waterMask);
 
-        bool isBodyInWater = Physics2D.OverlapCircle(transform.position, 0.5f, waterMask);
+        if (bodyCollider != null)
+        {
+            if (currentWater == null || currentWater.gameObject != bodyCollider.gameObject)
+            {
+                currentWater = bodyCollider.GetComponent<NetworkInteractableWater>();
+                if (currentWater == null) currentWater = bodyCollider.GetComponentInParent<NetworkInteractableWater>();
+            }
+        }
+        else
+        {
+            currentWater = null;
+        }
+
+        bool isBodyInWater = bodyCollider != null;
 
         if (isBodyInWater && !IsHeadUnderwater)
         {
