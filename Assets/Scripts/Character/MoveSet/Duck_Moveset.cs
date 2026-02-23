@@ -1,4 +1,4 @@
-using Fusion;
+﻿using Fusion;
 using UnityEngine;
 
 public class Duck_Moveset : MovementCharacter
@@ -9,7 +9,7 @@ public class Duck_Moveset : MovementCharacter
     [Networked] bool ReadyToDive { get; set; }
 
     [Header("Dive Settings")]
-    private NetworkInteractableWater currentWater;
+    private InteractableWater currentWater; // change back to NetoworkInteractableWater when ready
 
     [SerializeField] float swimSpeed = 5f;
 
@@ -48,6 +48,11 @@ public class Duck_Moveset : MovementCharacter
 
     [Networked] public bool _wasJumpPressed { get; set; }
 
+    [Header("Buoyancy (Floating) Settings")]
+    [SerializeField] private float buoyancyForce = 20f; // แรงลอยตัว
+    [SerializeField] private float waterDamping = 10f;  // ★ จุดสำคัญ: ยิ่งเยอะเป็ดยิ่งไม่เด้งขึ้นลง (เบรกหัวทิ่มเมื่อลงน้ำ)
+    [SerializeField] private float floatOffset = -0.2f; // จุดศูนย์ถ่วง (ปรับเพื่อให้หัวเป็ดโผล่พ้นน้ำพอดี)
+
     // Head
     public float headOffset = 0.2f;
     [Networked] public bool IsHeadUnderwater { get; set; }
@@ -70,6 +75,7 @@ public class Duck_Moveset : MovementCharacter
         }
 
         CheckWaterZone();
+        HandleBuoyancy();
     }
 
     public void HandleWaterLogic(NetworkInputData input)
@@ -155,7 +161,7 @@ public class Duck_Moveset : MovementCharacter
 
         // Trigger the Splash Effect
         float impactForce = rb2D.mass * -swimSpeed;
-        currentWater.RPC_Splash(transform.position, impactForce);
+        currentWater.Splash(transform.position, impactForce);
 
         onDiving = true;
         onDivingControl = true;
@@ -248,7 +254,7 @@ public class Duck_Moveset : MovementCharacter
                 {
                     // Positive velocity for exit splash
                     float exitForce = rb2D.mass * rb2D.linearVelocity.y;
-                    currentWater.RPC_Splash(transform.position, exitForce);
+                    currentWater.Splash(transform.position, exitForce);
                 }
 
                 EndDiveLogic();
@@ -271,6 +277,26 @@ public class Duck_Moveset : MovementCharacter
         }
     }
 
+    public void HandleBuoyancy()
+    {
+        if (currentWater != null && !onDiving)
+        {
+            isOptional = true;
+            optionalGravity = 0f;
+
+            rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, rb2D.linearVelocity.y * 0.8f);
+
+            float surfaceY = currentWater.transform.position.y;
+            Vector2 targetPos = new Vector2(rb2D.position.x, surfaceY);
+
+            rb2D.position = Vector2.Lerp(rb2D.position, targetPos, 10f * Time.fixedDeltaTime);
+        }
+        else if (currentWater == null && !onDiving)
+        {
+            isOptional = false;
+        }
+    }
+
     public void CheckWaterZone()
     {
         LayerMask waterMask = LayerMask.GetMask("Water");
@@ -283,8 +309,8 @@ public class Duck_Moveset : MovementCharacter
         {
             if (currentWater == null || currentWater.gameObject != bodyCollider.gameObject)
             {
-                currentWater = bodyCollider.GetComponent<NetworkInteractableWater>();
-                if (currentWater == null) currentWater = bodyCollider.GetComponentInParent<NetworkInteractableWater>();
+                currentWater = bodyCollider.GetComponent<InteractableWater>();
+                if (currentWater == null) currentWater = bodyCollider.GetComponentInParent<InteractableWater>();
             }
         }
         else
@@ -293,6 +319,23 @@ public class Duck_Moveset : MovementCharacter
         }
 
         bool isBodyInWater = bodyCollider != null;
+
+        if (isBodyInWater)
+        {
+            isOptional = true;
+            optionalGravity = 0f;
+            rb2D.linearDamping = 4f;
+
+            if (!onDiving)
+            {
+                rb2D.AddForce(Vector2.up * 15f);
+            }
+        }
+        else if (!onDiving)
+        {
+            isOptional = false;
+            rb2D.linearDamping = 0f;
+        }
 
         if (isBodyInWater && !IsHeadUnderwater)
         {
