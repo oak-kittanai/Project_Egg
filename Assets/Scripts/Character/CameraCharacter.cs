@@ -6,6 +6,8 @@ public class CameraCharacter : NetworkBehaviour
     public delegate void ParallaxCameraDelegate(float deltaMovement);
     public ParallaxCameraDelegate onCameraTranslate;
 
+    private Transform camearaTransform;
+
     private float oldPosition;
 
     public override void Spawned()
@@ -13,6 +15,8 @@ public class CameraCharacter : NetworkBehaviour
         if (Object.HasInputAuthority)
         {
             oldPosition = transform.position.x;
+
+            camearaTransform = this.transform;
 
             if (ParallaxBackground.Instance != null)
             {
@@ -30,6 +34,13 @@ public class CameraCharacter : NetworkBehaviour
             if (listener != null) listener.enabled = false;
         }
     }
+
+    /*private void Update()
+    {
+        camearaTransform.rotation = Quaternion.Euler(0,0,0);
+        this.transform.rotation = camearaTransform.rotation;
+    }*/
+
     void LateUpdate()
     {
         if (!Object.HasInputAuthority) return;

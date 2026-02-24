@@ -1,6 +1,8 @@
 using Fusion;
+using System.Threading.Tasks;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class ForceStart : NetworkBehaviour
@@ -66,7 +68,6 @@ public class ForceStart : NetworkBehaviour
             var res = await runner.StartGame(StartServer);
             if (!res.Ok)
             {
-
                 Debug.LogError($"Shutdown reason is {res.ShutdownReason}");
             }
             else

@@ -127,7 +127,7 @@ Rigidbody2D:
   m_ExcludeLayers:
     serializedVersion: 2
     m_Bits: 0
-  m_Interpolate: 0
+  m_Interpolate: 1
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 4
@@ -265,6 +265,7 @@ MonoBehaviour:
   - {fileID: 4112164643277785246}
   - {fileID: -187779602931087687}
   - {fileID: -8560203487497628801}
+  - {fileID: 2576185141407854388}
   ForceRemoteRenderTimeframe: 0
 --- !u!114 &-7947786426853800306
 MonoBehaviour:
@@ -304,7 +305,7 @@ MonoBehaviour:
   Animator: {fileID: 3258201221068302135}
   ApplyTiming: 2
   SyncSettings: 79
-  StateHashes: 000000008a18fce4b9abd9d328a981077af3fe2eb36f0a5980dc2f6e56a4c5104c35fffa50877270bee5ba058ecc7e2edc960107a1609f62d8aa0cc4
+  StateHashes: 00000000c339d0662d5b181328a981077af3fe2eb36f0a5980dc2f6e56a4c5104c35fffa50877270bee5ba058ecc7e2edc960107a1609f62d8aa0cc4
   TriggerHashes: 00000000
   TotalWords: 3
 --- !u!114 &-187779602931087687
@@ -329,6 +330,7 @@ MonoBehaviour:
   _IsInAir: 0
   _MoveInput: {x: 0, y: 0}
   _isFloating: 0
+  isMoveAble: 0
   resetAnimation: 0
   _IsFalling: 0
   _FallingBusy: 0
@@ -345,9 +347,25 @@ MonoBehaviour:
   rayDistance: 0.47
   interactRadius: 0.8
   playerInteractRadius: 1
+  diveCooldownTimer: 2
+  swimSpeed: 10
+  swimAcceleration: 4
+  swimDeceleration: 4
+  swimMaxSpeed: 5
+  divingTime: 5
+  holdBreathTime: 5
   onWater: 0
-  _AlreadyFloating: 0
+  drive: 0
+  alreadyDive: 0
+  _onDiving: 0
+  nomalSwimSpeed: 0
+  fastSwimSpeed: 0
+  emergencyToggle: 0
+  emergencySwimTimer: 2
+  _alreadyFloating: 0
   __wasJumpPressed: 0
+  headOffset: 0.2
+  _IsHeadUnderwater: 0
 --- !u!114 &-8560203487497628801
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -370,6 +388,7 @@ MonoBehaviour:
   _IsInAir: 0
   _MoveInput: {x: 0, y: 0}
   _isFloating: 0
+  isMoveAble: 0
   resetAnimation: 0
   _IsFalling: 0
   _FallingBusy: 0
@@ -576,6 +595,7 @@ GameObject:
   - component: {fileID: 1972045629521261847}
   - component: {fileID: 5099668636001666967}
   - component: {fileID: 146692513518075897}
+  - component: {fileID: 2576185141407854388}
   m_Layer: 0
   m_Name: PlayerCamera
   m_TagString: Camera
@@ -693,3 +713,15 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
+--- !u!114 &2576185141407854388
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3020338236366186645}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 414c87415a894514981b08e08aed3e97, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CameraCharacter
