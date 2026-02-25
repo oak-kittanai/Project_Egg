@@ -160,7 +160,7 @@ MonoBehaviour:
   s_maxStamina: 10
   s_walkSpeed: 6
   maxSpeed: 5
-  s_jumpForce: 4.5
+  s_jumpForce: 8
   acceleration: 3
   deceleration: 10
   s_flySpeed: 5
@@ -332,13 +332,24 @@ MonoBehaviour:
   _isFloating: 0
   isMoveAble: 0
   resetAnimation: 0
+  JumpCooldownTimer: 2
+  isSpeedoptional: 0
+  normalGravity: 2
+  heavyGravity: 5.5
+  maxGravity: 16
   _IsFalling: 0
   _FallingBusy: 0
   isOptional: 0
   optionalGravity: 0
-  normalGravity: 2
-  heavyGravity: 5.5
-  maxGravity: 16
+  accelerationSpeedOptional: 0.6
+  decelerationSpeedOptional: 3
+  optionalMaxSpeed: 1
+  _IsHeadUnderwater: 0
+  _IsBodyOnWater: 0
+  headOffset: 0.2
+  bodyOffset: -0.2
+  currentWater: {fileID: 0}
+  _stilldrowning: 0
   _CarriedFriendId:
     Raw: 0
   _IsCarrying: 0
@@ -364,8 +375,9 @@ MonoBehaviour:
   emergencySwimTimer: 2
   _alreadyFloating: 0
   __wasJumpPressed: 0
-  headOffset: 0.2
-  _IsHeadUnderwater: 0
+  buoyancyForce: 20
+  waterDamping: 10
+  floatOffset: 0.11
 --- !u!114 &-8560203487497628801
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -390,13 +402,24 @@ MonoBehaviour:
   _isFloating: 0
   isMoveAble: 0
   resetAnimation: 0
+  JumpCooldownTimer: 2
+  isSpeedoptional: 0
+  normalGravity: 2
+  heavyGravity: 5.5
+  maxGravity: 16
   _IsFalling: 0
   _FallingBusy: 0
   isOptional: 0
   optionalGravity: 0
-  normalGravity: 2
-  heavyGravity: 5.5
-  maxGravity: 16
+  accelerationSpeedOptional: 3.5
+  decelerationSpeedOptional: 6.5
+  optionalMaxSpeed: 19
+  _IsHeadUnderwater: 0
+  _IsBodyOnWater: 0
+  headOffset: 0.2
+  bodyOffset: -0.2
+  currentWater: {fileID: 0}
+  _stilldrowning: 0
   _CarriedFriendId:
     Raw: 0
   _IsCarrying: 0

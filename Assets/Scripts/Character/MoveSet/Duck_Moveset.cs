@@ -8,9 +8,9 @@ public class Duck_Moveset : MovementCharacter
     [SerializeField] private float diveCooldownTimer = 2f;
     [Networked] bool ReadyToDive { get; set; }
 
-    [Header("Dive Settings")]
-    private InteractableWater currentWater; // change back to NetoworkInteractableWater when ready
+    [Networked] bool isJumpingUp { get; set; }
 
+    [Header("Dive Settings")]
     [SerializeField] float swimSpeed = 5f;
 
     [SerializeField] float swimAcceleration = 1f;
@@ -18,7 +18,6 @@ public class Duck_Moveset : MovementCharacter
     [SerializeField] float swimMaxSpeed = 5f;
 
     [SerializeField] float divingTime = 5f;
-
     [SerializeField] float holdBreathTime = 5f;
 
     [SerializeField] bool onWater;
@@ -26,15 +25,12 @@ public class Duck_Moveset : MovementCharacter
     [SerializeField] bool alreadyDive;
 
     [Networked] public bool onDiving { get; set; }
-
     [Networked] bool onDivingControl { get; set; }
 
     [SerializeField] float nomalSwimSpeed;
     [SerializeField] float fastSwimSpeed; // can't be turn
 
     [Header("Emergency Setting")]
-    [Networked] bool stilldrowning { get; set; }
-
     [Networked] bool emergencySwimBool { get; set; }
 
     [Networked] private TickTimer EmergencyTimer { get; set; }
@@ -45,22 +41,27 @@ public class Duck_Moveset : MovementCharacter
 
     [Header("Etc")]
     [Networked] public bool alreadyFloating { get; set; } // Option
-
     [Networked] public bool _wasJumpPressed { get; set; }
 
     [Header("Buoyancy (Floating) Settings")]
-    [SerializeField] private float buoyancyForce = 20f; // แรงลอยตัว
-    [SerializeField] private float waterDamping = 10f;  // ★ จุดสำคัญ: ยิ่งเยอะเป็ดยิ่งไม่เด้งขึ้นลง (เบรกหัวทิ่มเมื่อลงน้ำ)
-    [SerializeField] private float floatOffset = -0.2f; // จุดศูนย์ถ่วง (ปรับเพื่อให้หัวเป็ดโผล่พ้นน้ำพอดี)
+    [SerializeField] private float buoyancyForce = 20f;
+    [SerializeField] private float waterDamping = 10f;
+    [SerializeField] private float floatOffset = -0.2f;
 
-    // Head
-    public float headOffset = 0.2f;
-    [Networked] public bool IsHeadUnderwater { get; set; }
     protected override void OnFixedUpdateSpecific()
     {
         if (GetInput(out NetworkInputData input))
         {
             HandleWaterLogic(input);
+
+            if (input.jump)
+            {
+                isJumpingUp = true;
+            }
+            else
+            {
+                isJumpingUp = false;
+            }
         }
 
         if (isWaterSurface && !onDiving)
@@ -73,9 +74,11 @@ public class Duck_Moveset : MovementCharacter
         {
             onWater = false;
         }
-
-        CheckWaterZone();
-        HandleBuoyancy();
+        
+        if (IsBodyOnWater)
+        {
+            HandleBuoyancy();
+        }
     }
 
     public void HandleWaterLogic(NetworkInputData input)
@@ -89,10 +92,8 @@ public class Duck_Moveset : MovementCharacter
 
         if (isWaterSurface && isPressed && ReadyToDive)
         {
-            // try dive
             StartDiveLogic();
         }
-
 
         if (onDiving && !emergencySwimBool)
         {
@@ -108,23 +109,12 @@ public class Duck_Moveset : MovementCharacter
                     optionalGravity = 0f;
                     isOptional = true;
 
-                    // make the duck controll the dive
                     Vector2 inputDir = new Vector2(input.horizontal, input.vertical);
-
-                    /*if (inputDir.sqrMagnitude > 0.1f) Need to fix
-                    {
-                        float targetAngle = Mathf.Atan2(inputDir.y, inputDir.x) * Mathf.Rad2Deg;
-
-                        float nextAngle = Mathf.LerpAngle(rb2D.rotation, targetAngle, 10f * Runner.DeltaTime);
-
-                        rb2D.MoveRotation(nextAngle);
-                    }*/
 
                     if (inputDir.sqrMagnitude > 1)
                         inputDir.Normalize();
 
                     Vector2 targetVel = inputDir * swimMaxSpeed;
-
                     Vector2 currentVel = rb2D.linearVelocity;
                     Vector2 speedDif = targetVel - currentVel;
 
@@ -154,18 +144,15 @@ public class Duck_Moveset : MovementCharacter
     {
         if (currentWater == null) return;
 
-        isMoveAble = false; // make the Movement Logic stop
+        isMoveAble = false;
 
-        // make the character dive into the water
         rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, -swimSpeed * 1.5f);
 
-        // Trigger the Splash Effect
         float impactForce = rb2D.mass * -swimSpeed;
         currentWater.Splash(transform.position, impactForce);
 
         onDiving = true;
         onDivingControl = true;
-        //cAnimation.SetFlipToFalse();
         emergencyToggle = true;
 
         float duration = divingTime;
@@ -225,20 +212,10 @@ public class Duck_Moveset : MovementCharacter
             {
                 Vector2 inputDir = new Vector2(0f, 1f);
 
-                /*if (inputDir.sqrMagnitude > 0.1f)
-                {
-                    float targetAngle = Mathf.Atan2(inputDir.y, inputDir.x) * Mathf.Rad2Deg;
-
-                    float nextAngle = Mathf.LerpAngle(rb2D.rotation, targetAngle, 10f * Runner.DeltaTime);
-
-                    rb2D.MoveRotation(nextAngle);
-                }*/
-
                 if (inputDir.sqrMagnitude > 1)
                     inputDir.Normalize();
 
                 Vector2 targetVel = inputDir * swimMaxSpeed;
-
                 Vector2 currentVel = rb2D.linearVelocity;
                 Vector2 speedDif = targetVel - currentVel;
 
@@ -252,7 +229,6 @@ public class Duck_Moveset : MovementCharacter
             {
                 if (onDiving && currentWater != null)
                 {
-                    // Positive velocity for exit splash
                     float exitForce = rb2D.mass * rb2D.linearVelocity.y;
                     currentWater.Splash(transform.position, exitForce);
                 }
@@ -271,7 +247,6 @@ public class Duck_Moveset : MovementCharacter
         }
         else
         {
-            // RIP
             EndDiveLogic();
             Debug.Log("Dead");
         }
@@ -279,79 +254,27 @@ public class Duck_Moveset : MovementCharacter
 
     public void HandleBuoyancy()
     {
-        if (currentWater != null && !onDiving)
+        if (IsBodyOnWater)
         {
-            isOptional = true;
-            optionalGravity = 0f;
-
-            rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, rb2D.linearVelocity.y * 0.8f);
-
-            float surfaceY = currentWater.transform.position.y;
-            Vector2 targetPos = new Vector2(rb2D.position.x, surfaceY);
-
-            rb2D.position = Vector2.Lerp(rb2D.position, targetPos, 10f * Time.fixedDeltaTime);
-        }
-        else if (currentWater == null && !onDiving)
-        {
-            isOptional = false;
-        }
-    }
-
-    public void CheckWaterZone()
-    {
-        LayerMask waterMask = LayerMask.GetMask("Water");
-        Vector2 headPosition = (Vector2)transform.position + (Vector2.up * headOffset);
-
-        Collider2D bodyCollider = Physics2D.OverlapCircle(transform.position, 0.5f, waterMask);
-        IsHeadUnderwater = Physics2D.OverlapPoint(headPosition, waterMask);
-
-        if (bodyCollider != null)
-        {
-            if (currentWater == null || currentWater.gameObject != bodyCollider.gameObject)
+            if (currentWater != null && !onDiving && !isJumpingUp)
             {
-                currentWater = bodyCollider.GetComponent<InteractableWater>();
-                if (currentWater == null) currentWater = bodyCollider.GetComponentInParent<InteractableWater>();
+                isOptional = true;
+                optionalGravity = 0f;
+                rb2D.gravityScale = 0f;
+
+                isSpeedoptional = true;
+
+                float surfaceY = currentWater.transform.position.y;
+                float targetY = surfaceY + floatOffset;
+                float difference = targetY - transform.position.y;
+
+                rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, difference * 10f);
             }
         }
-        else
-        {
-            currentWater = null;
-        }
-
-        bool isBodyInWater = bodyCollider != null;
-
-        if (isBodyInWater)
-        {
-            isOptional = true;
-            optionalGravity = 0f;
-            rb2D.linearDamping = 4f;
-
-            if (!onDiving)
-            {
-                rb2D.AddForce(Vector2.up * 15f);
-            }
-        }
-        else if (!onDiving)
+        else if (currentWater == null || onDiving || isJumpingUp)
         {
             isOptional = false;
-            rb2D.linearDamping = 0f;
+            isSpeedoptional = false;
         }
-
-        if (isBodyInWater && !IsHeadUnderwater)
-        {
-            stilldrowning = false;
-        }
-        else if (isBodyInWater && IsHeadUnderwater)
-        {
-            stilldrowning = true;
-        }
-    }
-
-    private void OnDrawGizmosSelected()
-    {
-        Gizmos.color = Color.orange;
-        Vector2 start = transform.position;
-        Vector2 direction = Vector2.up * headOffset;
-        Gizmos.DrawRay(start, direction);
     }
 }
