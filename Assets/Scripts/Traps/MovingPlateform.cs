@@ -63,7 +63,7 @@ public class MovingPlateform : MonoBehaviour
         {
             endPosition.x += distance;
         }
-        Gizmos.color = Color.yellow;
+        Gizmos.color = Color.red;
         Gizmos.DrawLine(currentStart, endPosition);
         Gizmos.DrawSphere(currentStart, 0.1f);
         Gizmos.DrawSphere(endPosition, 0.1f);
