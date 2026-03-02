@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEditor;
 
-[CustomEditor(typeof(NetworkInteractableWater))]
+[CustomEditor(typeof(InteractableWater))]
 public class NetworkInteractableWaterEditor : Editor
 {
     public override void OnInspectorGUI()
@@ -10,7 +10,7 @@ public class NetworkInteractableWaterEditor : Editor
 
         DrawDefaultInspector();
 
-        NetworkInteractableWater water = (NetworkInteractableWater)target;
+        InteractableWater water = (InteractableWater)target;
 
         GUILayout.Space(10);
 
@@ -34,7 +34,7 @@ public class NetworkInteractableWaterEditor : Editor
 
     protected virtual void OnSceneGUI()
     {
-        NetworkInteractableWater water = (NetworkInteractableWater)target;
+        InteractableWater water = (InteractableWater)target;
 
         Handles.color = Color.white;
 
@@ -52,9 +52,7 @@ public class NetworkInteractableWaterEditor : Editor
         EditorGUI.BeginChangeCheck();
 
         Vector3 newP1 = Handles.FreeMoveHandle(p1, 0.2f, Vector3.zero, Handles.CubeHandleCap);
-
         Vector3 newP2 = Handles.FreeMoveHandle(p2, 0.2f, Vector3.zero, Handles.CubeHandleCap);
-
         Vector3 newP3 = Handles.FreeMoveHandle(p3, 0.2f, Vector3.zero, Handles.CubeHandleCap);
 
         if (EditorGUI.EndChangeCheck())

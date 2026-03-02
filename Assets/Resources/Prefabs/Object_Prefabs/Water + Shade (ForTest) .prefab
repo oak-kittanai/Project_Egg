@@ -9,12 +9,13 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7039615980745825420}
-  - component: {fileID: 2826776519203518063}
-  - component: {fileID: 161254463269988387}
+  - component: {fileID: 8955072753648102956}
+  - component: {fileID: 1954370135117116909}
   - component: {fileID: 845856261113721823}
   - component: {fileID: 6034961320026370419}
   - component: {fileID: 8220386309618556829}
   - component: {fileID: 6752824186918360189}
+  - component: {fileID: 4078008376938497245}
   m_Layer: 4
   m_Name: 'Water + Shade (ForTest) '
   m_TagString: Untagged
@@ -37,7 +38,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2826776519203518063
+--- !u!114 &8955072753648102956
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -46,97 +47,37 @@ MonoBehaviour:
   m_GameObject: {fileID: 1971559880577178109}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c080031f737f5af438dce482d866e028, type: 3}
+  m_Script: {fileID: 11500000, guid: dd2279c6edc054c4bbfc6f1b58478d1a, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::InteractableWater
+  m_EditorClassIdentifier: Assembly-CSharp::NetworkWaterTrigger
+  water: {fileID: 1954370135117116909}
+  hitLayers:
+    serializedVersion: 2
+    m_Bits: 128
+--- !u!114 &1954370135117116909
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1971559880577178109}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5f8929bb62654f43a2402cb5915f891, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NetworkInteractableWater
   vertexCount: 20
   size: {x: 10, y: 4}
   material: {fileID: 2100000, guid: cb4291c767555ec4f94a5d738dc14e34, type: 2}
   gizmoColor: {r: 0, g: 1, b: 1, a: 1}
+  splashParticles: {fileID: 0}
   springStiffness: 0.1
   dampening: 0.03
   spread: 0.006
   collisionRadius: 1
   forceMultiplier: 0.07
   maxVelocity: 0.5
-  waterPoints:
-  - velocity: 0
-    height: 0
-    targetHeight: 0
-  - velocity: 0
-    height: 0
-    targetHeight: 0
-  - velocity: 0
-    height: 0
-    targetHeight: 0
-  - velocity: 0
-    height: 0
-    targetHeight: 0
-  - velocity: 0
-    height: 0
-    targetHeight: 0
-  - velocity: 0
-    height: 0
-    targetHeight: 0
-  - velocity: 0
-    height: 0
-    targetHeight: 0
-  - velocity: 0
-    height: 0
-    targetHeight: 0
-  - velocity: 0
-    height: 0
-    targetHeight: 0
-  - velocity: 0
-    height: 0
-    targetHeight: 0
-  - velocity: 0
-    height: 0
-    targetHeight: 0
-  - velocity: 0
-    height: 0
-    targetHeight: 0
-  - velocity: 0
-    height: 0
-    targetHeight: 0
-  - velocity: 0
-    height: 0
-    targetHeight: 0
-  - velocity: 0
-    height: 0
-    targetHeight: 0
-  - velocity: 0
-    height: 0
-    targetHeight: 0
-  - velocity: 0
-    height: 0
-    targetHeight: 0
-  - velocity: 0
-    height: 0
-    targetHeight: 0
-  - velocity: 0
-    height: 0
-    targetHeight: 0
-  - velocity: 0
-    height: 0
-    targetHeight: 0
---- !u!114 &161254463269988387
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1971559880577178109}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 23bc57e171b51be4e8e9925adcff5e53, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::WaterTrigger
-  water: {fileID: 2826776519203518063}
-  hitLayers:
-    serializedVersion: 2
-    m_Bits: 128
-  splashParticles: {fileID: 0}
+  waterPoints: []
 --- !u!33 &845856261113721823
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -282,3 +223,23 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 10.000001, y: 3.9999998}
   m_EdgeRadius: 0
+--- !u!114 &4078008376938497245
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1971559880577178109}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
+  SortKey: 998761731
+  ObjectInterest: 1
+  Flags: 262145
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: 8955072753648102956}
+  - {fileID: 1954370135117116909}
+  ForceRemoteRenderTimeframe: 0

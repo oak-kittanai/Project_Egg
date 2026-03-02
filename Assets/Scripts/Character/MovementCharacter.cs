@@ -46,7 +46,7 @@ public class MovementCharacter : NetworkBehaviour
     [SerializeField] public float headOffset = 0.2f;
     [SerializeField] public float bodyOffset = -0.2f;
 
-    [SerializeField] public InteractableWater currentWater; // change back to NetoworkInteractableWater when ready
+    [SerializeField] public NetworkInteractableWater currentWater; // change back to NetoworkInteractableWater when ready
     [Networked] public bool stilldrowning { get; set; }
 
     [SerializeField] public bool _isEPressed;

@@ -9,29 +9,21 @@ public class NetworkWaterTrigger : NetworkBehaviour
     [Tooltip("Layers that trigger a splash (Player, PhysicsObject, etc)")]
     public LayerMask hitLayers;
 
-    [Tooltip("Visual particles (Optional)")]
-    public ParticleSystem splashParticles;
-
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if (((1 << collision.gameObject.layer) & hitLayers) == 0) return;
 
-        NetworkObject netObj = collision.GetComponentInParent<NetworkObject>();
+        if (Object != null && !HasStateAuthority) return;
 
-        if (netObj != null && netObj.HasStateAuthority)
+        Rigidbody2D rb = collision.GetComponent<Rigidbody2D>();
+        if (rb != null)
         {
-            Rigidbody2D rb = collision.GetComponent<Rigidbody2D>();
-            if (rb != null)
-            {
-                float velocity = rb.velocity.y * rb.mass;
+            float fallVelocity = rb.linearVelocity.y;
+            float impactForce = fallVelocity * rb.mass;
 
-                water.RPC_Splash(collision.transform.position, velocity);
+            float clampedVelocity = Mathf.Clamp(impactForce, -10f, -1f);
 
-                if (splashParticles != null)
-                {
-                    Instantiate(splashParticles, collision.transform.position, Quaternion.identity);
-                }
-            }
+            water.Splash(collision.transform.position, clampedVelocity);
         }
     }
 }
