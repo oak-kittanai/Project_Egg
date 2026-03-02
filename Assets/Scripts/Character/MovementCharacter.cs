@@ -280,8 +280,8 @@ public class MovementCharacter : NetworkBehaviour
         {
             if (currentWater == null || currentWater.gameObject != bodyCollider.gameObject)
             {
-                currentWater = bodyCollider.GetComponent<InteractableWater>();
-                if (currentWater == null) currentWater = bodyCollider.GetComponentInParent<InteractableWater>();
+                currentWater = bodyCollider.GetComponent<NetworkInteractableWater>();
+                if (currentWater == null) currentWater = bodyCollider.GetComponentInParent<NetworkInteractableWater>();
             }
         }
         else
