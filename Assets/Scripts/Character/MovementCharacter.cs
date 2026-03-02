@@ -1,4 +1,4 @@
-using Fusion;
+﻿using Fusion;
 using Fusion.Addons.Physics;
 using UnityEditor;
 using UnityEngine;
@@ -49,8 +49,11 @@ public class MovementCharacter : NetworkBehaviour
     [SerializeField] public InteractableWater currentWater; // change back to NetoworkInteractableWater when ready
     [Networked] public bool stilldrowning { get; set; }
 
+    [SerializeField] public bool _isEPressed;
+
     [Header("Carry System")]
     [Networked] public NetworkId CarriedFriendId { get; set; }
+    [Networked] public NetworkId CarrierId { get; set; }
     [Networked] public bool IsCarrying { get; set; }
     [Networked] public bool IsBeingCarried { get; set; }
 
@@ -98,8 +101,11 @@ public class MovementCharacter : NetworkBehaviour
 
         if (GetInput(out NetworkInputData input))
         {
-            HandleMovement(input);
-            HandleJump(input);
+            if (!IsBeingCarried)
+            {
+                HandleMovement(input);
+                HandleJump(input);
+            }
             HandleInteraction(input);
         }
 
@@ -157,7 +163,9 @@ public class MovementCharacter : NetworkBehaviour
 
     private void HandleInteraction(NetworkInputData input)
     {
-        if (input.Keyboard_E)
+        bool isEPressed = input.Keyboard_E && !_isEPressed;
+
+        if (isEPressed)
         {
             if (IsCarrying)
             {
@@ -190,6 +198,8 @@ public class MovementCharacter : NetworkBehaviour
                 }
             }
         }
+
+        _isEPressed = input.Keyboard_E;
     }
 
     public void PickupFriend(MovementCharacter friend)
@@ -199,17 +209,21 @@ public class MovementCharacter : NetworkBehaviour
         IsCarrying = true;
         CarriedFriendId = friend.Object.Id;
 
-        friend.SetCarriedState(true);
+        friend.SetCarriedState(true, Object.Id);
     }
 
-    public void DropFriend()
+    public void DropFriend(bool throwFriend = true)
     {
         if (Runner.TryFindObject(CarriedFriendId, out var obj))
         {
             if (obj.TryGetComponent<MovementCharacter>(out var friend))
             {
-                friend.SetCarriedState(false);
-                friend.GetComponent<Rigidbody2D>().AddForce(new Vector2(transform.localScale.x * 2, 2), ForceMode2D.Force);
+                friend.SetCarriedState(false, default);
+
+                if (throwFriend)
+                {
+                    friend.GetComponent<Rigidbody2D>().AddForce(new Vector2(transform.localScale.x * 2, 2), ForceMode2D.Force);
+                }
             }
         }
 
@@ -219,9 +233,11 @@ public class MovementCharacter : NetworkBehaviour
         CarriedFriendId = default;
     }
 
-    public void SetCarriedState(bool state)
+    public void SetCarriedState(bool state, NetworkId carrierId)
     {
         IsBeingCarried = state;
+        CarrierId = carrierId;
+
         if (state)
         {
             IsInteractBusy = true;
@@ -246,7 +262,6 @@ public class MovementCharacter : NetworkBehaviour
         resetAnimation = o;
     }
 
-    // Raycast
     private void CheckGround()
     {
         LayerMask mask = LayerMask.GetMask("Ground", "Platform");
@@ -314,7 +329,7 @@ public class MovementCharacter : NetworkBehaviour
             IsInAir = false;
         }
 
-        if (IsInAir && rb2D.linearVelocity.y < 0 && !FallingBusy)
+        if (IsInAir && rb2D.linearVelocity.y < 0 && !FallingBusy && !isOptional)
         {
             FallingCheck();
             cAnimation.FallingAndFloatAnimation(true);
@@ -346,12 +361,16 @@ public class MovementCharacter : NetworkBehaviour
 
     private void InFrontCheck()
     {
-        // add check in front for checking object and interactable 
+        // add check in front for checking object and interactable
+        LayerMask interactItemMask = LayerMask.GetMask();
+        LayerMask interactMask = LayerMask.GetMask();
+
+        Vector2 bodyPosition = (Vector2)transform.position + (Vector2.up * bodyOffset);
     }
 
     protected virtual void OnFixedUpdateSpecific()
     {
-
+        
     }
 
     private void OnDrawGizmosSelected()

@@ -8,6 +8,7 @@ public class SpawnPlayer : SingletonNetwork<SpawnPlayer>
 
     [SerializeField] CharacterStats stats;
     [SerializeField] public characterType characterType;
+    [SerializeField] public characterType characterClientType;
 
     public void SpawnPlayerToPosition(PlayerRef player, NetworkRunner runner)
     {
@@ -30,6 +31,21 @@ public class SpawnPlayer : SingletonNetwork<SpawnPlayer>
         if (playerObj.InputAuthority == runner.LocalPlayer)
         {
             playerStats.skinType = characterType;
+            playerObj.name = $"Player ({playerStats.skinType})Host";
+            Debug.Log("Spawn Player Host");
+            if (playerStats.skinType == characterType.Duck)
+            {
+                Destroy(bird);
+            }
+            else
+            {
+                Destroy(duck);
+            }
+            stats = playerStats;
+        }
+        else
+        {
+            playerStats.skinType = characterClientType;
             playerObj.name = $"Player ({playerStats.skinType})Host";
             Debug.Log("Spawn Player Host");
             if (playerStats.skinType == characterType.Duck)
