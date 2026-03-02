@@ -1,5 +1,5 @@
 using Fusion;
-using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class CharacterAnimation : NetworkBehaviour
@@ -21,6 +21,8 @@ public class CharacterAnimation : NetworkBehaviour
     [SerializeField] public RuntimeAnimatorController BirdController;
 
     [SerializeField] characterType currentSkin;
+
+    private HashSet<int> parameterHashes = new HashSet<int>();
 
     private void Awake()
     {
@@ -48,6 +50,8 @@ public class CharacterAnimation : NetworkBehaviour
                 Debug.LogError("can't Get MovementCharacter");
             }
         }
+
+        CacheAnimatorParameters();
     }
 
     public void Setup()
@@ -59,6 +63,7 @@ public class CharacterAnimation : NetworkBehaviour
 
     public void UpdateSkin(characterType skin)
     {
+        currentSkin = skin;
         if (skin == characterType.Duck)
         {
             animator.runtimeAnimatorController = DuckController;
@@ -67,67 +72,87 @@ public class CharacterAnimation : NetworkBehaviour
         {
             animator.runtimeAnimatorController = BirdController;
         }
+
+        CacheAnimatorParameters();
+    }
+
+    private void CacheAnimatorParameters()
+    {
+        if (animator == null || animator.runtimeAnimatorController == null) return;
+
+        parameterHashes.Clear();
+        foreach (AnimatorControllerParameter param in animator.parameters)
+        {
+            parameterHashes.Add(param.nameHash);
+        }
+    }
+
+    private bool HasParameter(string paramName)
+    {
+        return parameterHashes.Contains(Animator.StringToHash(paramName));
+    }
+
+    private bool HasState(string stateName)
+    {
+        return animator.HasState(0, Animator.StringToHash(stateName));
     }
 
     public void UpdateAnimationController(Vector2 direction)
     {
-        animator.SetFloat("X", direction.x);
+        if (HasParameter("X")) animator.SetFloat("X", direction.x);
 
-        if (direction.x < -0.01f)
-        {
-            FlipX = false;
-        }
-
-        if (direction.x > 0.01f)
-        {
-            FlipX = true;
-        }
+        if (direction.x < -0.01f) FlipX = false;
+        if (direction.x > 0.01f) FlipX = true;
 
         spriteRenderer.flipX = FlipX;
-        animator.SetFloat("Y", direction.y);
+        if (HasParameter("Y")) animator.SetFloat("Y", direction.y);
     }
 
     public void ReturnToBlendAnimation()
     {
+        if (!HasState("BlendAnimation")) return;
         animator.CrossFade("BlendAnimation", 0.1f);
     }
 
     public void UpdateGroundTypeOnDuck(bool isWaterGround)
     {
+        if (!HasParameter("OnWater")) return;
+
         if (isWaterGround)
         {
             animator.SetBool("OnWater", true);
-            if (Carrying)
+            if (Carrying && HasState("Floating_carry"))
             {
                 animator.Play("Floating_carry", 0);
             }
-            else animator.Play("Floating", 0);
+            else if (HasState("Floating"))
+            {
+                animator.Play("Floating", 0);
+            }
         }
-        else animator.SetBool("OnWater", false);
+        else
+        {
+            animator.SetBool("OnWater", false);
+        }
     }
 
     public void UpdateOnGroundTypeOnBird(bool isInTheAir)
     {
-        if (isInTheAir)
-        {
-            animator.SetBool("InTheAir", true);
-        }
-        else animator.SetBool("InTheAir", false);
+        if (!HasParameter("InTheAir")) return;
+        animator.SetBool("InTheAir", isInTheAir);
     }
 
     public void UpdateFloatingOnBird(bool Floating)
     {
-        if (Floating)
-        {
-            animator.SetBool("InTheAir", true);
-        }
-        else animator.SetBool("InTheAir", false);
+        if (!HasParameter("InTheAir")) return;
+        animator.SetBool("InTheAir", Floating);
     }
 
     // Overall
 
     public void JumpAnimation()
     {
+        if (!HasState("Jump")) return;
         animator.Play("Jump", 0);
     }
 
@@ -135,29 +160,18 @@ public class CharacterAnimation : NetworkBehaviour
     {
         if (Carrying)
         {
-            if (isFalling)
+            if (HasParameter("Carrying")) animator.SetBool("Carrying", !isFalling);
+            if (HasParameter("Falling")) animator.SetBool("Falling", isFalling);
+
+            if (!isFalling && HasState("Floating_carry"))
             {
-                animator.SetBool("Carrying", false);
-                animator.SetBool("Falling", true);
-            }
-            else
-            {
-                animator.SetBool("Carrying", true);
                 animator.Play("Floating_carry", 0);
             }
         }
         else
         {
-            if (isFalling)
-            {
-                animator.SetBool("Falling", true);
-                animator.SetBool("Float", false);
-            }
-            else
-            {
-                animator.SetBool("Float", true);
-                animator.SetBool("Falling", false);
-            }
+            if (HasParameter("Falling")) animator.SetBool("Falling", isFalling);
+            if (HasParameter("Float")) animator.SetBool("Float", !isFalling);
         }
     }
 
@@ -165,20 +179,14 @@ public class CharacterAnimation : NetworkBehaviour
 
     public void UpdateSwimFlip(Vector2 direction)
     {
-        animator.SetFloat("X", direction.x);
+        if (HasParameter("X")) animator.SetFloat("X", direction.x);
 
-        if (direction.x < -0.01f)
-        {
-            FlipX = true;
-        }
-
-        if (direction.x > 0.01f)
-        {
-            FlipX = false;
-        }
+        if (direction.x < -0.01f) FlipX = true;
+        if (direction.x > 0.01f) FlipX = false;
 
         spriteRenderer.flipX = FlipX;
-        animator.SetFloat("Y", direction.y);
+
+        if (HasParameter("Y")) animator.SetFloat("Y", direction.y);
     }
 
     public void SetFlipToFalse()
@@ -188,46 +196,49 @@ public class CharacterAnimation : NetworkBehaviour
 
     public void SmashAnimation()
     {
+        if (!HasState("Hit")) return;
         animator.Play("Hit", 0);
     }
 
     public void SwimAnimation()
     {
+        if (!HasState("Swim")) return;
         animator.Play("Swim", 0);
     }
 
     public void DiveAnimation()
     {
-        animator.SetBool("InWater", true);
+        if (!HasParameter("Diving")) return;
+        animator.SetBool("Diving", true);
     }
 
     public void ReturnToSurface()
     {
-        animator.Play("BackToSwim", 0); // make it ready to use
+        if (!HasState("Swim")) return;
+        animator.Play("Swim", 0);
     }
 
     // Bird
 
     public void ThrowAnimation()
     {
+        if (!HasParameter("Throwing")) return;
         animator.SetBool("Throwing", true);
     }
 
     public void FlyAnimation(bool isFly)
     {
-        if (isFly)
+        if (HasParameter("Flying")) animator.SetBool("Flying", isFly);
+
+        if (isFly && HasState("Fly"))
         {
             animator.Play("Fly", 0);
-            animator.SetBool("Flying", true);
-        }
-        else
-        {
-            animator.SetBool("Flying", false);
         }
     }
 
     public void OnGroundCheck()
     {
+        if (!HasParameter("Falling")) return;
         animator.SetBool("Falling", false);
     }
 }

@@ -332,7 +332,11 @@ public class MovementCharacter : NetworkBehaviour
         if (IsInAir && rb2D.linearVelocity.y < 0 && !FallingBusy && !isOptional)
         {
             FallingCheck();
-            cAnimation.FallingAndFloatAnimation(true);
+            if (cAnimation.currentSkin == characterType.Bird)
+            {
+                cAnimation.FallingAndFloatAnimation(true);
+            }
+            
             resetAnimation = true;
         }
         else
