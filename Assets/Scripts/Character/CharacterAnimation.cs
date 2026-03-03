@@ -20,7 +20,7 @@ public class CharacterAnimation : NetworkBehaviour
     [SerializeField] public RuntimeAnimatorController DuckController;
     [SerializeField] public RuntimeAnimatorController BirdController;
 
-    [SerializeField] characterType currentSkin;
+    [SerializeField] public characterType currentSkin;
 
     private HashSet<int> parameterHashes = new HashSet<int>();
 
