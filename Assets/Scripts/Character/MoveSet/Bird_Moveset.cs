@@ -16,7 +16,7 @@ public class Bird_Moveset : MovementCharacter
     [Networked] public bool AlreadyFloating { get; set; }
     [Networked] public bool _wasJumpPressed { get; set; }
 
-    protected override void OnFixedUpdateSpecific()
+    protected override void OnFixedUpdateSpecific() 
     {
         if (GetInput(out NetworkInputData input))
         {
@@ -40,21 +40,36 @@ public class Bird_Moveset : MovementCharacter
         bool isPressed = input.jump && !_wasJumpPressed;
         bool isNearPeak = Mathf.Abs(rb2D.linearVelocity.y) < 3f;
 
-        if (isPressed && IsInAir)
+        if (!IsBeingCarried)
         {
-            if (!IsFlying && !IsAlreadyFly && isNearPeak)
+            if (isPressed && IsInAir)
             {
-                StartFlying();
+                if (!IsFlying && !IsAlreadyFly && isNearPeak)
+                {
+                    StartFlying();
+                }
             }
         }
 
-        if (isPressed)
+        if (IsBeingCarried)
+        {
+            isMoveAble = false;
+            if (isPressed)
+            {
+                if (!IsFlying && !IsAlreadyFly)
+                {
+                    StartFlying();
+                }
+            }
+        }
+
+        if (isPressed && IsAlreadyFly)
         {
             if (AlreadyFloating)
             {
                 StopFloating();
             }
-            else if (IsAlreadyFly && !AlreadyFloating)
+            else if (!AlreadyFloating)
             {
                 StartFloating();
             }
@@ -69,7 +84,20 @@ public class Bird_Moveset : MovementCharacter
             }
             else
             {
-                rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, stats.s_flySpeed);
+                if (!IsBeingCarried)
+                {
+                    rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, stats.s_flySpeed);
+                }
+                else
+                {
+                    if (Runner.TryFindObject(CarrierId, out var carrierObj))
+                    {
+                        if (carrierObj.TryGetComponent<MovementCharacter>(out var duck))
+                        {
+                            duck.rb2D.linearVelocity = new Vector2(duck.rb2D.linearVelocity.x, stats.s_flySpeed);
+                        }
+                    }
+                }
             }
         }
 
@@ -96,7 +124,6 @@ public class Bird_Moveset : MovementCharacter
         isOptional = false;
 
         rb2D.linearDamping = 0f;
-
         rb2D.gravityScale = normalGravity;
 
         cAnimation.UpdateFloatingOnBird(false);
@@ -105,11 +132,19 @@ public class Bird_Moveset : MovementCharacter
     private void StartFlying()
     {
         IsFlying = true;
+        float duration;
 
-        float duration = IsCarrying ? carryFlyTime : normalFlyTime;
+        if (IsBeingCarried)
+        {
+            duration = carryFlyTime;
+        }
+        else
+        {
+            duration = normalFlyTime;
+        }
 
         FlightTimer = TickTimer.CreateFromSeconds(Runner, duration);
-        Debug.Log($"Bird Flying! Duration: {duration}s (Carrying: {IsCarrying})");
+        Debug.Log($"Bird Flying! Duration: {duration}s (Being Carried: {IsBeingCarried})");
     }
 
     private void StopFlying()

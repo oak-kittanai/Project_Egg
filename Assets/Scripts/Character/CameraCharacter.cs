@@ -41,7 +41,7 @@ public class CameraCharacter : NetworkBehaviour
         this.transform.rotation = camearaTransform.rotation;
     }*/
 
-    void LateUpdate()
+    public override void FixedUpdateNetwork()
     {
         if (!Object.HasInputAuthority) return;
 
