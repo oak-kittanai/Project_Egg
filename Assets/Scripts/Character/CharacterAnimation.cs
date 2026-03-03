@@ -24,7 +24,7 @@ public class CharacterAnimation : NetworkBehaviour
 
     private HashSet<int> parameterHashes = new HashSet<int>();
 
-    private void Awake()
+    private void Awake()    
     {
         Setup();
     }
@@ -121,13 +121,22 @@ public class CharacterAnimation : NetworkBehaviour
         if (isWaterGround)
         {
             animator.SetBool("OnWater", true);
+
+            AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
+
             if (Carrying && HasState("Floating_carry"))
             {
-                animator.Play("Floating_carry", 0);
+                if (!stateInfo.IsName("Floating_carry"))
+                {
+                    animator.Play("Floating_carry", 0);
+                }
             }
             else if (HasState("Floating"))
             {
-                animator.Play("Floating", 0);
+                if (!stateInfo.IsName("Floating"))
+                {
+                    animator.Play("Floating", 0);
+                }
             }
         }
         else

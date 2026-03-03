@@ -265,16 +265,15 @@ public class MovementCharacter : NetworkBehaviour
     private void CheckGround()
     {
         LayerMask mask = LayerMask.GetMask("Ground", "Platform");
-        IsGrounded = Physics2D.Raycast(transform.position, Vector2.down, rayDistance, mask);
+        bool groundHit = Physics2D.Raycast(transform.position, Vector2.down, rayDistance, mask);
 
         LayerMask waterMask = LayerMask.GetMask("Water");
         Vector2 headPosition = (Vector2)transform.position + (Vector2.up * headOffset);
         Vector2 bodyPosition = (Vector2)transform.position + (Vector2.up * bodyOffset);
 
         Collider2D bodyCollider = Physics2D.OverlapCircle(transform.position, 0.5f, waterMask);
-        IsHeadUnderwater = Physics2D.OverlapPoint(headPosition, waterMask);
-
-        IsBodyOnWater = Physics2D.OverlapPoint(bodyPosition, waterMask);
+        bool headInWater = Physics2D.OverlapPoint(headPosition, waterMask);
+        bool bodyInWater = Physics2D.OverlapPoint(bodyPosition, waterMask);
 
         if (bodyCollider != null)
         {
@@ -289,20 +288,34 @@ public class MovementCharacter : NetworkBehaviour
             currentWater = null;
         }
 
-        bool isBodyInWater = bodyCollider != null;
-
-        if (isBodyInWater && IsBodyOnWater && !IsHeadUnderwater)
+        if (HasStateAuthority || HasInputAuthority)
         {
-            isWaterSurface = true;
-            stilldrowning = false;
-        }
-        else if (isBodyInWater && IsHeadUnderwater)
-        {
-            isWaterSurface = false;
-            stilldrowning = true;
-        }
+            IsGrounded = groundHit;
+            IsHeadUnderwater = headInWater;
+            IsBodyOnWater = bodyInWater;
 
-        IsInAir = !IsGrounded;
+            if (bodyCollider != null && IsBodyOnWater && !IsHeadUnderwater)
+            {
+                isWaterSurface = true;
+                stilldrowning = false;
+            }
+            else if (bodyCollider != null && IsHeadUnderwater)
+            {
+                isWaterSurface = false;
+                stilldrowning = true;
+            }
+            else
+            {
+                isWaterSurface = false;
+            }
+
+            IsInAir = !IsGrounded;
+
+            if (isWaterSurface)
+            {
+                IsInAir = false;
+            }
+        }
 
         if (IsGrounded)
         {
@@ -324,19 +337,11 @@ public class MovementCharacter : NetworkBehaviour
             }
         }
 
-        if (isWaterSurface)
-        {
-            IsInAir = false;
-        }
-
         if (IsInAir && rb2D.linearVelocity.y < 0 && !FallingBusy && !isOptional)
         {
             FallingCheck();
-            if (cAnimation.currentSkin == characterType.Bird)
-            {
-                cAnimation.FallingAndFloatAnimation(true);
-            }
-            
+            cAnimation.FallingAndFloatAnimation(true);
+
             resetAnimation = true;
         }
         else
