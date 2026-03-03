@@ -42,6 +42,12 @@ public class Duck_Moveset : MovementCharacter
     [Header("Floating Settings")]
     [SerializeField] private float floatOffset = -0.2f;
 
+    [Header("Carry System (Duck Only)")]
+    [Networked] public NetworkId CarriedFriendId { get; set; }
+
+    [Networked] public bool _isCarryingInternal { get; set; }
+    public override bool IsCarrying => _isCarryingInternal;
+
     protected override void OnFixedUpdateSpecific()
     {
         if (GetInput(out NetworkInputData input))
@@ -78,6 +84,62 @@ public class Duck_Moveset : MovementCharacter
         }
 
         HandleBuoyancy();
+    }
+
+    private void HandleDuckInteraction(NetworkInputData input)
+    {
+        bool isEPressed = input.Keyboard_E && !_wasEPressed;
+
+        if (isEPressed)
+        {
+            if (IsCarrying)
+            {
+                DropFriend();
+                return;
+            }
+
+            Collider2D[] hitsPlayer = Physics2D.OverlapCircleAll(transform.position, playerInteractRadius);
+            foreach (var hit in hitsPlayer)
+            {
+                if (hit.gameObject == gameObject) continue;
+                if (hit.TryGetComponent<MovementCharacter>(out var otherPlayer))
+                {
+                    PickupFriend(otherPlayer);
+                    return;
+                }
+            }
+        }
+        _wasEPressed = input.Keyboard_E;
+    }
+
+    public void PickupFriend(MovementCharacter friend)
+    {
+        _isCarryingInternal = true;
+        CarriedFriendId = friend.Object.Id;
+        friend.SetCarriedState(true, Object.Id);
+        Debug.Log("Duck picked up a friend!");
+    }
+
+    public void DropFriend()
+    {
+        if (Runner.TryFindObject(CarriedFriendId, out var obj))
+        {
+            if (obj.TryGetComponent<MovementCharacter>(out var friend))
+            {
+                friend.SetCarriedState(false, default);
+                friend.rb2D.AddForce(new Vector2(transform.localScale.x * 2, 2), ForceMode2D.Impulse);
+            }
+        }
+        _isCarryingInternal = false;
+        CarriedFriendId = default;
+    }
+
+    private void UpdateCarriedFriendPosition()
+    {
+        if (Runner.TryFindObject(CarriedFriendId, out var obj))
+        {
+            obj.transform.position = transform.position + Vector3.up * 1.1f;
+        }
     }
 
     public void HandleWaterLogic(NetworkInputData input)

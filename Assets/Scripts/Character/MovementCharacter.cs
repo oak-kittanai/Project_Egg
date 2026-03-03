@@ -51,12 +51,10 @@ public class MovementCharacter : NetworkBehaviour
 
     [SerializeField] public bool _isEPressed;
 
-    [Header("Carry System")]
-    [Networked] public NetworkId CarriedFriendId { get; set; }
+    [Header("Carry State")]
+    public virtual bool IsCarrying => false;
     [Networked] public NetworkId CarrierId { get; set; }
-    [Networked] public bool IsCarrying { get; set; }
     [Networked] public bool IsBeingCarried { get; set; }
-
     [Networked] public bool IsInteractBusy { get; set; }
 
     // Local Variables
@@ -91,7 +89,7 @@ public class MovementCharacter : NetworkBehaviour
     {
         if (IsBeingCarried)
         {
-            rb2D.simulated = false; // Stop gravity/collisions
+            rb2D.simulated = false;
             return;
         }
         else
@@ -101,22 +99,12 @@ public class MovementCharacter : NetworkBehaviour
 
         if (GetInput(out NetworkInputData input))
         {
-            if (!IsBeingCarried)
-            {
-                HandleMovement(input);
-                HandleJump(input);
-            }
+            HandleMovement(input);
+            HandleJump(input);
             HandleInteraction(input);
         }
 
         CheckGround();
-        InFrontCheck();
-
-        if (IsCarrying)
-        {
-            UpdateCarriedFriendPosition();
-        }
-
         OnFixedUpdateSpecific();
     }
 
@@ -156,23 +144,23 @@ public class MovementCharacter : NetworkBehaviour
             rb2D.AddForce(Vector2.up * stats.s_jumpForce, ForceMode2D.Impulse);
             IsGrounded = false;
             IsInteractBusy = false;
-
             JumpCooldown = TickTimer.CreateFromSeconds(Runner, JumpCooldownTimer);
         }
     }
 
-    private void HandleInteraction(NetworkInputData input)
+    public void SetCarriedState(bool state, NetworkId carrierId)
+    {
+        IsBeingCarried = state;
+        CarrierId = carrierId;
+        IsInteractBusy = state;
+    }
+
+    protected virtual void HandleInteraction(NetworkInputData input)
     {
         bool isEPressed = input.Keyboard_E && !_isEPressed;
 
         if (isEPressed)
         {
-            if (IsCarrying)
-            {
-                DropFriend();
-                return;
-            }
-
             Collider2D[] hitsItem = Physics2D.OverlapCircleAll(transform.position, interactRadius);
             foreach (var hit in hitsItem)
             {
@@ -186,7 +174,7 @@ public class MovementCharacter : NetworkBehaviour
                 }
             }
 
-            Collider2D[] hitsPlayer = Physics2D.OverlapCircleAll(transform.position, playerInteractRadius);
+            /*Collider2D[] hitsPlayer = Physics2D.OverlapCircleAll(transform.position, playerInteractRadius);
             foreach (var hit in hitsPlayer)
             {
                 if (hit.gameObject == gameObject) continue;
@@ -196,65 +184,10 @@ public class MovementCharacter : NetworkBehaviour
                     PickupFriend(otherPlayer);
                     return;
                 }
-            }
+            }*/
         }
 
         _isEPressed = input.Keyboard_E;
-    }
-
-    public void PickupFriend(MovementCharacter friend)
-    {
-        IsInteractBusy = true;
-        Debug.Log("Picking up friend!");
-        IsCarrying = true;
-        CarriedFriendId = friend.Object.Id;
-
-        friend.SetCarriedState(true, Object.Id);
-    }
-
-    public void DropFriend(bool throwFriend = true)
-    {
-        if (Runner.TryFindObject(CarriedFriendId, out var obj))
-        {
-            if (obj.TryGetComponent<MovementCharacter>(out var friend))
-            {
-                friend.SetCarriedState(false, default);
-
-                if (throwFriend)
-                {
-                    friend.GetComponent<Rigidbody2D>().AddForce(new Vector2(transform.localScale.x * 2, 2), ForceMode2D.Force);
-                }
-            }
-        }
-
-        IsCarrying = false;
-        IsInteractBusy = false;
-        resetAnimation = true;
-        CarriedFriendId = default;
-    }
-
-    public void SetCarriedState(bool state, NetworkId carrierId)
-    {
-        IsBeingCarried = state;
-        CarrierId = carrierId;
-
-        if (state)
-        {
-            IsInteractBusy = true;
-        }
-        else
-        {
-            IsInteractBusy = false;
-        }
-    }
-
-    private void UpdateCarriedFriendPosition()
-    {
-        if (Runner.TryFindObject(CarriedFriendId, out var obj))
-        {
-            // Snap position to above our head
-            obj.transform.position = transform.position + Vector3.up * 1.1f;
-        }
     }
 
     public void SetResetAnimation(bool o)
