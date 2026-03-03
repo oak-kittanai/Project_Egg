@@ -24,9 +24,17 @@ public class CharacterAnimation : NetworkBehaviour
 
     private HashSet<int> parameterHashes = new HashSet<int>();
 
-    private void Awake()    
+    private void Awake()
     {
         Setup();
+    }
+
+    public override void Render()
+    {
+        if (spriteRenderer != null)
+        {
+            spriteRenderer.flipX = FlipX;
+        }
     }
 
     public override void Spawned()

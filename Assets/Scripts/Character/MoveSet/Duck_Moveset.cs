@@ -50,26 +50,31 @@ public class Duck_Moveset : MovementCharacter
 
             if (isJumpAble)
             {
-                if (input.jump)
-                {
-                    isJumpingUp = true;
-                }
-                else
-                {
-                    isJumpingUp = false;
-                }
+                if (input.jump) isJumpingUp = true;
+                else isJumpingUp = false;
+            }
+        }
+
+        if (HasStateAuthority || HasInputAuthority)
+        {
+            if (isWaterSurface && !onDiving)
+            {
+                onWater = true;
+                ReadyToDive = true;
+            }
+            else
+            {
+                onWater = false;
             }
         }
 
         if (isWaterSurface && !onDiving)
         {
-            onWater = true;
-            cAnimation.UpdateGroundTypeOnDuck(onWater);
-            ReadyToDive = true;
+            cAnimation.UpdateGroundTypeOnDuck(true);
         }
         else
         {
-            onWater = false;
+            cAnimation.UpdateGroundTypeOnDuck(false);
         }
 
         HandleBuoyancy();

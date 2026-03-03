@@ -317,7 +317,7 @@ public class MovementCharacter : NetworkBehaviour
             }
         }
 
-        if (IsGrounded)
+        if (IsGrounded && !isWaterSurface)
         {
             isOptional = false;
             FallingBusy = false;
