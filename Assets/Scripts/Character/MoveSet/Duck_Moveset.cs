@@ -11,15 +11,15 @@ public class Duck_Moveset : MovementCharacter
     [Networked] bool isJumpingUp { get; set; }
     [Networked] public bool isJumpAble { get; set; }
 
+    [SerializeField] float betweenCarryPosition = 0.63f;
+
     [Header("Dive Settings")]
     [SerializeField] float swimSpeed = 5f;
     [SerializeField] float swimAcceleration = 1f;
     [SerializeField] float swimDeceleration = 1f;
     [SerializeField] float swimMaxSpeed = 5f;
     [SerializeField] float divingTime = 5f;
-
     [SerializeField] float divePhase = 0.5f;
-
     [SerializeField] bool onWater;
 
     [Networked] public bool onDiving { get; set; }
@@ -44,14 +44,13 @@ public class Duck_Moveset : MovementCharacter
 
     [Header("Carry System (Duck Only)")]
     [Networked] public NetworkId CarriedFriendId { get; set; }
-
-    [Networked] public bool _isCarryingInternal { get; set; }
-    public override bool IsCarrying => _isCarryingInternal;
+    [Networked] public bool IsCarrying { get; set; }
 
     protected override void OnFixedUpdateSpecific()
     {
         if (GetInput(out NetworkInputData input))
         {
+            HandleDuckInteraction(input);
             HandleWaterLogic(input);
 
             if (isJumpAble)
@@ -79,8 +78,12 @@ public class Duck_Moveset : MovementCharacter
         }
 
         HandleBuoyancy();
-    }
 
+        if (IsCarrying)
+        {
+            UpdateCarriedFriendPosition();
+        }
+    }
     private void HandleDuckInteraction(NetworkInputData input)
     {
         bool isEPressed = input.Keyboard_E && !_wasEPressed;
@@ -104,28 +107,30 @@ public class Duck_Moveset : MovementCharacter
                 }
             }
         }
-        _wasEPressed = input.Keyboard_E;
     }
 
     public void PickupFriend(MovementCharacter friend)
     {
-        _isCarryingInternal = true;
+        IsCarrying = true;
         CarriedFriendId = friend.Object.Id;
         friend.SetCarriedState(true, Object.Id);
         Debug.Log("Duck picked up a friend!");
     }
 
-    public void DropFriend()
+    public void DropFriend(bool throwFriend = true)
     {
         if (Runner.TryFindObject(CarriedFriendId, out var obj))
         {
             if (obj.TryGetComponent<MovementCharacter>(out var friend))
             {
                 friend.SetCarriedState(false, default);
-                friend.rb2D.AddForce(new Vector2(transform.localScale.x * 2, 2), ForceMode2D.Impulse);
+                if (throwFriend)
+                {
+                    friend.rb2D.AddForce(new Vector2(transform.localScale.x * 2, 2), ForceMode2D.Impulse);
+                }
             }
         }
-        _isCarryingInternal = false;
+        IsCarrying = false;
         CarriedFriendId = default;
     }
 
@@ -133,7 +138,7 @@ public class Duck_Moveset : MovementCharacter
     {
         if (Runner.TryFindObject(CarriedFriendId, out var obj))
         {
-            obj.transform.position = transform.position + Vector3.up * 1.1f;
+            obj.transform.position = transform.position + Vector3.up * betweenCarryPosition;
         }
     }
 
@@ -176,7 +181,7 @@ public class Duck_Moveset : MovementCharacter
             }
             else
             {
-                if (onDivingControl && stilldrowning)
+                if (onDivingControl)
                 {
                     optionalGravity = 0f;
                     isOptional = true;
@@ -197,10 +202,6 @@ public class Duck_Moveset : MovementCharacter
                     cAnimation.SwimAnimation();
                     cAnimation.UpdateSwimFlip(new Vector2(input.horizontal, input.vertical));
                     rb2D.linearDamping = 5f;
-                }
-                else if (!stilldrowning)
-                {
-                    Debug.Log("not in water");
                 }
             }
         }

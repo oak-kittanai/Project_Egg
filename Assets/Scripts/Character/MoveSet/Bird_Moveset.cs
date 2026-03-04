@@ -1,4 +1,4 @@
-using Fusion;
+﻿using Fusion;
 using UnityEngine;
 
 public class Bird_Moveset : MovementCharacter
@@ -12,18 +12,17 @@ public class Bird_Moveset : MovementCharacter
     [Header("Bird State")]
     [Networked] private TickTimer FlightTimer { get; set; }
     [Networked] private bool IsFlying { get; set; }
-    [Networked] public bool IsAlreadyFly {  get; set; }
+    [Networked] public bool IsAlreadyFly { get; set; }
     [Networked] public bool AlreadyFloating { get; set; }
     [Networked] public bool _wasJumpPressed { get; set; }
 
-    protected override void OnFixedUpdateSpecific() 
+    protected override void OnFixedUpdateSpecific()
     {
         if (GetInput(out NetworkInputData input))
         {
             HandleFlightLogic(input);
         }
 
-        // Update Animation
         if (cAnimation != null)
         {
             cAnimation.FlyAnimation(IsFlying);
