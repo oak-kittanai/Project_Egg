@@ -193,6 +193,7 @@ public class MovementCharacter : NetworkBehaviour
         else
         {
             IsInteractBusy = false;
+            isMoveAble = true;
         }
     }
 

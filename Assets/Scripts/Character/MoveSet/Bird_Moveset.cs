@@ -6,7 +6,6 @@ public class Bird_Moveset : MovementCharacter
     [Header("Bird Settings")]
     [SerializeField] float normalFlyTime = 5f;
     [SerializeField] float carryFlyTime = 3f;
-
     [SerializeField] float floatingGravity = 0.1f;
 
     [Header("Bird State")]
@@ -31,6 +30,31 @@ public class Bird_Moveset : MovementCharacter
         if (IsGrounded)
         {
             IsAlreadyFly = false;
+        }
+
+        if (IsBeingCarried)
+        {
+            if (Runner.TryFindObject(CarrierId, out var duckObj) && duckObj.TryGetComponent<MovementCharacter>(out var duck))
+            {
+                if (duck.IsGrounded)
+                {
+                    IsAlreadyFly = false;
+                }
+            }
+        }
+
+        HandleDrowning();
+    }
+
+    private void HandleDrowning()
+    {
+        if (!IsBeingCarried && (isWaterSurface || stilldrowning))
+        {
+            isMoveAble = false;
+            isOptional = true;
+            optionalGravity = 0f;
+
+            rb2D.linearVelocity = new Vector2(0f, -1.5f);
         }
     }
 
@@ -64,14 +88,8 @@ public class Bird_Moveset : MovementCharacter
 
         if (isPressed && IsAlreadyFly)
         {
-            if (AlreadyFloating)
-            {
-                StopFloating();
-            }
-            else if (!AlreadyFloating)
-            {
-                StartFloating();
-            }
+            if (AlreadyFloating) StopFloating();
+            else if (!AlreadyFloating) StartFloating();
         }
 
         if (IsFlying)
@@ -80,6 +98,11 @@ public class Bird_Moveset : MovementCharacter
             {
                 StopFlying();
                 IsAlreadyFly = true;
+
+                if (IsBeingCarried)
+                {
+                    cAnimation.ReturnToBlendAnimation();
+                }
             }
             else
             {
@@ -107,11 +130,9 @@ public class Bird_Moveset : MovementCharacter
     {
         FallingBusy = true;
         AlreadyFloating = true;
-
         optionalGravity = floatingGravity;
         isOptional = true;
         cAnimation.UpdateFloatingOnBird(true);
-
         rb2D.linearDamping = 5f;
     }
 
@@ -119,29 +140,16 @@ public class Bird_Moveset : MovementCharacter
     {
         FallingBusy = false;
         AlreadyFloating = false;
-
         isOptional = false;
-
         rb2D.linearDamping = 0f;
         rb2D.gravityScale = normalGravity;
-
         cAnimation.UpdateFloatingOnBird(false);
     }
 
     private void StartFlying()
     {
         IsFlying = true;
-        float duration;
-
-        if (IsBeingCarried)
-        {
-            duration = carryFlyTime;
-        }
-        else
-        {
-            duration = normalFlyTime;
-        }
-
+        float duration = IsBeingCarried ? carryFlyTime : normalFlyTime;
         FlightTimer = TickTimer.CreateFromSeconds(Runner, duration);
         Debug.Log($"Bird Flying! Duration: {duration}s (Being Carried: {IsBeingCarried})");
     }

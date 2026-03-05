@@ -130,7 +130,9 @@ public class Duck_Moveset : MovementCharacter
                 friend.SetCarriedState(false, default);
                 if (throwFriend)
                 {
-                    friend.rb2D.AddForce(new Vector2(transform.localScale.x * 2, 2), ForceMode2D.Impulse);
+                    float throwDir = cAnimation.FlipX ? 1f : -1f;
+
+                    friend.rb2D.AddForce(new Vector2(throwDir * 6f, 4f), ForceMode2D.Impulse);
                 }
             }
         }
