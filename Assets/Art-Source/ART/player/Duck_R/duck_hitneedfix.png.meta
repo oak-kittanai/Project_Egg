@@ -1,31 +1,37 @@
 fileFormatVersion: 2
-guid: 283f5e6a2769b194f912e7e9b3dcd6bc
+guid: c482ac7de8531ca47905db75a65b9562
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -1130030326545090344
-    second: duck_floating_carry_ground_walk_0
+      213: 2090971092085837928
+    second: duck_hit_0
   - first:
-      213: -303922188186537185
-    second: duck_floating_carry_ground_walk_1
+      213: 2743800953768381348
+    second: duck_hit_1
   - first:
-      213: 5441902445511040330
-    second: duck_floating_carry_ground_walk_2
+      213: -2639204688919590220
+    second: duck_hit_2
   - first:
-      213: -1900594331963575446
-    second: duck_floating_carry_ground_walk_3
+      213: -9017982019422366442
+    second: duck_hit_3
   - first:
-      213: 2202020658234772763
-    second: duck_floating_carry_ground_walk_4
+      213: 6267081541070724907
+    second: duck_hit_4
   - first:
-      213: -5739292350873615525
-    second: duck_floating_carry_ground_walk_5
+      213: 4156320158688118495
+    second: duck_hit_5
   - first:
-      213: -4450671664469964758
-    second: duck_floating_carry_ground_walk_6
+      213: 12933221569603033
+    second: duck_hit_6
   - first:
-      213: -88727628855017971
-    second: duck_floating_carry_ground_walk_7
+      213: -862897356353054887
+    second: duck_hit_7
+  - first:
+      213: -3911645892005358344
+    second: duck_hit_8
+  - first:
+      213: 6914846415671517096
+    second: duck_hit_9
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -160,177 +166,221 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: duck_floating_carry_ground_walk_0
+      name: duck_hit_0
       rect:
         serializedVersion: 2
-        x: 7
-        y: 2
-        width: 35
-        height: 44
+        x: 8
+        y: 3
+        width: 34
+        height: 42
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 8d87cd8b7635150f0800000000000000
-      internalID: -1130030326545090344
+      spriteID: 860136b312f940d10800000000000000
+      internalID: 2090971092085837928
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: duck_floating_carry_ground_walk_1
+      name: duck_hit_1
       rect:
         serializedVersion: 2
         x: 54
-        y: 2
+        y: 3
         width: 35
-        height: 45
+        height: 40
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: f1338cd416048cbf0800000000000000
-      internalID: -303922188186537185
+      spriteID: 4ab0ebf1e60f31620800000000000000
+      internalID: 2743800953768381348
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: duck_floating_carry_ground_walk_2
+      name: duck_hit_2
       rect:
         serializedVersion: 2
-        x: 103
-        y: 2
+        x: 99
+        y: 3
+        width: 39
+        height: 38
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4ba076b8159af5bd0800000000000000
+      internalID: -2639204688919590220
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: duck_hit_3
+      rect:
+        serializedVersion: 2
+        x: 148
+        y: 3
+        width: 38
+        height: 38
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6155875f121b9d280800000000000000
+      internalID: -9017982019422366442
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: duck_hit_4
+      rect:
+        serializedVersion: 2
+        x: 195
+        y: 3
+        width: 46
+        height: 42
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b2f9de9057529f650800000000000000
+      internalID: 6267081541070724907
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: duck_hit_5
+      rect:
+        serializedVersion: 2
+        x: 244
+        y: 3
+        width: 44
+        height: 43
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fd68667c9273ea930800000000000000
+      internalID: 4156320158688118495
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: duck_hit_6
+      rect:
+        serializedVersion: 2
+        x: 288
+        y: 3
+        width: 42
+        height: 42
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9d5257d42b2fd2000800000000000000
+      internalID: 12933221569603033
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: duck_hit_7
+      rect:
+        serializedVersion: 2
+        x: 335
+        y: 9
+        width: 43
+        height: 39
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 957d3fc1d6f5604f0800000000000000
+      internalID: -862897356353054887
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: duck_hit_8
+      rect:
+        serializedVersion: 2
+        x: 387
+        y: 5
+        width: 38
+        height: 39
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8f497e739ca07b9c0800000000000000
+      internalID: -3911645892005358344
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: duck_hit_9
+      rect:
+        serializedVersion: 2
+        x: 440
+        y: 3
         width: 34
-        height: 46
+        height: 40
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: a4dd3071175858b40800000000000000
-      internalID: 5441902445511040330
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: duck_floating_carry_ground_walk_3
-      rect:
-        serializedVersion: 2
-        x: 152
-        y: 2
-        width: 33
-        height: 45
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: a63b03d568bbf95e0800000000000000
-      internalID: -1900594331963575446
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: duck_floating_carry_ground_walk_4
-      rect:
-        serializedVersion: 2
-        x: 199
-        y: 2
-        width: 35
-        height: 44
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: b1dc7223f162f8e10800000000000000
-      internalID: 2202020658234772763
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: duck_floating_carry_ground_walk_5
-      rect:
-        serializedVersion: 2
-        x: 246
-        y: 2
-        width: 35
-        height: 45
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: b53cf04d300f950b0800000000000000
-      internalID: -5739292350873615525
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: duck_floating_carry_ground_walk_6
-      rect:
-        serializedVersion: 2
-        x: 295
-        y: 2
-        width: 34
-        height: 46
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: a280f5ba3b90c32c0800000000000000
-      internalID: -4450671664469964758
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: duck_floating_carry_ground_walk_7
-      rect:
-        serializedVersion: 2
-        x: 344
-        y: 2
-        width: 33
-        height: 46
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: d0e755011b6c4cef0800000000000000
-      internalID: -88727628855017971
+      spriteID: 8afdb7abd2876ff50800000000000000
+      internalID: 6914846415671517096
       vertices: []
       indices: 
       edges: []
@@ -339,7 +389,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: 62b855e7c322d1e4bacb674924f38e80
     internalID: 0
     vertices: []
     indices: 
@@ -349,14 +399,16 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      duck_floating_carry_ground_walk_0: -1130030326545090344
-      duck_floating_carry_ground_walk_1: -303922188186537185
-      duck_floating_carry_ground_walk_2: 5441902445511040330
-      duck_floating_carry_ground_walk_3: -1900594331963575446
-      duck_floating_carry_ground_walk_4: 2202020658234772763
-      duck_floating_carry_ground_walk_5: -5739292350873615525
-      duck_floating_carry_ground_walk_6: -4450671664469964758
-      duck_floating_carry_ground_walk_7: -88727628855017971
+      duck_hit_0: 2090971092085837928
+      duck_hit_1: 2743800953768381348
+      duck_hit_2: -2639204688919590220
+      duck_hit_3: -9017982019422366442
+      duck_hit_4: 6267081541070724907
+      duck_hit_5: 4156320158688118495
+      duck_hit_6: 12933221569603033
+      duck_hit_7: -862897356353054887
+      duck_hit_8: -3911645892005358344
+      duck_hit_9: 6914846415671517096
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

@@ -166,6 +166,9 @@ public class MovementCharacter : NetworkBehaviour
                 if (hit.TryGetComponent<Interactable>(out var interactable))
                 {
                     Debug.Log("Trigger interactable object");
+
+                    cAnimation.InteractAnimation();
+
                     interactable.Interact();
                     return;
                 }
@@ -198,7 +201,14 @@ public class MovementCharacter : NetworkBehaviour
     {
         LayerMask mask = LayerMask.GetMask("Ground", "Platform");
 
+        bool wasGrounded = IsGrounded;
+
         IsGrounded = Physics2D.Raycast(transform.position, Vector2.down, rayDistance, mask);
+
+        if (!wasGrounded && IsGrounded)
+        {
+            resetAnimation = true;
+        }
 
         bool isNearGround = Physics2D.Raycast(transform.position, Vector2.down, rayDistance + nearGroundDistance, mask);
 
@@ -210,6 +220,8 @@ public class MovementCharacter : NetworkBehaviour
         IsHeadUnderwater = Physics2D.OverlapPoint(headPosition, waterMask);
 
         IsBodyOnWater = Physics2D.OverlapPoint(bodyPosition, waterMask);
+
+        
 
         if (bodyCollider != null)
         {

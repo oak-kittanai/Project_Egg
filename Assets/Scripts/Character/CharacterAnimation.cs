@@ -18,7 +18,6 @@ public class CharacterAnimation : NetworkBehaviour
     [Networked] public float AnimY { get; set; }
     [Networked] public NetworkString<_32> CurrentAnimState { get; set; }
 
-    // carry state
     [SerializeField] public bool Carrying => movement is Duck_Moveset duck && duck.IsCarrying;
     [SerializeField] public bool BeingCarried => movement.IsBeingCarried;
 
@@ -37,17 +36,8 @@ public class CharacterAnimation : NetworkBehaviour
 
     public override void Spawned()
     {
-        if (animator == null)
-        {
-            animator = GetComponent<Animator>();
-            if (animator == null) Debug.LogError("can't Get Animator");
-        }
-
-        if (movement == null)
-        {
-            movement = GetComponent<MovementCharacter>();
-            if (movement == null) Debug.LogError("can't Get MovementCharacter");
-        }
+        if (animator == null) animator = GetComponent<Animator>();
+        if (movement == null) movement = GetComponent<MovementCharacter>();
 
         CacheAnimatorParameters();
     }
@@ -61,10 +51,7 @@ public class CharacterAnimation : NetworkBehaviour
 
     public override void Render()
     {
-        if (spriteRenderer != null)
-        {
-            spriteRenderer.flipX = FlipX;
-        }
+        if (spriteRenderer != null) spriteRenderer.flipX = FlipX;
 
         if (animator != null)
         {
@@ -81,22 +68,13 @@ public class CharacterAnimation : NetworkBehaviour
     public void UpdateSkin(characterType skin)
     {
         currentSkin = skin;
-        if (skin == characterType.Duck)
-        {
-            animator.runtimeAnimatorController = DuckController;
-        }
-        else
-        {
-            animator.runtimeAnimatorController = BirdController;
-        }
-
+        animator.runtimeAnimatorController = (skin == characterType.Duck) ? DuckController : BirdController;
         CacheAnimatorParameters();
     }
 
     private void CacheAnimatorParameters()
     {
         if (animator == null || animator.runtimeAnimatorController == null) return;
-
         parameterHashes.Clear();
         foreach (AnimatorControllerParameter param in animator.parameters)
         {
@@ -104,15 +82,8 @@ public class CharacterAnimation : NetworkBehaviour
         }
     }
 
-    private bool HasParameter(string paramName)
-    {
-        return parameterHashes.Contains(Animator.StringToHash(paramName));
-    }
-
-    private bool HasState(string stateName)
-    {
-        return animator.HasState(0, Animator.StringToHash(stateName));
-    }
+    private bool HasParameter(string paramName) => parameterHashes.Contains(Animator.StringToHash(paramName));
+    private bool HasState(string stateName) => animator.HasState(0, Animator.StringToHash(stateName));
 
     public void UpdateAnimationController(Vector2 direction)
     {
@@ -128,11 +99,7 @@ public class CharacterAnimation : NetworkBehaviour
 
     private void PlayAnimationNetworked(string stateName)
     {
-        if (!HasState(stateName))
-        {
-            Debug.LogWarning($"[Animation Error] ไม่มี State: '{stateName}' ใน Animator!");
-            return;
-        }
+        if (!HasState(stateName)) return;
 
         if (HasStateAuthority || HasInputAuthority)
         {
@@ -145,10 +112,9 @@ public class CharacterAnimation : NetworkBehaviour
         if (!HasState(stateName)) return;
 
         AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
-
         if (!stateInfo.IsName(stateName))
         {
-            if (stateName == "BlendAnimation")
+            if (stateName == "BlendAnimation" || stateName == "NormalMovementTree" || stateName == "CarryMovementTree")
             {
                 animator.CrossFade(stateName, 0.1f);
             }
@@ -161,37 +127,37 @@ public class CharacterAnimation : NetworkBehaviour
 
     public void ReturnToBlendAnimation()
     {
-        PlayAnimationNetworked("BlendAnimation");
+        if (currentSkin == characterType.Duck && Carrying)
+        {
+            PlayAnimationNetworked("CarryMovementTree");
+        }
+        else
+        {
+            PlayAnimationNetworked("NomalMovementTree");
+        }
     }
 
     public void UpdateGroundTypeOnDuck(bool isWaterGround)
     {
         if (isWaterGround)
         {
+            bool isMoving = Mathf.Abs(AnimX) > 0.01f;
+
             if (Carrying)
             {
-                if (HasState("Floating_carry")) PlayAnimationNetworked("Floating_carry");
-                else PlayAnimationNetworked("Float_carry");
+                PlayAnimationNetworked(isMoving ? "Floating_carry_walk" : "Floating_carry_Idle");
             }
             else
             {
-                if (HasState("Floating")) PlayAnimationNetworked("Floating");
-                else if (HasState("Float")) PlayAnimationNetworked("Float");
-                else PlayAnimationNetworked("Swim");
+                PlayAnimationNetworked(isMoving ? "Floating_walk" : "Floating_Idle");
             }
         }
     }
 
     public void UpdateOnGroundTypeOnBird(bool isInTheAir)
     {
-        if (isInTheAir)
-        {
-            PlayAnimationNetworked("InTheAir");
-        }
-        else
-        {
-            ReturnToBlendAnimation();
-        }
+        if (isInTheAir) PlayAnimationNetworked("InTheAir");
+        else ReturnToBlendAnimation();
     }
 
     public void UpdateFloatingOnBird(bool isFloating)
@@ -201,17 +167,13 @@ public class CharacterAnimation : NetworkBehaviour
             if (HasState("Float")) PlayAnimationNetworked("Float");
             else PlayAnimationNetworked("Floating");
         }
-        else
-        {
-            PlayAnimationNetworked("Falling");
-        }
+        else PlayAnimationNetworked("Falling");
     }
 
     // Overall
-    public void JumpAnimation()
-    {
-        PlayAnimationNetworked("Jump");
-    }
+    public void JumpAnimation() => PlayAnimationNetworked("Jump");
+
+    public void InteractAnimation() => PlayAnimationNetworked("Interact");
 
     public void FallingAndFloatAnimation(bool isFalling, bool isNearGround = false)
     {
@@ -224,11 +186,13 @@ public class CharacterAnimation : NetworkBehaviour
         {
             if (isFalling)
             {
-                if (isNearGround && HasState("Reach_ground"))
+                /* if (isNearGround && HasState("Reach_ground")) 
                 {
                     PlayAnimationNetworked("Reach_ground");
                 }
-                else if (HasState("Float_Down"))
+                else 
+                */
+                if (HasState("Float_Down"))
                 {
                     PlayAnimationNetworked("Float_Down");
                 }
@@ -262,43 +226,20 @@ public class CharacterAnimation : NetworkBehaviour
         if (HasStateAuthority || HasInputAuthority) FlipX = false;
     }
 
-    public void SmashAnimation()
-    {
-        PlayAnimationNetworked("Hit");
-    }
-
-    public void SwimAnimation()
-    {
-        PlayAnimationNetworked("Swim");
-    }
-
-    public void DiveAnimation()
-    {
-        PlayAnimationNetworked("Diving");
-    }
-
-    public void ReturnToSurface()
-    {
-        PlayAnimationNetworked("Swim");
-    }
+    public void SmashAnimation() => PlayAnimationNetworked("Hit");
+    public void SwimAnimation() => PlayAnimationNetworked("Swim");
+    public void DiveAnimation() => PlayAnimationNetworked("Diving");
+    public void ReturnToSurface() => PlayAnimationNetworked("Swim");
 
     // Bird
-    public void ThrowAnimation()
-    {
-        PlayAnimationNetworked("Throwing");
-    }
+    public void ThrowAnimation() => PlayAnimationNetworked("Throwing");
+
     public void FlyAnimation(bool isFly)
     {
         if (isFly)
         {
-            if (BeingCarried && HasState("Fly_carry"))
-            {
-                PlayAnimationNetworked("Fly_carry");
-            }
-            else
-            {
-                PlayAnimationNetworked("Fly");
-            }
+            if (BeingCarried && HasState("Fly_carry")) PlayAnimationNetworked("Fly_carry");
+            else PlayAnimationNetworked("Fly");
         }
     }
 }

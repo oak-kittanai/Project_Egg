@@ -114,6 +114,10 @@ public class Duck_Moveset : MovementCharacter
         IsCarrying = true;
         CarriedFriendId = friend.Object.Id;
         friend.SetCarriedState(true, Object.Id);
+
+        if (IsGrounded) cAnimation.ReturnToBlendAnimation();
+        else if (isWaterSurface) cAnimation.UpdateGroundTypeOnDuck(true);
+
         Debug.Log("Duck picked up a friend!");
     }
 
@@ -132,6 +136,9 @@ public class Duck_Moveset : MovementCharacter
         }
         IsCarrying = false;
         CarriedFriendId = default;
+
+        if (IsGrounded) cAnimation.ReturnToBlendAnimation();
+        else if (isWaterSurface) cAnimation.UpdateGroundTypeOnDuck(true);
     }
 
     private void UpdateCarriedFriendPosition()
@@ -185,6 +192,7 @@ public class Duck_Moveset : MovementCharacter
                 {
                     optionalGravity = 0f;
                     isOptional = true;
+                    isSpeedoptional = true;
 
                     Vector2 inputDir = new Vector2(input.horizontal, input.vertical);
 
@@ -259,6 +267,7 @@ public class Duck_Moveset : MovementCharacter
         isMoveAble = true;
         onDiving = false;
         isOptional = false;
+        isSpeedoptional = false;
         onDivingControl = false;
         rb2D.linearDamping = 0f;
         ResetDiving();
