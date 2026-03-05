@@ -1,18 +1,15 @@
-using Fusion;
+﻿using Fusion;
 using UnityEngine;
 
 public class GameManager : SingletonNetwork<GameManager>
 {
     [SerializeField] NetworkRunner NetworkRunner;
 
+    [Networked] public int TeamKeys { get; set; }
+
     public override void Spawned()
     {
         base.Spawned();
-    }
-
-    public override void FixedUpdateNetwork()
-    {
-        base.FixedUpdateNetwork();
     }
 
     public void GetNetworkRunner(NetworkRunner networkRunner)
@@ -20,40 +17,65 @@ public class GameManager : SingletonNetwork<GameManager>
         NetworkRunner = networkRunner;
     }
 
-    public void SelfDeSpawn(NetworkObject objToDespawn, bool NeedToRespawn, Vector2 oldPos)
+    // Key
+    public void AddKey()
     {
-        NetworkRunner.Despawn(objToDespawn);
-        if (NeedToRespawn)
-        {
-            switch (objToDespawn.name)
-            {
-                default:
-                    NetworkRunner.Spawn(objToDespawn);
-                    break;
-            }
+        if (HasStateAuthority) TeamKeys++;
+        else RPC_RequestAddKey();
+    }
 
+    public void UseKey()
+    {
+        if (HasStateAuthority) TeamKeys--;
+        else RPC_RequestUseKey();
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    private void RPC_RequestAddKey() => TeamKeys++;
+
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    private void RPC_RequestUseKey() => TeamKeys--;
+
+
+    public void RequestDespawn(NetworkObject objToDespawn)
+    {
+        if (HasStateAuthority)
+        {
+            NetworkRunner.Despawn(objToDespawn);
+        }
+        else
+        {
+            RPC_Despawn(objToDespawn.Id);
         }
     }
 
-    public void ProjectileDespawn(NetworkObject objToDespawn)
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    private void RPC_Despawn(NetworkId objId)
     {
-        NetworkRunner.Despawn(objToDespawn);
+        if (NetworkRunner.TryFindObject(objId, out var obj))
+        {
+            NetworkRunner.Despawn(obj);
+        }
     }
 
     public void ProjectileSpawn(NetworkObject objToSpawn, Vector2 posToSpawn, Vector2 direction, Quaternion rota)
     {
+        if (!HasStateAuthority) return;
+
         Vector3 spawnPos = new Vector3(posToSpawn.x, posToSpawn.y, 0f);
         NetworkRunner.Spawn(objToSpawn, spawnPos, rota);
 
         Rigidbody2D rb = objToSpawn.GetComponent<Rigidbody2D>();
         if (rb != null)
         {
-            rb.velocity = direction * 10f;
+            rb.linearVelocity = direction * 10f;
         }
     }
 
     public void SpawnDropItem(NetworkObject objToSpawn, Vector2 posToSpawn)
     {
+        if (!HasStateAuthority) return;
+
         Vector3 spawnPos = new Vector3(posToSpawn.x, posToSpawn.y, 0f);
         NetworkObject objIte = NetworkRunner.Spawn(objToSpawn, posToSpawn);
 

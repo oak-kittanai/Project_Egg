@@ -99,7 +99,11 @@ public class CharacterAnimation : NetworkBehaviour
 
     private void PlayAnimationNetworked(string stateName)
     {
-        if (!HasState(stateName)) return;
+        if (!HasState(stateName))
+        {
+            Debug.Log($"can't find {stateName}");
+            return;
+        }
 
         if (HasStateAuthority || HasInputAuthority)
         {
@@ -112,11 +116,12 @@ public class CharacterAnimation : NetworkBehaviour
         if (!HasState(stateName)) return;
 
         AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
-        if (!stateInfo.IsName(stateName))
+
+        if (!stateInfo.IsName(stateName) && !animator.IsInTransition(0))
         {
-            if (stateName == "BlendAnimation" || stateName == "NormalMovementTree" || stateName == "CarryMovementTree")
+            if (stateName == "BlendAnimation" || stateName == "NomalMovementTree" || stateName == "CarryMovementTree")
             {
-                animator.CrossFade(stateName, 0.1f);
+                animator.Play(stateName, 0, 0f);
             }
             else
             {
@@ -133,7 +138,7 @@ public class CharacterAnimation : NetworkBehaviour
         }
         else
         {
-            PlayAnimationNetworked("NomalMovementTree");
+            PlayAnimationNetworked("NormalMovementTree");
         }
     }
 

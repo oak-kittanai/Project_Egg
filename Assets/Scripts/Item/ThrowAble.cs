@@ -21,7 +21,7 @@ public class ThrowAble : NetworkBehaviour, ThrowAbleItem
 
     public bool PickupItem()
     {
-        GameManager.Instance.SelfDeSpawn(selfNet, false, transform.position);
+        GameManager.Instance.RequestDespawn(selfNet);
         return true;
     }
 }

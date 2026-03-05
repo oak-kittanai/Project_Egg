@@ -22,7 +22,7 @@ public class Arrow : NetworkBehaviour
         if (collision.TryGetComponent<IDamageable>(out var target))
         {
             target.TakeDamage(damage, 0, transform.position);
-            GameManager.Instance.ProjectileDespawn(selfObj);
+            GameManager.Instance.RequestDespawn(selfObj);
         }
     }
 }

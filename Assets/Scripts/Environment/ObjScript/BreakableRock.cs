@@ -29,7 +29,7 @@ public class BreakableRock : NetworkBehaviour, Interactable
             }
         }
 
-        GameManager.Instance.SelfDeSpawn(selfNet, false, transform.position);
+        GameManager.Instance.RequestDespawn(selfNet);
     }
 
     public void SpawnItem()

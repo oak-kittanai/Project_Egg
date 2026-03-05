@@ -23,6 +23,7 @@ public class MovementCharacter : NetworkBehaviour
 
     [SerializeField] public bool resetAnimation;
 
+    [SerializeField] bool isJumping;
     [Networked] private TickTimer JumpCooldown { get; set; }
     [SerializeField] private float JumpCooldownTimer = 2f;
 
@@ -48,7 +49,7 @@ public class MovementCharacter : NetworkBehaviour
 
     [SerializeField] public float nearGroundDistance = 0.63f;
 
-    [SerializeField] public InteractableWater currentWater;
+    [SerializeField] public NetworkInteractableWater currentWater;
     [Networked] public bool stilldrowning { get; set; }
 
     [SerializeField] public bool _isEPressed;
@@ -107,7 +108,6 @@ public class MovementCharacter : NetworkBehaviour
         }
 
         CheckGround();
-        InFrontCheck();
 
         OnFixedUpdateSpecific();
     }
@@ -141,12 +141,16 @@ public class MovementCharacter : NetworkBehaviour
     {
         if (input.jump && IsGrounded && JumpCooldown.Expired(Runner))
         {
-            IsInteractBusy = true;
             cAnimation.JumpAnimation();
-            resetAnimation = true;
+
+            isJumping = true;
+            IsInteractBusy = true;
+
             rb2D.AddForce(Vector2.up * stats.s_jumpForce, ForceMode2D.Impulse);
             IsGrounded = false;
             IsInteractBusy = false;
+
+            resetAnimation = false;
 
             JumpCooldown = TickTimer.CreateFromSeconds(Runner, JumpCooldownTimer);
         }
@@ -202,11 +206,11 @@ public class MovementCharacter : NetworkBehaviour
         LayerMask mask = LayerMask.GetMask("Ground", "Platform");
 
         bool wasGrounded = IsGrounded;
-
         IsGrounded = Physics2D.Raycast(transform.position, Vector2.down, rayDistance, mask);
 
         if (!wasGrounded && IsGrounded)
         {
+            isJumping = false;
             resetAnimation = true;
         }
 
@@ -218,17 +222,14 @@ public class MovementCharacter : NetworkBehaviour
 
         Collider2D bodyCollider = Physics2D.OverlapCircle(transform.position, 0.5f, waterMask);
         IsHeadUnderwater = Physics2D.OverlapPoint(headPosition, waterMask);
-
         IsBodyOnWater = Physics2D.OverlapPoint(bodyPosition, waterMask);
-
-        
 
         if (bodyCollider != null)
         {
             if (currentWater == null || currentWater.gameObject != bodyCollider.gameObject)
             {
-                currentWater = bodyCollider.GetComponent<InteractableWater>();
-                if (currentWater == null) currentWater = bodyCollider.GetComponentInParent<InteractableWater>();
+                currentWater = bodyCollider.GetComponent<NetworkInteractableWater>();
+                if (currentWater == null) currentWater = bodyCollider.GetComponentInParent<NetworkInteractableWater>();
             }
         }
         else
@@ -255,13 +256,11 @@ public class MovementCharacter : NetworkBehaviour
         {
             isOptional = false;
             FallingBusy = false;
-            if (!IsInteractBusy)
+
+            if (!IsInteractBusy && resetAnimation)
             {
-                if (resetAnimation)
-                {
-                    cAnimation.ReturnToBlendAnimation();
-                    resetAnimation = false;
-                }
+                cAnimation.ReturnToBlendAnimation();
+                resetAnimation = false;
             }
         }
 
@@ -270,12 +269,18 @@ public class MovementCharacter : NetworkBehaviour
             IsInAir = false;
         }
 
-        // ★ ส่งค่า isNearGround ไปให้ระบบแอนิเมชันเลือกท่าให้ถูก
-        if (IsInAir && rb2D.linearVelocity.y < 0 && !FallingBusy && !isOptional)
+        if (IsInAir)
         {
-            FallingCheck();
-            cAnimation.FallingAndFloatAnimation(true, isNearGround);
-            resetAnimation = true;
+            if (rb2D.linearVelocity.y < -0.1f)
+            {
+                isJumping = false;
+
+                if (!FallingBusy && !isOptional)
+                {
+                    FallingCheck();
+                    cAnimation.FallingAndFloatAnimation(true, isNearGround);
+                }
+            }
         }
         else
         {
@@ -299,14 +304,6 @@ public class MovementCharacter : NetworkBehaviour
         float cappedY = Mathf.Max(rb2D.linearVelocity.y, -maxGravity);
 
         rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, cappedY);
-    }
-
-    private void InFrontCheck()
-    {
-        LayerMask interactItemMask = LayerMask.GetMask();
-        LayerMask interactMask = LayerMask.GetMask();
-
-        Vector2 bodyPosition = (Vector2)transform.position + (Vector2.up * bodyOffset);
     }
 
     protected virtual void OnFixedUpdateSpecific()
