@@ -12,6 +12,8 @@ public class Duck_Moveset : MovementCharacter
     [Networked] public bool isJumpAble { get; set; }
 
     [SerializeField] float betweenCarryPosition = 0.63f;
+    [SerializeField] float throwForceX = 4f;
+    [SerializeField] float throwForceY = 4f;
 
     [Header("Dive Settings")]
     [SerializeField] float swimSpeed = 5f;
@@ -132,7 +134,7 @@ public class Duck_Moveset : MovementCharacter
                 {
                     float throwDir = cAnimation.FlipX ? 1f : -1f;
 
-                    friend.rb2D.AddForce(new Vector2(throwDir * 6f, 4f), ForceMode2D.Impulse);
+                    friend.rb2D.AddForce(new Vector2(throwDir * throwForceX, throwForceY), ForceMode2D.Impulse);
                 }
             }
         }

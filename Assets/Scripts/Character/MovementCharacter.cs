@@ -3,7 +3,7 @@ using Fusion.Addons.Physics;
 using UnityEditor;
 using UnityEngine;
 
-public class MovementCharacter : NetworkBehaviour
+public class MovementCharacter : NetworkBehaviour, IDamageable
 {
     [Header("References")]
     [SerializeField] public CharacterStats stats;
@@ -41,7 +41,19 @@ public class MovementCharacter : NetworkBehaviour
     [SerializeField] public float decelerationSpeedOptional = 3f;
     [SerializeField] public float optionalMaxSpeed = 1f;
 
-    [Header("Character Setting")]
+    [Header("Character Setting (Health & Respawn)")]
+    [Networked] public int characterMaxHealth { get; set; }
+    [Networked] public int characterMinHealth { get; set; }
+    [Networked] public int currentHealth { get; set; }
+
+    [Networked] public bool isDead { get; set; }
+
+    [Networked] TickTimer respawnTimer { get; set; }
+    [SerializeField] float respawnCooldown = 3f;
+
+    [SerializeField] bool canbeRespawn = true;
+
+    [Header("Water Setting")]
     [Networked] public bool IsHeadUnderwater { get; set; }
     [Networked] public bool IsBodyOnWater { get; set; }
     [SerializeField] public float headOffset = 0.2f;
@@ -73,24 +85,91 @@ public class MovementCharacter : NetworkBehaviour
 
     public override void Spawned()
     {
-        if (stats.skinType == characterType.Bird)
-        {
-            isBird = true;
-        }
-        else
-        {
-            isBird = false;
-        }
+        isBird = stats.skinType == characterType.Bird;
+
+        currentHealth = characterMaxHealth;
 
         JumpCooldown = TickTimer.CreateFromSeconds(Runner, JumpCooldownTimer);
         resetAnimation = true;
+
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.RegisterPlayer(this);
+        }
+    }
+
+    public void TakeDamage(int dmg, float knockbackForce, Vector2 vec)
+    {
+        if (isDead) return;
+
+        currentHealth -= dmg;
+        cAnimation.SmashAnimation();
+
+        rb2D.linearVelocity = Vector2.zero;
+        rb2D.AddForce(vec * knockbackForce, ForceMode2D.Impulse);
+
+        if (currentHealth <= characterMinHealth)
+        {
+            Die();
+        }
+    }
+
+    public virtual void Die()
+    {
+        if (isDead) return;
+
+        isDead = true;
+        isMoveAble = false;
+
+        if (IsBeingCarried) SetCarriedState(false, default);
+
+        if (this is Duck_Moveset duck && duck.IsCarrying) duck.DropFriend(true);
+
+        rb2D.linearVelocity = Vector2.zero;
+
+
+        if (canbeRespawn)
+        {
+            respawnTimer = TickTimer.CreateFromSeconds(Runner, respawnCooldown);
+        }
+    }
+
+    public virtual void Respawn()
+    {
+        isDead = false;
+        isMoveAble = true;
+        currentHealth = characterMaxHealth;
+        stilldrowning = false;
+        IsHeadUnderwater = false;
+        isWaterSurface = false;
+
+        transform.position = GameManager.Instance.GetRespawnPosition();
+        rb2D.linearVelocity = Vector2.zero;
+
+        cAnimation.ReturnToBlendAnimation();
     }
 
     public override void FixedUpdateNetwork()
     {
+
+        if (GameManager.Instance != null && !GameManager.Instance.IsGameReady)
+        {
+            rb2D.linearVelocity = Vector2.zero;
+            return;
+        }
+
+        if (isDead)
+        {
+            if (HasStateAuthority && canbeRespawn && respawnTimer.Expired(Runner))
+            {
+                Respawn();
+            }
+            return;
+        }
+
         if (IsBeingCarried)
         {
-            rb2D.simulated = false; // Stop gravity/collisions
+            rb2D.simulated = false;
         }
         else
         {
@@ -108,6 +187,7 @@ public class MovementCharacter : NetworkBehaviour
         }
 
         CheckGround();
+        InFrontCheck();
 
         OnFixedUpdateSpecific();
     }
@@ -118,21 +198,10 @@ public class MovementCharacter : NetworkBehaviour
         {
             float targetSpeed = input.horizontal * stats.maxSpeed;
             float currentSpeed = rb2D.linearVelocity.x;
-
-            float accelRate;
-
-            if (isSpeedoptional)
-            {
-                accelRate = Mathf.Abs(targetSpeed) > 0.01f ? accelerationSpeedOptional : decelerationSpeedOptional;
-            }
-            else
-            {
-                accelRate = Mathf.Abs(targetSpeed) > 0.01f ? stats.acceleration : stats.deceleration;
-            }
-
+            float accelRate = isSpeedoptional ? (Mathf.Abs(targetSpeed) > 0.01f ? accelerationSpeedOptional : decelerationSpeedOptional) : (Mathf.Abs(targetSpeed) > 0.01f ? stats.acceleration : stats.deceleration);
             float speedDif = targetSpeed - currentSpeed;
-            rb2D.AddForce(Vector2.right * (speedDif * accelRate));
 
+            rb2D.AddForce(Vector2.right * (speedDif * accelRate));
             cAnimation.UpdateAnimationController(new Vector2(input.horizontal, rb2D.linearVelocity.y));
         }
     }
@@ -142,16 +211,12 @@ public class MovementCharacter : NetworkBehaviour
         if (input.jump && IsGrounded && JumpCooldown.Expired(Runner))
         {
             cAnimation.JumpAnimation();
-
             isJumping = true;
             IsInteractBusy = true;
-
             rb2D.AddForce(Vector2.up * stats.s_jumpForce, ForceMode2D.Impulse);
             IsGrounded = false;
             IsInteractBusy = false;
-
             resetAnimation = false;
-
             JumpCooldown = TickTimer.CreateFromSeconds(Runner, JumpCooldownTimer);
         }
     }
@@ -169,10 +234,7 @@ public class MovementCharacter : NetworkBehaviour
 
                 if (hit.TryGetComponent<Interactable>(out var interactable))
                 {
-                    Debug.Log("Trigger interactable object");
-
                     cAnimation.InteractAnimation();
-
                     interactable.Interact();
                     return;
                 }
@@ -185,22 +247,11 @@ public class MovementCharacter : NetworkBehaviour
     {
         IsBeingCarried = state;
         CarrierId = carrierId;
-
-        if (state)
-        {
-            IsInteractBusy = true;
-        }
-        else
-        {
-            IsInteractBusy = false;
-            isMoveAble = true;
-        }
+        IsInteractBusy = state;
+        if (!state) isMoveAble = true;
     }
 
-    public void SetResetAnimation(bool o)
-    {
-        resetAnimation = o;
-    }
+    public void SetResetAnimation(bool o) => resetAnimation = o;
 
     private void CheckGround()
     {
@@ -265,10 +316,7 @@ public class MovementCharacter : NetworkBehaviour
             }
         }
 
-        if (isWaterSurface)
-        {
-            IsInAir = false;
-        }
+        if (isWaterSurface) IsInAir = false;
 
         if (IsInAir)
         {
@@ -285,47 +333,31 @@ public class MovementCharacter : NetworkBehaviour
         }
         else
         {
-            if (isOptional)
-            {
-                rb2D.gravityScale = optionalGravity;
-            }
-            else
-            {
-                rb2D.gravityScale = normalGravity;
-            }
+            rb2D.gravityScale = isOptional ? optionalGravity : normalGravity;
         }
     }
 
     private void FallingCheck()
     {
         float speedPercent = Mathf.Abs(rb2D.linearVelocity.y) / maxGravity;
-
         rb2D.gravityScale = Mathf.Lerp(normalGravity, heavyGravity, speedPercent);
-
         float cappedY = Mathf.Max(rb2D.linearVelocity.y, -maxGravity);
-
         rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, cappedY);
     }
 
-    protected virtual void OnFixedUpdateSpecific()
-    {
+    private void InFrontCheck() { }
 
-    }
+    protected virtual void OnFixedUpdateSpecific() { }
 
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.blue;
-        Vector2 start = transform.position;
-        Vector2 direction = Vector2.down * rayDistance;
-        Gizmos.DrawRay(start, direction);
-
+        Gizmos.DrawRay(transform.position, Vector2.down * rayDistance);
         Gizmos.color = Color.cyan;
-        Gizmos.DrawRay((Vector2)start + Vector2.right * 0.5f, Vector2.down * (rayDistance + nearGroundDistance));
-
+        Gizmos.DrawRay((Vector2)transform.position + Vector2.right * 0.5f, Vector2.down * (rayDistance + nearGroundDistance));
         Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(start, interactRadius);
-
+        Gizmos.DrawWireSphere(transform.position, interactRadius);
         Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(start, playerInteractRadius);
+        Gizmos.DrawWireSphere(transform.position, playerInteractRadius);
     }
 }

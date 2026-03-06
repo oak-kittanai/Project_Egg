@@ -15,6 +15,11 @@ public class Bird_Moveset : MovementCharacter
     [Networked] public bool AlreadyFloating { get; set; }
     [Networked] public bool _wasJumpPressed { get; set; }
 
+    // Drowning
+    [Networked] private TickTimer DrownTimer { get; set; }
+    [SerializeField] float drowningTime = 3f;
+    [SerializeField] bool startTimer;
+
     protected override void OnFixedUpdateSpecific()
     {
         if (GetInput(out NetworkInputData input))
@@ -55,7 +60,35 @@ public class Bird_Moveset : MovementCharacter
             optionalGravity = 0f;
 
             rb2D.linearVelocity = new Vector2(0f, -1.5f);
+
+            if (!startTimer)
+            {
+                StartDrowningTimer();
+            }
+
+            if (startTimer)
+            {
+                if (DrownTimer.Expired(Runner))
+                {
+                    startTimer = false;
+                    Die();
+                }
+                else
+                {
+                    // drowning animation
+                }
+            }
         }
+        else
+        {
+            startTimer = false;
+        }
+    }
+
+    private void StartDrowningTimer()
+    {
+        startTimer = true;
+        DrownTimer = TickTimer.CreateFromSeconds(Runner, drowningTime);
     }
 
     private void HandleFlightLogic(NetworkInputData input)
