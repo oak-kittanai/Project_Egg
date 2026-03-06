@@ -1,7 +1,7 @@
 using Fusion;
 using UnityEngine;
 
-public class B_Interact_Door : NetworkBehaviour
+public class BToggle_Interact_Door : NetworkBehaviour
 {
     [Header("Target Door")]
     [SerializeField] Interact_Door targetDoor;
@@ -11,7 +11,7 @@ public class B_Interact_Door : NetworkBehaviour
     [SerializeField] Sprite pressed;
 
     private SpriteRenderer spriteRenderer;
-    private int objectsOnButton = 0;
+    private bool isToggled = false;
 
     void Awake()
     {
@@ -21,34 +21,25 @@ public class B_Interact_Door : NetworkBehaviour
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
+        // Player Check
         if (collision.CompareTag("Player") || collision.CompareTag("Box"))
         {
-            objectsOnButton++;
-            UpdateStatus();
+            isToggled = true; // อยากเหยียบซ้ำก็มาเปลี่ยนเอา <3
+            UpdateState();
         }
     }
 
-    private void OnTriggerExit2D(Collider2D collision)
+    private void UpdateState()
     {
-        if (collision.CompareTag("Player") || collision.CompareTag("Box"))
-        {
-            objectsOnButton--;
-            UpdateStatus();
-        }
-    }
-
-    private void UpdateStatus()
-    {
-        bool isDown = objectsOnButton > 0;
-
+        // Sprite ปุ่ม
         if (spriteRenderer != null)
         {
-            spriteRenderer.sprite = isDown ? pressed : unpressed;
+            spriteRenderer.sprite = isToggled ? pressed : unpressed;
         }
 
         if (targetDoor != null)
         {
-            targetDoor.SetDoorState(isDown);
+            targetDoor.SetDoorState(isToggled);
         }
     }
 }

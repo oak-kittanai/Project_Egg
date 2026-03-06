@@ -1,14 +1,17 @@
 using Fusion;
 using UnityEngine;
 
-public class Interact_Door : NetworkBehaviour
+public class Interact_Door2 : NetworkBehaviour
 {
-    [Header("Movement Settings")]
+    [Header("Movement")]
     [Range(0.0f, 100f)]
-    [SerializeField] float speed;
+    [SerializeField] float speed = 5f;
     [Range(0.0f, 100f)]
-    [SerializeField] float distance;
+    [SerializeField] float distance = 3f;
     [SerializeField] bool isVertical = true;
+
+    [SerializeField] int requiredButtons = 2;
+    private int activatedButtonsCount = 0;
 
     private Vector3 startPosition;
     private Vector3 endPosition;
@@ -31,20 +34,13 @@ public class Interact_Door : NetworkBehaviour
         transform.position = Vector3.MoveTowards(transform.position, targetPosition, speed * Time.deltaTime);
     }
 
-    public void SetDoorState(bool open)
+    public void RegistButtonPress()
     {
-        targetPosition = open ? endPosition : startPosition;
-    }
+        activatedButtonsCount++;
 
-    private void OnCollisionEnter2D(Collision2D collision)
-    {
-        if (collision.gameObject.CompareTag("Player"))
-            collision.transform.SetParent(transform);
-    }
-
-    private void OnCollisionExit2D(Collision2D collision)
-    {
-        if (collision.gameObject.CompareTag("Player"))
-            collision.transform.SetParent(null);
+        if (activatedButtonsCount >= requiredButtons)
+        {
+            targetPosition = endPosition;
+        }
     }
 }

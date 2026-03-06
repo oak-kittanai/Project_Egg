@@ -1,62 +1,101 @@
-using Fusion;
 using UnityEngine;
 
-public class TrapArrow : NetworkBehaviour
+public class TrapArrow : MonoBehaviour
 {
     [Header("Detection Settings")]
-    [SerializeField] float detectRadius = 5f;   
+    [SerializeField] float detectRadius = 5f;
     [Range(0, 360)]
-    [SerializeField] float viewAngle = 45f; 
+    [SerializeField] float viewAngle = 45f;
+    [SerializeField] LayerMask playerMask;
+    [SerializeField] LayerMask obstacleMask;
+
+    [Header("Rotation Settings")]
+    [SerializeField] float rotationSpeed = 5f;
 
     [Header("Firing Settings")]
     [SerializeField] float fireRate = 2.5f;
-    [SerializeField] float arrowSpeed = 10f;
-    [Range(0, 90)]
-    [SerializeField] float launchAngle = 45f; 
+    [SerializeField] GameObject arrowPrefab; // เปลี่ยนเป็น GameObject ธรรมดา
 
-    [Header("References")]
-    [SerializeField] LayerMask playerMask;
-    [NetworkPrefab] public NetworkObject arrowPrefab;
+    private Transform lockedTarget; // ใช้ Transform แทน NetworkObject
+    private float fireTimer;
 
-    float fireTime;
-
-    private void Update()
+    void Update()
     {
-        detectFire();
-    }
+        // 1. ตรวจสอบและหาเป้าหมาย
+        ValidateOrFindTarget();
 
-    void detectFire()
-    {
-        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, detectRadius, playerMask);
-
-        if (hits.Length == 0) return;
-
-        foreach (var hit in hits)
+        if (lockedTarget != null)
         {
-            if (hit.TryGetComponent<IDamageable>(out var idamage))
+            // 2. หมุนหน้าตามเป้าหมาย
+            RotateTowardsTarget();
+
+            // 3. จับเวลาและยิง
+            if (Time.time >= fireTimer)
             {
-                Vector2 dirToTarget = (hit.transform.position - transform.position).normalized;
-                if (Vector2.Angle(transform.right, dirToTarget) < viewAngle / 2f)
+                if (HasLineOfSight(lockedTarget) && IsInFiringRange())
                 {
-                    if (Time.time >= fireTime + fireRate)
-                    {
-                        //FireArrow(hit.transform);
-                        fireTime = Time.time;
-                    }
+                    FireArrow();
+                    fireTimer = Time.time + fireRate;
                 }
             }
         }
     }
 
-    public void FireArrow(Transform target)
+    private void ValidateOrFindTarget()
     {
-        if (Object.HasStateAuthority == false) return;
+        if (lockedTarget != null)
+        {
+            float dist = Vector2.Distance(transform.position, lockedTarget.position);
+            if (dist > detectRadius || !HasLineOfSight(lockedTarget))
+            {
+                lockedTarget = null;
+            }
+        }
 
-        Vector2 direction = (target.position - transform.position).normalized;
-        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
-        Quaternion rotation = Quaternion.Euler(0, 0, angle);
+        if (lockedTarget == null)
+        {
+            Collider2D hit = Physics2D.OverlapCircle(transform.position, detectRadius, playerMask);
+            if (hit != null)
+            {
+                if (HasLineOfSight(hit.transform))
+                {
+                    lockedTarget = hit.transform;
+                }
+            }
+        }
+    }
 
-        GameManager.Instance.ProjectileSpawn(arrowPrefab, transform.position, direction, rotation);
+    private bool HasLineOfSight(Transform target)
+    {
+        Vector2 direction = (Vector2)target.position - (Vector2)transform.position;
+        float distance = direction.magnitude;
+
+        // ขยับจุดเริ่ม Raycast ออกมา 0.6 หน่วยเพื่อไม่ให้ชนตัวเอง
+        Vector2 startPos = (Vector2)transform.position + ((Vector2)transform.right * 0.6f);
+        RaycastHit2D hit = Physics2D.Raycast(startPos, direction.normalized, distance - 0.6f, obstacleMask);
+
+        return hit.collider == null;
+    }
+
+    private void RotateTowardsTarget()
+    {
+        Vector2 direction = (Vector2)lockedTarget.position - (Vector2)transform.position;
+        float targetAngle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+        Quaternion targetRotation = Quaternion.Euler(0, 0, targetAngle);
+        transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
+    }
+
+    private bool IsInFiringRange()
+    {
+        Vector2 dirToTarget = ((Vector2)lockedTarget.position - (Vector2)transform.position).normalized;
+        return Vector2.Angle(transform.right, dirToTarget) < viewAngle / 2f;
+    }
+
+    private void FireArrow()
+    {
+        if (arrowPrefab == null) return;
+        // ใช้ Instantiate ปกติ
+        Instantiate(arrowPrefab, transform.position + (transform.right * 0.5f), transform.rotation);
     }
 
     private void OnDrawGizmosSelected()
@@ -64,10 +103,9 @@ public class TrapArrow : NetworkBehaviour
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, detectRadius);
         Vector3 rightDir = transform.right;
-        Vector3 upperBoundary = Quaternion.Euler(0, 0, viewAngle / 2f) * rightDir;
-        Vector3 lowerBoundary = Quaternion.Euler(0, 0, -viewAngle / 2f) * rightDir;
-
-        Gizmos.DrawLine(transform.position, transform.position + upperBoundary * detectRadius);
-        Gizmos.DrawLine(transform.position, transform.position + lowerBoundary * detectRadius);
+        Vector3 upper = Quaternion.Euler(0, 0, viewAngle / 2f) * rightDir;
+        Vector3 lower = Quaternion.Euler(0, 0, -viewAngle / 2f) * rightDir;
+        Gizmos.DrawLine(transform.position, transform.position + upper * detectRadius);
+        Gizmos.DrawLine(transform.position, transform.position + lower * detectRadius);
     }
 }
