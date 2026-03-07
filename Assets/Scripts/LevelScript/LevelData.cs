@@ -25,6 +25,7 @@ public class LevelData : MonoBehaviour
     public GameObject[] bearTraps;
     public GameObject[] jellyfishes;
     public GameObject[] pressureAndPulls;
+    public GameObject[] iceTraps;
 
     private void Start()
     {

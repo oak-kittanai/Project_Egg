@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 4327024120583160988}
   - component: {fileID: 5080697295294909637}
   - component: {fileID: 3533914830962055626}
+  - component: {fileID: 7732057707125300726}
   m_Layer: 0
   m_Name: Trap_Ice
   m_TagString: Untagged
@@ -106,6 +107,25 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &7732057707125300726
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 992113258163840892}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
+  SortKey: 2404361487
+  ObjectInterest: 1
+  Flags: 262145
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: 5080697295294909637}
+  ForceRemoteRenderTimeframe: 0
 --- !u!1 &7256360383550570494
 GameObject:
   m_ObjectHideFlags: 0
