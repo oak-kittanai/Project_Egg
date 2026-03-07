@@ -155,7 +155,7 @@ public class GameManager : SingletonNetwork<GameManager>
         if (!activePlayers.Contains(player))
         {
             activePlayers.Add(player);
-            Debug.Log($"[GameManager] Player {player.Object.Id} รายงานตัว!");
+            Debug.Log($"[GameManager] Player {player.Object.Id} Has Joined");
         }
     }
     public void SetupLevelData(LevelData data)
@@ -166,8 +166,6 @@ public class GameManager : SingletonNetwork<GameManager>
 
         // door for event
         currentExitDoor = data.mainExitDoor;
-
-        Debug.Log("[GameManager] ได้รับข้อมูลด่านเรียบร้อยแล้ว!");
     }
 }
 
