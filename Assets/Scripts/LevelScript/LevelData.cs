@@ -12,6 +12,19 @@ public class LevelData : MonoBehaviour
     [Header("UI")]
     public GameObject loadingScreenUI;
 
+    [Header("Platforms")]
+    public GameObject[] movingPlatforms;
+    public GameObject[] timeLimitedPlatforms;
+
+    [Header("Interact Objects")]
+    public GameObject[] holdStepButtons;
+    public GameObject[] rockTriggerDoors;
+
+    [Header("Traps")]
+    public GameObject[] bearTraps;
+    public GameObject[] jellyfishes;
+    public GameObject[] pressureAndPulls;
+
     private void Start()
     {
         if (GameManager.Instance != null)
