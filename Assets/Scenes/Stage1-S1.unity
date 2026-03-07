@@ -3957,6 +3957,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: JellyTrap (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 7167900166808362576, guid: 8b907817a0eedd34887acd4737b1eb24, type: 3}
+      propertyPath: SortKey
+      value: 163072890
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -6863,9 +6867,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TrapPressure
   pushForce: 40
-  _isActive: 1
-  _isRevers: 0
-  currentDirection: {x: 0, y: 0}
+  __isActive:
+    _value: 0
+  __isRevers:
+    _value: 0
   defaultDirection: {x: 0, y: 0}
   anim: {fileID: 0}
 --- !u!212 &333882557
@@ -14871,7 +14876,7 @@ PrefabInstance:
     - target: {fileID: 2790486429633427667, guid: eef2675190ce46547ade4f9e14c295d1, type: 3}
       propertyPath: targetDoor
       value: 
-      objectReference: {fileID: 1055415218}
+      objectReference: {fileID: 2133065744}
     - target: {fileID: 2790486429633427667, guid: eef2675190ce46547ade4f9e14c295d1, type: 3}
       propertyPath: pressedSprite
       value: 
@@ -15492,9 +15497,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TrapPressure
   pushForce: 40
-  _isActive: 1
-  _isRevers: 0
-  currentDirection: {x: 0, y: 0}
+  __isActive:
+    _value: 0
+  __isRevers:
+    _value: 0
   defaultDirection: {x: 0, y: 0}
   anim: {fileID: 0}
 --- !u!212 &591836434
@@ -17510,17 +17516,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: db5f92de198f1dd48af3537447d5f8d4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TrapArrow
-  detectRadius: 5
-  viewAngle: 45
-  playerMask:
-    serializedVersion: 2
-    m_Bits: 128
-  obstacleMask:
-    serializedVersion: 2
-    m_Bits: 0
-  rotationSpeed: 5
-  fireRate: 2.5
-  arrowPrefab: {fileID: 0}
 --- !u!1 &676584659
 GameObject:
   m_ObjectHideFlags: 0
@@ -21249,6 +21244,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 137.512
       objectReference: {fileID: 0}
+    - target: {fileID: 5271518675147485758, guid: ddfcc09ed43d46a458a0d95cf81815af, type: 3}
+      propertyPath: SortKey
+      value: 1168992713
+      objectReference: {fileID: 0}
     - target: {fileID: 5304418185427679846, guid: ddfcc09ed43d46a458a0d95cf81815af, type: 3}
       propertyPath: m_Name
       value: Trap_Pull
@@ -21963,6 +21962,10 @@ PrefabInstance:
       propertyPath: targetDoor
       value: 
       objectReference: {fileID: 1695386074}
+    - target: {fileID: 7209394276222256675, guid: d55942ff4ffe7a74a95783ed0daabe20, type: 3}
+      propertyPath: triggerLayers.m_Bits
+      value: 128
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -73661,17 +73664,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 3003302654978856556, guid: 55dcad44a46fc0a42b5ba9142713baf7, type: 3}
   m_PrefabInstance: {fileID: 4659453936359462772}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1055415218 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 6812101765118846676, guid: 55dcad44a46fc0a42b5ba9142713baf7, type: 3}
-  m_PrefabInstance: {fileID: 4659453936359462772}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6fa6ff26770eb2f4f95c520747c9c759, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Interact_Door
 --- !u!1 &1060264154
 GameObject:
   m_ObjectHideFlags: 0
@@ -73903,6 +73895,10 @@ PrefabInstance:
     - target: {fileID: 5551655724824992466, guid: 8b907817a0eedd34887acd4737b1eb24, type: 3}
       propertyPath: m_Name
       value: JellyTrap (3)
+      objectReference: {fileID: 0}
+    - target: {fileID: 7167900166808362576, guid: 8b907817a0eedd34887acd4737b1eb24, type: 3}
+      propertyPath: SortKey
+      value: 2125697933
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -74800,17 +74796,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: db5f92de198f1dd48af3537447d5f8d4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TrapArrow
-  detectRadius: 5
-  viewAngle: 45
-  playerMask:
-    serializedVersion: 2
-    m_Bits: 128
-  obstacleMask:
-    serializedVersion: 2
-    m_Bits: 0
-  rotationSpeed: 5
-  fireRate: 3.5
-  arrowPrefab: {fileID: 0}
 --- !u!212 &1092032272
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -76660,6 +76645,10 @@ PrefabInstance:
     - target: {fileID: 5551655724824992466, guid: 8b907817a0eedd34887acd4737b1eb24, type: 3}
       propertyPath: m_Name
       value: JellyTrap (4)
+      objectReference: {fileID: 0}
+    - target: {fileID: 7167900166808362576, guid: 8b907817a0eedd34887acd4737b1eb24, type: 3}
+      propertyPath: SortKey
+      value: 2176586718
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -90091,6 +90080,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -90.089
       objectReference: {fileID: 0}
+    - target: {fileID: 4813129708222591706, guid: d0ecb097aec7dd94c8169e7f4a41779a, type: 3}
+      propertyPath: SortKey
+      value: 2860934442
+      objectReference: {fileID: 0}
     - target: {fileID: 7196536560358233384, guid: d0ecb097aec7dd94c8169e7f4a41779a, type: 3}
       propertyPath: m_Name
       value: Trap_Pressure (1)
@@ -90136,7 +90129,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LevelData
   startingSpawnPosition: {x: 0, y: 0, z: 0}
   levelCheckPoints: []
-  mainExitDoor: {fileID: 0}
   loadingScreenUI: {fileID: 0}
   movingPlatforms: []
   timeLimitedPlatforms: []
@@ -97259,6 +97251,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: JellyTrap (2)
       objectReference: {fileID: 0}
+    - target: {fileID: 7167900166808362576, guid: 8b907817a0eedd34887acd4737b1eb24, type: 3}
+      propertyPath: SortKey
+      value: 2637229069
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -97921,6 +97917,7 @@ GameObject:
   - component: {fileID: 1695386074}
   - component: {fileID: 1695386076}
   - component: {fileID: 1695386075}
+  - component: {fileID: 1695386078}
   m_Layer: 0
   m_Name: door Horizontal_0 (2)
   m_TagString: Untagged
@@ -98062,6 +98059,25 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1264675415}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1695386078
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1695386073}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
+  SortKey: 1468633740
+  ObjectInterest: 1
+  Flags: 262145
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: 1695386074}
+  ForceRemoteRenderTimeframe: 0
 --- !u!1 &1695534719
 GameObject:
   m_ObjectHideFlags: 0
@@ -100176,6 +100192,7 @@ GameObject:
   - component: {fileID: 1781638880}
   - component: {fileID: 1781638878}
   - component: {fileID: 1781638877}
+  - component: {fileID: 1781638881}
   m_Layer: 0
   m_Name: door Horizontal_0 (4)
   m_TagString: Untagged
@@ -100318,6 +100335,25 @@ MonoBehaviour:
   distance: 3
   isVertical: 0
   requiredButtons: 2
+--- !u!114 &1781638881
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1781638875}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
+  SortKey: 2514071655
+  ObjectInterest: 1
+  Flags: 262145
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: 1781638880}
+  ForceRemoteRenderTimeframe: 0
 --- !u!1 &1781914641
 GameObject:
   m_ObjectHideFlags: 0
@@ -134374,6 +134410,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -137.512
       objectReference: {fileID: 0}
+    - target: {fileID: 4813129708222591706, guid: d0ecb097aec7dd94c8169e7f4a41779a, type: 3}
+      propertyPath: SortKey
+      value: 3734836079
+      objectReference: {fileID: 0}
     - target: {fileID: 7196536560358233384, guid: d0ecb097aec7dd94c8169e7f4a41779a, type: 3}
       propertyPath: m_Name
       value: Trap_Pressure
@@ -136458,6 +136498,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5271518675147485758, guid: ddfcc09ed43d46a458a0d95cf81815af, type: 3}
+      propertyPath: SortKey
+      value: 477152985
+      objectReference: {fileID: 0}
     - target: {fileID: 5304418185427679846, guid: ddfcc09ed43d46a458a0d95cf81815af, type: 3}
       propertyPath: m_Name
       value: Trap_Pull
@@ -136519,6 +136563,10 @@ PrefabInstance:
     - target: {fileID: 1335487888378682953, guid: 2f15a8ef23706964b8584732f8cd6c47, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6771285338271012133, guid: 2f15a8ef23706964b8584732f8cd6c47, type: 3}
+      propertyPath: SortKey
+      value: 1169062202
       objectReference: {fileID: 0}
     - target: {fileID: 8962584722424341302, guid: 2f15a8ef23706964b8584732f8cd6c47, type: 3}
       propertyPath: m_Name
@@ -136695,6 +136743,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: JellyTrap
       objectReference: {fileID: 0}
+    - target: {fileID: 7167900166808362576, guid: 8b907817a0eedd34887acd4737b1eb24, type: 3}
+      propertyPath: SortKey
+      value: 3391174
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -136750,6 +136802,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1264675415}
     m_Modifications:
+    - target: {fileID: 1584627010063421241, guid: 4c7f1b54e49a758449704e7dfa37e2fd, type: 3}
+      propertyPath: SortKey
+      value: 1526577
+      objectReference: {fileID: 0}
     - target: {fileID: 3861463902620192890, guid: 4c7f1b54e49a758449704e7dfa37e2fd, type: 3}
       propertyPath: targetTrap
       value: 
@@ -136811,6 +136867,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1264675415}
     m_Modifications:
+    - target: {fileID: 2347817001745298528, guid: 55dcad44a46fc0a42b5ba9142713baf7, type: 3}
+      propertyPath: SortKey
+      value: 3754021291
+      objectReference: {fileID: 0}
     - target: {fileID: 3003302654978856556, guid: 55dcad44a46fc0a42b5ba9142713baf7, type: 3}
       propertyPath: m_LocalPosition.x
       value: 54.1492
@@ -136896,6 +136956,14 @@ PrefabInstance:
       propertyPath: targetTrap
       value: 
       objectReference: {fileID: 1758305830}
+    - target: {fileID: 1931994600269574352, guid: 9a64d1fabbd48b4408b0813f71d8e08a, type: 3}
+      propertyPath: SortKey
+      value: 349002912
+      objectReference: {fileID: 0}
+    - target: {fileID: 1931994600269574352, guid: 9a64d1fabbd48b4408b0813f71d8e08a, type: 3}
+      propertyPath: NetworkedBehaviours.Array.size
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8465274526444478857, guid: 9a64d1fabbd48b4408b0813f71d8e08a, type: 3}
       propertyPath: m_LocalPosition.x
       value: -32.91
@@ -137225,6 +137293,10 @@ PrefabInstance:
     - target: {fileID: 2574183789542456464, guid: d0ecb097aec7dd94c8169e7f4a41779a, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4813129708222591706, guid: d0ecb097aec7dd94c8169e7f4a41779a, type: 3}
+      propertyPath: SortKey
+      value: 3113115587
       objectReference: {fileID: 0}
     - target: {fileID: 7196536560358233384, guid: d0ecb097aec7dd94c8169e7f4a41779a, type: 3}
       propertyPath: m_Name
