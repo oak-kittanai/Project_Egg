@@ -24,14 +24,13 @@ public class BToggle_Interact_Door : NetworkBehaviour
         // Player Check
         if (collision.CompareTag("Player") || collision.CompareTag("Box"))
         {
-            isToggled = true; // อยากเหยียบซ้ำก็มาเปลี่ยนเอา <3
+            isToggled = true;
             UpdateState();
         }
     }
 
     private void UpdateState()
     {
-        // Sprite ปุ่ม
         if (spriteRenderer != null)
         {
             spriteRenderer.sprite = isToggled ? pressed : unpressed;

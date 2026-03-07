@@ -75,6 +75,10 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     public float interactRadius = 1.5f;
     public float playerInteractRadius = 1f;
 
+    [Header("I-Frames")]
+    [Networked] private TickTimer InvincibleTimer { get; set; }
+    [SerializeField] private float invincibleDuration = 1.5f;
+
     private void Awake()
     {
         if (stats == null) stats = GetComponent<CharacterStats>();
@@ -100,7 +104,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     public void TakeDamage(int dmg, float knockbackForce, Vector2 vec)
     {
-        if (isDead) return;
+
+        if (isDead || !InvincibleTimer.ExpiredOrNotRunning(Runner)) return;
 
         currentHealth -= dmg;
         cAnimation.SmashAnimation();
@@ -111,6 +116,10 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         if (currentHealth <= characterMinHealth)
         {
             Die();
+        }
+        else
+        {
+            InvincibleTimer = TickTimer.CreateFromSeconds(Runner, invincibleDuration);
         }
     }
 

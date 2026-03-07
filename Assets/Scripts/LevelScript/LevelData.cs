@@ -7,7 +7,7 @@ public class LevelData : MonoBehaviour
     public CheckPoint[] levelCheckPoints;
 
     [Header("Important Objects")]
-    public NetworkDoor mainExitDoor; // to go next map
+    //public NetworkDoor mainExitDoor; // to go next map
 
     [Header("UI")]
     public GameObject loadingScreenUI;

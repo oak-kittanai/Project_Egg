@@ -148,7 +148,7 @@ public class GameManager : SingletonNetwork<GameManager>
     public List<MovementCharacter> activePlayers = new List<MovementCharacter>();
 
     [SerializeField] public CheckPoint[] checkPoints;
-    public NetworkDoor currentExitDoor;
+    //public NetworkDoor currentExitDoor;
 
     public void RegisterPlayer(MovementCharacter player)
     {
@@ -165,8 +165,15 @@ public class GameManager : SingletonNetwork<GameManager>
         checkPoints = data.levelCheckPoints;
 
         // door for event
-        currentExitDoor = data.mainExitDoor;
+        //currentExitDoor = data.mainExitDoor;
     }
+
+
+    [Header("Team Inventory")]
+    [Networked] public NetworkBool TeamHasOrangeStone { get; set; }
+    [Networked] public NetworkBool TeamHasBlueStone { get; set; }
+
+
 }
 
 [System.Serializable]
