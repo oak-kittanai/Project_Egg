@@ -18,6 +18,7 @@ public class LevelData : MonoBehaviour
 
     [Header("Interact Objects")]
     public GameObject[] holdStepButtons;
+    public GameObject[] toggleStepButtons;
     public GameObject[] rockTriggerDoors;
 
     [Header("Traps")]
