@@ -1,6 +1,7 @@
+using Fusion;
 using UnityEngine;
 
-public class FloatingItem : MonoBehaviour
+public class FloatingItem : NetworkBehaviour
 {
     [Header("Floating Settings")]
     [Range(0f, 100f)]

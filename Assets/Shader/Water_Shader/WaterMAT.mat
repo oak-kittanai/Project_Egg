@@ -59,6 +59,8 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _BUILTIN_QueueControl: -1
+    - _BUILTIN_QueueOffset: 0
     - _BodyTransparency: 0
     - _CausticOffsetSpeed: 1
     - _CausticPower: 9.5
@@ -68,7 +70,7 @@ Material:
     - _DistortionScale: 30
     - _DistortionStength: 0.0025
     - _Float: 0
-    - _LineLenght: 0.985
+    - _LineLenght: 1
     - _QueueControl: 0
     - _QueueOffset: 0
     - _WaveCount: 0.75
@@ -76,11 +78,24 @@ Material:
     - _WaveSize: 0.05
     - _WaveSpeed: 4
     m_Colors:
-    - _BodyColor: {r: 0.09189212, g: 0.19750842, b: 0.5566038, a: 1}
+    - _BodyColor: {r: 0.0918921, g: 0.1975084, b: 0.5566037, a: 1}
     - _CausticColor: {r: 0.2588235, g: 0.40012208, b: 1, a: 1}
     - _CausticScrollDir: {r: 0.045, g: 0, b: 0, a: 0}
     - _CausticTiling: {r: 0.5, g: 1.5, b: 0, a: 0}
     - _DistortionDir: {r: 0.05, g: 0, b: 0, a: 0}
-    - _LineColor: {r: 0.15508187, g: 0.29984295, b: 0.8018868, a: 1}
+    - _LineColor: {r: 0.15508184, g: 0.29984292, b: 0.8018868, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
+--- !u!114 &8841990837990352943
+MonoBehaviour:
+  m_ObjectHideFlags: 11
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 639247ca83abc874e893eb93af2b5e44, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.ShaderGraph.Editor::UnityEditor.Rendering.BuiltIn.AssetVersion
+  version: 0
