@@ -3,8 +3,8 @@ using UnityEngine;
 
 public class SingletonNetwork<T> : NetworkBehaviour where T : NetworkBehaviour
 {
-    private static T instance;
 
+    private static T instance;
     public static T Instance
     {
         get
@@ -12,10 +12,11 @@ public class SingletonNetwork<T> : NetworkBehaviour where T : NetworkBehaviour
             if (instance == null)
             {
                 instance = FindAnyObjectByType<T>();
-
                 if (instance == null)
                 {
-                    Debug.LogError($"SingletonNetwork can't find {typeof(T).Name} in scene");
+                    GameObject obj = new GameObject();
+                    obj.name = typeof(T).Name;
+                    instance = obj.AddComponent<T>();
                 }
             }
             return instance;
@@ -28,32 +29,32 @@ public class SingletonNetwork<T> : NetworkBehaviour where T : NetworkBehaviour
         {
             instance = this as T;
             DontDestroyOnLoad(gameObject);
-
-            OnSetup();
         }
-        else if (instance != this)
+        else
         {
             Destroy(gameObject);
         }
-    }
 
-    protected virtual void OnSetup()
-    {
-        if (PlayerSpawn.Instance != null)
+        if (Instance is PlayerSpawn)
         {
             PlayerSpawn.Instance.Setup();
         }
-        if (CenterHost.Instance != null)
+
+
+        if (Instance is CenterHost)
         {
             CenterHost.instance.GetRunner();
         }
-        if (SessionHub.Instance != null)
-        {
-            SessionHub.Instance.Setup();
-        }
-        if (SessionManager.Instance != null)
+
+
+        if (Instance is SessionManager)
         {
             SessionManager.Instance.Setup();
+        }
+
+        if (Instance is SessionHub)
+        {
+            SessionHub.Instance.Setup();
         }
     }
 }

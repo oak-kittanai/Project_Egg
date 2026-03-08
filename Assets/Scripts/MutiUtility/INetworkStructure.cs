@@ -171,7 +171,7 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
         //    Debug.LogWarning("Can't find CenterHost");
         //}
 
-        //Debug.Log($"Player has {player.PlayerId} Joined the session");
+        Debug.Log($"Player has {player.PlayerId} Joined the session");
     }
 
     public void OnPlayerLeft(NetworkRunner runner, PlayerRef player)

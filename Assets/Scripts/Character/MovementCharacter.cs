@@ -178,7 +178,15 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     public override void FixedUpdateNetwork()
     {
 
-        if (GameManager.Instance != null && !GameManager.Instance.IsGameReady)
+        if (GameManager.Instance != null && GameManager.Instance.Object != null && GameManager.Instance.Object.IsValid)
+        {
+            if (!GameManager.Instance.IsGameReady)
+            {
+                rb2D.linearVelocity = Vector2.zero;
+                return;
+            }
+        }
+        else
         {
             rb2D.linearVelocity = Vector2.zero;
             return;
