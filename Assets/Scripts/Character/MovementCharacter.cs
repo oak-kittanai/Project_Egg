@@ -32,6 +32,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [SerializeField] public float heavyGravity = 6.5f;
     [SerializeField] public float maxGravity = 19f;
 
+    private bool hasSetInitialPosition = false;
+
     // Falling
     [Networked] public bool IsFalling { get; set; }
     [Networked] public bool FallingBusy { get; set; }
@@ -105,8 +107,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         if (GameManager.Instance != null)
         {
             GameManager.Instance.RegisterPlayer(this);
-
-            transform.position = GameManager.Instance.GetRespawnPosition();
         }
     }
 
@@ -177,8 +177,30 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     public override void FixedUpdateNetwork()
     {
+        if (GameManager.Instance == null || GameManager.Instance.Object == null || !GameManager.Instance.Object.IsValid)
+        {
+            rb2D.linearVelocity = Vector2.zero;
+            return;
+        }
 
-        if (GameManager.Instance != null && !GameManager.Instance.IsGameReady)
+        if (!GameManager.Instance.isLoadMapDone)
+        {
+            rb2D.linearVelocity = Vector2.zero;
+            return;
+        }
+
+        if (!hasSetInitialPosition)
+        {
+            transform.position = GameManager.Instance.GetRespawnPosition();
+            hasSetInitialPosition = true;
+
+            if (HasStateAuthority)
+            {
+                GameManager.Instance.PlayerFinishedLoading();
+            }
+        }
+        
+        if (!GameManager.Instance.IsGameReady)
         {
             rb2D.linearVelocity = Vector2.zero;
             return;

@@ -14,23 +14,28 @@ public class CoopDoorManager : NetworkBehaviour
 
     public override void FixedUpdateNetwork()
     {
-        if (!HasStateAuthority) return;
+        if (!HasStateAuthority || targetDoor == null) return;
 
         bool allConditionsMet = true;
 
-        foreach (var btn in requiredStepButtons)
+        if (requiredStepButtons != null)
         {
-            if (!btn.IsPressed) allConditionsMet = false;
+            foreach (var btn in requiredStepButtons)
+            {
+                if (btn == null) continue;
+                if (!btn.IsPressed) allConditionsMet = false;
+            }
         }
 
-        foreach (var sw in requiredInteractSwitches)
+        if (requiredInteractSwitches != null)
         {
-            if (!sw.IsOn) allConditionsMet = false;
+            foreach (var sw in requiredInteractSwitches)
+            {
+                if (sw == null) continue;
+                if (!sw.IsOn) allConditionsMet = false;
+            }
         }
 
-        if (targetDoor != null && targetDoor.IsOpen != allConditionsMet)
-        {
-            targetDoor.SetDoorState(allConditionsMet);
-        }
+        targetDoor.SetDoorState(allConditionsMet);
     }
 }

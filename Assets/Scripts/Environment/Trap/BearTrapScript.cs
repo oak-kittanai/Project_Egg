@@ -50,7 +50,7 @@ public class BearTrapScript : NetworkBehaviour
     {
         if (trapAnimator != null)
         {
-            trapAnimator.SetBool("IsTriggered", IsTriggered);
+            trapAnimator.SetBool("Trigger", IsTriggered);
         }
     }
 }

@@ -14,7 +14,7 @@ AnimatorStateMachine:
     m_Position: {x: 250, y: 190, z: 0}
   - serializedVersion: 1
     m_State: {fileID: -6428815026391929382}
-    m_Position: {x: 290, y: 250, z: 0}
+    m_Position: {x: 250, y: 270, z: 0}
   m_ChildStateMachines: []
   m_AnyStateTransitions: []
   m_EntryTransitions: []
@@ -33,6 +33,9 @@ AnimatorStateTransition:
   m_PrefabAsset: {fileID: 0}
   m_Name: 
   m_Conditions:
+  - m_ConditionMode: 1
+    m_ConditionEvent: isReversed
+    m_EventTreshold: 0
   - m_ConditionMode: 1
     m_ConditionEvent: isPulling
     m_EventTreshold: 0
@@ -86,6 +89,12 @@ AnimatorController:
   m_Name: wa-we1-Sheet_0
   serializedVersion: 5
   m_AnimatorParameters:
+  - m_Name: isReversed
+    m_Type: 4
+    m_DefaultFloat: 0
+    m_DefaultInt: 0
+    m_DefaultBool: 0
+    m_Controller: {fileID: 9100000}
   - m_Name: isPulling
     m_Type: 4
     m_DefaultFloat: 0
@@ -113,6 +122,9 @@ AnimatorStateTransition:
   m_PrefabAsset: {fileID: 0}
   m_Name: 
   m_Conditions:
+  - m_ConditionMode: 2
+    m_ConditionEvent: isReversed
+    m_EventTreshold: 0
   - m_ConditionMode: 2
     m_ConditionEvent: isPulling
     m_EventTreshold: 0
