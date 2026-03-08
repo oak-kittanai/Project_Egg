@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 6343200620378497334}
   - component: {fileID: 8898757959291188084}
   - component: {fileID: 415150659783381964}
-  - component: {fileID: 7167900166808362576}
+  - component: {fileID: 441982317292356946}
   m_Layer: 0
   m_Name: JellyTrap
   m_TagString: Untagged
@@ -30,7 +30,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5551655724824992466}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 21.71357, y: -23.27767, z: 0}
   m_LocalScale: {x: 0.58458, y: 0.58458, z: 0.58458}
   m_ConstrainProportionsScale: 0
@@ -297,7 +297,7 @@ LineRenderer:
   m_UseWorldSpace: 1
   m_Loop: 0
   m_ApplyActiveColorSpace: 1
---- !u!114 &7167900166808362576
+--- !u!114 &441982317292356946
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -309,7 +309,7 @@ MonoBehaviour:
   m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
-  SortKey: 803278157
+  SortKey: 2097240634
   ObjectInterest: 1
   Flags: 262145
   NestedObjects: []

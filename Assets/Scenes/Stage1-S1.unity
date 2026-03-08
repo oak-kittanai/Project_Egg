@@ -3312,6 +3312,7 @@ GameObject:
   - component: {fileID: 168632403}
   - component: {fileID: 168632405}
   - component: {fileID: 168632404}
+  - component: {fileID: 168632406}
   m_Layer: 0
   m_Name: note
   m_TagString: Untagged
@@ -3408,6 +3409,25 @@ MonoBehaviour:
   velocity: 1
   isRotate: 1
   rotationSpeed: {x: 0, y: 30, z: 0}
+--- !u!114 &168632406
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 168632402}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
+  SortKey: 3732524944
+  ObjectInterest: 1
+  Flags: 262145
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: 168632405}
+  ForceRemoteRenderTimeframe: 0
 --- !u!1 &172463614
 GameObject:
   m_ObjectHideFlags: 0
@@ -3913,6 +3933,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1868328084}
     m_Modifications:
+    - target: {fileID: 441982317292356946, guid: 8b907817a0eedd34887acd4737b1eb24, type: 3}
+      propertyPath: SortKey
+      value: 1457035367
+      objectReference: {fileID: 0}
     - target: {fileID: 5111233697646250585, guid: 8b907817a0eedd34887acd4737b1eb24, type: 3}
       propertyPath: m_LocalPosition.x
       value: 28.95
@@ -73113,6 +73137,7 @@ GameObject:
   - component: {fileID: 1012857064}
   - component: {fileID: 1012857066}
   - component: {fileID: 1012857065}
+  - component: {fileID: 1012857067}
   m_Layer: 0
   m_Name: Key_0
   m_TagString: Untagged
@@ -73209,6 +73234,25 @@ MonoBehaviour:
   velocity: 1
   isRotate: 1
   rotationSpeed: {x: 0, y: 30, z: 0}
+--- !u!114 &1012857067
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1012857063}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
+  SortKey: 105228724
+  ObjectInterest: 1
+  Flags: 262145
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: 1012857066}
+  ForceRemoteRenderTimeframe: 0
 --- !u!1 &1018054139
 GameObject:
   m_ObjectHideFlags: 0
@@ -73852,6 +73896,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1868328084}
     m_Modifications:
+    - target: {fileID: 441982317292356946, guid: 8b907817a0eedd34887acd4737b1eb24, type: 3}
+      propertyPath: SortKey
+      value: 3419660410
+      objectReference: {fileID: 0}
     - target: {fileID: 5111233697646250585, guid: 8b907817a0eedd34887acd4737b1eb24, type: 3}
       propertyPath: m_LocalPosition.x
       value: 75.7
@@ -76602,6 +76650,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1868328084}
     m_Modifications:
+    - target: {fileID: 441982317292356946, guid: 8b907817a0eedd34887acd4737b1eb24, type: 3}
+      propertyPath: SortKey
+      value: 3470549195
+      objectReference: {fileID: 0}
     - target: {fileID: 5111233697646250585, guid: 8b907817a0eedd34887acd4737b1eb24, type: 3}
       propertyPath: m_LocalPosition.x
       value: 80.5
@@ -90130,8 +90182,8 @@ MonoBehaviour:
   startingSpawnPosition: {x: 0, y: 0, z: 0}
   levelCheckPoints: []
   loadingScreenUI: {fileID: 0}
-  movingPlatforms:
-  - {fileID: 2024668695}
+  spawnPointsInMap: []
+  movingPlatforms: []
   timeLimitedPlatforms: []
   holdStepButtons: []
   toggleStepButtons: []
@@ -97208,6 +97260,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1868328084}
     m_Modifications:
+    - target: {fileID: 441982317292356946, guid: 8b907817a0eedd34887acd4737b1eb24, type: 3}
+      propertyPath: SortKey
+      value: 3931191546
+      objectReference: {fileID: 0}
     - target: {fileID: 5111233697646250585, guid: 8b907817a0eedd34887acd4737b1eb24, type: 3}
       propertyPath: m_LocalPosition.x
       value: 35.23
@@ -136700,6 +136756,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1868328084}
     m_Modifications:
+    - target: {fileID: 441982317292356946, guid: 8b907817a0eedd34887acd4737b1eb24, type: 3}
+      propertyPath: SortKey
+      value: 1297353651
+      objectReference: {fileID: 0}
     - target: {fileID: 5111233697646250585, guid: 8b907817a0eedd34887acd4737b1eb24, type: 3}
       propertyPath: m_LocalPosition.x
       value: 23.26
@@ -136949,6 +137009,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1264675415}
     m_Modifications:
+    - target: {fileID: 1004532091978210105, guid: 9a64d1fabbd48b4408b0813f71d8e08a, type: 3}
+      propertyPath: SortKey
+      value: 2280511772
+      objectReference: {fileID: 0}
     - target: {fileID: 1046474063278495907, guid: 9a64d1fabbd48b4408b0813f71d8e08a, type: 3}
       propertyPath: m_Name
       value: Toggle_Pressure_ON/OFF

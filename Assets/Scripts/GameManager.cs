@@ -9,9 +9,12 @@ public class GameManager : SingletonNetwork<GameManager>
     [SerializeField] GameObject playerHost;
     [SerializeField] GameObject playerClient;
 
-    [SerializeField] Vector3 respawnPos;
+    [Networked] public Vector3 respawnPos { get; set; }
 
     [Header("Game Setting")]
+    [Networked] public int MapsLoadedCount { get; set; }
+    [Networked] public NetworkBool isPlayerReady { get; set; }
+    [Networked] public NetworkBool isLoadMapDone { get; set; }
     [Networked] public NetworkBool IsGameReady { get; set; }
     [Networked] public int PlayersReadyCount { get; set; }
 
@@ -31,6 +34,13 @@ public class GameManager : SingletonNetwork<GameManager>
         NetworkRunner = networkRunner;
     }
 
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    private void RPC_PlayerFinishedLoading()
+    {
+        PlayersReadyCount++;
+        CheckGameStart();
+    }
+
     public void PlayerFinishedLoading()
     {
         if (HasStateAuthority)
@@ -45,18 +55,46 @@ public class GameManager : SingletonNetwork<GameManager>
     }
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    private void RPC_PlayerFinishedLoading()
+    private void RPC_MapFinishedLoading()
     {
-        PlayersReadyCount++;
-        CheckGameStart();
+        MapsLoadedCount++;
+        CheckMapLoading();
+    }
+    public void MapFinishedLoading()
+    {
+        if (HasStateAuthority)
+        {
+            MapsLoadedCount++;
+            CheckMapLoading();
+        }
+        else
+        {
+            RPC_MapFinishedLoading();
+        }
+    }
+
+    private void CheckMapLoading()
+    {
+        if (MapsLoadedCount >= 2 && !isLoadMapDone)
+        {
+            isLoadMapDone = true;
+            Debug.Log("Map Ready");
+            CheckGameStart();
+        }
     }
 
     private void CheckGameStart()
     {
-        if (PlayersReadyCount >= 2)
+        if (PlayersReadyCount >= 2 && !isPlayerReady)
+        {
+            isPlayerReady = true;
+            Debug.Log("Player Ready");
+        }
+
+        if (isPlayerReady && isLoadMapDone && !IsGameReady)
         {
             IsGameReady = true;
-            Debug.Log("Ready To Play");
+            Debug.Log("All Ready! Game Start!");
         }
     }
 
@@ -75,7 +113,22 @@ public class GameManager : SingletonNetwork<GameManager>
 
     public void UpdateRespawnPos(Vector3 newPos)
     {
+        if (HasStateAuthority)
+        {
+            respawnPos = newPos;
+            Debug.Log($"Checkpoint try to update new Pos: {newPos}");
+        }
+        else
+        {
+            RPC_UpdateRespawnPos(newPos);
+        }
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    private void RPC_UpdateRespawnPos(Vector3 newPos)
+    {
         respawnPos = newPos;
+        Debug.Log($"Host confirm Checkpoint update new Pos: {newPos}");
     }
 
     // Key
@@ -144,11 +197,10 @@ public class GameManager : SingletonNetwork<GameManager>
     }
 
     // LoadLevel & Player
-
     public List<MovementCharacter> activePlayers = new List<MovementCharacter>();
 
     [SerializeField] public CheckPoint[] checkPoints;
-    //public NetworkDoor currentExitDoor;
+    //public NetworkDoor currentExitDoor; 
 
     public void RegisterPlayer(MovementCharacter player)
     {
@@ -160,12 +212,15 @@ public class GameManager : SingletonNetwork<GameManager>
     }
     public void SetupLevelData(LevelData data)
     {
-        UpdateRespawnPos(data.startingSpawnPosition);
+        if (data.SpawnPosition != null)
+        {
+            UpdateRespawnPos(data.SpawnPosition.position);
+        }
 
         checkPoints = data.levelCheckPoints;
 
-        // door for event
-        //currentExitDoor = data.mainExitDoor;
+        currentLoadingUI = data.loadingScreenUI;
+        if (currentLoadingUI != null) currentLoadingUI.SetActive(true);
     }
 
 
@@ -173,6 +228,15 @@ public class GameManager : SingletonNetwork<GameManager>
     [Networked] public NetworkBool TeamHasOrangeStone { get; set; }
     [Networked] public NetworkBool TeamHasBlueStone { get; set; }
 
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    public void RPC_RequestAddStone(bool isOrange) 
+    {
+        if (isOrange)
+        {
+            TeamHasOrangeStone = true;
+        }
+        else TeamHasBlueStone = true; 
+    }
 
 }
 

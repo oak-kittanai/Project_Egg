@@ -9,10 +9,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8465274526444478857}
-  - component: {fileID: 1320641499352761435}
   - component: {fileID: 8414822574777445684}
   - component: {fileID: 6751136891991830922}
-  - component: {fileID: 1931994600269574352}
+  - component: {fileID: 1004532091978210105}
+  - component: {fileID: 433541000653353511}
   m_Layer: 0
   m_Name: Toggle_Pressure
   m_TagString: Untagged
@@ -29,27 +29,12 @@ Transform:
   m_GameObject: {fileID: 1046474063278495907}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -32.91, y: -14.88, z: 0}
+  m_LocalPosition: {x: 0.41, y: -2.41, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1320641499352761435
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1046474063278495907}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1d8a061b632e1e94083fb2e639be5f2d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ToggleButton_CloseTrap
-  targetTrap: {fileID: 0}
-  _isDisable:
-    _value: 0
 --- !u!212 &8414822574777445684
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -154,7 +139,7 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 0.96, y: 0.17}
   m_EdgeRadius: 0
---- !u!114 &1931994600269574352
+--- !u!114 &1004532091978210105
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -166,10 +151,27 @@ MonoBehaviour:
   m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
-  SortKey: 546912971
+  SortKey: 2478421831
   ObjectInterest: 1
   Flags: 262145
   NestedObjects: []
   NetworkedBehaviours:
-  - {fileID: 1320641499352761435}
+  - {fileID: 433541000653353511}
   ForceRemoteRenderTimeframe: 0
+--- !u!114 &433541000653353511
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1046474063278495907}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0d21b0cb00d6b0a45ac709ad7dd140b6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Toggle_Presure_Trap
+  targetTraps:
+  - {fileID: 0}
+  - {fileID: 0}
+  _isDisable:
+    _value: 0
