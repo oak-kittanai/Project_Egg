@@ -1,14 +1,9 @@
 using Fusion;
 using UnityEngine;
-
-public class CharacterStats : NetworkBehaviour, IDamageable
+public class CharacterStats : NetworkBehaviour
 {
     [Header("Ref")]
-    private Rigidbody2D rb2D;
     private CharacterAnimation cAnimation;
-
-    [Header("Networked Stats")]
-    [Networked] public int CurrentHealth { get; set; }
 
     [Header("Base Config")]
     public int s_maxHealth = 5;
@@ -20,7 +15,6 @@ public class CharacterStats : NetworkBehaviour, IDamageable
     public float s_jumpForce = 12f;
     public float acceleration = 5f;
     public float deceleration = 5f;
-
     public float s_flySpeed = 8f;
 
     [Header("Identity")]
@@ -33,34 +27,10 @@ public class CharacterStats : NetworkBehaviour, IDamageable
 
     public override void Spawned()
     {
-        rb2D = GetComponent<Rigidbody2D>();
-
         if (cAnimation != null)
         {
             cAnimation.UpdateSkin(skinType);
-            Debug.Log("UpdateSkin");
         }
         else Debug.LogError("can't find CharacterAnimation");
-
-        if (Object.HasStateAuthority)
-        {
-            CurrentHealth = s_maxHealth;
-        }
-    }
-
-    public void TakeDamage(int dmg, float knockbackForce, Vector2 vec)
-    {
-        if (Object.HasStateAuthority)
-        {
-            CurrentHealth -= dmg;
-            Debug.Log($"HP: {CurrentHealth}");
-
-            if (rb2D != null)
-            {
-                Vector2 pushDirection = ((Vector2)transform.position - vec).normalized;
-
-                rb2D.AddForce(pushDirection * knockbackForce, ForceMode2D.Impulse);
-            }
-        }
     }
 }
