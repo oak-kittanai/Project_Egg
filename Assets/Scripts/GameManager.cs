@@ -9,10 +9,9 @@ public class GameManager : SingletonNetwork<GameManager>
     [SerializeField] GameObject playerHost;
     [SerializeField] GameObject playerClient;
 
-    [SerializeField] Vector3 respawnPos;
+    [Networked] public Vector3 respawnPos { get; set; }
 
     [Header("Game Setting")]
-
     [Networked] public int MapsLoadedCount { get; set; }
     [Networked] public NetworkBool isPlayerReady { get; set; }
     [Networked] public NetworkBool isLoadMapDone { get; set; }
@@ -114,7 +113,22 @@ public class GameManager : SingletonNetwork<GameManager>
 
     public void UpdateRespawnPos(Vector3 newPos)
     {
+        if (HasStateAuthority)
+        {
+            respawnPos = newPos;
+            Debug.Log($"Checkpoint try to update new Pos: {newPos}");
+        }
+        else
+        {
+            RPC_UpdateRespawnPos(newPos);
+        }
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    private void RPC_UpdateRespawnPos(Vector3 newPos)
+    {
         respawnPos = newPos;
+        Debug.Log($"Host confirm Checkpoint update new Pos: {newPos}");
     }
 
     // Key
@@ -183,7 +197,6 @@ public class GameManager : SingletonNetwork<GameManager>
     }
 
     // LoadLevel & Player
-
     public List<MovementCharacter> activePlayers = new List<MovementCharacter>();
 
     [SerializeField] public CheckPoint[] checkPoints;
@@ -199,12 +212,15 @@ public class GameManager : SingletonNetwork<GameManager>
     }
     public void SetupLevelData(LevelData data)
     {
-        UpdateRespawnPos(data.startingSpawnPosition);
+        if (data.SpawnPosition != null)
+        {
+            UpdateRespawnPos(data.SpawnPosition.position);
+        }
 
         checkPoints = data.levelCheckPoints;
 
-        // door for event
-        //currentExitDoor = data.mainExitDoor;
+        currentLoadingUI = data.loadingScreenUI;
+        if (currentLoadingUI != null) currentLoadingUI.SetActive(true);
     }
 
 
