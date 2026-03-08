@@ -12,6 +12,9 @@ public class LevelData : MonoBehaviour
     [Header("UI")]
     public GameObject loadingScreenUI;
 
+    [Header("SpawnPoints")]
+    public GameObject[] spawnPointsInMap;
+
     [Header("Platforms")]
     public GameObject[] movingPlatforms;
     public GameObject[] timeLimitedPlatforms;
@@ -32,6 +35,8 @@ public class LevelData : MonoBehaviour
         if (GameManager.Instance != null)
         {
             GameManager.Instance.SetupLevelData(this);
+
+            GameManager.Instance.MapFinishedLoading();
         }
     }
 }

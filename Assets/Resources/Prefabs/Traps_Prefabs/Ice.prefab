@@ -47,8 +47,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dbb9051aad15ee2488a4d194453ebc4d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Trap_Ice
-  cooldownTime: 1.5
-  hitColl: {fileID: 7256360383550570494}
+  damageAmount: 1
+  knockbackForce: 5
 --- !u!212 &3533914830962055626
 SpriteRenderer:
   m_ObjectHideFlags: 0

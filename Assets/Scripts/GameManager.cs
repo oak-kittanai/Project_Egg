@@ -12,6 +12,10 @@ public class GameManager : SingletonNetwork<GameManager>
     [SerializeField] Vector3 respawnPos;
 
     [Header("Game Setting")]
+
+    [Networked] public int MapsLoadedCount { get; set; }
+    [Networked] public NetworkBool isPlayerReady { get; set; }
+    [Networked] public NetworkBool isLoadMapDone { get; set; }
     [Networked] public NetworkBool IsGameReady { get; set; }
     [Networked] public int PlayersReadyCount { get; set; }
 
@@ -31,6 +35,13 @@ public class GameManager : SingletonNetwork<GameManager>
         NetworkRunner = networkRunner;
     }
 
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    private void RPC_PlayerFinishedLoading()
+    {
+        PlayersReadyCount++;
+        CheckGameStart();
+    }
+
     public void PlayerFinishedLoading()
     {
         if (HasStateAuthority)
@@ -45,18 +56,46 @@ public class GameManager : SingletonNetwork<GameManager>
     }
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    private void RPC_PlayerFinishedLoading()
+    private void RPC_MapFinishedLoading()
     {
-        PlayersReadyCount++;
-        CheckGameStart();
+        MapsLoadedCount++;
+        CheckMapLoading();
+    }
+    public void MapFinishedLoading()
+    {
+        if (HasStateAuthority)
+        {
+            MapsLoadedCount++;
+            CheckMapLoading();
+        }
+        else
+        {
+            RPC_MapFinishedLoading();
+        }
+    }
+
+    private void CheckMapLoading()
+    {
+        if (MapsLoadedCount >= 2 && !isLoadMapDone)
+        {
+            isLoadMapDone = true;
+            Debug.Log("Map Ready");
+            CheckGameStart();
+        }
     }
 
     private void CheckGameStart()
     {
-        if (PlayersReadyCount >= 2)
+        if (PlayersReadyCount >= 2 && !isPlayerReady)
+        {
+            isPlayerReady = true;
+            Debug.Log("Player Ready");
+        }
+
+        if (isPlayerReady && isLoadMapDone && !IsGameReady)
         {
             IsGameReady = true;
-            Debug.Log("Ready To Play");
+            Debug.Log("All Ready! Game Start!");
         }
     }
 
@@ -148,7 +187,7 @@ public class GameManager : SingletonNetwork<GameManager>
     public List<MovementCharacter> activePlayers = new List<MovementCharacter>();
 
     [SerializeField] public CheckPoint[] checkPoints;
-    //public NetworkDoor currentExitDoor;
+    //public NetworkDoor currentExitDoor; 
 
     public void RegisterPlayer(MovementCharacter player)
     {
@@ -173,6 +212,15 @@ public class GameManager : SingletonNetwork<GameManager>
     [Networked] public NetworkBool TeamHasOrangeStone { get; set; }
     [Networked] public NetworkBool TeamHasBlueStone { get; set; }
 
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    public void RPC_RequestAddStone(bool isOrange) 
+    {
+        if (isOrange)
+        {
+            TeamHasOrangeStone = true;
+        }
+        else TeamHasBlueStone = true; 
+    }
 
 }
 

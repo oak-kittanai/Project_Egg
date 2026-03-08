@@ -12,11 +12,10 @@ public class SingletonNetwork<T> : NetworkBehaviour where T : NetworkBehaviour
             if (instance == null)
             {
                 instance = FindAnyObjectByType<T>();
+
                 if (instance == null)
                 {
-                    GameObject obj = new GameObject();
-                    obj.name = typeof(T).Name;
-                    instance = obj.AddComponent<T>();
+                    Debug.LogError($"SingletonNetwork can't find {typeof(T).Name} in scene");
                 }
             }
             return instance;
@@ -29,32 +28,20 @@ public class SingletonNetwork<T> : NetworkBehaviour where T : NetworkBehaviour
         {
             instance = this as T;
             DontDestroyOnLoad(gameObject);
+
+            OnSetup();
         }
-        else
+        else if (instance != this)
         {
             Destroy(gameObject);
         }
+    }
 
-        if (Instance is PlayerSpawn)
-        {
-            PlayerSpawn.Instance.Setup();
-        }
-
-        if (Instance is CenterHost)
-        {
-            CenterHost.instance.GetRunner();
-        }
-
-        if (Instance is SessionManager)
-        {
-            SessionManager.Instance.Setup();
-        }
-
-        if (Instance is SessionHub)
-        {
-            SessionHub.Instance.Setup();
-
-        }
-
+    protected virtual void OnSetup()
+    {
+        PlayerSpawn.Instance.Setup();
+        CenterHost.instance.GetRunner();
+        SessionManager.Instance.Setup();
+        SessionHub.Instance.Setup();
     }
 }
