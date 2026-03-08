@@ -91,6 +91,12 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     {
         isBird = stats.skinType == characterType.Bird;
 
+        if (stats != null)
+        {
+            characterMaxHealth = stats.s_maxHealth;
+            characterMinHealth = 0;
+        }
+
         currentHealth = characterMaxHealth;
 
         JumpCooldown = TickTimer.CreateFromSeconds(Runner, JumpCooldownTimer);
@@ -99,6 +105,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         if (GameManager.Instance != null)
         {
             GameManager.Instance.RegisterPlayer(this);
+
+            transform.position = GameManager.Instance.GetRespawnPosition();
         }
     }
 
@@ -148,12 +156,21 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         isDead = false;
         isMoveAble = true;
         currentHealth = characterMaxHealth;
+
         stilldrowning = false;
         IsHeadUnderwater = false;
         isWaterSurface = false;
+        IsFalling = false;
+        FallingBusy = false;
 
-        transform.position = GameManager.Instance.GetRespawnPosition();
         rb2D.linearVelocity = Vector2.zero;
+        rb2D.angularVelocity = 0f;
+        rb2D.gravityScale = normalGravity;
+
+        if (GameManager.Instance != null)
+        {
+            transform.position = GameManager.Instance.GetRespawnPosition();
+        }
 
         cAnimation.ReturnToBlendAnimation();
     }
