@@ -618,6 +618,18 @@ PrefabInstance:
       propertyPath: m_Name
       value: Single_Button_Door
       objectReference: {fileID: 0}
+    - target: {fileID: 7209394276222256675, guid: d55942ff4ffe7a74a95783ed0daabe20, type: 3}
+      propertyPath: sr
+      value: 
+      objectReference: {fileID: 1616162881}
+    - target: {fileID: 7209394276222256675, guid: d55942ff4ffe7a74a95783ed0daabe20, type: 3}
+      propertyPath: pressed
+      value: 
+      objectReference: {fileID: -5494015379787739270, guid: 86d7972531da7124ebb04dde0ab6790e, type: 3}
+    - target: {fileID: 7209394276222256675, guid: d55942ff4ffe7a74a95783ed0daabe20, type: 3}
+      propertyPath: unpressed
+      value: 
+      objectReference: {fileID: -9166657333119488929, guid: 46008bb0b2823894ba425a0501aacbf4, type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -1325,6 +1337,14 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6282041033302280531, guid: ef2f8192c20f48645a4e64c776334d00, type: 3}
+      propertyPath: pressed
+      value: 
+      objectReference: {fileID: -565304000334143489, guid: cc40b4108352dc74cafd22da701f003e, type: 3}
+    - target: {fileID: 6282041033302280531, guid: ef2f8192c20f48645a4e64c776334d00, type: 3}
+      propertyPath: unpressed
+      value: 
+      objectReference: {fileID: 8269517253818850575, guid: 6f3bf03246107354985734d61899bf82, type: 3}
     - target: {fileID: 7901761190229084442, guid: ef2f8192c20f48645a4e64c776334d00, type: 3}
       propertyPath: m_Name
       value: BlueButton_Coop
@@ -2116,6 +2136,22 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3432037856914768695, guid: 2f15a8ef23706964b8584732f8cd6c47, type: 3}
+      propertyPath: emptyDoor
+      value: 
+      objectReference: {fileID: -7341407202210888751, guid: 7d3f43fbf8ac95b4d94a097f1770961e, type: 3}
+    - target: {fileID: 3432037856914768695, guid: 2f15a8ef23706964b8584732f8cd6c47, type: 3}
+      propertyPath: blueStoneDoor
+      value: 
+      objectReference: {fileID: 6064695404436056443, guid: 4fd82d65399c78c4eafb91174673520b, type: 3}
+    - target: {fileID: 3432037856914768695, guid: 2f15a8ef23706964b8584732f8cd6c47, type: 3}
+      propertyPath: fullStoneDoor
+      value: 
+      objectReference: {fileID: 6170796778493073096, guid: 6776f29206124cc4ea582c6f9bd54893, type: 3}
+    - target: {fileID: 3432037856914768695, guid: 2f15a8ef23706964b8584732f8cd6c47, type: 3}
+      propertyPath: orangeStoneDoor
+      value: 
+      objectReference: {fileID: -4184110322267007368, guid: 39889451a28cafa4f85a00f129e3a92c, type: 3}
     - target: {fileID: 6771285338271012133, guid: 2f15a8ef23706964b8584732f8cd6c47, type: 3}
       propertyPath: SortKey
       value: 3099809880
@@ -2391,6 +2427,14 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2790486429633427667, guid: eef2675190ce46547ade4f9e14c295d1, type: 3}
+      propertyPath: pressed
+      value: 
+      objectReference: {fileID: -7481154837144258176, guid: 5b206e212a52e564c976a365e7203edb, type: 3}
+    - target: {fileID: 2790486429633427667, guid: eef2675190ce46547ade4f9e14c295d1, type: 3}
+      propertyPath: unpressed
+      value: 
+      objectReference: {fileID: 4631503453264377532, guid: ef6b60505819e69408be4096d5326873, type: 3}
     - target: {fileID: 7670297104376374014, guid: eef2675190ce46547ade4f9e14c295d1, type: 3}
       propertyPath: m_Name
       value: Hold_Door
@@ -2411,6 +2455,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1d24b3f49e970614e9657976ac6b3ba5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::B_Interact_Door
+--- !u!212 &1616162881 stripped
+SpriteRenderer:
+  m_CorrespondingSourceObject: {fileID: 5705644324745908338, guid: d55942ff4ffe7a74a95783ed0daabe20, type: 3}
+  m_PrefabInstance: {fileID: 468531927}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1644616362
 GameObject:
   m_ObjectHideFlags: 0
@@ -2509,6 +2558,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 2360243292909803353, guid: 04192dcdb75c61345ac57ee223598a8a, type: 3}
+      propertyPath: pressed
+      value: 
+      objectReference: {fileID: -5494015379787739270, guid: 86d7972531da7124ebb04dde0ab6790e, type: 3}
+    - target: {fileID: 2360243292909803353, guid: 04192dcdb75c61345ac57ee223598a8a, type: 3}
+      propertyPath: unpressed
+      value: 
+      objectReference: {fileID: -9166657333119488929, guid: 46008bb0b2823894ba425a0501aacbf4, type: 3}
     - target: {fileID: 2855823185204692929, guid: 04192dcdb75c61345ac57ee223598a8a, type: 3}
       propertyPath: m_LocalPosition.x
       value: -1.8648767
