@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 
 public class LevelData : MonoBehaviour
 {
@@ -27,12 +28,13 @@ public class LevelData : MonoBehaviour
     public GameObject[] pressureAndPulls;
     public GameObject[] iceTraps;
 
-    private void Start()
+    private IEnumerator Start()
     {
-        if (GameManager.Instance != null)
-        {
-            GameManager.Instance.SetupLevelData(this);
-            GameManager.Instance.MapFinishedLoading();
-        }
+        yield return new WaitUntil(() => GameManager.Instance != null);
+
+        yield return new WaitUntil(() => GameManager.Instance.Object != null && GameManager.Instance.Object.IsValid);
+
+        GameManager.Instance.SetupLevelData(this);
+        GameManager.Instance.MapFinishedLoading();
     }
 }

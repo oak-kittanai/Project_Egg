@@ -7,8 +7,6 @@ using UnityEngine.InputSystem;
 
 public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
 {
-    //[SerializeField] public PlayerSpawn spawner;
-
     #region OnConnected&Disconnected
 
     public void OnConnectedToServer(NetworkRunner runner)
@@ -158,18 +156,18 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
         }
 
         // for test
-        //if (SpawnPlayer.Instance != null)
-        //{
-        //    if (runner.IsServer)
-        //    {
-        //        SpawnPlayer.Instance.SpawnPlayerToPosition(player, runner);
-        //    }
-        //    Debug.Log("Try spawn");
-        //}
-        //else
-        //{
-        //    Debug.LogWarning("Can't find CenterHost");
-        //}
+        /*if (SpawnPlayer.Instance != null)
+        {
+            if (runner.IsServer)
+            {
+                SpawnPlayer.Instance.SpawnPlayerToPosition(player, runner);
+            }
+            Debug.Log("Try spawn");
+        }
+        else
+        {
+            Debug.LogWarning("Can't find CenterHost");
+        }*/
 
         Debug.Log($"Player has {player.PlayerId} Joined the session");
     }

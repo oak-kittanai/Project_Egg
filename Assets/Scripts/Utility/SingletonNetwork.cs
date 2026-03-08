@@ -12,11 +12,10 @@ public class SingletonNetwork<T> : NetworkBehaviour where T : NetworkBehaviour
             if (instance == null)
             {
                 instance = FindAnyObjectByType<T>();
+
                 if (instance == null)
                 {
-                    GameObject obj = new GameObject();
-                    obj.name = typeof(T).Name;
-                    instance = obj.AddComponent<T>();
+                    Debug.LogWarning($"Singleton not found : {typeof(T).Name}");
                 }
             }
             return instance;

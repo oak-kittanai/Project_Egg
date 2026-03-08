@@ -21,13 +21,6 @@ public class CenterHost : SingletonNetwork<CenterHost>
     [SerializeField] PlayerRef clientPlayer;
     [SerializeField] CharacterStats clientStats;
 
-    [Header("Check&Spawn")]
-    [SerializeField] bool doneScan;
-    [SerializeField] bool readySpawn;
-    [SerializeField] public List<ObjectTransform> ObjMoveAbleTrans = new List<ObjectTransform>();
-    [SerializeField] public List<ObjectTransform> ObjTrapTrans = new List<ObjectTransform>();
-    [SerializeField] public List<ObjectTransform> ObjEnemyTrans = new List<ObjectTransform>();
-
     [Networked] public bool RemoveOldObj { get; set; }
 
     [Networked] characterType currentHost { get; set; }
