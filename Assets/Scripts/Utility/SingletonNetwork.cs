@@ -39,9 +39,21 @@ public class SingletonNetwork<T> : NetworkBehaviour where T : NetworkBehaviour
 
     protected virtual void OnSetup()
     {
-        PlayerSpawn.Instance.Setup();
-        CenterHost.instance.GetRunner();
-        SessionManager.Instance.Setup();
-        SessionHub.Instance.Setup();
+        if (PlayerSpawn.Instance != null)
+        {
+            PlayerSpawn.Instance.Setup();
+        }
+        if (CenterHost.Instance != null)
+        {
+            CenterHost.instance.GetRunner();
+        }
+        if (SessionHub.Instance != null)
+        {
+            SessionHub.Instance.Setup();
+        }
+        if (SessionManager.Instance != null)
+        {
+            SessionManager.Instance.Setup();
+        }
     }
 }
