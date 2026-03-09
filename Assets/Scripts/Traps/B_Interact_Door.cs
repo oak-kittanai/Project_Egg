@@ -1,7 +1,7 @@
 using Fusion;
 using UnityEngine;
 
-public class B_Interact_Door : NetworkBehaviour
+public class B_Interact_Door : NetworkBehaviour, Interactable
 {
     [Header("Target Door")]
     [SerializeField] Interact_Door targetDoor;
@@ -11,7 +11,9 @@ public class B_Interact_Door : NetworkBehaviour
     [SerializeField] Sprite pressed;
 
     private SpriteRenderer spriteRenderer;
-    private int objectsOnButton = 0;
+
+    [Networked, OnChangedRender(nameof(OnSwitchToggled))]
+    public NetworkBool isToggled { get; set; }
 
     void Awake()
     {
@@ -19,36 +21,44 @@ public class B_Interact_Door : NetworkBehaviour
         if (unpressed != null) spriteRenderer.sprite = unpressed;
     }
 
-    private void OnTriggerEnter2D(Collider2D collision)
+    public override void Spawned()
     {
-        if (collision.CompareTag("Player") || collision.CompareTag("Box"))
+        UpdateStatus();
+    }
+
+    public void Interact()
+    {
+        if (HasStateAuthority)
         {
-            objectsOnButton++;
-            UpdateStatus();
+            isToggled = !isToggled;
+        }
+        else
+        {
+            RPC_ToggleSwitch();
         }
     }
 
-    private void OnTriggerExit2D(Collider2D collision)
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    private void RPC_ToggleSwitch()
     {
-        if (collision.CompareTag("Player") || collision.CompareTag("Box"))
-        {
-            objectsOnButton--;
-            UpdateStatus();
-        }
+        isToggled = !isToggled;
+    }
+
+    public void OnSwitchToggled()
+    {
+        UpdateStatus();
     }
 
     private void UpdateStatus()
     {
-        bool isDown = objectsOnButton > 0;
-
         if (spriteRenderer != null)
         {
-            spriteRenderer.sprite = isDown ? pressed : unpressed;
+            spriteRenderer.sprite = isToggled ? pressed : unpressed;
         }
 
         if (targetDoor != null)
         {
-            targetDoor.SetDoorState(isDown);
+            targetDoor.SetDoorState(isToggled);
         }
     }
 }
