@@ -6,6 +6,10 @@ public class CoopDoorManager : NetworkBehaviour
     public SlidingNetworkDoor targetDoor;
 
     [Header("Condition Setting")]
+    public bool openOnceAndStayOpen = false;
+
+    [Networked] public NetworkBool HasOpenedPermanently { get; set; }
+
     [Tooltip("StepButton")]
     public CoopStepButton[] requiredStepButtons;
 
@@ -15,6 +19,8 @@ public class CoopDoorManager : NetworkBehaviour
     public override void FixedUpdateNetwork()
     {
         if (!HasStateAuthority || targetDoor == null) return;
+
+        if (openOnceAndStayOpen && HasOpenedPermanently) return;
 
         bool allConditionsMet = true;
 
@@ -34,6 +40,11 @@ public class CoopDoorManager : NetworkBehaviour
                 if (sw == null) continue;
                 if (!sw.IsOn) allConditionsMet = false;
             }
+        }
+
+        if (allConditionsMet && openOnceAndStayOpen)
+        {
+            HasOpenedPermanently = true;
         }
 
         targetDoor.SetDoorState(allConditionsMet);

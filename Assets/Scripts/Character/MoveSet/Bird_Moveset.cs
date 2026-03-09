@@ -41,7 +41,7 @@ public class Bird_Moveset : MovementCharacter
         {
             if (Runner.TryFindObject(CarrierId, out var duckObj) && duckObj.TryGetComponent<MovementCharacter>(out var duck))
             {
-                if (duck.IsGrounded)
+                if (duck.IsGrounded || duck.isWaterSurface)
                 {
                     IsAlreadyFly = false;
                 }

@@ -6,7 +6,7 @@ public class CoopStepButton : NetworkBehaviour
     [Networked] public NetworkBool IsPressed { get; set; }
     [Networked] public int ObjectsOnPad { get; set; }
 
-    [SerializeField] public bool isSigleUse;
+    [SerializeField] public bool isSingleUse;
 
     [SerializeField] public LayerMask triggerLayers;
 
@@ -19,6 +19,8 @@ public class CoopStepButton : NetworkBehaviour
     {
         if (!HasStateAuthority) return;
 
+        if (isSingleUse && IsPressed) return;
+
         if (((1 << collision.gameObject.layer) & triggerLayers) != 0)
         {
             ObjectsOnPad++;
@@ -30,7 +32,7 @@ public class CoopStepButton : NetworkBehaviour
     {
         if (!HasStateAuthority) return;
 
-        if (isSigleUse) return;
+        if (isSingleUse) return;
 
         if (((1 << collision.gameObject.layer) & triggerLayers) != 0)
         {

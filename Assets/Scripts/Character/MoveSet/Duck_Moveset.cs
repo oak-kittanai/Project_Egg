@@ -24,6 +24,8 @@ public class Duck_Moveset : MovementCharacter
     [SerializeField] float divePhase = 0.5f;
     [SerializeField] bool onWater;
 
+    [SerializeField] float waterJumpForce = 12f;
+
     [Networked] public bool onDiving { get; set; }
     [Networked] bool onDivingControl { get; set; }
     [Networked] public bool IsAlreadyDive { get; set; }
@@ -39,6 +41,7 @@ public class Duck_Moveset : MovementCharacter
 
     [Header("Etc")]
     [Networked] public bool _wasEPressed { get; set; }
+    [Networked] public bool _wasFPressed { get; set; }
     [Networked] public bool _wasJumpPressed { get; set; }
 
     [Header("Floating Settings")]
@@ -50,33 +53,58 @@ public class Duck_Moveset : MovementCharacter
 
     protected override void OnFixedUpdateSpecific()
     {
+        bool isJumpPressed = false;
+
         if (GetInput(out NetworkInputData input))
         {
+            isJumpPressed = input.jump && !_wasJumpPressed;
+
             HandleDuckInteraction(input);
             HandleWaterLogic(input);
 
             if (isJumpAble)
             {
-                if (input.jump)
-                {
-                    isJumpingUp = true;
-                }
-                else
-                {
-                    isJumpingUp = false;
-                }
+                if (input.jump) isJumpingUp = true;
+                else isJumpingUp = false;
             }
+
+            _wasEPressed = input.Keyboard_E;
+            _wasFPressed = input.Keyboard_F;
+            _wasJumpPressed = input.jump;
         }
 
         if (isWaterSurface && !onDiving)
         {
-            onWater = true;
-            cAnimation.UpdateGroundTypeOnDuck(onWater);
+            if (!onWater)
+            {
+                onWater = true;
+                cAnimation.UpdateGroundTypeOnDuck(true);
+            }
             ReadyToDive = true;
+
+            if (isJumpPressed)
+            {
+                isJumpingUp = true;
+                rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, waterJumpForce);
+
+                if (currentWater != null)
+                {
+                    currentWater.Splash(transform.position, rb2D.mass * waterJumpForce);
+                }
+            }
         }
         else
         {
-            onWater = false;
+            if (onWater)
+            {
+                onWater = false;
+                cAnimation.UpdateGroundTypeOnDuck(false);
+            }
+        }
+
+        if (isJumpingUp && rb2D.linearVelocity.y <= 0f)
+        {
+            isJumpingUp = false;
         }
 
         HandleBuoyancy();
@@ -86,8 +114,10 @@ public class Duck_Moveset : MovementCharacter
             UpdateCarriedFriendPosition();
         }
     }
+
     private void HandleDuckInteraction(NetworkInputData input)
     {
+        // ★ ยกเพื่อน / วางเพื่อน ใช้ปุ่ม E
         bool isEPressed = input.Keyboard_E && !_wasEPressed;
 
         if (isEPressed)
@@ -163,15 +193,14 @@ public class Duck_Moveset : MovementCharacter
             return;
         }
 
-        bool isEPressed = input.Keyboard_E && !_wasEPressed;
-        bool isJumpPressed = input.jump && !_wasJumpPressed;
+        bool isFPressed = input.Keyboard_F && !_wasFPressed;
 
-        if (!isWaterSurface && isEPressed && onDiving && !IsGrounded && IsAlreadyDive)
+        if (!isWaterSurface && isFPressed && onDiving && !IsGrounded && IsAlreadyDive)
         {
             EndDivingLogic();
         }
 
-        if (isWaterSurface && isEPressed && ReadyToDive && !IsGrounded && !IsAlreadyDive)
+        if (isWaterSurface && isFPressed && ReadyToDive && !IsGrounded && !IsAlreadyDive)
         {
             if (!IsCarrying)
             {
@@ -221,9 +250,6 @@ public class Duck_Moveset : MovementCharacter
         {
             EmergencySwimup();
         }
-
-        _wasEPressed = input.Keyboard_E;
-        _wasJumpPressed = input.jump;
     }
 
     public void StartDiveLogic()
@@ -342,7 +368,9 @@ public class Duck_Moveset : MovementCharacter
 
     public void HandleBuoyancy()
     {
-        if (IsBodyOnWater && currentWater != null && !onDiving && !isJumpingUp)
+        bool isBeingLiftedByBird = IsCarrying && rb2D.linearVelocity.y > 1.5f;
+
+        if (IsBodyOnWater && currentWater != null && !onDiving && !isJumpingUp && !isBeingLiftedByBird)
         {
             isOptional = true;
             optionalGravity = 0f;
@@ -356,7 +384,7 @@ public class Duck_Moveset : MovementCharacter
 
             rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, difference * 10f);
         }
-        else if (currentWater == null || isJumpingUp || (!IsBodyOnWater && onDiving))
+        else if (currentWater == null || isJumpingUp || (!IsBodyOnWater && onDiving) || isBeingLiftedByBird)
         {
             isOptional = false;
             isSpeedoptional = false;
