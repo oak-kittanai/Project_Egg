@@ -242,6 +242,16 @@ public class GameManager : SingletonNetwork<GameManager>
 
         allowCloseUI = false;
 
+        if (data.SpawnPosition != null)
+        {
+            UpdateRespawnPos(data.SpawnPosition.position);
+        }
+        checkPoints = data.levelCheckPoints;
+    }
+
+    // Reset Loading State For Next Level
+    public void ResetLoadingStateForNextLevel()
+    {
         if (HasStateAuthority)
         {
             MapsLoadedCount = 0;
@@ -250,14 +260,7 @@ public class GameManager : SingletonNetwork<GameManager>
             isLoadMapDone = false;
             IsGameReady = false;
             LoadingSceneTimer = TickTimer.None;
-            Debug.Log("Reset Level Data for New Scene!");
         }
-
-        if (data.SpawnPosition != null)
-        {
-            UpdateRespawnPos(data.SpawnPosition.position);
-        }
-        checkPoints = data.levelCheckPoints;
     }
 
 
