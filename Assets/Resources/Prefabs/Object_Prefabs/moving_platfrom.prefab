@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 3631765083968519835}
   - component: {fileID: 2664261140314649154}
   - component: {fileID: 3408141062921567657}
+  - component: {fileID: 1628954175445214663}
   m_Layer: 10
   m_Name: moving_platfrom
   m_TagString: Untagged
@@ -29,7 +30,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 267925694483582083}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -15.06, y: -5.9, z: 0}
   m_LocalScale: {x: 0.6631269, y: 0.6631269, z: 0.6631269}
   m_ConstrainProportionsScale: 0
@@ -200,4 +201,22 @@ MonoBehaviour:
   NestedObjects: []
   NetworkedBehaviours:
   - {fileID: 7253942695205911844}
+  - {fileID: 1628954175445214663}
   ForceRemoteRenderTimeframe: 0
+--- !u!114 &1628954175445214663
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 267925694483582083}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 158639473, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkTransform
+  _stateAuthorityChangeErrorCorrectionDelta: 0
+  SyncScale: 0
+  SyncParent: 0
+  _autoAOIOverride: 1
+  DisableSharedModeInterpolation: 0

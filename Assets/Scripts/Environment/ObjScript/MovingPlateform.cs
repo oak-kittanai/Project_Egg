@@ -18,12 +18,14 @@ public class MovingPlateform : NetworkBehaviour
         rb = GetComponent<Rigidbody2D>();
 
         rb.bodyType = RigidbodyType2D.Kinematic;
-
         rb.useFullKinematicContacts = true;
     }
 
     public override void FixedUpdateNetwork()
     {
+
+        if (!HasStateAuthority) return;
+
         float movementOffset = Mathf.PingPong((float)Runner.SimulationTime * speed, distance);
         Vector3 newPosition = startPosition;
 
