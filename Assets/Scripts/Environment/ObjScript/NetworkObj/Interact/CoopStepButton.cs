@@ -7,6 +7,8 @@ public class CoopStepButton : NetworkBehaviour
     [Networked] public int ObjectsOnPad { get; set; }
 
     [SerializeField] public LayerMask triggerLayers;
+    [SerializeField] public bool isSigleUse;
+
 
     [Header("Visuals")]
     public SpriteRenderer sr;
@@ -27,6 +29,8 @@ public class CoopStepButton : NetworkBehaviour
     private void OnTriggerExit2D(Collider2D collision)
     {
         if (!HasStateAuthority) return;
+
+        if (isSigleUse) return;
 
         if (((1 << collision.gameObject.layer) & triggerLayers) != 0)
         {
