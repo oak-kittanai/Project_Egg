@@ -9,8 +9,6 @@ public class CoopStepButton : NetworkBehaviour
     [SerializeField] public bool isSigleUse;
 
     [SerializeField] public LayerMask triggerLayers;
-    [SerializeField] public bool isSigleUse;
-
 
     [Header("Visuals")]
     public SpriteRenderer sr;
