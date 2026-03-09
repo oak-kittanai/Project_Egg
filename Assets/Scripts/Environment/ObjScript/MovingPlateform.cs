@@ -23,10 +23,11 @@ public class MovingPlateform : NetworkBehaviour
 
     public override void FixedUpdateNetwork()
     {
-
         if (!HasStateAuthority) return;
 
-        float movementOffset = Mathf.PingPong((float)Runner.SimulationTime * speed, distance);
+        float sineValue = (Mathf.Sin((float)Runner.SimulationTime * speed) + 1f) / 2f;
+        float movementOffset = sineValue * distance;
+
         Vector3 newPosition = startPosition;
 
         if (isVertical)

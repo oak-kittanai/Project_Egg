@@ -125,6 +125,7 @@ MonoBehaviour:
   NestedObjects: []
   NetworkedBehaviours:
   - {fileID: 5080697295294909637}
+  - {fileID: 8190788000779945284}
   ForceRemoteRenderTimeframe: 0
 --- !u!1 &7256360383550570494
 GameObject:
@@ -231,6 +232,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DoDamage
   trapDMG: 1
+  cooldownTime: 1.5
+  damageAmount: 1
   knockbackForce: 1
 --- !u!61 &1582110076811513288
 BoxCollider2D:

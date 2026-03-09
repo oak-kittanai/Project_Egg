@@ -27,7 +27,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 764720602214330622}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: 0.000003724359, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -16.73643, y: -5.097673, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -108,7 +108,7 @@ MonoBehaviour:
   _IsActive:
     _value: 0
   gunBarrel: {fileID: 4974609732892755703}
-  detectRadius: 5
+  detectRadius: 5.5
   viewAngle: 45
   playerMask:
     serializedVersion: 2

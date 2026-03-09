@@ -22,17 +22,9 @@ public class BearTrapScript : NetworkBehaviour
 
         if (other.CompareTag("Player"))
         {
-            if (other.TryGetComponent<IDamageable>(out var damageable))
-            {
-                Vector2 knockbackDir = (other.transform.position - transform.position).normalized;
-                knockbackDir.y = 1f;
+            IsTriggered = true;
 
-                damageable.TakeDamage(damageAmount, knockbackForce, knockbackDir.normalized);
-
-                CooldownTimer = TickTimer.CreateFromSeconds(Runner, cooldownTime);
-
-                IsTriggered = true;
-            }
+            CooldownTimer = TickTimer.CreateFromSeconds(Runner, cooldownTime);
         }
     }
 

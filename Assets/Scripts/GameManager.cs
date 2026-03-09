@@ -20,7 +20,7 @@ public class GameManager : SingletonNetwork<GameManager>
 
     [Header("Time Delay")]
     [Networked] TickTimer LoadingSceneTimer { get; set; }
-    [SerializeField] float loadingSceneCooldown = 2f;
+    [SerializeField] float loadingSceneCooldown = 7f;
 
     // Loading scene
     private GameObject currentLoadingUI;
@@ -231,15 +231,25 @@ public class GameManager : SingletonNetwork<GameManager>
     }
     public void SetupLevelData(LevelData data)
     {
+        currentLoadingUI = data.loadingScreenUI;
+        if (currentLoadingUI != null) currentLoadingUI.SetActive(true);
+
+        if (HasStateAuthority)
+        {
+            MapsLoadedCount = 0;
+            PlayersReadyCount = 0;
+            isPlayerReady = false;
+            isLoadMapDone = false;
+            IsGameReady = false;
+            LoadingSceneTimer = TickTimer.None;
+            Debug.Log("Reset Level Data for New Scene!");
+        }
+
         if (data.SpawnPosition != null)
         {
             UpdateRespawnPos(data.SpawnPosition.position);
         }
-
         checkPoints = data.levelCheckPoints;
-
-        currentLoadingUI = data.loadingScreenUI;
-        if (currentLoadingUI != null) currentLoadingUI.SetActive(true);
     }
 
 

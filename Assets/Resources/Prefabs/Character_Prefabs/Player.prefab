@@ -339,7 +339,7 @@ MonoBehaviour:
   isMoveAble: 0
   resetAnimation: 0
   isJumping: 0
-  JumpCooldownTimer: 2
+  JumpCooldownTimer: 1.4
   isSpeedoptional: 0
   normalGravity: 2
   heavyGravity: 5.5
@@ -357,7 +357,6 @@ MonoBehaviour:
   _isDead: 0
   respawnCooldown: 3
   canbeRespawn: 1
-  IsInWind: 0
   _IsHeadUnderwater: 0
   _IsBodyOnWater: 0
   headOffset: 0.2
@@ -440,7 +439,6 @@ MonoBehaviour:
   _isDead: 0
   respawnCooldown: 3
   canbeRespawn: 1
-  IsInWind: 0
   _IsHeadUnderwater: 0
   _IsBodyOnWater: 0
   headOffset: 0.2
@@ -708,7 +706,7 @@ Camera:
   field of view: 60
   orthographic: 1
   orthographic size: 4
-  m_Depth: -1
+  m_Depth: 1
   m_CullingMask:
     serializedVersion: 2
     m_Bits: 4294967295
