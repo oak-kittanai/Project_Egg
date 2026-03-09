@@ -6,6 +6,8 @@ public class CoopStepButton : NetworkBehaviour
     [Networked] public NetworkBool IsPressed { get; set; }
     [Networked] public int ObjectsOnPad { get; set; }
 
+    [SerializeField] public bool isSigleUse;
+
     [SerializeField] public LayerMask triggerLayers;
     [SerializeField] public bool isSigleUse;
 
