@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEditor;
 
+# if UNITY_EDITOR
 [CustomEditor(typeof(NetworkInteractableWater))]
 public class NetworkInteractableWaterEditor : Editor
 {
@@ -74,3 +75,4 @@ public class NetworkInteractableWaterEditor : Editor
         }
     }
 }
+#endif

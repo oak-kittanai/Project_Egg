@@ -18,7 +18,7 @@ public class WaterTrigger : MonoBehaviour
         Rigidbody2D rb = collision.GetComponent<Rigidbody2D>();
         if (rb != null)
         {
-            float fallVelocity = rb.velocity.y;
+            float fallVelocity = rb.linearVelocityY;
 
             float impactForce = fallVelocity * rb.mass;
 
