@@ -24,6 +24,7 @@ public class GameManager : SingletonNetwork<GameManager>
 
     // Loading scene
     private GameObject currentLoadingUI;
+    private bool allowCloseUI = false;
 
     [Networked] public bool gameOver { get; set; }
     [Networked] public int TeamKeys { get; set; }
@@ -119,7 +120,12 @@ public class GameManager : SingletonNetwork<GameManager>
 
     public override void Render()
     {
-        if (IsGameReady && currentLoadingUI != null && currentLoadingUI.activeSelf)
+        if (!IsGameReady)
+        {
+            allowCloseUI = true;
+        }
+
+        if (allowCloseUI && IsGameReady && currentLoadingUI != null && currentLoadingUI.activeSelf)
         {
             currentLoadingUI.SetActive(false);
         }
@@ -233,6 +239,8 @@ public class GameManager : SingletonNetwork<GameManager>
     {
         currentLoadingUI = data.loadingScreenUI;
         if (currentLoadingUI != null) currentLoadingUI.SetActive(true);
+
+        allowCloseUI = false;
 
         if (HasStateAuthority)
         {

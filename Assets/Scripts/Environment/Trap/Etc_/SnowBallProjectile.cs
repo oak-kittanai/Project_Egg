@@ -38,7 +38,7 @@ public class SnowBallProjectile : NetworkBehaviour
         }
     }
 
-    private void OnCollisionEnter2D(Collision2D collision)
+    private void OnTriggerEnter2D(Collider2D collision)
     {
         if (!HasStateAuthority) return;
 
@@ -51,8 +51,12 @@ public class SnowBallProjectile : NetworkBehaviour
                 damageable.TakeDamage(damageAmount, knockbackForce, knockbackDir.normalized);
             }
             DespawnSnowball();
-            return;
         }
+    }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (!HasStateAuthority) return;
 
         int layer = collision.gameObject.layer;
         if (layer == LayerMask.NameToLayer("Ground") || layer == LayerMask.NameToLayer("Platform"))

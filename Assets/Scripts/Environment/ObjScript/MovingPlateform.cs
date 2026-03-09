@@ -7,7 +7,7 @@ public class MovingPlateform : NetworkBehaviour
     [Header("Movement State")]
     [SerializeField] float speed = 1.5f;
     [SerializeField] float distance = 4f;
-    [SerializeField] bool isVertical = false;
+    [SerializeField] bool isVertical;
 
     private Vector3 startPosition;
     private Rigidbody2D rb;
