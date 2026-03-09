@@ -246,7 +246,32 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         {
             float targetSpeed = input.horizontal * stats.maxSpeed;
             float currentSpeed = rb2D.linearVelocity.x;
-            float accelRate = isSpeedoptional ? (Mathf.Abs(targetSpeed) > 0.01f ? accelerationSpeedOptional : decelerationSpeedOptional) : (Mathf.Abs(targetSpeed) > 0.01f ? stats.acceleration : stats.deceleration);
+
+            float accelRate = 0;
+
+            if (isSpeedoptional)
+            {
+                if (Mathf.Abs(targetSpeed) > 0.01f)
+                {
+                    accelRate = accelerationSpeedOptional;
+                }
+                else
+                {
+                    accelRate = decelerationSpeedOptional;
+                }
+            }
+            else
+            {
+                if (Mathf.Abs(targetSpeed) > 0.01f)
+                {
+                    accelRate = stats.acceleration;
+                }
+                else
+                {
+                    accelRate = stats.deceleration;
+                }
+            }
+
             float speedDif = targetSpeed - currentSpeed;
 
             rb2D.AddForce(Vector2.right * (speedDif * accelRate));

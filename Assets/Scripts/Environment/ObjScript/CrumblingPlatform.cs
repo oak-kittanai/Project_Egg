@@ -1,78 +1,83 @@
+﻿using Fusion;
 using UnityEngine;
-using System.Collections;
 
 [RequireComponent(typeof(BoxCollider2D))]
 [RequireComponent(typeof(Animator))]
 [RequireComponent(typeof(SpriteRenderer))]
-public class CrumblingPlatform : MonoBehaviour
+public class CrumblingPlatform : NetworkBehaviour
 {
+    public enum PlatformState { Idle, Shaking, Broken }
+
     [Header("Settings")]
     [SerializeField] float crumbleDelay = 1.0f;
-    [SerializeField] float destroyDelay = 0.5f;
+
     [SerializeField] float respawnTime = 3.0f;
 
-    [Header("Shake Settings")]
-    [SerializeField] bool shakeBeforeFall = true;
-    [SerializeField] float shakeAmount = 0.05f;
+    [Networked] public PlatformState CurrentState { get; set; }
+    [Networked] private TickTimer StateTimer { get; set; }
 
-    private Animator anim;
     private BoxCollider2D boxCollider;
     private SpriteRenderer sr;
-    private bool isActivated = false;
-    private Vector3 initialPosition;
 
     private void Awake()
     {
-        anim = GetComponent<Animator>();
         boxCollider = GetComponent<BoxCollider2D>();
         sr = GetComponent<SpriteRenderer>();
-        initialPosition = transform.position;
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (collision.gameObject.CompareTag("Player") && !isActivated)
+        if (!HasStateAuthority) return;
+
+        if (CurrentState == PlatformState.Idle && collision.gameObject.CompareTag("Player"))
         {
             if (collision.transform.position.y > transform.position.y)
             {
-                StartCoroutine(CrumbleSequence());
+                CurrentState = PlatformState.Shaking;
+                StateTimer = TickTimer.CreateFromSeconds(Runner, crumbleDelay);
             }
         }
     }
 
-    IEnumerator CrumbleSequence()
+    public override void FixedUpdateNetwork()
     {
-        isActivated = true;
-        float timer = 0f;
+        if (!HasStateAuthority) return;
 
-        while (timer < crumbleDelay)
+        if (CurrentState == PlatformState.Shaking && StateTimer.Expired(Runner))
         {
-            timer += Time.deltaTime;
-            if (shakeBeforeFall)
-            {
-                float x = Random.Range(-1f, 1f) * shakeAmount;
-                float y = Random.Range(-1f, 1f) * shakeAmount;
-                transform.position = initialPosition + new Vector3(x, y, 0);
-            }
-            yield return null;
+            BreakPlatform();
         }
-        transform.position = initialPosition;
-        anim.SetTrigger("Break");
-        boxCollider.enabled = false;
-        yield return new WaitForSeconds(destroyDelay);
-        sr.enabled = false;
-        yield return new WaitForSeconds(respawnTime);
-
-        ResetPlatform();
+        else if (CurrentState == PlatformState.Broken && StateTimer.Expired(Runner))
+        {
+            ResetPlatform();
+        }
     }
 
-    void ResetPlatform()
+    private void BreakPlatform()
     {
-        sr.enabled = true;
-        boxCollider.enabled = true;
+        CurrentState = PlatformState.Broken;
+        StateTimer = TickTimer.CreateFromSeconds(Runner, respawnTime);
 
-        isActivated = false;
-        transform.position = initialPosition;
-        anim.SetTrigger("Reset");
+        boxCollider.enabled = false;
+    }
+
+    private void ResetPlatform()
+    {
+        CurrentState = PlatformState.Idle;
+        StateTimer = TickTimer.None;
+
+        boxCollider.enabled = true;
+    }
+
+    public override void Render()
+    {
+        if (CurrentState == PlatformState.Broken)
+        {
+            sr.enabled = false;
+        }
+        else
+        {
+            sr.enabled = true;
+        }
     }
 }

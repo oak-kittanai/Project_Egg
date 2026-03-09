@@ -22,8 +22,6 @@ public class CameraCharacter : NetworkBehaviour
             {
                 ParallaxBackground.Instance.SetCamera(this);
             }
-
-            gameObject.tag = "Camera";
         }
         else
         {
@@ -34,12 +32,6 @@ public class CameraCharacter : NetworkBehaviour
             if (listener != null) listener.enabled = false;
         }
     }
-
-    /*private void Update()
-    {
-        camearaTransform.rotation = Quaternion.Euler(0,0,0);
-        this.transform.rotation = camearaTransform.rotation;
-    }*/
 
     public override void FixedUpdateNetwork()
     {

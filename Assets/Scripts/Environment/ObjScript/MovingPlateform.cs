@@ -1,24 +1,30 @@
-using Unity.VisualScripting.Antlr3.Runtime.Tree;
+using Fusion;
 using UnityEngine;
-using static UnityEngine.RuleTile.TilingRuleOutput;
 
-public class MovingPlateform : MonoBehaviour
+[RequireComponent(typeof(Rigidbody2D))]
+public class MovingPlateform : NetworkBehaviour
 {
     [Header("Movement State")]
     [SerializeField] float speed = 1.5f;
     [SerializeField] float distance = 4f;
-
     [SerializeField] bool isVertical = false;
-    private Vector3 startPosition;
 
-    void Start()
+    private Vector3 startPosition;
+    private Rigidbody2D rb;
+
+    public override void Spawned()
     {
         startPosition = transform.position;
+        rb = GetComponent<Rigidbody2D>();
+
+        rb.bodyType = RigidbodyType2D.Kinematic;
+
+        rb.useFullKinematicContacts = true;
     }
 
-    void Update()
+    public override void FixedUpdateNetwork()
     {
-        float movementOffset = Mathf.PingPong(Time.time * speed, distance);
+        float movementOffset = Mathf.PingPong((float)Runner.SimulationTime * speed, distance);
         Vector3 newPosition = startPosition;
 
         if (isVertical)
@@ -30,24 +36,7 @@ public class MovingPlateform : MonoBehaviour
             newPosition.x += movementOffset;
         }
 
-        transform.position = newPosition;
-    }
-
-    private void OnCollisionEnter2D(Collision2D collision)
-    {
-
-        if (collision.gameObject.CompareTag("Player"))
-        {
-            collision.transform.SetParent(transform);
-        }
-    }
-
-    private void OnCollisionExit2D(Collision2D collision)
-    {
-        if (collision.gameObject.CompareTag("Player"))
-        {
-            collision.transform.SetParent(null);
-        }
+        rb.MovePosition(newPosition);
     }
 
     private void OnDrawGizmosSelected()

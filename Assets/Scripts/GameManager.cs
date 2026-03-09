@@ -18,6 +18,10 @@ public class GameManager : SingletonNetwork<GameManager>
     [Networked] public NetworkBool IsGameReady { get; set; }
     [Networked] public int PlayersReadyCount { get; set; }
 
+    [Header("Time Delay")]
+    [Networked] TickTimer LoadingSceneTimer { get; set; }
+    [SerializeField] float loadingSceneCooldown = 2f;
+
     // Loading scene
     private GameObject currentLoadingUI;
 
@@ -91,10 +95,25 @@ public class GameManager : SingletonNetwork<GameManager>
             Debug.Log("Player Ready");
         }
 
-        if (isPlayerReady && isLoadMapDone && !IsGameReady)
+        if (isPlayerReady && isLoadMapDone && !IsGameReady && !LoadingSceneTimer.IsRunning)
         {
-            IsGameReady = true;
-            Debug.Log("All Ready! Game Start!");
+            LoadingSceneTimer = TickTimer.CreateFromSeconds(Runner, loadingSceneCooldown);
+            Debug.Log($"Both Ready! Starting Delay Timer {loadingSceneCooldown}");
+        }
+    }
+
+    public override void FixedUpdateNetwork()
+    {
+        if (!HasStateAuthority) return;
+
+        if (!IsGameReady && isPlayerReady && isLoadMapDone)
+        {
+            if (LoadingSceneTimer.Expired(Runner))
+            {
+                IsGameReady = true;
+                LoadingSceneTimer = TickTimer.None;
+                Debug.Log("Game Start!");
+            }
         }
     }
 
@@ -229,13 +248,13 @@ public class GameManager : SingletonNetwork<GameManager>
     [Networked] public NetworkBool TeamHasBlueStone { get; set; }
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    public void RPC_RequestAddStone(bool isOrange) 
+    public void RPC_RequestAddStone(bool isOrange)
     {
         if (isOrange)
         {
             TeamHasOrangeStone = true;
         }
-        else TeamHasBlueStone = true; 
+        else TeamHasBlueStone = true;
     }
 
 }

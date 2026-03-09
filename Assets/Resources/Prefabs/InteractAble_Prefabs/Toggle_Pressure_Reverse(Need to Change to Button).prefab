@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 4958595851061001168}
   - component: {fileID: 5853228604440899508}
   m_Layer: 0
-  m_Name: Toggle_Pressure_Reverse
+  m_Name: Toggle_Pressure_Reverse(Need to Change to Button)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -170,7 +170,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d3de91892c35bf6438f2c5e3dfe84651, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ToggleButton_ReversPresure
-  targetTrap:
-  - {fileID: 0}
+  targetTrap: []
   _isRevers:
     _value: 0

@@ -3,8 +3,10 @@ using UnityEngine;
 
 public class SnowBallProjectile : NetworkBehaviour
 {
+    [Header("Movement Settings")]
+    [SerializeField] private float speed = 15f;
+
     [Header("Snowball Settings")]
-    [Tooltip("ถ้าความแรงตอนเด้งพื้นน้อยกว่าค่านี้ ลูกหิมะจะแตกทิ้ง")]
     [SerializeField] private float minBounceForce = 2f;
 
     [Header("Damage Settings")]
@@ -17,6 +19,12 @@ public class SnowBallProjectile : NetworkBehaviour
         if (HasStateAuthority)
         {
             LifeTimer = TickTimer.CreateFromSeconds(Runner, 7f);
+
+            Rigidbody2D rb = GetComponent<Rigidbody2D>();
+            if (rb != null)
+            {
+                rb.linearVelocity = transform.right * speed;
+            }
         }
     }
 
@@ -60,8 +68,9 @@ public class SnowBallProjectile : NetworkBehaviour
 
     private void DespawnSnowball()
     {
-        // can be add Particle Effect after it time to destory
-
-        GameManager.Instance.RequestDespawn(this.Object);
+        if (GameManager.Instance != null && Object != null && Object.IsValid)
+        {
+            GameManager.Instance.RequestDespawn(this.Object);
+        }
     }
 }
