@@ -1,4 +1,4 @@
-using Fusion;
+﻿using Fusion;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
@@ -232,26 +232,37 @@ public class SessionManager : SingletonNetwork<SessionManager>
 
     public async void JoinRoom(string sessionKey)
     {
+        if (string.IsNullOrEmpty(sessionKey))
+        {
+            Debug.LogError("Session Key is Empty!");
+            return;
+        }
+
+        if (networkRunner == null) AddRunner();
+
         var startJoiningArgs = new StartGameArgs()
         {
             GameMode = GameMode.Client,
-            SessionName = sessionKey
+            SessionName = sessionKey,
+            SceneManager = networkRunner.GetComponent<NetworkSceneManagerDefault>()
         };
 
         var res = await networkRunner.StartGame(startJoiningArgs);
+
         if (!res.Ok)
         {
-            SessionHub.Instance.ShowDebugText("Join Session Fail");
             Debug.LogError($"JoinSession failed: {res.ShutdownReason}");
+            SessionHub.Instance.ShowDebugText($"Join Session Fail :{res.ShutdownReason}");
             return;
         }
         else if (res.Ok)
         {
+            _sessionKey = sessionKey;
             SessionHub.Instance.ShowDebugText("Success Joining Session");
             SessionHub.Instance.DoneJoin();
             SessionHub.Instance.GetKey(_sessionKey);
             Debug.Log("Successfully joined");
-        };
+        }
     }
 
     private string GenerateSessionCode(int length = 6)

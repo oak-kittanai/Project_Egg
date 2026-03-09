@@ -20,7 +20,7 @@ public class GameManager : SingletonNetwork<GameManager>
 
     [Header("Time Delay")]
     [Networked] TickTimer LoadingSceneTimer { get; set; }
-    [SerializeField] float loadingSceneCooldown = 7f;
+    [SerializeField] float loadingSceneCooldown = 4f;
 
     // Loading scene
     private GameObject currentLoadingUI;
@@ -262,7 +262,6 @@ public class GameManager : SingletonNetwork<GameManager>
             LoadingSceneTimer = TickTimer.None;
         }
     }
-
 
     [Header("Team Inventory")]
     [Networked] public NetworkBool TeamHasOrangeStone { get; set; }
