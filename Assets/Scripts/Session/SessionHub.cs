@@ -70,6 +70,7 @@ public class SessionHub : SingletonNetwork<SessionHub>
     [SerializeField] TMP_Text RoomCode;
 
     [SerializeField] Button _startButton;
+    [SerializeField] Button _readyButton;
 
     [Header("Support_Text")]
     [SerializeField] GameObject DebugTextObj;
