@@ -4,8 +4,9 @@ using System.Collections.Generic;
 
 public class TrapPressure : NetworkBehaviour
 {
-    [Header("Stat")]
+    [Header("Stat&Mode")]
     [SerializeField] float pushForce = 50f;
+    [SerializeField] ForceMode2D forceMode = ForceMode2D.Force;
 
     [Networked] public NetworkBool _isActive { get; set; }
     [Networked] public NetworkBool _isRevers { get; set; }
@@ -44,11 +45,31 @@ public class TrapPressure : NetworkBehaviour
 
     private void OnTriggerExit2D(Collider2D collision)
     {
+        //if (collision.CompareTag("Player") && collision.TryGetComponent<MovementCharacter>(out var player))
+        //{
+        //    if (playersInTrap.Contains(player))
+        //    {
+        //        playersInTrap.Remove(player);
+        //    }
+        //}
+
         if (collision.CompareTag("Player") && collision.TryGetComponent<MovementCharacter>(out var player))
         {
             if (playersInTrap.Contains(player))
             {
                 playersInTrap.Remove(player);
+
+                if (player.rb2D != null)
+                {
+                    Vector2 currentDirection = _isRevers ? -defaultDirection : defaultDirection;
+
+                    float velocityInDirection = Vector2.Dot(player.rb2D.velocity, currentDirection.normalized);
+
+                    if (velocityInDirection > 0)
+                    {
+                        player.rb2D.velocity -= currentDirection.normalized * velocityInDirection * 0.8f;
+                    }
+                }
             }
         }
     }
@@ -65,9 +86,11 @@ public class TrapPressure : NetworkBehaviour
             {
                 if (player.rb2D != null)
                 {
+                    if (player.rb2D.IsSleeping()) player.rb2D.WakeUp();
+
                     Vector2 currentDirection = _isRevers ? -defaultDirection : defaultDirection;
 
-                    player.rb2D.AddForce(currentDirection.normalized * pushForce, ForceMode2D.Force);
+                    player.rb2D.AddForce(currentDirection.normalized * pushForce, forceMode);
                 }
             }
         }

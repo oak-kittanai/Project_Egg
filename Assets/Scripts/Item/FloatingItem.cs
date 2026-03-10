@@ -5,29 +5,28 @@ public class FloatingItem : NetworkBehaviour
 {
     [Header("Floating Settings")]
     [Range(0f, 100f)]
-    [SerializeField] float heightDis = 0.5f; // heightFloating
+    [SerializeField] float heightDis = 0.5f;
     [Range(0f, 100f)]
-    [SerializeField] float velocity = 1f;   // velocityFloating
+    [SerializeField] float velocity = 1f;
 
     [Header("Rotation Settings")]
-    [SerializeField] bool isRotate = true; // The หมุน
-    [SerializeField] Vector3 rotationSpeed = new Vector3(0, 50, 0);
+    [SerializeField] bool isRotate = true;
+    [SerializeField] Vector3 rotationSpeed = new Vector3(0, 0, 50);
 
-    private Vector3 startPosition;
+    private Vector3 _startPosition;
 
-    void Start()
+    public override void Spawned()
     {
-        startPosition = transform.position;
+        _startPosition = transform.position;
     }
 
-    void Update()
+    public override void Render()
     {
-        //คำนวนแบบลิงงง
-        float newY = startPosition.y + Mathf.Sin(Time.time * Mathf.PI * velocity) * heightDis;
+        float time = Runner.LocalRenderTime;
 
-        transform.position = new Vector3(startPosition.x, newY, startPosition.z);
+        float newY = _startPosition.y + Mathf.Sin(time * Mathf.PI * velocity) * heightDis;
+        transform.position = new Vector3(_startPosition.x, newY, _startPosition.z);
 
-        //หมุนตามแกนที่ตั้ง
         if (isRotate)
         {
             transform.Rotate(rotationSpeed * Time.deltaTime);
