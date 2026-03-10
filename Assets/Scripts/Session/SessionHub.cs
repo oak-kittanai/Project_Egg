@@ -63,7 +63,9 @@ public class SessionHub : SingletonNetwork<SessionHub>
     [SerializeField] public Sprite unknownImage;
 
     [SerializeField] public Button ChangeCharacterButtonForHost;
+    [SerializeField] public Button ChangeCharacterButtonForHost2;
     [SerializeField] public Button ChangeCharacterButtonForClient;
+    [SerializeField] public Button ChangeCharacterButtonForClient2;
 
     [SerializeField] TMP_Text RoomCode;
 
@@ -83,6 +85,8 @@ public class SessionHub : SingletonNetwork<SessionHub>
         _leaveButton2.onClick.AddListener(LeaveRoom);
         ChangeCharacterButtonForHost.onClick.AddListener(AddFromHost);
         ChangeCharacterButtonForClient.onClick.AddListener(AddFromClient);
+        ChangeCharacterButtonForHost2.onClick.AddListener(AddFromHost);
+        ChangeCharacterButtonForClient2.onClick.AddListener(AddFromClient);
 
         _clipBoardCopy.onClick.AddListener(CopyKeyToClipboard);
 
@@ -222,11 +226,17 @@ public class SessionHub : SingletonNetwork<SessionHub>
         {
             ChangeCharacterButtonForHost.interactable = true;
             ChangeCharacterButtonForClient.interactable = false;
+
+            ChangeCharacterButtonForHost2.interactable = true;
+            ChangeCharacterButtonForClient2.interactable = false;
         }
         else
         {
             ChangeCharacterButtonForHost.interactable = false;
             ChangeCharacterButtonForClient.interactable = true;
+
+            ChangeCharacterButtonForHost2.interactable = false;
+            ChangeCharacterButtonForClient2.interactable = true;
         }
     }
 
