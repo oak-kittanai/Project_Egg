@@ -385,12 +385,14 @@ MonoBehaviour:
   divingTime: 5
   divePhase: 0.5
   onWater: 0
+  waterJumpForce: 12
   _onDiving: 0
   _IsAlreadyDive: 0
   _emergencySwimBool: 0
   emergencyToggle: 0
   emergencySwimTimer: 2
   __wasEPressed: 0
+  __wasFPressed: 0
   __wasJumpPressed: 0
   floatOffset: 0.11
   _CarriedFriendId:
@@ -421,7 +423,7 @@ MonoBehaviour:
   isMoveAble: 0
   resetAnimation: 0
   isJumping: 0
-  JumpCooldownTimer: 2
+  JumpCooldownTimer: 1.4
   isSpeedoptional: 0
   normalGravity: 2
   heavyGravity: 5.5
@@ -455,7 +457,7 @@ MonoBehaviour:
   interactRadius: 0.8
   playerInteractRadius: 1
   invincibleDuration: 1.5
-  normalFlyTime: 1.5
+  normalFlyTime: 1
   carryFlyTime: 0.8
   floatingGravity: 1
   _IsAlreadyFly: 0
