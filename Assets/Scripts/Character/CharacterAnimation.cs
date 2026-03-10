@@ -5,7 +5,6 @@ using UnityEngine;
 public class CharacterAnimation : NetworkBehaviour
 {
     [Header("Referent")]
-    CharacterStats stats;
     Animator animator;
     SpriteRenderer spriteRenderer;
     MovementCharacter movement;
@@ -46,7 +45,6 @@ public class CharacterAnimation : NetworkBehaviour
     {
         animator = GetComponent<Animator>();
         spriteRenderer = GetComponent<SpriteRenderer>();
-        stats = GetComponent<CharacterStats>();
     }
 
     public override void Render()
