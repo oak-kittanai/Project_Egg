@@ -8,6 +8,10 @@ public class Bird_Moveset : MovementCharacter
     [SerializeField] float carryFlyTime = 3f;
     [SerializeField] float floatingGravity = 0.1f;
 
+    [Header("Physics Materials")]
+    [SerializeField] PhysicsMaterial2D zeroFrictionMaterial;
+    private PhysicsMaterial2D defaultMaterial;
+
     [Header("Bird State")]
     [Networked] private TickTimer FlightTimer { get; set; }
     [Networked] private bool IsFlying { get; set; }
@@ -19,6 +23,16 @@ public class Bird_Moveset : MovementCharacter
     [Networked] private TickTimer DrownTimer { get; set; }
     [SerializeField] float drowningTime = 3f;
     [SerializeField] bool startTimer;
+
+    public override void Spawned()
+    {
+        base.Spawned();
+
+        if (rb2D != null)
+        {
+            defaultMaterial = rb2D.sharedMaterial;
+        }
+    }
 
     protected override void OnFixedUpdateSpecific()
     {
@@ -35,10 +49,25 @@ public class Bird_Moveset : MovementCharacter
         if (IsGrounded)
         {
             IsAlreadyFly = false;
+
+            if (AlreadyFloating)
+            {
+                StopFloating();
+            }
+
+            if (!IsFlying && rb2D != null && rb2D.sharedMaterial != defaultMaterial)
+            {
+                rb2D.sharedMaterial = defaultMaterial;
+            }
         }
 
         if (IsBeingCarried)
         {
+            if (AlreadyFloating)
+            {
+                StopFloating();
+            }
+
             if (Runner.TryFindObject(CarrierId, out var duckObj) && duckObj.TryGetComponent<MovementCharacter>(out var duck))
             {
                 if (duck.IsGrounded || duck.isWaterSurface)
@@ -184,6 +213,12 @@ public class Bird_Moveset : MovementCharacter
         IsFlying = true;
         float duration = IsBeingCarried ? carryFlyTime : normalFlyTime;
         FlightTimer = TickTimer.CreateFromSeconds(Runner, duration);
+
+        if (rb2D != null && zeroFrictionMaterial != null)
+        {
+            rb2D.sharedMaterial = zeroFrictionMaterial;
+        }
+
         Debug.Log($"Bird Flying! Duration: {duration}s (Being Carried: {IsBeingCarried})");
     }
 
@@ -191,5 +226,10 @@ public class Bird_Moveset : MovementCharacter
     {
         IsFlying = false;
         FlightTimer = TickTimer.None;
+
+        if (rb2D != null)
+        {
+            rb2D.sharedMaterial = defaultMaterial;
+        }
     }
 }

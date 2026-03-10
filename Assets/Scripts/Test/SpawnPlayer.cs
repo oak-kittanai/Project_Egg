@@ -1,9 +1,12 @@
 using Fusion;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class SpawnPlayer : SingletonNetwork<SpawnPlayer>
 {
     [SerializeField] NetworkObject PlayerPrefab;
+    [SerializeField] GameManager GameManager;
+    [SerializeField] NetworkObject GameManagerPrefab;
     [SerializeField] Vector3 spawnPos;
 
     [SerializeField] CharacterStats stats;
@@ -30,6 +33,9 @@ public class SpawnPlayer : SingletonNetwork<SpawnPlayer>
 
         if (playerObj.InputAuthority == runner.LocalPlayer)
         {
+            NetworkObject GM = runner.Spawn(GameManagerPrefab);
+            GameManager = GM.GetComponent<GameManager>();
+
             playerStats.skinType = characterType;
             playerObj.name = $"Player ({playerStats.skinType})Host";
             Debug.Log("Spawn Player Host");

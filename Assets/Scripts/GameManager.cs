@@ -1,6 +1,7 @@
 ﻿using Fusion;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameManager : SingletonNetwork<GameManager>
 {
@@ -80,6 +81,13 @@ public class GameManager : SingletonNetwork<GameManager>
 
     private void CheckMapLoading()
     {
+        // --- TEST CODE ---
+        /*if (SceneManager.GetActiveScene().name == "SampleScene" && !isLoadMapDone && !isPlayerReady)
+        {
+            if (!isLoadMapDone) isLoadMapDone = true;
+            if (!isPlayerReady) isPlayerReady = true;
+        }*/
+
         if (MapsLoadedCount >= 2 && !isLoadMapDone)
         {
             isLoadMapDone = true;

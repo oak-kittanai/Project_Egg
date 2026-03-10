@@ -376,8 +376,8 @@ MonoBehaviour:
   diveCooldownTimer: 2
   _isJumpAble: 0
   betweenCarryPosition: 0.7
-  throwForceX: 4
-  throwForceY: 4
+  throwForceX: 7
+  throwForceY: 7
   swimSpeed: 10
   swimAcceleration: 4
   swimDeceleration: 4
@@ -385,7 +385,6 @@ MonoBehaviour:
   divingTime: 5
   divePhase: 0.5
   onWater: 0
-  waterJumpForce: 12
   _onDiving: 0
   _IsAlreadyDive: 0
   _emergencySwimBool: 0
@@ -460,6 +459,7 @@ MonoBehaviour:
   normalFlyTime: 0.9
   carryFlyTime: 0.8
   floatingGravity: 1
+  zeroFrictionMaterial: {fileID: 6200000, guid: b71115bdd90209b478eff619dce9253a, type: 2}
   _IsAlreadyFly: 0
   _AlreadyFloating: 0
   __wasJumpPressed: 0

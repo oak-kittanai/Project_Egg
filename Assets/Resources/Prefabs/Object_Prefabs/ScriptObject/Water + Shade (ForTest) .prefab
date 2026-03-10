@@ -75,9 +75,69 @@ MonoBehaviour:
   dampening: 0.03
   spread: 0.006
   collisionRadius: 1
-  forceMultiplier: 0.07
-  maxVelocity: 0.5
-  waterPoints: []
+  forceMultiplier: 0.02
+  maxVelocity: 0.1
+  waterPoints:
+  - velocity: 0.0000053329964
+    height: 0.00004427659
+    targetHeight: 0
+  - velocity: 0.0000034756836
+    height: 0.000056522556
+    targetHeight: 0
+  - velocity: 0.000003844926
+    height: 0.00009240754
+    targetHeight: 0
+  - velocity: 0.000000028810682
+    height: 0.000067293535
+    targetHeight: 0
+  - velocity: 0.00000087354897
+    height: 0.00007933883
+    targetHeight: 0
+  - velocity: -0.0000068417817
+    height: 0.000020021394
+    targetHeight: 0
+  - velocity: -0.0000016747415
+    height: -0.000011595399
+    targetHeight: 0
+  - velocity: -0.00003329659
+    height: -0.00004220485
+    targetHeight: 0
+  - velocity: -0.00002191175
+    height: 0.000012025179
+    targetHeight: 0
+  - velocity: 0.0000023035595
+    height: 0.000016877455
+    targetHeight: 0
+  - velocity: 0.000009704915
+    height: 0.000025664365
+    targetHeight: 0
+  - velocity: 0.00003236221
+    height: -0.000018936029
+    targetHeight: 0
+  - velocity: 0.000007892126
+    height: 0.0000003403875
+    targetHeight: 0
+  - velocity: 0.000033432232
+    height: -0.000025770183
+    targetHeight: 0
+  - velocity: 0.000021768195
+    height: 0.000025772708
+    targetHeight: 0
+  - velocity: 0.000010899789
+    height: 0.000021026894
+    targetHeight: 0
+  - velocity: -0.000016290189
+    height: 0.000038945425
+    targetHeight: 0
+  - velocity: -0.000015376225
+    height: 0.000018388322
+    targetHeight: 0
+  - velocity: 0.0000051708967
+    height: 0.000025047277
+    targetHeight: 0
+  - velocity: 0.000008203582
+    height: 0.00007187602
+    targetHeight: 0
 --- !u!33 &845856261113721823
 MeshFilter:
   m_ObjectHideFlags: 0

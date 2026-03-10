@@ -11,9 +11,10 @@ public class Duck_Moveset : MovementCharacter
     [Networked] bool isJumpingUp { get; set; }
     [Networked] public bool isJumpAble { get; set; }
 
-    [SerializeField] float betweenCarryPosition = 0.63f;
-    [SerializeField] float throwForceX = 4f;
-    [SerializeField] float throwForceY = 4f;
+    [Header("Carry setting")]
+    [SerializeField] public float betweenCarryPosition = 0.63f;
+    [SerializeField] public float throwForceX = 4f;
+    [SerializeField] public float throwForceY = 4f;
 
     [Header("Dive Settings")]
     [SerializeField] float swimSpeed = 5f;
@@ -24,7 +25,7 @@ public class Duck_Moveset : MovementCharacter
     [SerializeField] float divePhase = 0.5f;
     [SerializeField] bool onWater;
 
-    [SerializeField] float waterJumpForce = 12f;
+    // ★ ลบ waterJumpForce ออกไปแล้ว เพราะเราจะไปใช้ค่ากระโดดปกติแทนครับ
 
     [Networked] public bool onDiving { get; set; }
     [Networked] bool onDivingControl { get; set; }
@@ -82,15 +83,10 @@ public class Duck_Moveset : MovementCharacter
             }
             ReadyToDive = true;
 
+            // ★ เรียกใช้ฟังก์ชันกระโดดขึ้นจากน้ำ
             if (isJumpPressed)
             {
-                isJumpingUp = true;
-                rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, waterJumpForce);
-
-                if (currentWater != null)
-                {
-                    currentWater.Splash(transform.position, rb2D.mass * waterJumpForce);
-                }
+                HandleJumpOffWater();
             }
         }
         else
@@ -115,9 +111,22 @@ public class Duck_Moveset : MovementCharacter
         }
     }
 
+    private void HandleJumpOffWater()
+    {
+        isJumpingUp = true;
+
+        float normalJumpForce = stats.s_jumpForce;
+
+        rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, normalJumpForce);
+
+        if (currentWater != null)
+        {
+            currentWater.Splash(transform.position, rb2D.mass * normalJumpForce);
+        }
+    }
+
     private void HandleDuckInteraction(NetworkInputData input)
     {
-        // ★ ยกเพื่อน / วางเพื่อน ใช้ปุ่ม E
         bool isEPressed = input.Keyboard_E && !_wasEPressed;
 
         if (isEPressed)
@@ -388,6 +397,8 @@ public class Duck_Moveset : MovementCharacter
         {
             isOptional = false;
             isSpeedoptional = false;
+
+            rb2D.gravityScale = normalGravity;
         }
     }
 }

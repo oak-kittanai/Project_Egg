@@ -13,10 +13,10 @@ public class SingletonNetwork<T> : NetworkBehaviour where T : NetworkBehaviour
             {
                 instance = FindAnyObjectByType<T>();
 
-                if (instance == null)
+                /*if (instance == null)
                 {
                     Debug.LogWarning($"Singleton not found : {typeof(T).Name}");
-                }
+                }*/
             }
             return instance;
         }

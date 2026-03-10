@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class SceneManager : Singleton<SceneManager>
+public class G_SceneManager : Singleton<G_SceneManager>
 {
 
 
