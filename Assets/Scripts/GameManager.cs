@@ -28,7 +28,8 @@ public class GameManager : SingletonNetwork<GameManager>
     private bool allowCloseUI = false;
 
     [Networked] public bool gameOver { get; set; }
-    [Networked] public int TeamKeys { get; set; }
+    [Networked] public int TeamBlueKeys { get; set; }
+    [Networked] public int TeamOrangeKeys { get; set; }
 
     public override void Spawned()
     {
@@ -165,23 +166,39 @@ public class GameManager : SingletonNetwork<GameManager>
     }
 
     // Key
-    public void AddKey()
+    public void AddKey(bool OrangeKeys)
     {
-        if (HasStateAuthority) TeamKeys++;
-        else RPC_RequestAddKey();
+        if (HasStateAuthority)
+        {
+            if (OrangeKeys)
+            {
+                TeamOrangeKeys++;
+            }
+            else
+                TeamBlueKeys++;
+        }
+        else RPC_RequestAddKey(OrangeKeys);
     }
 
-    public void UseKey()
+    public void UseKey(bool OrangeKeys)
     {
-        if (HasStateAuthority) TeamKeys--;
-        else RPC_RequestUseKey();
+        if (HasStateAuthority)
+        {
+            if (OrangeKeys)
+            {
+                TeamOrangeKeys--;
+            }
+            else
+                TeamBlueKeys--;
+        }
+        else RPC_RequestUseKey(OrangeKeys);
     }
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    private void RPC_RequestAddKey() => TeamKeys++;
+    private void RPC_RequestAddKey(bool OrangeKeys) { if (OrangeKeys) TeamOrangeKeys++; else TeamBlueKeys++; }
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    private void RPC_RequestUseKey() => TeamKeys--;
+    private void RPC_RequestUseKey(bool OrangeKeys) { if (OrangeKeys) TeamOrangeKeys--; else TeamBlueKeys--; }
 
     public void RequestDespawn(NetworkObject objToDespawn)
     {
