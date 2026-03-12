@@ -1,19 +1,10 @@
 using Fusion;
 using UnityEngine;
 
-public class StoneItem : NetworkBehaviour
+public class StoneItem : NetworkBehaviour, Interactable
 {
     [Header("ColorSet")]
-    [Tooltip("ติ๊กถูกเป็น Mira ถไม่ติ๊กเป็น Kale")]
     [SerializeField] bool isOrangeStone;
-
-    private void OnTriggerEnter2D(Collider2D collision)
-    {
-        if (collision.CompareTag("Player"))
-        {
-            Collect();
-        }
-    }
 
     private void Collect()
     {
@@ -24,5 +15,10 @@ public class StoneItem : NetworkBehaviour
         GameManager.Instance.RequestDespawn(Object);
 
         Debug.Log($"Picked up {(isOrangeStone ? "Orange" : "Blue")} Stone!");
+    }
+
+    public void Interact()
+    {
+        Collect();
     }
 }
