@@ -1,120 +1,77 @@
 using Fusion;
 using UnityEngine;
 
-public class SnowballShooterTrapNoRotate : NetworkBehaviour
+public class Turret_Shooter : NetworkBehaviour
 {
-    [Networked] public NetworkBool IsActive { get; set; }
-
     [Header("Detection Settings")]
-    [SerializeField] float detectRadius = 5f;
-    [Range(0, 360)]
-    [SerializeField] float viewAngle = 45f;
-    [SerializeField] LayerMask playerMask;
-    [SerializeField] LayerMask obstacleMask;
+    public float detectionRadius = 6f;
+    public float viewAngle = 22.5f;
+    public LayerMask playerLayer;
 
-    [Header("Firing Settings")]
-    [SerializeField] float fireRate = 2.5f;
+    [Header("Shooting Settings")]
+    public NetworkObject bulletPrefab;
 
-    [SerializeField] NetworkObject snowballPrefab;
+    public float fireRate = 1.5f;
 
-    private Transform lockedTarget;
+    public Transform firePoint;
 
     [Networked] private TickTimer FireTimer { get; set; }
 
-    public override void Spawned()
+    public override void FixedUpdateNetwork()
     {
-        if (HasStateAuthority)
+        if (!HasStateAuthority) return;
+
+        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, detectionRadius, playerLayer);
+
+        Transform targetToShoot = null;
+        float minDistance = float.MaxValue;
+
+        foreach (var hit in hits)
         {
-            IsActive = true;
+            if (hit.GetComponent<MovementCharacter>() == null) continue;
+
+            Vector2 dirToTarget = (hit.transform.position - transform.position).normalized;
+            float distance = Vector2.Distance(transform.position, hit.transform.position);
+
+            if (Vector2.Angle(transform.right, dirToTarget) <= viewAngle)
+            {
+                if (distance < minDistance)
+                {
+                    minDistance = distance;
+                    targetToShoot = hit.transform;
+                }
+            }
+        }
+
+        if (targetToShoot != null && FireTimer.ExpiredOrNotRunning(Runner))
+        {
+            ShootAt(targetToShoot);
             FireTimer = TickTimer.CreateFromSeconds(Runner, fireRate);
         }
     }
 
-    public override void FixedUpdateNetwork()
+    private void ShootAt(Transform target)
     {
-        if (!HasStateAuthority || !IsActive) return;
+        Vector2 spawnPos = firePoint != null ? (Vector2)firePoint.position : (Vector2)transform.position;
 
-        ValidateOrFindTarget();
+        Vector2 direction = ((Vector2)target.position - spawnPos).normalized;
 
-        if (lockedTarget != null)
+        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+        Quaternion bulletRotation = Quaternion.Euler(0, 0, angle);
+
+        if (GameManager.Instance != null && bulletPrefab != null)
         {
-            if (FireTimer.ExpiredOrNotRunning(Runner))
-            {
-                if (HasLineOfSight(lockedTarget) && IsInFiringRange())
-                {
-                    FireSnowball();
-                    FireTimer = TickTimer.CreateFromSeconds(Runner, fireRate);
-                }
-            }
+            GameManager.Instance.ProjectileSpawn(bulletPrefab, spawnPos, direction, bulletRotation);
         }
     }
-
-    private void ValidateOrFindTarget()
-    {
-        if (lockedTarget != null)
-        {
-            float dist = Vector2.Distance(transform.position, lockedTarget.position); if (dist > detectRadius || !HasLineOfSight(lockedTarget))
-            {
-                lockedTarget = null;
-            }
-        }
-
-        if (lockedTarget == null)
-        {
-            Collider2D hit = Physics2D.OverlapCircle(transform.position, detectRadius, playerMask); if (hit != null)
-            {
-                if (HasLineOfSight(hit.transform))
-                {
-                    lockedTarget = hit.transform;
-                }
-            }
-        }
-    }
-
-    private bool HasLineOfSight(Transform target)
-    {
-        Vector2 direction = (Vector2)target.position - (Vector2)transform.position;
-        float distance = direction.magnitude;
-
-        Vector2 startPos = (Vector2)transform.position + ((Vector2)transform.right * 0.6f);
-        RaycastHit2D hit = Physics2D.Raycast(startPos, direction.normalized, distance - 0.6f, obstacleMask);
-
-        return hit.collider == null;
-    }
-
-    private bool IsInFiringRange()
-    {
-        Vector2 dirToTarget = ((Vector2)lockedTarget.position - (Vector2)transform.position).normalized;
-        return Vector2.Angle(transform.right, dirToTarget) < viewAngle / 2f;
-    }
-
-    private void FireSnowball()
-    {
-        if (snowballPrefab == null) return;
-
-        Vector2 spawnPos = (Vector2)transform.position + ((Vector2)transform.right * 0.5f);
-        Vector2 fireDirection = transform.right;
-
-        GameManager.Instance.ProjectileSpawn(snowballPrefab, spawnPos, fireDirection, transform.rotation);
-    }
-
-    public void SetTrapActive(bool active)
-    {
-        if (HasStateAuthority) IsActive = active;
-        else RPC_SetTrapActive(active);
-    }
-
-    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    private void RPC_SetTrapActive(NetworkBool active) => IsActive = active;
 
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, detectRadius);
-        Vector3 rightDir = transform.right;
-        Vector3 upper = Quaternion.Euler(0, 0, viewAngle / 2f) * rightDir;
-        Vector3 lower = Quaternion.Euler(0, 0, -viewAngle / 2f) * rightDir;
-        Gizmos.DrawLine(transform.position, transform.position + upper * detectRadius);
-        Gizmos.DrawLine(transform.position, transform.position + lower * detectRadius);
+        Gizmos.DrawWireSphere(transform.position, detectionRadius);
+        Vector3 upLimit = Quaternion.Euler(0, 0, viewAngle) * transform.right * detectionRadius;
+        Vector3 downLimit = Quaternion.Euler(0, 0, -viewAngle) * transform.right * detectionRadius;
+        Gizmos.DrawLine(transform.position, transform.position + upLimit);
+        Gizmos.DrawLine(transform.position, transform.position + downLimit);
     }
 }
