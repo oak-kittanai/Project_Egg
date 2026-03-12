@@ -91,7 +91,11 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     public override void Spawned()
     {
-        isBird = stats.skinType == characterType.Bird;
+        if (stats.skinType == characterType.Bird)
+        {
+            isBird = true;
+        }
+        else { isBird = false;}
 
         if (stats != null)
         {
@@ -120,7 +124,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
             if (PlayerGUI.Instance != null)
             {
-                PlayerGUI.Instance.SetCharacterType(!isBird);
+                PlayerGUI.Instance.SetCharacterType(isBird);
             }
         }
     }
