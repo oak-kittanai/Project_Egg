@@ -1,6 +1,5 @@
 ﻿using Fusion;
 using UnityEngine;
-using static Unity.Collections.Unicode;
 
 public class BearTrapScript : NetworkBehaviour
 {
@@ -23,8 +22,17 @@ public class BearTrapScript : NetworkBehaviour
         if (other.CompareTag("Player"))
         {
             IsTriggered = true;
-
             CooldownTimer = TickTimer.CreateFromSeconds(Runner, cooldownTime);
+
+            if (other.TryGetComponent<MovementCharacter>(out var player))
+            {
+                float pushDirectionX = Mathf.Sign(other.transform.position.x - transform.position.x);
+                Vector2 knockbackDirection = new Vector2(pushDirectionX, 1f).normalized;
+
+                player.TakeDamage(damageAmount, knockbackForce, knockbackDirection);
+
+                Debug.Log($"กับดักหมี งับ {player.name} ลดไป {damageAmount} เลือด!");
+            }
         }
     }
 
