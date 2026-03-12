@@ -82,7 +82,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: -9166657333119488929, guid: 46008bb0b2823894ba425a0501aacbf4, type: 3}
+  m_Sprite: {fileID: 7335205847882109900, guid: 7cb47206c98068a4d9e49fba020658b1, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -131,7 +131,7 @@ BoxCollider2D:
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 0.96, y: 0.38}
+    oldSize: {x: 1, y: 0.5729167}
     newSize: {x: 1, y: 1}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
@@ -173,9 +173,10 @@ MonoBehaviour:
   _IsPressed:
     _value: 0
   _ObjectsOnPad: 0
+  isSingleUse: 0
   triggerLayers:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 128
   sr: {fileID: 5705644324745908338}
-  unpressed: {fileID: -9166657333119488929, guid: 46008bb0b2823894ba425a0501aacbf4, type: 3}
-  pressed: {fileID: -5494015379787739270, guid: 86d7972531da7124ebb04dde0ab6790e, type: 3}
+  unpressed: {fileID: 7335205847882109900, guid: 7cb47206c98068a4d9e49fba020658b1, type: 3}
+  pressed: {fileID: 6290093490729569754, guid: 0b294af96c2d15a4887c3a12c0e401a0, type: 3}

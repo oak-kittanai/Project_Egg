@@ -84,7 +84,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 2
-  m_Sprite: {fileID: 5251734906795025119, guid: b5dd40518ca793e4781ca4b0558fd680, type: 3}
+  m_Sprite: {fileID: -5213533225891938, guid: 235f0add60ff37a42b147b151bab261b, type: 3}
   m_Color: {r: 0.9009434, g: 1, b: 0.9773927, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -170,6 +170,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6c6b135e5e7f3b74d943377eb00edb0e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SnowBallProjectile
+  speed: 15
   minBounceForce: 2
   damageAmount: 1
   knockbackForce: 4
