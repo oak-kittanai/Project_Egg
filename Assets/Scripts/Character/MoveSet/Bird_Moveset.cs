@@ -214,6 +214,14 @@ public class Bird_Moveset : MovementCharacter
         float duration = IsBeingCarried ? carryFlyTime : normalFlyTime;
         FlightTimer = TickTimer.CreateFromSeconds(Runner, duration);
 
+        if (HasInputAuthority || (HasStateAuthority && Runner.LocalPlayer == Object.StateAuthority))
+        {
+            if (PlayerGUI.Instance != null)
+            {
+                PlayerGUI.Instance.StartFlightBar(FlightTimer, Runner, duration);
+            }
+        }
+
         if (rb2D != null && zeroFrictionMaterial != null)
         {
             rb2D.sharedMaterial = zeroFrictionMaterial;
@@ -226,6 +234,14 @@ public class Bird_Moveset : MovementCharacter
     {
         IsFlying = false;
         FlightTimer = TickTimer.None;
+
+        if (HasInputAuthority || (HasStateAuthority && Runner.LocalPlayer == Object.StateAuthority))
+        {
+            if (PlayerGUI.Instance != null)
+            {
+                PlayerGUI.Instance.StopFlightBar();
+            }
+        }
 
         if (rb2D != null)
         {

@@ -46,7 +46,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [Header("Character Setting (Health & Respawn)")]
     [Networked] public int characterMaxHealth { get; set; }
     [Networked] public int characterMinHealth { get; set; }
-    [Networked] public int currentHealth { get; set; }
+    [Networked, OnChangedRender(nameof(OnHealthChanged))] public int currentHealth { get; set; }
 
     [Networked] public bool isDead { get; set; }
 
@@ -108,6 +108,21 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         {
             GameManager.Instance.RegisterPlayer(this);
         }
+
+        if (HasStateAuthority || HasInputAuthority)
+        {
+            OnHealthChanged();
+
+            if (PlayerInterface.Instance != null)
+            {
+                PlayerInterface.Instance.UpdateProfileUI(isBird);
+            }
+
+            if (PlayerGUI.Instance != null)
+            {
+                PlayerGUI.Instance.SetCharacterType(!isBird);
+            }
+        }
     }
 
     public void TakeDamage(int dmg, float knockbackForce, Vector2 vec)
@@ -128,6 +143,17 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         else
         {
             InvincibleTimer = TickTimer.CreateFromSeconds(Runner, invincibleDuration);
+        }
+    }
+
+    public void OnHealthChanged()
+    {
+        if (HasInputAuthority || (HasStateAuthority && Runner.LocalPlayer == Object.StateAuthority))
+        {
+            if (PlayerInterface.Instance != null)
+            {
+                PlayerInterface.Instance.UpdateHealthUI(currentHealth);
+            }
         }
     }
 
@@ -407,6 +433,46 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         else
         {
             rb2D.gravityScale = isOptional ? optionalGravity : normalGravity;
+        }
+    }
+
+    public override void Render()
+    {
+        if (HasInputAuthority || (HasStateAuthority && Runner.LocalPlayer == Object.StateAuthority))
+        {
+            CheckInteractablePrompt();
+        }
+    }
+
+    private void CheckInteractablePrompt()
+    {
+        Collider2D[] hitsItem = Physics2D.OverlapCircleAll(transform.position, interactRadius);
+
+        Transform closestItem = null;
+        float minDistance = float.MaxValue;
+
+        foreach (var hit in hitsItem)
+        {
+            if (hit.gameObject == gameObject) continue;
+
+            if (hit.TryGetComponent<Interactable>(out var interactable))
+            {
+                float dist = Vector2.Distance(transform.position, hit.transform.position);
+                if (dist < minDistance)
+                {
+                    minDistance = dist;
+                    closestItem = hit.transform;
+                }
+            }
+        }
+
+        if (closestItem != null && PlayerInterface.Instance != null)
+        {
+            PlayerInterface.Instance.ShowInteractPrompt(closestItem);
+        }
+        else if (PlayerInterface.Instance != null)
+        {
+            PlayerInterface.Instance.HideInteractPrompt();
         }
     }
 

@@ -302,6 +302,74 @@ public class GameManager : SingletonNetwork<GameManager>
         else TeamHasBlueStone = true;
     }
 
+    [Header("Global Quest System")]
+    [Networked, OnChangedRender(nameof(OnQuestStateChanged))]
+    public NetworkBool IsQuestActive { get; set; }
+
+    [Networked, OnChangedRender(nameof(OnQuestStateChanged))]
+    public int QuestCurrentProgress { get; set; }
+
+    [Networked, OnChangedRender(nameof(OnQuestStateChanged))]
+    public int QuestMaxProgress { get; set; }
+
+    [Networked, OnChangedRender(nameof(OnQuestStateChanged))]
+    public NetworkString<_64> QuestDescription { get; set; }
+    public void OnQuestStateChanged()
+    {
+        if (PlayerInterface.Instance != null)
+        {
+            if (IsQuestActive)
+            {
+                PlayerInterface.Instance.UpdateQuestUI(QuestDescription.ToString(), QuestCurrentProgress, QuestMaxProgress);
+            }
+            else
+            {
+                PlayerInterface.Instance.HideQuestUI();
+            }
+        }
+    }
+
+    public void StartGlobalQuest(string desc, int maxProgress)
+    {
+        if (HasStateAuthority)
+        {
+            QuestDescription = desc;
+            QuestMaxProgress = maxProgress;
+            QuestCurrentProgress = 0;
+            IsQuestActive = true;
+        }
+        else RPC_StartGlobalQuest(desc, maxProgress);
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    private void RPC_StartGlobalQuest(NetworkString<_64> desc, int maxProgress)
+    {
+        StartGlobalQuest(desc.ToString(), maxProgress);
+    }
+
+    public void AddQuestProgress(int amount = 1)
+    {
+        if (HasStateAuthority)
+        {
+            if (!IsQuestActive) return;
+
+            QuestCurrentProgress += amount;
+
+            if (QuestCurrentProgress >= QuestMaxProgress)
+            {
+                IsQuestActive = false;
+                Debug.Log("Quest Completed!");
+            }
+        }
+        else RPC_AddQuestProgress(amount);
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    private void RPC_AddQuestProgress(int amount)
+    {
+        AddQuestProgress(amount);
+    }
+
 }
 
 [System.Serializable]
