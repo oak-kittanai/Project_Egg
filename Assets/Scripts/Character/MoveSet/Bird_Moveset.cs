@@ -218,7 +218,10 @@ public class Bird_Moveset : MovementCharacter
         {
             if (PlayerGUI.Instance != null)
             {
-                PlayerGUI.Instance.StartFlightBar(FlightTimer, Runner, duration);
+                if (HasInputAuthority)
+                {
+                    PlayerGUI.Instance.StartFlightBar(FlightTimer, Runner, duration);
+                }
             }
         }
 
