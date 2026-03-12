@@ -10,7 +10,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [SerializeField] public CharacterAnimation cAnimation;
     [SerializeField] public Rigidbody2D rb2D;
     [SerializeField] public Collider2D coll2D;
-
+    [SerializeField] public PlayerGUI localGUI;
     [Networked] public bool isBird { get; set; }
 
     [Header("Movement Settings")]
@@ -87,6 +87,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         if (cAnimation == null) cAnimation = GetComponent<CharacterAnimation>();
         if (rb2D == null) rb2D = GetComponent<Rigidbody2D>();
         isMoveAble = true;
+        if (localGUI != null) localGUI = GetComponent<PlayerGUI>();
     }
 
     public override void Spawned()
@@ -113,18 +114,18 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             GameManager.Instance.RegisterPlayer(this);
         }
 
-        if (HasStateAuthority || HasInputAuthority)
+        if (localGUI != null)
+        {
+            localGUI.SetCharacterType(isBird);
+        }
+
+        if (HasInputAuthority || (HasStateAuthority && Runner.LocalPlayer == Object.StateAuthority))
         {
             OnHealthChanged();
 
             if (PlayerInterface.Instance != null)
             {
                 PlayerInterface.Instance.UpdateProfileUI(isBird);
-            }
-
-            if (PlayerGUI.Instance != null)
-            {
-                PlayerGUI.Instance.SetCharacterType(isBird);
             }
         }
     }
@@ -442,7 +443,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     public override void Render()
     {
-        if (HasInputAuthority || (HasStateAuthority && Runner.LocalPlayer == Object.StateAuthority))
+        if (HasInputAuthority)
         {
             CheckInteractablePrompt();
         }
