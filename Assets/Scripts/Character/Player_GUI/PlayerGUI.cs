@@ -1,56 +1,119 @@
-using Fusion;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
+using Fusion;
 
-public class PlayerGUI : NetworkBehaviour
+public class PlayerGUI : MonoBehaviour
 {
-    [Header("Ref")]
-    CharacterStats stats;
+    public static PlayerGUI Instance;
 
-    [SerializeField] Slider staminaBar;
-    [Networked] public float minValue {  get; set; }
-    [Networked] public float maxValue {  get; set; }
+    [Header("Setting")]
+    [SerializeField] public bool isDuck;
+
+    [Header("Oxygen Setting")]
+    public GameObject oxygenContainer;
+    public Image[] oxygenBubbles;
+    public Sprite fullBubbleSprite;
+    public Sprite emptyBubbleSprite;
+
+    private TickTimer activeOxygenTimer;
+    private bool isTrackingOxygen = false;
+    private int maxBubbles;
+
+    [Header("Flight Bar")]
+    public Slider flightBar;
+    private TickTimer activeFlightTimer;
+    private NetworkRunner activeRunner;
+    private bool isTrackingFlight = false;
 
     private void Awake()
     {
-        stats = GetComponentInParent<CharacterStats>();
+        if (Instance == null) Instance = this;
     }
 
-    public override void Spawned()
+    private void Start()
     {
-        if (stats == null)
+        if (flightBar != null) flightBar.gameObject.SetActive(false);
+    }
+
+    public void SetCharacterType(bool duck)
+    {
+        isDuck = duck;
+
+        if (isDuck)
         {
-            Debug.Log("stats in GUI not found");
+            if (oxygenContainer != null) oxygenContainer.SetActive(true);
+            if (flightBar != null) flightBar.gameObject.SetActive(false);
         }
         else
         {
-            minValue = 0;
-            maxValue = stats.s_maxStamina;
-
-            staminaBar.minValue = minValue;
-            staminaBar.maxValue = maxValue;
+            if (oxygenContainer != null) oxygenContainer.SetActive(false);
+            if (flightBar != null) flightBar.gameObject.SetActive(false);
         }
     }
 
-    public override void FixedUpdateNetwork()
+    private void Update()
     {
-        StaminaUpdate();
-        if (stats != null)
+        if (isTrackingFlight && activeRunner != null)
         {
-            /*if (stats.s_minStamina >= stats.s_maxStamina)
+            float remainingTime = activeFlightTimer.RemainingTime(activeRunner) ?? 0f;
+            flightBar.value = remainingTime;
+            if (remainingTime <= 0f) StopFlightBar();
+        }
+
+        if (isTrackingOxygen && activeRunner != null)
+        {
+            float remainingTime = activeOxygenTimer.RemainingTime(activeRunner) ?? 0f;
+            int currentBubbles = Mathf.CeilToInt(remainingTime);
+
+            UpdateOxygenBubbles(currentBubbles);
+
+            if (remainingTime <= 0f)
             {
-                staminaBar.gameObject.SetActive(false);
+                isTrackingOxygen = false;
+                UpdateOxygenBubbles(0);
             }
-            else
-            {
-                staminaBar.gameObject.SetActive(true);
-            }*/
         }
     }
 
-    public void StaminaUpdate()
+    public void StartOxygenTracking(TickTimer timer, NetworkRunner runner, int maxAir)
     {
-        /*minValue = stats.s_minStamina;
-        staminaBar.value = minValue; */
+        activeOxygenTimer = timer;
+        activeRunner = runner;
+        maxBubbles = maxAir;
+        isTrackingOxygen = true;
+    }
+
+    public void StopOxygenTracking()
+    {
+        isTrackingOxygen = false;
+        UpdateOxygenBubbles(maxBubbles);
+    }
+
+    public void UpdateOxygenBubbles(int currentBubbles)
+    {
+        if (oxygenBubbles == null || oxygenBubbles.Length == 0) return;
+
+        for (int i = 0; i < oxygenBubbles.Length; i++)
+        {
+            if (i < currentBubbles) oxygenBubbles[i].sprite = fullBubbleSprite;
+            else oxygenBubbles[i].sprite = emptyBubbleSprite;
+        }
+    }
+
+    public void StartFlightBar(TickTimer timer, NetworkRunner runner, float maxFlightTime)
+    {
+        if (flightBar == null) return;
+        activeFlightTimer = timer;
+        activeRunner = runner;
+        flightBar.maxValue = maxFlightTime;
+        flightBar.value = maxFlightTime;
+        flightBar.gameObject.SetActive(true);
+        isTrackingFlight = true;
+    }
+
+    public void StopFlightBar()
+    {
+        isTrackingFlight = false;
+        if (flightBar != null) flightBar.gameObject.SetActive(false);
     }
 }

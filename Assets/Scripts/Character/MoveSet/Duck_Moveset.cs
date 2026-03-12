@@ -280,6 +280,11 @@ public class Duck_Moveset : MovementCharacter
 
         DiveTimer = TickTimer.CreateFromSeconds(Runner, divingTime);
         Debug.Log($"Duck Diving! Duration: {divingTime}s");
+
+        if (HasInputAuthority && PlayerGUI.Instance != null)
+        {
+            PlayerGUI.Instance.StartOxygenTracking(DiveTimer, Runner, Mathf.CeilToInt(divingTime));
+        }
     }
 
     public void EndDivingLogic()
@@ -321,6 +326,11 @@ public class Duck_Moveset : MovementCharacter
 
         float duration = diveCooldownTimer;
         DiveCooldown = TickTimer.CreateFromSeconds(Runner, duration);
+
+        if (HasInputAuthority && PlayerGUI.Instance != null)
+        {
+            PlayerGUI.Instance.StopOxygenTracking();
+        }
     }
 
     public void EmergencySwimup()
