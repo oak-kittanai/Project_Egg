@@ -11,6 +11,10 @@ public class Duck_Moveset : MovementCharacter
     [Networked] bool isJumpingUp { get; set; }
     [Networked] public bool isJumpAble { get; set; }
 
+    [Header("Water Jump Setting")]
+    [Networked] private TickTimer WaterJumpCooldownTimer { get; set; }
+    [SerializeField] private float waterJumpCooldown = 3f;
+
     [Header("Carry setting")]
     [SerializeField] public float betweenCarryPosition = 0.63f;
     [SerializeField] public float throwForceX = 4f;
@@ -24,8 +28,6 @@ public class Duck_Moveset : MovementCharacter
     [SerializeField] float divingTime = 5f;
     [SerializeField] float divePhase = 0.5f;
     [SerializeField] bool onWater;
-
-    // ★ ลบ waterJumpForce ออกไปแล้ว เพราะเราจะไปใช้ค่ากระโดดปกติแทนครับ
 
     [Networked] public bool onDiving { get; set; }
     [Networked] bool onDivingControl { get; set; }
@@ -83,8 +85,7 @@ public class Duck_Moveset : MovementCharacter
             }
             ReadyToDive = true;
 
-            // ★ เรียกใช้ฟังก์ชันกระโดดขึ้นจากน้ำ
-            if (isJumpPressed)
+            if (isJumpPressed && WaterJumpCooldownTimer.ExpiredOrNotRunning(Runner))
             {
                 HandleJumpOffWater();
             }
@@ -123,6 +124,8 @@ public class Duck_Moveset : MovementCharacter
         {
             currentWater.Splash(transform.position, rb2D.mass * normalJumpForce);
         }
+
+        WaterJumpCooldownTimer = TickTimer.CreateFromSeconds(Runner, waterJumpCooldown);
     }
 
     private void HandleDuckInteraction(NetworkInputData input)
