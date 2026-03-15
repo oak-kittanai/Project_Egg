@@ -231,8 +231,8 @@ public class CharacterAnimation : NetworkBehaviour
 
     public void SmashAnimation() => PlayAnimationNetworked("Hit");
     public void SwimAnimation() => PlayAnimationNetworked("Swim");
-    public void DiveAnimation() => PlayAnimationNetworked("Diving");
-    public void ReturnToSurface() => PlayAnimationNetworked("Swim");
+    //public void DiveAnimation() => PlayAnimationNetworked("Diving");
+    public void ReturnToSurface() => PlayAnimationNetworked("Swim"); // need Animation
 
     // Bird
     public void ThrowAnimation() => PlayAnimationNetworked("Throwing");

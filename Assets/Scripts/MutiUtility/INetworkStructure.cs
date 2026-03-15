@@ -177,9 +177,9 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
         Debug.Log("Player has Disconnect");
     }
 
-    #endregion
+        #endregion
 
-    #region SceneLoadDone&Start
+        #region SceneLoadDone&Start
 
     public void OnSceneLoadDone(NetworkRunner runner)
     {

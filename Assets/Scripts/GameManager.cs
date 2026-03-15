@@ -82,7 +82,7 @@ public class GameManager : SingletonNetwork<GameManager>
 
     private void CheckMapLoading()
     {
-        // --- TEST CODE ---
+        // --- TEST CODE --- for sample scene
         /*if (SceneManager.GetActiveScene().name == "SampleScene" && !isLoadMapDone && !isPlayerReady)
         {
             if (!isLoadMapDone) isLoadMapDone = true;

@@ -216,9 +216,9 @@ public class Bird_Moveset : MovementCharacter
 
         if (HasInputAuthority || (HasStateAuthority && Runner.LocalPlayer == Object.StateAuthority))
         {
-            if (PlayerGUI.Instance != null)
+            if (localGUI != null)
             {
-                PlayerGUI.Instance.StartFlightBar(FlightTimer, Runner, duration);
+                localGUI.StartFlightBar(FlightTimer, Runner, duration);
             }
         }
 
@@ -237,9 +237,9 @@ public class Bird_Moveset : MovementCharacter
 
         if (HasInputAuthority || (HasStateAuthority && Runner.LocalPlayer == Object.StateAuthority))
         {
-            if (PlayerGUI.Instance != null)
+            if (localGUI != null)
             {
-                PlayerGUI.Instance.StopFlightBar();
+                localGUI.StopFlightBar();
             }
         }
 

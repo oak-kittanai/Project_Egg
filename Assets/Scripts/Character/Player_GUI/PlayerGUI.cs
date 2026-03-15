@@ -4,10 +4,8 @@ using Fusion;
 
 public class PlayerGUI : MonoBehaviour
 {
-    public static PlayerGUI Instance;
-
     [Header("Setting")]
-    [SerializeField] public bool isDuck;
+    [SerializeField] public bool isBird;
 
     [Header("Oxygen Setting")]
     public GameObject oxygenContainer;
@@ -25,30 +23,17 @@ public class PlayerGUI : MonoBehaviour
     private NetworkRunner activeRunner;
     private bool isTrackingFlight = false;
 
-    private void Awake()
-    {
-        if (Instance == null) Instance = this;
-    }
-
     private void Start()
     {
         if (flightBar != null) flightBar.gameObject.SetActive(false);
     }
 
-    public void SetCharacterType(bool duck)
+    public void SetCharacterType(bool bird)
     {
-        isDuck = duck;
+        isBird = bird;
 
-        if (isDuck)
-        {
-            if (oxygenContainer != null) oxygenContainer.SetActive(true);
-            if (flightBar != null) flightBar.gameObject.SetActive(false);
-        }
-        else
-        {
-            if (oxygenContainer != null) oxygenContainer.SetActive(false);
-            if (flightBar != null) flightBar.gameObject.SetActive(false);
-        }
+        if (oxygenContainer != null) oxygenContainer.SetActive(false);
+        if (flightBar != null) flightBar.gameObject.SetActive(false);
     }
 
     private void Update()
@@ -77,16 +62,21 @@ public class PlayerGUI : MonoBehaviour
 
     public void StartOxygenTracking(TickTimer timer, NetworkRunner runner, int maxAir)
     {
+        if (oxygenContainer != null) oxygenContainer.SetActive(true);
+
         activeOxygenTimer = timer;
         activeRunner = runner;
         maxBubbles = maxAir;
         isTrackingOxygen = true;
+
+        UpdateOxygenBubbles(maxBubbles);
     }
 
     public void StopOxygenTracking()
     {
         isTrackingOxygen = false;
-        UpdateOxygenBubbles(maxBubbles);
+
+        if (oxygenContainer != null) oxygenContainer.SetActive(false);
     }
 
     public void UpdateOxygenBubbles(int currentBubbles)

@@ -11,6 +11,10 @@ public class Duck_Moveset : MovementCharacter
     [Networked] bool isJumpingUp { get; set; }
     [Networked] public bool isJumpAble { get; set; }
 
+    [Header("Water Jump Setting")]
+    [Networked] private TickTimer WaterJumpCooldownTimer { get; set; }
+    [SerializeField] private float waterJumpCooldown = 3f;
+
     [Header("Carry setting")]
     [SerializeField] public float betweenCarryPosition = 0.63f;
     [SerializeField] public float throwForceX = 4f;
@@ -23,12 +27,10 @@ public class Duck_Moveset : MovementCharacter
     [SerializeField] float swimMaxSpeed = 5f;
     [SerializeField] float divingTime = 5f;
     [SerializeField] float divePhase = 0.5f;
-    [SerializeField] bool onWater;
-
-    // ★ ลบ waterJumpForce ออกไปแล้ว เพราะเราจะไปใช้ค่ากระโดดปกติแทนครับ
 
     [Networked] public bool onDiving { get; set; }
     [Networked] bool onDivingControl { get; set; }
+    [Networked] bool justDive { get; set; }
     [Networked] public bool IsAlreadyDive { get; set; }
 
     [Header("Emergency Setting")]
@@ -76,26 +78,26 @@ public class Duck_Moveset : MovementCharacter
 
         if (isWaterSurface && !onDiving)
         {
-            if (!onWater)
-            {
-                onWater = true;
-                cAnimation.UpdateGroundTypeOnDuck(true);
-            }
+            cAnimation.UpdateGroundTypeOnDuck(true);
             ReadyToDive = true;
 
-            // ★ เรียกใช้ฟังก์ชันกระโดดขึ้นจากน้ำ
-            if (isJumpPressed)
+            if (isJumpPressed && WaterJumpCooldownTimer.ExpiredOrNotRunning(Runner))
             {
                 HandleJumpOffWater();
             }
         }
-        else
+        else if (!onDiving && !isJumping)
         {
-            if (onWater)
-            {
-                onWater = false;
-                cAnimation.UpdateGroundTypeOnDuck(false);
-            }
+            cAnimation.ReturnToBlendAnimation();
+        }
+
+        if (IsHeadUnderwater && !justDive && onDiving)
+        {
+            justDive = true;
+        }
+        else if (!IsHeadUnderwater && !onDiving && isWaterSurface)
+        {
+            justDive = false;
         }
 
         if (isJumpingUp && rb2D.linearVelocity.y <= 0f)
@@ -123,6 +125,8 @@ public class Duck_Moveset : MovementCharacter
         {
             currentWater.Splash(transform.position, rb2D.mass * normalJumpForce);
         }
+
+        WaterJumpCooldownTimer = TickTimer.CreateFromSeconds(Runner, waterJumpCooldown);
     }
 
     private void HandleDuckInteraction(NetworkInputData input)
@@ -211,7 +215,7 @@ public class Duck_Moveset : MovementCharacter
 
         if (isWaterSurface && isFPressed && ReadyToDive && !IsGrounded && !IsAlreadyDive)
         {
-            if (!IsCarrying)
+            if (!IsCarrying || !onDiving)
             {
                 StartDiveLogic();
             }
@@ -227,6 +231,10 @@ public class Duck_Moveset : MovementCharacter
             {
                 EndDivingLogic();
                 onDivingControl = false;
+            }
+            else if (!IsHeadUnderwater && onDiving && !DiveTimer.Expired(Runner) && justDive)
+            {
+                EndDivingLogic();
             }
             else
             {
@@ -269,6 +277,8 @@ public class Duck_Moveset : MovementCharacter
 
         isMoveAble = false;
 
+        ReadyToDive = false;
+
         rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, -swimSpeed * divePhase);
 
         float impactForce = rb2D.mass;
@@ -281,9 +291,9 @@ public class Duck_Moveset : MovementCharacter
         DiveTimer = TickTimer.CreateFromSeconds(Runner, divingTime);
         Debug.Log($"Duck Diving! Duration: {divingTime}s");
 
-        if (HasInputAuthority && PlayerGUI.Instance != null)
+        if (localGUI != null)
         {
-            PlayerGUI.Instance.StartOxygenTracking(DiveTimer, Runner, Mathf.CeilToInt(divingTime));
+            localGUI.StartOxygenTracking(DiveTimer, Runner, Mathf.CeilToInt(divingTime));
         }
     }
 
@@ -321,15 +331,16 @@ public class Duck_Moveset : MovementCharacter
     public void ResetDiving()
     {
         emergencyToggle = true;
+        ReadyToDive = true;
         EmergencyTimer = TickTimer.None;
         DiveTimer = TickTimer.None;
 
         float duration = diveCooldownTimer;
         DiveCooldown = TickTimer.CreateFromSeconds(Runner, duration);
 
-        if (HasInputAuthority && PlayerGUI.Instance != null)
+        if (localGUI != null)
         {
-            PlayerGUI.Instance.StopOxygenTracking();
+            localGUI.StopOxygenTracking();
         }
     }
 
