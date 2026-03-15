@@ -268,6 +268,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             rb2D.simulated = true;
         }
 
+        CheckGround();
+
         if (GetInput(out NetworkInputData input))
         {
             if (!IsBeingCarried)
@@ -277,8 +279,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             }
             HandleInteraction(input);
         }
-
-        CheckGround();
+        
         InFrontCheck();
 
         OnFixedUpdateSpecific();
@@ -375,7 +376,17 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         LayerMask mask = LayerMask.GetMask("Ground", "Platform");
 
         bool wasGrounded = IsGrounded;
-        IsGrounded = Physics2D.Raycast(transform.position, Vector2.down, rayDistance, mask);
+
+        bool hitGround = Physics2D.Raycast(transform.position, Vector2.down, rayDistance, mask);
+
+        if (isJumping)
+        {
+            IsGrounded = false;
+        }
+        else
+        {
+            IsGrounded = hitGround;
+        }
 
         if (!wasGrounded && IsGrounded)
         {
@@ -418,7 +429,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             isWaterSurface = false;
             stilldrowning = true;
         }
-        else if (!isBodyInWater && IsGrounded || IsInAir)
+        else if (!isBodyInWater)
         {
             isWaterSurface = false;
             stilldrowning = false;
