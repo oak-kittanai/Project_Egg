@@ -11,6 +11,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [SerializeField] public Rigidbody2D rb2D;
     [SerializeField] public Collider2D coll2D;
     [SerializeField] public PlayerGUI localGUI;
+    [SerializeField] public SpriteRenderer spriteRenderer;
     [Networked] public bool isBird { get; set; }
 
     [Header("Movement Settings")]
@@ -23,7 +24,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     [SerializeField] public bool resetAnimation;
 
-    [SerializeField] bool isJumping;
+    [SerializeField] public bool isJumping;
     [Networked] private TickTimer JumpCooldown { get; set; }
     [SerializeField] private float JumpCooldownTimer = 2f;
 
@@ -81,6 +82,10 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [Networked] private TickTimer InvincibleTimer { get; set; }
     [SerializeField] private float invincibleDuration = 1.5f;
 
+    [Header("Sprite Setting")]
+    [SerializeField] public Material outline_Duck;
+    [SerializeField] public Material outline_Bird;
+
     private void Awake()
     {
         if (stats == null) stats = GetComponent<CharacterStats>();
@@ -95,8 +100,16 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         if (stats.skinType == characterType.Bird)
         {
             isBird = true;
+            if (isBird)
+            {
+                spriteRenderer.material = outline_Bird;
+            }
+            else
+            {
+                spriteRenderer.material = outline_Duck;
+            }
         }
-        else { isBird = false;}
+        else { isBird = false; }
 
         if (stats != null)
         {
@@ -314,7 +327,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     {
         if (input.jump && IsGrounded && JumpCooldown.Expired(Runner))
         {
-            cAnimation.JumpAnimation();
             isJumping = true;
             IsInteractBusy = true;
             rb2D.AddForce(Vector2.up * stats.s_jumpForce, ForceMode2D.Impulse);
@@ -322,6 +334,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             IsInteractBusy = false;
             resetAnimation = false;
             JumpCooldown = TickTimer.CreateFromSeconds(Runner, JumpCooldownTimer);
+            cAnimation.JumpAnimation();
         }
     }
 
@@ -404,6 +417,11 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         {
             isWaterSurface = false;
             stilldrowning = true;
+        }
+        else if (!isBodyInWater && IsGrounded || IsInAir)
+        {
+            isWaterSurface = false;
+            stilldrowning = false;
         }
 
         IsInAir = !IsGrounded;

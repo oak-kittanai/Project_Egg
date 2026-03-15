@@ -66,17 +66,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5f8929bb62654f43a2402cb5915f891, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NetworkInteractableWater
-  vertexCount: 20
+  vertexCount: 50
   size: {x: 10, y: 4}
   material: {fileID: 2100000, guid: cb4291c767555ec4f94a5d738dc14e34, type: 2}
   gizmoColor: {r: 0, g: 1, b: 1, a: 1}
   splashParticles: {fileID: 0}
-  springStiffness: 0.1
-  dampening: 0.03
-  spread: 0.006
-  collisionRadius: 1
-  forceMultiplier: 0.02
-  maxVelocity: 0.1
+  springStiffness: 0.05
+  dampening: 0.025
+  spread: 0.05
+  collisionRadius: 0.2
+  forceMultiplier: 0.006
+  maxVelocity: 2
   waterPoints:
   - velocity: 0.0000053329964
     height: 0.00004427659

@@ -247,7 +247,7 @@ CapsuleCollider2D:
   m_CompositeOperation: 0
   m_CompositeOrder: 0
   m_Offset: {x: -0.029501198, y: 0.002748339}
-  m_Size: {x: 0.6493287, y: 0.8575568}
+  m_Size: {x: 0.6493287, y: 0.83}
   m_Direction: 0
 --- !u!114 &-2039167435644549920
 MonoBehaviour:
@@ -333,6 +333,7 @@ MonoBehaviour:
   rb2D: {fileID: 1808580689401154541}
   coll2D: {fileID: 645833589779868426}
   localGUI: {fileID: 6278514241336439428}
+  spriteRenderer: {fileID: 9153101824165123814}
   _isBird: 0
   _IsGrounded: 0
   _isWaterSurface: 0
@@ -376,8 +377,11 @@ MonoBehaviour:
   interactRadius: 0.8
   playerInteractRadius: 0.7
   invincibleDuration: 1.5
+  outline_Duck: {fileID: 2100000, guid: b6aae9ddce55c6d4c8bb52ed23067aac, type: 2}
+  outline_Bird: {fileID: 2100000, guid: 7e1a5e633ac2843498ae0803af368619, type: 2}
   diveCooldownTimer: 2
   _isJumpAble: 0
+  waterJumpCooldown: 3
   betweenCarryPosition: 0.7
   throwForceX: 7
   throwForceY: 7
@@ -387,7 +391,6 @@ MonoBehaviour:
   swimMaxSpeed: 5
   divingTime: 5
   divePhase: 0.5
-  onWater: 0
   _onDiving: 0
   _IsAlreadyDive: 0
   _emergencySwimBool: 0
@@ -417,6 +420,7 @@ MonoBehaviour:
   rb2D: {fileID: 1808580689401154541}
   coll2D: {fileID: 645833589779868426}
   localGUI: {fileID: 6278514241336439428}
+  spriteRenderer: {fileID: 9153101824165123814}
   _isBird: 0
   _IsGrounded: 0
   _isWaterSurface: 0
@@ -460,6 +464,8 @@ MonoBehaviour:
   interactRadius: 0.8
   playerInteractRadius: 1
   invincibleDuration: 1.5
+  outline_Duck: {fileID: 2100000, guid: b6aae9ddce55c6d4c8bb52ed23067aac, type: 2}
+  outline_Bird: {fileID: 2100000, guid: 7e1a5e633ac2843498ae0803af368619, type: 2}
   normalFlyTime: 0.9
   carryFlyTime: 0.8
   floatingGravity: 1

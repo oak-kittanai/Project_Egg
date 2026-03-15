@@ -27,10 +27,10 @@ public class Duck_Moveset : MovementCharacter
     [SerializeField] float swimMaxSpeed = 5f;
     [SerializeField] float divingTime = 5f;
     [SerializeField] float divePhase = 0.5f;
-    [SerializeField] bool onWater;
 
     [Networked] public bool onDiving { get; set; }
     [Networked] bool onDivingControl { get; set; }
+    [Networked] bool justDive { get; set; }
     [Networked] public bool IsAlreadyDive { get; set; }
 
     [Header("Emergency Setting")]
@@ -78,11 +78,7 @@ public class Duck_Moveset : MovementCharacter
 
         if (isWaterSurface && !onDiving)
         {
-            if (!onWater)
-            {
-                onWater = true;
-                cAnimation.UpdateGroundTypeOnDuck(true);
-            }
+            cAnimation.UpdateGroundTypeOnDuck(true);
             ReadyToDive = true;
 
             if (isJumpPressed && WaterJumpCooldownTimer.ExpiredOrNotRunning(Runner))
@@ -90,13 +86,18 @@ public class Duck_Moveset : MovementCharacter
                 HandleJumpOffWater();
             }
         }
-        else
+        else if (!onDiving && !isJumping)
         {
-            if (onWater)
-            {
-                onWater = false;
-                cAnimation.UpdateGroundTypeOnDuck(false);
-            }
+            cAnimation.ReturnToBlendAnimation();
+        }
+
+        if (IsHeadUnderwater && !justDive && onDiving)
+        {
+            justDive = true;
+        }
+        else if (!IsHeadUnderwater && !onDiving && isWaterSurface)
+        {
+            justDive = false;
         }
 
         if (isJumpingUp && rb2D.linearVelocity.y <= 0f)
@@ -214,7 +215,7 @@ public class Duck_Moveset : MovementCharacter
 
         if (isWaterSurface && isFPressed && ReadyToDive && !IsGrounded && !IsAlreadyDive)
         {
-            if (!IsCarrying)
+            if (!IsCarrying || !onDiving)
             {
                 StartDiveLogic();
             }
@@ -230,6 +231,10 @@ public class Duck_Moveset : MovementCharacter
             {
                 EndDivingLogic();
                 onDivingControl = false;
+            }
+            else if (!IsHeadUnderwater && onDiving && !DiveTimer.Expired(Runner) && justDive)
+            {
+                EndDivingLogic();
             }
             else
             {
@@ -271,6 +276,8 @@ public class Duck_Moveset : MovementCharacter
         if (IsCarrying) return;
 
         isMoveAble = false;
+
+        ReadyToDive = false;
 
         rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, -swimSpeed * divePhase);
 
@@ -324,6 +331,7 @@ public class Duck_Moveset : MovementCharacter
     public void ResetDiving()
     {
         emergencyToggle = true;
+        ReadyToDive = true;
         EmergencyTimer = TickTimer.None;
         DiveTimer = TickTimer.None;
 
