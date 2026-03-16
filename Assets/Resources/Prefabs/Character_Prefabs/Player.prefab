@@ -341,8 +341,8 @@ MonoBehaviour:
   _MoveInput: {x: 0, y: 0}
   _isFloating: 0
   isMoveAble: 0
-  resetAnimation: 0
-  isJumping: 0
+  _resetAnimation: 0
+  _isJumping: 0
   JumpCooldownTimer: 1.4
   isSpeedoptional: 0
   normalGravity: 2
@@ -428,8 +428,8 @@ MonoBehaviour:
   _MoveInput: {x: 0, y: 0}
   _isFloating: 0
   isMoveAble: 0
-  resetAnimation: 0
-  isJumping: 0
+  _resetAnimation: 0
+  _isJumping: 0
   JumpCooldownTimer: 1.4
   isSpeedoptional: 0
   normalGravity: 2

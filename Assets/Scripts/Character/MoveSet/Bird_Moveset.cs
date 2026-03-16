@@ -100,7 +100,7 @@ public class Bird_Moveset : MovementCharacter
                 if (DrownTimer.Expired(Runner))
                 {
                     startTimer = false;
-                    Die();
+                    CharacterDie();
                 }
                 else
                 {
@@ -205,12 +205,13 @@ public class Bird_Moveset : MovementCharacter
         isOptional = false;
         rb2D.linearDamping = 0f;
         rb2D.gravityScale = normalGravity;
-        cAnimation.UpdateFloatingOnBird(false);
     }
 
     private void StartFlying()
     {
         IsFlying = true;
+        isJumping = false;
+
         float duration = IsBeingCarried ? carryFlyTime : normalFlyTime;
         FlightTimer = TickTimer.CreateFromSeconds(Runner, duration);
 

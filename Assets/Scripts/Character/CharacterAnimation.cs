@@ -9,13 +9,15 @@ public class CharacterAnimation : NetworkBehaviour
     SpriteRenderer spriteRenderer;
     MovementCharacter movement;
 
-    [Header("Position")]
+    [Header("State")]
     [Networked] public int State { get; set; }
 
     [Networked] public NetworkBool FlipX { get; set; }
     [Networked] public float AnimX { get; set; }
     [Networked] public float AnimY { get; set; }
     [Networked] public NetworkString<_32> CurrentAnimState { get; set; }
+
+    private string _lastLocalState = "";
 
     [SerializeField] public bool Carrying => movement is Duck_Moveset duck && duck.IsCarrying;
     [SerializeField] public bool BeingCarried => movement.IsBeingCarried;
@@ -58,7 +60,11 @@ public class CharacterAnimation : NetworkBehaviour
 
             if (CurrentAnimState.Value != string.Empty)
             {
-                PlayAnimationSafeLocal(CurrentAnimState.Value);
+                if (_lastLocalState != CurrentAnimState.Value)
+                {
+                    PlayAnimationSafeLocal(CurrentAnimState.Value);
+                    _lastLocalState = CurrentAnimState.Value;
+                }
             }
         }
     }
@@ -117,7 +123,7 @@ public class CharacterAnimation : NetworkBehaviour
 
         if (!stateInfo.IsName(stateName) && !animator.IsInTransition(0))
         {
-            if (stateName == "BlendAnimation" || stateName == "NomalMovementTree" || stateName == "CarryMovementTree")
+            if (stateName == "BlendAnimation" || stateName == "NormalMovementTree" || stateName == "CarryMovementTree")
             {
                 animator.Play(stateName, 0, 0f);
             }
@@ -167,10 +173,8 @@ public class CharacterAnimation : NetworkBehaviour
     {
         if (isFloating)
         {
-            if (HasState("Float")) PlayAnimationNetworked("Float");
-            else PlayAnimationNetworked("Floating");
+            PlayAnimationNetworked("Float_Down");
         }
-        else PlayAnimationNetworked("Falling");
     }
 
     // Overall
@@ -180,33 +184,24 @@ public class CharacterAnimation : NetworkBehaviour
 
     public void FallingAndFloatAnimation(bool isFalling, bool isNearGround = false)
     {
-        if (Carrying)
+        if (movement.IsGrounded) return;
+
+        if (!movement.isBird)
         {
-            if (isFalling) PlayAnimationNetworked("Falling_carry");
-            else PlayAnimationNetworked("Floating_carry");
+            if (Carrying)
+            {
+                PlayAnimationNetworked(isFalling ? "Falling_carry" : "Floating_carry");
+            }
+            else
+            {
+                if (isFalling) PlayAnimationNetworked("Falling");
+            }
         }
         else
         {
             if (isFalling)
             {
-                /* if (isNearGround && HasState("Reach_ground")) 
-                {
-                    PlayAnimationNetworked("Reach_ground");
-                }
-                else 
-                */
-                if (HasState("Float_Down"))
-                {
-                    PlayAnimationNetworked("Float_Down");
-                }
-                else
-                {
-                    PlayAnimationNetworked("Falling");
-                }
-            }
-            else
-            {
-                PlayAnimationNetworked("Float");
+                PlayAnimationNetworked("Falling");
             }
         }
     }
@@ -241,8 +236,7 @@ public class CharacterAnimation : NetworkBehaviour
     {
         if (isFly)
         {
-            if (BeingCarried && HasState("Fly_carry")) PlayAnimationNetworked("Fly_carry");
-            else PlayAnimationNetworked("Fly");
+            PlayAnimationNetworked("Fly");
         }
     }
 }
