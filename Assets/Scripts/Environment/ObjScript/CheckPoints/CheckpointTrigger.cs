@@ -4,12 +4,11 @@ using UnityEngine;
 public class CheckpointTrigger : NetworkBehaviour
 {
     [Header("Checkpoint Settings")]
-    [Tooltip("if not use current spawnpoint")]
     [SerializeField] private Transform customSpawnPoint;
 
     [Networked] private NetworkBool isActivated { get; set; }
 
-    [Header("Visuals (Optional)")]
+    [Header("Visuals")]
     [SerializeField] private SpriteRenderer sr;
     [SerializeField] private Sprite activeSprite;
 

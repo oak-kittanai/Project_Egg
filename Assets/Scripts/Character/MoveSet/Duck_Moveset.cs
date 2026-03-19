@@ -392,6 +392,7 @@ public class Duck_Moveset : MovementCharacter
         else
         {
             EndDiveLogic();
+            CharacterDie();
             Debug.Log("Dead");
         }
     }

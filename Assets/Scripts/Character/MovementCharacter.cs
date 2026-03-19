@@ -22,9 +22,9 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [Networked] public bool isFloating { get; set; }
     [SerializeField] public bool isMoveAble;
 
-    [SerializeField] public bool resetAnimation;
+    [Networked] public bool resetAnimation { get; set; }
+    [Networked] public bool isJumping { get; set; }
 
-    [SerializeField] public bool isJumping;
     [Networked] private TickTimer JumpCooldown { get; set; }
     [SerializeField] private float JumpCooldownTimer = 2f;
 
@@ -111,6 +111,11 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         }
         else { isBird = false; }
 
+        if (cAnimation != null)
+        {
+            cAnimation.UpdateSkin(stats.skinType);
+        }
+
         if (stats != null)
         {
             characterMaxHealth = stats.s_maxHealth;
@@ -156,7 +161,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
         if (currentHealth <= characterMinHealth)
         {
-            Die();
+            CharacterDie();
         }
         else
         {
@@ -175,7 +180,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         }
     }
 
-    public virtual void Die()
+    public virtual void CharacterDie()
     {
         if (isDead) return;
 
@@ -326,16 +331,21 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     protected virtual void HandleJump(NetworkInputData input)
     {
-        if (input.jump && IsGrounded && JumpCooldown.Expired(Runner))
+        if (input.jump && IsGrounded && JumpCooldown.ExpiredOrNotRunning(Runner))
         {
             isJumping = true;
             IsInteractBusy = true;
+
+            rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, 0f);
             rb2D.AddForce(Vector2.up * stats.s_jumpForce, ForceMode2D.Impulse);
+
             IsGrounded = false;
             IsInteractBusy = false;
             resetAnimation = false;
+
             JumpCooldown = TickTimer.CreateFromSeconds(Runner, JumpCooldownTimer);
-            cAnimation.JumpAnimation();
+
+            if (cAnimation != null) cAnimation.JumpAnimation();
         }
     }
 
@@ -379,7 +389,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
         bool hitGround = Physics2D.Raycast(transform.position, Vector2.down, rayDistance, mask);
 
-        if (isJumping)
+        if (isJumping && rb2D.linearVelocity.y > 0.05f)
         {
             IsGrounded = false;
         }
