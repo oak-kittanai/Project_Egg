@@ -192,7 +192,10 @@ public class Duck_Moveset : MovementCharacter
     {
         if (Runner.TryFindObject(CarriedFriendId, out var obj))
         {
-            obj.transform.position = transform.position + Vector3.up * betweenCarryPosition;
+            if (obj.TryGetComponent<Rigidbody2D>(out var friendRb))
+            {
+                friendRb.position = rb2D.position + Vector2.up * betweenCarryPosition;
+            }
         }
     }
 
@@ -421,6 +424,16 @@ public class Duck_Moveset : MovementCharacter
             isSpeedoptional = false;
 
             rb2D.gravityScale = normalGravity;
+        }
+    }
+
+    public override void Render()
+    {
+        base.Render();
+
+        if (IsCarrying && Runner.TryFindObject(CarriedFriendId, out var obj))
+        {
+            obj.transform.position = transform.position + Vector3.up * betweenCarryPosition;
         }
     }
 }
