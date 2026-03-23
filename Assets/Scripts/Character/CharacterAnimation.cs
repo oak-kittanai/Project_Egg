@@ -232,11 +232,5 @@ public class CharacterAnimation : NetworkBehaviour
     // Bird
     public void ThrowAnimation() => PlayAnimationNetworked("Throwing");
 
-    public void FlyAnimation(bool isFly)
-    {
-        if (isFly)
-        {
-            PlayAnimationNetworked("Fly");
-        }
-    }
+    public void FlyAnimation() => PlayAnimationNetworked("Fly");
 }

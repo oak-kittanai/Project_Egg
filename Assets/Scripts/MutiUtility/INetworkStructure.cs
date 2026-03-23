@@ -99,6 +99,20 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
                 press_E = false;
             }
 
+            //Test Input
+
+            bool press_T;
+            if (Keyboard.current.tKey.isPressed)
+            {
+                press_T = true;
+            }
+            else
+            {
+                press_T = false;
+            }
+
+            // ---
+
             Vector2 mousePosition = Mouse.current.position.ReadValue();
 
             // need to add skill
@@ -121,6 +135,7 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
             data.jump = jump;
             data.Keyboard_F = press_F;
             data.Keyboard_E = press_E;
+            data.Keyboard_T = press_T;
         }
 
         input.Set(data);
@@ -137,7 +152,7 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
 
     public void OnPlayerJoined(NetworkRunner runner, PlayerRef player)
     {
-        if (SessionManager.Instance != null)
+        /*if (SessionManager.Instance != null)
         {
             SessionManager.Instance.GetData(player.PlayerId, player, runner);
         }
@@ -153,10 +168,10 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
             {
                 SessionHub.Instance.SetupButtonOnline(false);
             }
-        }
+        }*/
 
         // for test
-        /*if (SpawnPlayer.Instance != null)
+        if (SpawnPlayer.Instance != null)
         {
             if (runner.IsServer)
             {
@@ -167,7 +182,7 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
         else
         {
             Debug.LogWarning("Can't find CenterHost");
-        }*/
+        }
 
         Debug.Log($"Player has {player.PlayerId} Joined the session");
     }
@@ -257,6 +272,7 @@ public struct NetworkInputData : INetworkInput
     public bool jump;
     public bool Keyboard_F;
     public bool Keyboard_E;
+    public bool Keyboard_T;
     //public bool skill_1;
     //public bool skill_2;
 }

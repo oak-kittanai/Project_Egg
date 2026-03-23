@@ -31,7 +31,7 @@ public class BearTrapScript : NetworkBehaviour
 
                 player.TakeDamage(damageAmount, knockbackForce, knockbackDirection);
 
-                Debug.Log($"กับดักหมี งับ {player.name} ลดไป {damageAmount} เลือด!");
+                Debug.Log($"Do damage To {player.name}: -{damageAmount} hp");
             }
         }
     }

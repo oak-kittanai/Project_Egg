@@ -1,7 +1,6 @@
 ﻿using Fusion;
-using Fusion.Addons.Physics;
-using UnityEditor;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class MovementCharacter : NetworkBehaviour, IDamageable
 {
@@ -24,6 +23,10 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     [Networked] public bool resetAnimation { get; set; }
     [Networked] public bool isJumping { get; set; }
+
+    [Networked] private TickTimer PreJumpTimer { get; set; }
+    [Networked] public NetworkBool IsPreparingToJump { get; set; }
+    [SerializeField] private float jumpDelay = 0.5f;
 
     [Networked] private TickTimer JumpCooldown { get; set; }
     [SerializeField] private float JumpCooldownTimer = 2f;
@@ -82,17 +85,26 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [Networked] private TickTimer InvincibleTimer { get; set; }
     [SerializeField] private float invincibleDuration = 1.5f;
 
-    [Header("Sprite Setting")]
-    [SerializeField] public Material outline_Duck;
-    [SerializeField] public Material outline_Bird;
+    [SerializeField] private DamageFlash _damageFlash;
+    // Test Damage
+    [SerializeField] private bool FirstTimeTest = true;
+
+    [Header("Material Setting")]
+    [SerializeField] public Material outline;
+    [SerializeField] public Color duck_Color;
+    [SerializeField] public Color bird_Color;
+
 
     private void Awake()
     {
         if (stats == null) stats = GetComponent<CharacterStats>();
         if (cAnimation == null) cAnimation = GetComponent<CharacterAnimation>();
         if (rb2D == null) rb2D = GetComponent<Rigidbody2D>();
+        if (localGUI == null) localGUI = GetComponent<PlayerGUI>();
+        if (_damageFlash == null) _damageFlash = GetComponent<DamageFlash>();
+        if (outline == null) outline = GetComponent<Material>();
+
         isMoveAble = true;
-        if (localGUI != null) localGUI = GetComponent<PlayerGUI>();
     }
 
     public override void Spawned()
@@ -100,16 +112,17 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         if (stats.skinType == characterType.Bird)
         {
             isBird = true;
-            if (isBird)
-            {
-                spriteRenderer.material = outline_Bird;
-            }
-            else
-            {
-                spriteRenderer.material = outline_Duck;
-            }
         }
         else { isBird = false; }
+
+        if (isBird)
+        {
+            outline.SetColor("_OutlineColor", bird_Color);
+        }
+        else
+        {
+            outline.SetColor("_OutlineColor", duck_Color);
+        }
 
         if (cAnimation != null)
         {
@@ -154,17 +167,19 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         if (isDead || !InvincibleTimer.ExpiredOrNotRunning(Runner)) return;
 
         currentHealth -= dmg;
-        cAnimation.SmashAnimation();
+        //cAnimation.SmashAnimation();
 
         rb2D.linearVelocity = Vector2.zero;
         rb2D.AddForce(vec * knockbackForce, ForceMode2D.Impulse);
 
         if (currentHealth <= characterMinHealth)
         {
+            _damageFlash.CallDamageFlash_RPC();
             CharacterDie();
         }
         else
         {
+            _damageFlash.CallDamageFlash_RPC();
             InvincibleTimer = TickTimer.CreateFromSeconds(Runner, invincibleDuration);
         }
     }
@@ -283,8 +298,23 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                 HandleJump(input);
             }
             HandleInteraction(input);
+
+            if (input.Keyboard_T)
+            {
+                if (FirstTimeTest)
+                {
+                    FirstTimeTest = false;
+                    if (IsGrounded)
+                    {
+                        Vector2 knockbackDirection = new Vector2(1f, 1f).normalized;
+
+                        TakeDamage(1, 1, knockbackDirection);
+                    }
+                }
+                FirstTimeTest = true;
+            }
         }
-        
+
         InFrontCheck();
 
         OnFixedUpdateSpecific();

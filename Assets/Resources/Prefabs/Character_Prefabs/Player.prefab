@@ -22,6 +22,7 @@ GameObject:
   - component: {fileID: -187779602931087687}
   - component: {fileID: -8560203487497628801}
   - component: {fileID: 6278514241336439428}
+  - component: {fileID: 8883060706906370470}
   m_Layer: 7
   m_Name: Player
   m_TagString: Player
@@ -157,7 +158,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dcccfda6fabfc90408032db146230708, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CharacterStats
-  s_maxHealth: 3
+  s_maxHealth: 5
   s_maxStamina: 10
   s_walkSpeed: 6
   maxSpeed: 5
@@ -273,6 +274,7 @@ MonoBehaviour:
   - {fileID: 4112164643277785246}
   - {fileID: -187779602931087687}
   - {fileID: -8560203487497628801}
+  - {fileID: 8883060706906370470}
   - {fileID: 2576185141407854388}
   ForceRemoteRenderTimeframe: 0
 --- !u!114 &-7947786426853800306
@@ -343,6 +345,9 @@ MonoBehaviour:
   isMoveAble: 0
   _resetAnimation: 0
   _isJumping: 0
+  _IsPreparingToJump:
+    _value: 0
+  jumpDelay: 0.3
   JumpCooldownTimer: 1.4
   isSpeedoptional: 0
   normalGravity: 2
@@ -355,7 +360,7 @@ MonoBehaviour:
   accelerationSpeedOptional: 0.6
   decelerationSpeedOptional: 3
   optionalMaxSpeed: 1
-  _characterMaxHealth: 3
+  _characterMaxHealth: 5
   _characterMinHealth: 0
   _currentHealth: 0
   _isDead: 0
@@ -377,8 +382,11 @@ MonoBehaviour:
   interactRadius: 0.8
   playerInteractRadius: 0.7
   invincibleDuration: 1.5
-  outline_Duck: {fileID: 2100000, guid: b6aae9ddce55c6d4c8bb52ed23067aac, type: 2}
-  outline_Bird: {fileID: 2100000, guid: 7e1a5e633ac2843498ae0803af368619, type: 2}
+  _damageFlash: {fileID: 0}
+  FirstTimeTest: 1
+  outline: {fileID: 2100000, guid: b6aae9ddce55c6d4c8bb52ed23067aac, type: 2}
+  duck_Color: {r: 0, g: 0.4745098, b: 1, a: 0}
+  bird_Color: {r: 1, g: 0.54901963, b: 0, a: 0}
   diveCooldownTimer: 2
   _isJumpAble: 0
   waterJumpCooldown: 3
@@ -430,6 +438,9 @@ MonoBehaviour:
   isMoveAble: 0
   _resetAnimation: 0
   _isJumping: 0
+  _IsPreparingToJump:
+    _value: 0
+  jumpDelay: 0.5
   JumpCooldownTimer: 1.4
   isSpeedoptional: 0
   normalGravity: 2
@@ -442,7 +453,7 @@ MonoBehaviour:
   accelerationSpeedOptional: 3.5
   decelerationSpeedOptional: 6.5
   optionalMaxSpeed: 19
-  _characterMaxHealth: 3
+  _characterMaxHealth: 5
   _characterMinHealth: 0
   _currentHealth: 0
   _isDead: 0
@@ -464,8 +475,11 @@ MonoBehaviour:
   interactRadius: 0.8
   playerInteractRadius: 1
   invincibleDuration: 1.5
-  outline_Duck: {fileID: 2100000, guid: b6aae9ddce55c6d4c8bb52ed23067aac, type: 2}
-  outline_Bird: {fileID: 2100000, guid: 7e1a5e633ac2843498ae0803af368619, type: 2}
+  _damageFlash: {fileID: 0}
+  FirstTimeTest: 1
+  outline: {fileID: 2100000, guid: b6aae9ddce55c6d4c8bb52ed23067aac, type: 2}
+  duck_Color: {r: 0, g: 0.4745098, b: 1, a: 0}
+  bird_Color: {r: 1, g: 0.54901963, b: 0, a: 0}
   normalFlyTime: 0.9
   carryFlyTime: 0.8
   floatingGravity: 1
@@ -498,6 +512,55 @@ MonoBehaviour:
   fullBubbleSprite: {fileID: -1371404781168527079, guid: 921a17d8c16996f44b8dbc031acec8e9, type: 3}
   emptyBubbleSprite: {fileID: 1140728906013252903, guid: 83752bd8881af3f4f9f6e762e0e17c2d, type: 3}
   flightBar: {fileID: 482732701635250748}
+--- !u!114 &8883060706906370470
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 121460977929437379}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae9d36ee3d0765b45be99674acea75de, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DamageFlash
+  _spriteRenderers: []
+  _materials: []
+  _flashColor: {r: 63.999996, g: 0, b: 0, a: 1}
+  _flashCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: -1.1758127
+      outSlope: -1.1758127
+      tangentMode: 34
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 0.26313975
+      value: 0.69059694
+      inSlope: -2.149414
+      outSlope: -2.149414
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.19605236
+    - serializedVersion: 3
+      time: 0.4
+      value: 0
+      inSlope: -5.046001
+      outSlope: -5.046001
+      tangentMode: 34
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  flashDuration: 0.4
 --- !u!1 &432636327542768537
 GameObject:
   m_ObjectHideFlags: 0

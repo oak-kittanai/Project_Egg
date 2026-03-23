@@ -41,11 +41,6 @@ public class Bird_Moveset : MovementCharacter
             HandleFlightLogic(input);
         }
 
-        if (cAnimation != null)
-        {
-            cAnimation.FlyAnimation(IsFlying);
-        }
-
         if (IsGrounded)
         {
             IsAlreadyFly = false;
@@ -182,6 +177,7 @@ public class Bird_Moveset : MovementCharacter
                         }
                     }
                 }
+                cAnimation.FlyAnimation();
             }
         }
 
