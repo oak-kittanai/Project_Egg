@@ -24,10 +24,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [Networked] public bool resetAnimation { get; set; }
     [Networked] public bool isJumping { get; set; }
 
-    [Networked] private TickTimer PreJumpTimer { get; set; }
-    [Networked] public NetworkBool IsPreparingToJump { get; set; }
-    [SerializeField] private float jumpDelay = 0.5f;
-
     [Networked] private TickTimer JumpCooldown { get; set; }
     [SerializeField] private float JumpCooldownTimer = 2f;
 
@@ -90,7 +86,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [SerializeField] private bool FirstTimeTest = true;
 
     [Header("Material Setting")]
-    [SerializeField] public Material outline;
     [SerializeField] public Color duck_Color;
     [SerializeField] public Color bird_Color;
 
@@ -102,7 +97,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         if (rb2D == null) rb2D = GetComponent<Rigidbody2D>();
         if (localGUI == null) localGUI = GetComponent<PlayerGUI>();
         if (_damageFlash == null) _damageFlash = GetComponent<DamageFlash>();
-        if (outline == null) outline = GetComponent<Material>();
 
         isMoveAble = true;
     }
@@ -115,14 +109,22 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         }
         else { isBird = false; }
 
+        MaterialPropertyBlock mpb = new MaterialPropertyBlock();
+
+        spriteRenderer.GetPropertyBlock(mpb);
+
         if (isBird)
         {
-            outline.SetColor("_OutlineColor", bird_Color);
+            mpb.SetColor("_OutlineColor", bird_Color);
+            Debug.Log("Change Color to Bird");
         }
         else
         {
-            outline.SetColor("_OutlineColor", duck_Color);
+            mpb.SetColor("_OutlineColor", duck_Color);
+            Debug.Log("Change Color to Duck");
         }
+
+        spriteRenderer.SetPropertyBlock(mpb);
 
         if (cAnimation != null)
         {
@@ -172,14 +174,14 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         rb2D.linearVelocity = Vector2.zero;
         rb2D.AddForce(vec * knockbackForce, ForceMode2D.Impulse);
 
+        _damageFlash.CallDamageFlash_RPC();
+
         if (currentHealth <= characterMinHealth)
         {
-            _damageFlash.CallDamageFlash_RPC();
             CharacterDie();
         }
         else
         {
-            _damageFlash.CallDamageFlash_RPC();
             InvincibleTimer = TickTimer.CreateFromSeconds(Runner, invincibleDuration);
         }
     }
@@ -370,7 +372,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             rb2D.AddForce(Vector2.up * stats.s_jumpForce, ForceMode2D.Impulse);
 
             IsGrounded = false;
-            IsInteractBusy = false;
             resetAnimation = false;
 
             JumpCooldown = TickTimer.CreateFromSeconds(Runner, JumpCooldownTimer);

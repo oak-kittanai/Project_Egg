@@ -86,7 +86,7 @@ public class Duck_Moveset : MovementCharacter
                 HandleJumpOffWater();
             }
         }
-        else if (!onDiving && !isJumping)
+        else if (!onDiving && !isJumping && IsGrounded)
         {
             cAnimation.ReturnToBlendAnimation();
         }

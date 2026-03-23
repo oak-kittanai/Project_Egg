@@ -83,7 +83,7 @@ public class Bird_Moveset : MovementCharacter
             isOptional = true;
             optionalGravity = 0f;
 
-            rb2D.linearVelocity = new Vector2(0f, -1.5f);
+            rb2D.linearVelocity = new Vector2(rb2D.linearVelocityX, -1.5f);
 
             if (!startTimer)
             {
@@ -122,7 +122,7 @@ public class Bird_Moveset : MovementCharacter
 
         if (!IsBeingCarried)
         {
-            if (isPressed && IsInAir)
+            if (isPressed && IsAlreadyFly && IsInAir)
             {
                 if (!IsFlying && !IsAlreadyFly && isNearPeak)
                 {
