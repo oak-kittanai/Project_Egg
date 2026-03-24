@@ -35,7 +35,7 @@ public class DamageFlash : NetworkBehaviour
         }
     }
 
-    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    [Rpc(RpcSources.All, RpcTargets.All)]
     public void CallDamageFlash_RPC()
     {
         _damageFlashTimer = TickTimer.CreateFromSeconds(Runner, flashDuration);
