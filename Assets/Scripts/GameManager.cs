@@ -83,18 +83,18 @@ public class GameManager : SingletonNetwork<GameManager>
     private void CheckMapLoading()
     {
         // --- TEST CODE --- for sample scene
-        if (SceneManager.GetActiveScene().name == "SampleScene" && !isLoadMapDone && !isPlayerReady)
+        /*if (SceneManager.GetActiveScene().name == "SampleScene" && !isLoadMapDone && !isPlayerReady)
         {
             if (!isLoadMapDone) isLoadMapDone = true;
             if (!isPlayerReady) isPlayerReady = true;
-        }
+        }*/
 
-        /*if (MapsLoadedCount >= 2 && !isLoadMapDone)
+        if (MapsLoadedCount >= 2 && !isLoadMapDone)
         {
             isLoadMapDone = true;
             Debug.Log("Map Ready");
             CheckGameStart();
-        }*/
+        }
     }
 
     private void CheckGameStart()
@@ -110,6 +110,9 @@ public class GameManager : SingletonNetwork<GameManager>
             LoadingSceneTimer = TickTimer.CreateFromSeconds(Runner, loadingSceneCooldown);
             Debug.Log($"Both Ready! Starting Delay Timer {loadingSceneCooldown}");
         }
+
+        // Quest For Test
+        StartGlobalQuest("Free Map Explore", 1);
     }
 
     public override void FixedUpdateNetwork()
