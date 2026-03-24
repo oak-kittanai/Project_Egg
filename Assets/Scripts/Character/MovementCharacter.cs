@@ -300,21 +300,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                 HandleJump(input);
             }
             HandleInteraction(input);
-
-            if (input.Keyboard_T)
-            {
-                if (FirstTimeTest)
-                {
-                    FirstTimeTest = false;
-                    if (IsGrounded)
-                    {
-                        Vector2 knockbackDirection = new Vector2(1f, 1f).normalized;
-
-                        TakeDamage(1, 1, knockbackDirection);
-                    }
-                }
-                FirstTimeTest = true;
-            }
         }
 
         InFrontCheck();

@@ -69,6 +69,11 @@ public class Bird_Moveset : MovementCharacter
                 {
                     IsAlreadyFly = false;
                 }
+
+                if (HasStateAuthority || HasInputAuthority)
+                {
+                    cAnimation.FlipX = duck.cAnimation.FlipX;
+                }
             }
         }
 
