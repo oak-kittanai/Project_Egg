@@ -1,13 +1,10 @@
 fileFormatVersion: 2
-guid: c6b7a93894e391145b345ae4520d0dfa
+guid: dac944a7efe02214e958132c2397a835
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 5032889492801663959
-    second: Egg shell_0
-  - first:
-      213: -6772090435951175016
-    second: Egg shell_1
+      213: -4738109338099310754
+    second: thorn_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -112,17 +109,43 @@ TextureImporter:
     ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WindowsStoreApps
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Egg shell_0
+      name: thorn_0
       rect:
         serializedVersion: 2
-        x: 5
-        y: 2
-        width: 65
-        height: 53
+        x: 29
+        y: 47
+        width: 134
+        height: 35
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -131,30 +154,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 7d33d3c045a68d540800000000000000
-      internalID: 5032889492801663959
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: Egg shell_1
-      rect:
-        serializedVersion: 2
-        x: 65
-        y: 8
-        width: 23
-        height: 23
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 89a5f4ae0a3b402a0800000000000000
-      internalID: -6772090435951175016
+      spriteID: e5f11ab19aade3eb0800000000000000
+      internalID: -4738109338099310754
       vertices: []
       indices: 
       edges: []
@@ -173,8 +174,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Egg shell_0: 5032889492801663959
-      Egg shell_1: -6772090435951175016
+      thorn_0: -4738109338099310754
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

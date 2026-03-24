@@ -1,7 +1,6 @@
 ﻿using Fusion;
-using Fusion.Addons.Physics;
-using UnityEditor;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class MovementCharacter : NetworkBehaviour, IDamageable
 {
@@ -82,17 +81,24 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [Networked] private TickTimer InvincibleTimer { get; set; }
     [SerializeField] private float invincibleDuration = 1.5f;
 
-    [Header("Sprite Setting")]
-    [SerializeField] public Material outline_Duck;
-    [SerializeField] public Material outline_Bird;
+    [SerializeField] private DamageFlash _damageFlash;
+    // Test Damage
+    [SerializeField] private bool FirstTimeTest = true;
+
+    [Header("Material Setting")]
+    [SerializeField] public Color duck_Color;
+    [SerializeField] public Color bird_Color;
+
 
     private void Awake()
     {
         if (stats == null) stats = GetComponent<CharacterStats>();
         if (cAnimation == null) cAnimation = GetComponent<CharacterAnimation>();
         if (rb2D == null) rb2D = GetComponent<Rigidbody2D>();
+        if (localGUI == null) localGUI = GetComponent<PlayerGUI>();
+        if (_damageFlash == null) _damageFlash = GetComponent<DamageFlash>();
+
         isMoveAble = true;
-        if (localGUI != null) localGUI = GetComponent<PlayerGUI>();
     }
 
     public override void Spawned()
@@ -100,16 +106,25 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         if (stats.skinType == characterType.Bird)
         {
             isBird = true;
-            if (isBird)
-            {
-                spriteRenderer.material = outline_Bird;
-            }
-            else
-            {
-                spriteRenderer.material = outline_Duck;
-            }
         }
         else { isBird = false; }
+
+        MaterialPropertyBlock mpb = new MaterialPropertyBlock();
+
+        spriteRenderer.GetPropertyBlock(mpb);
+
+        if (isBird)
+        {
+            mpb.SetColor("_OutlineColor", bird_Color);
+            Debug.Log("Change Color to Bird");
+        }
+        else
+        {
+            mpb.SetColor("_OutlineColor", duck_Color);
+            Debug.Log("Change Color to Duck");
+        }
+
+        spriteRenderer.SetPropertyBlock(mpb);
 
         if (cAnimation != null)
         {
@@ -154,10 +169,12 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         if (isDead || !InvincibleTimer.ExpiredOrNotRunning(Runner)) return;
 
         currentHealth -= dmg;
-        cAnimation.SmashAnimation();
+        //cAnimation.SmashAnimation();
 
         rb2D.linearVelocity = Vector2.zero;
         rb2D.AddForce(vec * knockbackForce, ForceMode2D.Impulse);
+
+        _damageFlash.CallDamageFlash_RPC();
 
         if (currentHealth <= characterMinHealth)
         {
@@ -284,7 +301,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             }
             HandleInteraction(input);
         }
-        
+
         InFrontCheck();
 
         OnFixedUpdateSpecific();
@@ -340,7 +357,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             rb2D.AddForce(Vector2.up * stats.s_jumpForce, ForceMode2D.Impulse);
 
             IsGrounded = false;
-            IsInteractBusy = false;
             resetAnimation = false;
 
             JumpCooldown = TickTimer.CreateFromSeconds(Runner, JumpCooldownTimer);
