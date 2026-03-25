@@ -123,7 +123,7 @@ public class Bird_Moveset : MovementCharacter
     private void HandleFlightLogic(NetworkInputData input)
     {
         bool isPressed = input.jump && !_wasJumpPressed;
-        bool isNearPeak = Mathf.Abs(rb2D.linearVelocity.y) < 3f;
+        bool isNearPeak = Mathf.Abs(rb2D.linearVelocity.y) < 2f;
 
         if (!IsBeingCarried)
         {

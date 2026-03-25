@@ -82,8 +82,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [SerializeField] private float invincibleDuration = 1.5f;
 
     [SerializeField] private DamageFlash _damageFlash;
-    // Test Damage
-    [SerializeField] private bool FirstTimeTest = true;
 
     [Header("Material Setting")]
     [SerializeField] public Color duck_Color;
@@ -152,7 +150,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             localGUI.SetCharacterType(isBird);
         }
 
-        if (HasInputAuthority || (HasStateAuthority && Runner.LocalPlayer == Object.StateAuthority))
+        if (HasInputAuthority)
         {
             OnHealthChanged();
 
@@ -169,7 +167,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         if (isDead || !InvincibleTimer.ExpiredOrNotRunning(Runner)) return;
 
         currentHealth -= dmg;
-        //cAnimation.SmashAnimation();
 
         rb2D.linearVelocity = Vector2.zero;
         rb2D.AddForce(vec * knockbackForce, ForceMode2D.Impulse);
@@ -188,7 +185,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     public void OnHealthChanged()
     {
-        if (HasInputAuthority || (HasStateAuthority && Runner.LocalPlayer == Object.StateAuthority))
+        if (HasInputAuthority)
         {
             if (PlayerInterface.Instance != null)
             {
