@@ -113,7 +113,7 @@ public class GameManager : SingletonNetwork<GameManager>
         }
 
         // Quest For Test
-        StartGlobalQuest("Free Map Explore", 1);
+        StartGlobalQuest("Find an exit", 1);
     }
 
     public override void FixedUpdateNetwork()

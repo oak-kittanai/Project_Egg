@@ -68,7 +68,10 @@ public class Bird_Moveset : MovementCharacter
                 if (duck.IsGrounded || duck.isWaterSurface)
                 {
                     IsAlreadyFly = false;
-                    cAnimation.ReturnToBlendAnimation();
+                    if (IsFlying != false)
+                    {
+                        cAnimation.ReturnToBlendAnimation();
+                    }
                 }
 
                 if (HasStateAuthority || HasInputAuthority)
