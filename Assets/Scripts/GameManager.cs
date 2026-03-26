@@ -87,7 +87,8 @@ public class GameManager : SingletonNetwork<GameManager>
         {
             if (!isLoadMapDone) isLoadMapDone = true;
             if (!isPlayerReady) isPlayerReady = true;
-        }*/
+        }
+        */
 
         if (MapsLoadedCount >= 2 && !isLoadMapDone)
         {
@@ -205,16 +206,24 @@ public class GameManager : SingletonNetwork<GameManager>
 
     public void RequestDespawn(NetworkObject objToDespawn)
     {
-        if (HasStateAuthority) NetworkRunner.Despawn(objToDespawn);
-        else RPC_Despawn(objToDespawn.Id);
+        if (objToDespawn == null) return;
+
+        if (HasStateAuthority)
+        {
+            Runner.Despawn(objToDespawn);
+        }
+        else
+        {
+            RPC_Despawn(objToDespawn.Id);
+        }
     }
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
     private void RPC_Despawn(NetworkId objId)
     {
-        if (NetworkRunner.TryFindObject(objId, out var obj))
+        if (Runner.TryFindObject(objId, out var obj))
         {
-            NetworkRunner.Despawn(obj);
+            Runner.Despawn(obj);
         }
     }
 

@@ -13,10 +13,13 @@ public class PlayerInterface : MonoBehaviour
 
     [Header("Health Setting")]
     public Image HealthBar_Ref;
-    public Sprite fullHealth;
-    public Sprite halfHealth;
-    public Sprite lowHealth;
     public Sprite emptyHealth;
+    public Sprite FirstHealth;
+    public Sprite SecondHealth;
+    public Sprite ThirdHealth;
+    public Sprite FourthHealth;
+    public Sprite FifthHealth;
+    
 
     [Header("Quest Setting")]
     public GameObject questContainer;
@@ -45,9 +48,11 @@ public class PlayerInterface : MonoBehaviour
         if (HealthBar_Ref == null) return;
         switch (currentHp)
         {
-            case 3: HealthBar_Ref.sprite = fullHealth; break;
-            case 2: HealthBar_Ref.sprite = halfHealth; break;
-            case 1: HealthBar_Ref.sprite = lowHealth; break;
+            case 5: HealthBar_Ref.sprite = FifthHealth; break;
+            case 4: HealthBar_Ref.sprite = FourthHealth; break;
+            case 3: HealthBar_Ref.sprite = ThirdHealth; break;
+            case 2: HealthBar_Ref.sprite = SecondHealth; break;
+            case 1: HealthBar_Ref.sprite = FirstHealth; break;
             default: HealthBar_Ref.sprite = emptyHealth; break;
         }
     }

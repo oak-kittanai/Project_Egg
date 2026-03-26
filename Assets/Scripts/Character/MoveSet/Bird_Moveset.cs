@@ -68,6 +68,7 @@ public class Bird_Moveset : MovementCharacter
                 if (duck.IsGrounded || duck.isWaterSurface)
                 {
                     IsAlreadyFly = false;
+                    cAnimation.ReturnToBlendAnimation();
                 }
 
                 if (HasStateAuthority || HasInputAuthority)
@@ -88,7 +89,7 @@ public class Bird_Moveset : MovementCharacter
             isOptional = true;
             optionalGravity = 0f;
 
-            rb2D.linearVelocity = new Vector2(rb2D.linearVelocityX, -1.5f);
+            rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, -1.5f);
 
             if (!startTimer)
             {
@@ -123,13 +124,12 @@ public class Bird_Moveset : MovementCharacter
     private void HandleFlightLogic(NetworkInputData input)
     {
         bool isPressed = input.jump && !_wasJumpPressed;
-        bool isNearPeak = Mathf.Abs(rb2D.linearVelocity.y) < 2f;
 
         if (!IsBeingCarried)
         {
-            if (isPressed && IsAlreadyFly && IsInAir)
+            if (isPressed && IsInAir)
             {
-                if (!IsFlying && !IsAlreadyFly && isNearPeak)
+                if (!IsFlying && !IsAlreadyFly)
                 {
                     StartFlying();
                 }
@@ -148,10 +148,24 @@ public class Bird_Moveset : MovementCharacter
             }
         }
 
-        if (isPressed && IsAlreadyFly)
+        if (IsBeingCarried && IsAlreadyFly && !IsFlying)
+        {
+            if (Runner.TryFindObject(CarrierId, out var carrierObj))
+            {
+                if (carrierObj.TryGetComponent<MovementCharacter>(out var duck))
+                {
+                    if (duck.IsGrounded)
+                    {
+                        resetAnimation = true;
+                    }
+                }
+            }
+        }
+
+        if (isPressed && IsAlreadyFly && !IsFlying)
         {
             if (AlreadyFloating) StopFloating();
-            else if (!AlreadyFloating) StartFloating();
+            else StartFloating();
         }
 
         if (IsFlying)
@@ -161,10 +175,7 @@ public class Bird_Moveset : MovementCharacter
                 StopFlying();
                 IsAlreadyFly = true;
 
-                if (IsBeingCarried)
-                {
-                    cAnimation.ReturnToBlendAnimation();
-                }
+                StartFloating();
             }
             else
             {
@@ -182,7 +193,6 @@ public class Bird_Moveset : MovementCharacter
                         }
                     }
                 }
-                cAnimation.FlyAnimation();
             }
         }
 
@@ -195,7 +205,9 @@ public class Bird_Moveset : MovementCharacter
         AlreadyFloating = true;
         optionalGravity = floatingGravity;
         isOptional = true;
-        cAnimation.UpdateFloatingOnBird(true);
+
+        cAnimation.FlyFloatAnimation();
+
         rb2D.linearDamping = 5f;
     }
 
@@ -206,6 +218,8 @@ public class Bird_Moveset : MovementCharacter
         isOptional = false;
         rb2D.linearDamping = 0f;
         rb2D.gravityScale = normalGravity;
+
+        resetAnimation = true;
     }
 
     private void StartFlying()
@@ -216,7 +230,9 @@ public class Bird_Moveset : MovementCharacter
         float duration = IsBeingCarried ? carryFlyTime : normalFlyTime;
         FlightTimer = TickTimer.CreateFromSeconds(Runner, duration);
 
-        if (HasInputAuthority || (HasStateAuthority && Runner.LocalPlayer == Object.StateAuthority))
+        cAnimation.FlyUpAnimation();
+
+        if (HasInputAuthority)
         {
             if (localGUI != null)
             {
@@ -237,7 +253,7 @@ public class Bird_Moveset : MovementCharacter
         IsFlying = false;
         FlightTimer = TickTimer.None;
 
-        if (HasInputAuthority || (HasStateAuthority && Runner.LocalPlayer == Object.StateAuthority))
+        if (HasInputAuthority)
         {
             if (localGUI != null)
             {

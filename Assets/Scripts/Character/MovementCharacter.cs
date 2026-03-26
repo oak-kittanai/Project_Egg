@@ -71,6 +71,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [Header("Passenger System")]
     [Networked] public NetworkId CarrierId { get; set; }
     [Networked] public bool IsBeingCarried { get; set; }
+    [SerializeField] public bool isCarrying => this is Duck_Moveset duck && duck.IsCarry;
     [Networked] public bool IsInteractBusy { get; set; }
 
     public float rayDistance = 1.2f;
@@ -201,9 +202,18 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         isDead = true;
         isMoveAble = false;
 
-        if (IsBeingCarried) SetCarriedState(false, default);
-
-        if (this is Duck_Moveset duck && duck.IsCarrying) duck.DropFriend(true);
+        if (IsBeingCarried)
+        {
+            if (Runner.TryFindObject(CarrierId, out var carrierObj) && carrierObj.TryGetComponent<Duck_Moveset>(out var duck))
+            {
+                duck.DropFriend(false);
+            }
+            SetCarriedState(false, default);
+        }
+        else if (this is Duck_Moveset duckset && duckset.IsCarry)
+        {
+            duckset.DropFriend(true);
+        }
 
         rb2D.linearVelocity = Vector2.zero;
 
@@ -348,7 +358,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         if (input.jump && IsGrounded && JumpCooldown.ExpiredOrNotRunning(Runner))
         {
             isJumping = true;
-            IsInteractBusy = true;
 
             rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, 0f);
             rb2D.AddForce(Vector2.up * stats.s_jumpForce, ForceMode2D.Impulse);
@@ -358,7 +367,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
             JumpCooldown = TickTimer.CreateFromSeconds(Runner, JumpCooldownTimer);
 
-            if (cAnimation != null) cAnimation.JumpAnimation();
+            if (cAnimation != null && !isCarrying) cAnimation.JumpAnimation();
         }
     }
 

@@ -19,8 +19,10 @@ public class CharacterAnimation : NetworkBehaviour
 
     private string _lastLocalState = "";
 
-    [SerializeField] public bool Carrying => movement is Duck_Moveset duck && duck.IsCarrying;
+    [SerializeField] public bool Carrying => movement is Duck_Moveset duck && duck.IsCarry;
     [SerializeField] public bool BeingCarried => movement.IsBeingCarried;
+
+    [Networked] public TickTimer AnimationTimer { get; set; }
 
     [Header("Controller Setting")]
     [SerializeField] public RuntimeAnimatorController DuckController;
@@ -169,18 +171,15 @@ public class CharacterAnimation : NetworkBehaviour
         else ReturnToBlendAnimation();
     }
 
-    public void UpdateFloatingOnBird(bool isFloating)
-    {
-        if (isFloating)
-        {
-            PlayAnimationNetworked("Float_Down");
-        }
-    }
-
     // Overall
     public void JumpAnimation() => PlayAnimationNetworked("Jump");
 
     public void InteractAnimation() => PlayAnimationNetworked("Interact");
+
+    public void BirdPrepareFallingAnimaion()
+    {
+
+    }
 
     public void FallingAndFloatAnimation(bool isFalling, bool isNearGround = false)
     {
@@ -232,5 +231,7 @@ public class CharacterAnimation : NetworkBehaviour
     // Bird
     public void ThrowAnimation() => PlayAnimationNetworked("Throwing");
 
-    public void FlyAnimation() => PlayAnimationNetworked("Fly");
+    public void FlyUpAnimation() => PlayAnimationNetworked("Fly_Up");
+    public void FlyFloatAnimation() => PlayAnimationNetworked("Fly");
+    //public void ReachGroundAnimation() => PlayAnimationNetworked("Reach_ground");
 }

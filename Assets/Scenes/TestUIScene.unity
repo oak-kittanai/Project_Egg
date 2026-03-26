@@ -313,7 +313,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 3258438235624872542, guid: 7266f29ca9b20f64a85101daaae2cb3f, type: 3}
+  m_Sprite: {fileID: -3250615525173541702, guid: 482fe809bb6574c42bee12bfb41c4fb8, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -847,11 +847,13 @@ MonoBehaviour:
   characterProfile_Ref: {fileID: 2061495327}
   character_Duck: {fileID: -2374474480940007843, guid: e987e967332695f4c85c4c00a3750c38, type: 3}
   character_Bird: {fileID: 9143422536967379192, guid: 15690aa1fed1f5a49977f7be5dd5bac0, type: 3}
-  HealthBar_Ref: {fileID: 140757332}
-  fullHealth: {fileID: 8763615411080283816, guid: da15eb5f7e652614fb6875757cb96821, type: 3}
-  halfHealth: {fileID: -471466924387194846, guid: 165f090aa2aae894a9c9b3d94a4727db, type: 3}
-  lowHealth: {fileID: -9089209303918951932, guid: 44caa39c7e72ef1468b404f8bef8600f, type: 3}
-  emptyHealth: {fileID: 3258438235624872542, guid: 7266f29ca9b20f64a85101daaae2cb3f, type: 3}
+  HealthBar_Ref: {fileID: 0}
+  emptyHealth: {fileID: 0}
+  FirstHealth: {fileID: 0}
+  SecondHealth: {fileID: 0}
+  ThirdHealth: {fileID: 0}
+  FourthHealth: {fileID: 0}
+  FifthHealth: {fileID: 0}
   questContainer: {fileID: 583787085}
   questText: {fileID: 1609586350}
   questProgressBar: {fileID: 1102673127}

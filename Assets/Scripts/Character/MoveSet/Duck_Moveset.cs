@@ -4,8 +4,6 @@ using UnityEngine;
 public class Duck_Moveset : MovementCharacter
 {
     [Header("Duck Setting")]
-    [Networked] private TickTimer DiveCooldown { get; set; }
-    [SerializeField] private float diveCooldownTimer = 2f;
     [Networked] bool ReadyToDive { get; set; }
 
     [Networked] bool isJumpingUp { get; set; }
@@ -31,7 +29,6 @@ public class Duck_Moveset : MovementCharacter
     [Networked] public bool onDiving { get; set; }
     [Networked] bool onDivingControl { get; set; }
     [Networked] bool justDive { get; set; }
-    [Networked] public bool IsAlreadyDive { get; set; }
 
     [Header("Emergency Setting")]
     [Networked] public bool emergencySwimBool { get; set; }
@@ -52,7 +49,7 @@ public class Duck_Moveset : MovementCharacter
 
     [Header("Carry System (Duck Only)")]
     [Networked] public NetworkId CarriedFriendId { get; set; }
-    [Networked] public bool IsCarrying { get; set; }
+    [Networked] public bool IsCarry { get; set; }
 
     protected override void OnFixedUpdateSpecific()
     {
@@ -107,7 +104,7 @@ public class Duck_Moveset : MovementCharacter
 
         HandleBuoyancy();
 
-        if (IsCarrying)
+        if (IsCarry)
         {
             UpdateCarriedFriendPosition();
         }
@@ -135,7 +132,7 @@ public class Duck_Moveset : MovementCharacter
 
         if (isEPressed)
         {
-            if (IsCarrying)
+            if (IsCarry)
             {
                 DropFriend();
                 return;
@@ -156,7 +153,7 @@ public class Duck_Moveset : MovementCharacter
 
     public void PickupFriend(MovementCharacter friend)
     {
-        IsCarrying = true;
+        IsCarry = true;
         CarriedFriendId = friend.Object.Id;
         friend.SetCarriedState(true, Object.Id);
 
@@ -181,7 +178,7 @@ public class Duck_Moveset : MovementCharacter
                 }
             }
         }
-        IsCarrying = false;
+        IsCarry = false;
         CarriedFriendId = default;
 
         if (IsGrounded) cAnimation.ReturnToBlendAnimation();
@@ -211,15 +208,15 @@ public class Duck_Moveset : MovementCharacter
 
         bool isFPressed = input.Keyboard_F && !_wasFPressed;
 
-        if (!isWaterSurface && isFPressed && onDiving && !IsGrounded && IsAlreadyDive)
+        if (!isWaterSurface && isFPressed && onDiving && !IsGrounded)
         {
             EndDivingLogic();
         }
 
-        if (isWaterSurface && isFPressed && ReadyToDive && !IsGrounded && !IsAlreadyDive)
+        if (isWaterSurface && isFPressed && ReadyToDive && !IsGrounded)
         {
-            if (!IsCarrying || !onDiving)
-            {
+            if (!IsCarry || !onDiving)
+            {   
                 StartDiveLogic();
             }
             else
@@ -276,7 +273,7 @@ public class Duck_Moveset : MovementCharacter
     {
         if (currentWater == null) return;
 
-        if (IsCarrying) return;
+        if (IsCarry) return;
 
         isMoveAble = false;
 
@@ -328,7 +325,6 @@ public class Duck_Moveset : MovementCharacter
         onDivingControl = false;
         rb2D.linearDamping = 0f;
         ResetDiving();
-        IsAlreadyDive = false;
     }
 
     public void ResetDiving()
@@ -337,9 +333,6 @@ public class Duck_Moveset : MovementCharacter
         ReadyToDive = true;
         EmergencyTimer = TickTimer.None;
         DiveTimer = TickTimer.None;
-
-        float duration = diveCooldownTimer;
-        DiveCooldown = TickTimer.CreateFromSeconds(Runner, duration);
 
         if (localGUI != null)
         {
@@ -402,7 +395,7 @@ public class Duck_Moveset : MovementCharacter
 
     public void HandleBuoyancy()
     {
-        bool isBeingLiftedByBird = IsCarrying && rb2D.linearVelocity.y > 1.5f;
+        bool isBeingLiftedByBird = IsCarry && rb2D.linearVelocity.y > 1.5f;
 
         if (IsBodyOnWater && currentWater != null && !onDiving && !isJumpingUp && !isBeingLiftedByBird)
         {
@@ -431,7 +424,7 @@ public class Duck_Moveset : MovementCharacter
     {
         base.Render();
 
-        if (IsCarrying && Runner.TryFindObject(CarriedFriendId, out var obj))
+        if (IsCarry && Runner.TryFindObject(CarriedFriendId, out var obj))
         {
             obj.transform.position = transform.position + Vector3.up * betweenCarryPosition;
         }
