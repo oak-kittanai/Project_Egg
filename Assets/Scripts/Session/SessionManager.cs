@@ -68,7 +68,6 @@ public class SessionManager : SingletonNetwork<SessionManager>
                     if (playerRef == playerRun.LocalPlayer)
                     {
                         CH.SpawnPlayer(playerRef, CharacterTypeShip.Instance.currentHost, true);
-
                     }
                     else
                     {
@@ -103,6 +102,7 @@ public class SessionManager : SingletonNetwork<SessionManager>
             Debug.Log($"Remove player :{players.playerNum}");
         }
     }
+
     public void GetData(int userID, PlayerRef player, NetworkRunner runner)
     {
         PlayersData newPlayers = new PlayersData()
@@ -159,7 +159,6 @@ public class SessionManager : SingletonNetwork<SessionManager>
             _isAlreadyInRoom = true;
             if (!string.IsNullOrEmpty(_sessionKey))
             {
-
                 SessionHub.Instance.GetKey(_sessionKey);
                 Debug.Log($"Create session Key : {_sessionKey}");
             }
@@ -207,7 +206,7 @@ public class SessionManager : SingletonNetwork<SessionManager>
                 PlayerCount = 2
             };
 
-            var res = await networkRunner.StartGame(startSessionArgs);
+            var res = await runner.StartGame(startSessionArgs);
             if (!res.Ok)
             {
                 SessionHub.Instance.ShowDebugText("Create Session Fail");
@@ -217,13 +216,18 @@ public class SessionManager : SingletonNetwork<SessionManager>
             else if (res.Ok)
             {
                 SessionHub.Instance.ShowDebugText("Success Create Session");
-            };
-            
+            }
+            ;
+
             runTime = runner.Spawn(runtimeUpdate);
 
             if (runTime != null)
             {
-                RuntimeUpdate.Instance.UpdateCode(sessionKey);
+                RuntimeUpdate rtUpdate = runTime.GetComponent<RuntimeUpdate>();
+                if (rtUpdate != null)
+                {
+                    rtUpdate.UpdateCode(sessionKey);
+                }
             }
 
             shipType = runner.Spawn(shipTypePrefabs);
@@ -318,10 +322,10 @@ public class SessionManager : SingletonNetwork<SessionManager>
             Debug.Log("Runner shutdown complete");
         }
 
-        if (runTime != null)
-        {
-            networkRunner.Despawn(runTime);
-        }
+        runTime = null;
+        shipType = null;
+        GM = null;
+        Players.Clear();
 
         await Task.Delay(100);
 
@@ -333,15 +337,18 @@ public class SessionManager : SingletonNetwork<SessionManager>
 
     public void UpdatePlayerCount(NetworkRunner runner)
     {
-        if (runner.IsServer && runner.SessionInfo.PlayerCount == 2)
+        if (runner != null && runner.SessionInfo != null)
         {
-            runner.SessionInfo.IsOpen = false;
-            runner.SessionInfo.IsVisible = false;
-        }
-        else
-        {
-            runner.SessionInfo.IsOpen = true;
-            runner.SessionInfo.IsVisible = true;
+            if (runner.IsServer && runner.SessionInfo.PlayerCount == 2)
+            {
+                runner.SessionInfo.IsOpen = false;
+                runner.SessionInfo.IsVisible = false;
+            }
+            else
+            {
+                runner.SessionInfo.IsOpen = true;
+                runner.SessionInfo.IsVisible = true;
+            }
         }
     }
 }

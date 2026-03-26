@@ -23,7 +23,7 @@ public class PlayerGUI : MonoBehaviour
     private NetworkRunner activeRunner;
     private bool isTrackingFlight = false;
 
-    private void Start()
+    private void Awake()
     {
         if (flightBar != null) flightBar.gameObject.SetActive(false);
     }
