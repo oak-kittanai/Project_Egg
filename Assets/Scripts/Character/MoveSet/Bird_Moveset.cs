@@ -65,13 +65,10 @@ public class Bird_Moveset : MovementCharacter
 
             if (Runner.TryFindObject(CarrierId, out var duckObj) && duckObj.TryGetComponent<MovementCharacter>(out var duck))
             {
-                if (duck.IsGrounded || duck.isWaterSurface)
+                if (duck.IsGrounded || duck.isWaterSurface && !IsFlying)
                 {
                     IsAlreadyFly = false;
-                    if (IsFlying != false)
-                    {
-                        cAnimation.ReturnToBlendAnimation();
-                    }
+                    resetAnimation = true;
                 }
 
                 if (HasStateAuthority || HasInputAuthority)
