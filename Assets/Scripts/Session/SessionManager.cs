@@ -15,8 +15,6 @@ public class SessionManager : SingletonNetwork<SessionManager>
     [NetworkPrefab] public NetworkObject runtimeUpdate;
     [SerializeField] NetworkObject runTime;
 
-    [SerializeField] Transform _listTransform;
-
     [NetworkPrefab] public NetworkObject shipTypePrefabs;
     [SerializeField] NetworkObject shipType;
 
@@ -35,14 +33,30 @@ public class SessionManager : SingletonNetwork<SessionManager>
         public PlayerRef playerRef;
     }
 
-    [Header("GameManger")]
+    [Header("GameManager")]
     [NetworkPrefab] public NetworkObject GameManagerPrefabs;
     [SerializeField] public NetworkObject GM;
     [SerializeField] public GameManager gameManager;
 
+    [Header("UI System")]
+    [SerializeField] public GameObject globalLoadingScreen;
+
+    public void ShowLoadingScreen(bool show)
+    {
+        if (globalLoadingScreen != null)
+        {
+            globalLoadingScreen.SetActive(show);
+        }
+    }
+
     public async void StartGame()
     {
         _isAlreadyInRoom = false;
+
+        ShowLoadingScreen(true);
+
+        if (GlobalLoadingManager.Instance != null) GlobalLoadingManager.Instance.ShowLoading();
+
         if (networkRunner.IsServer)
         {
             INetworkStructure networkStructure = networkRunner.GetComponent<INetworkStructure>();
@@ -51,7 +65,7 @@ public class SessionManager : SingletonNetwork<SessionManager>
             CenterHost CH = CHObject.GetComponent<CenterHost>();
             CH.AddComponent(networkRunner, networkStructure, PlayerPrefabs);
 
-            await LoadStartGame("Stage1-S1"); // Load To Scene Beta Test
+            await LoadStartGame("Stage1-S1");
             _isAlreadyInRoom = false;
 
             GM = networkRunner.Spawn(GameManagerPrefabs);
@@ -113,7 +127,6 @@ public class SessionManager : SingletonNetwork<SessionManager>
         };
 
         Players.Add(newPlayers);
-
         Debug.Log($"Player added: {player.PlayerId} and add {runner}");
     }
 
@@ -126,21 +139,14 @@ public class SessionManager : SingletonNetwork<SessionManager>
     {
         if (networkRunner == null)
         {
-            try
-            {
-                ReStartNetworkRunner();
-            }
-            catch
-            {
-                ReStartNetworkRunner();
-            }
+            try { ReStartNetworkRunner(); }
+            catch { ReStartNetworkRunner(); }
         }
         else
         {
             ReStartNetworkRunner();
         }
     }
-
 
     #region SessionRoom
 
@@ -153,7 +159,6 @@ public class SessionManager : SingletonNetwork<SessionManager>
         else
         {
             _sessionKey = GenerateSessionCode();
-
             await StartSession(networkRunner, _sessionKey);
 
             _isAlreadyInRoom = true;
@@ -217,7 +222,6 @@ public class SessionManager : SingletonNetwork<SessionManager>
             {
                 SessionHub.Instance.ShowDebugText("Success Create Session");
             }
-            ;
 
             runTime = runner.Spawn(runtimeUpdate);
 
@@ -244,6 +248,10 @@ public class SessionManager : SingletonNetwork<SessionManager>
 
         if (networkRunner == null) AddRunner();
 
+        if (GlobalLoadingManager.Instance != null) GlobalLoadingManager.Instance.ShowLoading();
+
+        ShowLoadingScreen(true);
+
         var startJoiningArgs = new StartGameArgs()
         {
             GameMode = GameMode.Client,
@@ -257,6 +265,7 @@ public class SessionManager : SingletonNetwork<SessionManager>
         {
             Debug.LogError($"JoinSession failed: {res.ShutdownReason}");
             SessionHub.Instance.ShowDebugText($"Join Session Fail :{res.ShutdownReason}");
+            ShowLoadingScreen(false); // ถ้า Join พัง ก็ปิดหน้าโหลด
             return;
         }
         else if (res.Ok)
@@ -308,7 +317,6 @@ public class SessionManager : SingletonNetwork<SessionManager>
         {
             Debug.Log("create runner");
         }
-
     }
 
     public async void ReStartNetworkRunner()
@@ -333,7 +341,6 @@ public class SessionManager : SingletonNetwork<SessionManager>
     }
 
     #endregion
-
 
     public void UpdatePlayerCount(NetworkRunner runner)
     {

@@ -21,6 +21,7 @@ public class CharacterAnimation : NetworkBehaviour
 
     [SerializeField] public bool Carrying => movement is Duck_Moveset duck && duck.IsCarry;
     [SerializeField] public bool BeingCarried => movement.IsBeingCarried;
+    [SerializeField] public bool isBird => movement is MovementCharacter move && move.isBird;
 
     [Networked] public TickTimer AnimationTimer { get; set; }
 
@@ -40,7 +41,7 @@ public class CharacterAnimation : NetworkBehaviour
     public override void Spawned()
     {
         if (animator == null) animator = GetComponent<Animator>();
-        if (movement == null) movement = GetComponent<MovementCharacter>();
+        if (movement == null) movement = GetComponentInParent<MovementCharacter>();
 
         CacheAnimatorParameters();
     }
@@ -185,7 +186,7 @@ public class CharacterAnimation : NetworkBehaviour
     {
         if (movement.IsGrounded) return;
 
-        if (!movement.isBird)
+        if (!isBird)
         {
             if (Carrying)
             {

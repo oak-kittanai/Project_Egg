@@ -4,7 +4,7 @@ using UnityEngine;
 public class BearTrapScript : NetworkBehaviour
 {
     [Header("Trap Settings")]
-    [SerializeField] private float cooldownTime = 1.5f;
+    [SerializeField] private float cooldownTime = 2.4f;
     [SerializeField] private int damageAmount = 1;
     [SerializeField] private float knockbackForce = 5f;
     [Networked] private TickTimer CooldownTimer { get; set; }

@@ -3802,7 +3802,7 @@ PrefabInstance:
     - target: {fileID: 7581363676634988447, guid: 2a585ce85a41bfe428999078832f2881, type: 3}
       propertyPath: PlayerPrefabs
       value: 
-      objectReference: {fileID: -2039167435644549920, guid: 448217c67bfd8884097fc5e4774a11fd, type: 3}
+      objectReference: {fileID: 6866875988248065551, guid: 4a21928bbd567594bb193592dd20431f, type: 3}
     - target: {fileID: 7581363676634988447, guid: 2a585ce85a41bfe428999078832f2881, type: 3}
       propertyPath: shipTypePrefabs
       value: 
@@ -3819,6 +3819,10 @@ PrefabInstance:
       propertyPath: GameManagerPrefabs
       value: 
       objectReference: {fileID: 861224361725939580, guid: ed0cb723a5912b64d9876a3f28a3df89, type: 3}
+    - target: {fileID: 7581363676634988447, guid: 2a585ce85a41bfe428999078832f2881, type: 3}
+      propertyPath: globalLoadingScreen
+      value: 
+      objectReference: {fileID: 4284040587868531441, guid: 32106e508f38449458581bef698c2a5b, type: 3}
     - target: {fileID: 8951876932146295832, guid: 2a585ce85a41bfe428999078832f2881, type: 3}
       propertyPath: m_LocalPosition.x
       value: 1068.1223

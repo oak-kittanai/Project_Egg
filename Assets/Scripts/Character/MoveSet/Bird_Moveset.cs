@@ -174,7 +174,6 @@ public class Bird_Moveset : MovementCharacter
             {
                 StopFlying();
                 IsAlreadyFly = true;
-
                 StartFloating();
             }
             else
@@ -189,7 +188,10 @@ public class Bird_Moveset : MovementCharacter
                     {
                         if (carrierObj.TryGetComponent<MovementCharacter>(out var duck))
                         {
-                            duck.rb2D.linearVelocity = new Vector2(duck.rb2D.linearVelocity.x, stats.s_flySpeed);
+                            if (duck.HasStateAuthority)
+                            {
+                                duck.rb2D.linearVelocity = new Vector2(duck.rb2D.linearVelocity.x, stats.s_flySpeed);
+                            }
                         }
                     }
                 }

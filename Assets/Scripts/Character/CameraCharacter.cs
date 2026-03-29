@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using Fusion;
 
 public class CameraCharacter : NetworkBehaviour
@@ -6,17 +6,25 @@ public class CameraCharacter : NetworkBehaviour
     public delegate void ParallaxCameraDelegate(float deltaMovement);
     public ParallaxCameraDelegate onCameraTranslate;
 
-    private Transform camearaTransform;
-
     private float oldPosition;
+
+    [Header("Camera Smoothing"), Tooltip("(0.05|low value = fast follow, 0.1|high value = slow follower/Smooth)")]
+    [SerializeField] private float smoothTime = 0.08f;
+    private Vector3 velocity = Vector3.zero;
+
+    private Transform target;
+    private Vector3 offset;
 
     public override void Spawned()
     {
-        if (Object.HasInputAuthority)
+        if (HasInputAuthority)
         {
             oldPosition = transform.position.x;
+            offset = transform.localPosition;
 
-            camearaTransform = this.transform;
+            target = transform.parent;
+
+            transform.SetParent(null);
 
             if (ParallaxBackground.Instance != null)
             {
@@ -33,9 +41,20 @@ public class CameraCharacter : NetworkBehaviour
         }
     }
 
-    public override void FixedUpdateNetwork()
+    public override void Despawned(NetworkRunner runner, bool hasState)
     {
-        if (!Object.HasInputAuthority) return;
+        if (HasInputAuthority && gameObject != null)
+        {
+            Destroy(gameObject);
+        }
+    }
+
+    private void LateUpdate()
+    {
+        if (!HasInputAuthority || target == null) return;
+
+        Vector3 desiredPosition = target.position + offset;
+        transform.position = Vector3.SmoothDamp(transform.position, desiredPosition, ref velocity, smoothTime);
 
         if (transform.position.x != oldPosition)
         {

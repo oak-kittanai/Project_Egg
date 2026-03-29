@@ -179,7 +179,7 @@ public class CenterHost : SingletonNetwork<CenterHost>
     private void InitializeObjBeforeSpawn(NetworkRunner runner, NetworkObject playerObj)
     {
         CharacterStats playerStats = playerObj.GetComponent<CharacterStats>();
-        CharacterAnimation playerAnimation = playerObj.GetComponent<CharacterAnimation>();
+        CharacterAnimation playerAnimation = playerObj.GetComponentInChildren<CharacterAnimation>();
         Bird_Moveset bird = playerObj.GetComponent<Bird_Moveset>();
         Duck_Moveset duck = playerObj.GetComponent<Duck_Moveset>();
 
@@ -188,13 +188,16 @@ public class CenterHost : SingletonNetwork<CenterHost>
             playerStats.skinType = currentHost;
             playerObj.name = $"Player ({playerStats.skinType})Host";
             Debug.Log("Spawn Player Host");
+
             if (playerStats.skinType == characterType.Duck)
             {
-                Destroy(bird);
+                if (bird != null) bird.enabled = false;
+                if (duck != null) duck.enabled = true;
             }
             else
             {
-                Destroy(duck);
+                if (duck != null) duck.enabled = false;
+                if (bird != null) bird.enabled = true;
             }
             hostStats = playerStats;
         }
@@ -203,13 +206,16 @@ public class CenterHost : SingletonNetwork<CenterHost>
             playerStats.skinType = currentClient;
             playerObj.name = $"Player ({playerStats.skinType})Client";
             Debug.Log("Spawn Player Client");
+
             if (playerStats.skinType == characterType.Duck)
             {
-                Destroy(bird);
+                if (bird != null) bird.enabled = false;
+                if (duck != null) duck.enabled = true;
             }
             else
             {
-                Destroy(duck);
+                if (duck != null) duck.enabled = false;
+                if (bird != null) bird.enabled = true;
             }
             clientStats = playerStats;
         }

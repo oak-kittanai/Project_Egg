@@ -92,7 +92,7 @@ public class NetworkInteractableWater : NetworkBehaviour
 
         for (int i = 0; i < waterPoints.Count; i++)
         {
-            Vector3 vertPos = vertices[topVertexIndices[i]];
+            Vector3 vertPos = vertices[topVertexIndices[i]]; // Bug
             float distance = Mathf.Abs(localPos.x - vertPos.x);
 
             if (distance < collisionRadius)

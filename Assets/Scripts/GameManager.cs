@@ -83,19 +83,18 @@ public class GameManager : SingletonNetwork<GameManager>
     private void CheckMapLoading()
     {
         // --- TEST CODE --- for sample scene
-        /*if (SceneManager.GetActiveScene().name == "SampleScene" && !isLoadMapDone && !isPlayerReady)
+        if (SceneManager.GetActiveScene().name == "SampleScene" && !isLoadMapDone && !isPlayerReady)
         {
             if (!isLoadMapDone) isLoadMapDone = true;
             if (!isPlayerReady) isPlayerReady = true;
         }
-        */
 
-        if (MapsLoadedCount >= 2 && !isLoadMapDone)
+        /*if (MapsLoadedCount >= 2 && !isLoadMapDone)
         {
             isLoadMapDone = true;
             Debug.Log("Map Ready");
             CheckGameStart();
-        }
+        }*/
     }
 
     private void CheckGameStart()
@@ -128,19 +127,6 @@ public class GameManager : SingletonNetwork<GameManager>
                 LoadingSceneTimer = TickTimer.None;
                 Debug.Log("Game Start!");
             }
-        }
-    }
-
-    public override void Render()
-    {
-        if (!IsGameReady)
-        {
-            allowCloseUI = true;
-        }
-
-        if (allowCloseUI && IsGameReady && currentLoadingUI != null && currentLoadingUI.activeSelf)
-        {
-            currentLoadingUI.SetActive(false);
         }
     }
 
@@ -380,6 +366,44 @@ public class GameManager : SingletonNetwork<GameManager>
     private void RPC_AddQuestProgress(int amount)
     {
         AddQuestProgress(amount);
+    }
+
+    // Loading Screen Zone
+
+    public void ShowGlobalLoadingScreen()
+    {
+        if (GlobalLoadingManager.Instance != null)
+        {
+            GlobalLoadingManager.Instance.ShowLoading();
+        }
+    }
+
+    public void HideGlobalLoadingScreen()
+    {
+        if (GlobalLoadingManager.Instance != null)
+        {
+            GlobalLoadingManager.Instance.HideLoading();
+        }
+    }
+
+    public override void Render()
+    {
+        if (!IsGameReady)
+        {
+            allowCloseUI = true;
+        }
+
+        if (allowCloseUI && IsGameReady)
+        {
+            HideGlobalLoadingScreen();
+
+            if (currentLoadingUI != null && currentLoadingUI.activeSelf)
+            {
+                currentLoadingUI.SetActive(false);
+            }
+
+            allowCloseUI = false;
+        }
     }
 
 }

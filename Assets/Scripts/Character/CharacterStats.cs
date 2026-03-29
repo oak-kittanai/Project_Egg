@@ -22,7 +22,7 @@ public class CharacterStats : NetworkBehaviour
 
     private void Awake()
     {
-        cAnimation = GetComponent<CharacterAnimation>();
+        cAnimation = GetComponentInChildren<CharacterAnimation>();
     }
 
     public override void Spawned()

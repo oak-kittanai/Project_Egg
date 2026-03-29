@@ -27,7 +27,7 @@ public class SpawnPlayer : SingletonNetwork<SpawnPlayer>
     private void InitializeObjBeforeSpawn(NetworkRunner runner, NetworkObject playerObj)
     {
         CharacterStats playerStats = playerObj.GetComponent<CharacterStats>();
-        CharacterAnimation playerAnimation = playerObj.GetComponent<CharacterAnimation>();
+        CharacterAnimation playerAnimation = playerObj.GetComponentInChildren<CharacterAnimation>();
         Bird_Moveset bird = playerObj.GetComponent<Bird_Moveset>();
         Duck_Moveset duck = playerObj.GetComponent<Duck_Moveset>();
 
