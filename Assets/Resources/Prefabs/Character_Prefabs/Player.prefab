@@ -583,6 +583,8 @@ MonoBehaviour:
   localGUI: {fileID: 843996908277204990}
   spriteRenderer: {fileID: 3464039886670934113}
   _isBird: 0
+  visualTransform: {fileID: 0}
+  visualSmoothTime: 0.03
   _IsGrounded: 0
   _isWaterSurface: 0
   _IsInAir: 0
@@ -591,7 +593,7 @@ MonoBehaviour:
   isMoveAble: 0
   _resetAnimation: 0
   _isJumping: 0
-  JumpCooldownTimer: 2.8
+  JumpCooldownTimer: 1.4
   isSpeedoptional: 0
   normalGravity: 2
   heavyGravity: 5.5
@@ -607,7 +609,7 @@ MonoBehaviour:
   _characterMinHealth: 0
   _currentHealth: 0
   _isDead: 0
-  respawnCooldown: 6
+  respawnCooldown: 2.5
   canbeRespawn: 1
   _IsHeadUnderwater: 0
   _IsBodyOnWater: 0
@@ -637,12 +639,14 @@ MonoBehaviour:
   swimAcceleration: 4
   swimDeceleration: 4
   swimMaxSpeed: 5
-  divingTime: 16
+  divingTime: 8
   divePhase: 0.5
+  emergencyAcceleration: 1.1
+  emergencyDeceleration: 2
   _onDiving: 0
   _emergencySwimBool: 0
   emergencyToggle: 0
-  emergencySwimTimer: 4
+  emergencySwimTimer: 2
   __wasEPressed: 0
   __wasFPressed: 0
   __wasJumpPressed: 0
@@ -669,6 +673,8 @@ MonoBehaviour:
   localGUI: {fileID: 843996908277204990}
   spriteRenderer: {fileID: 3464039886670934113}
   _isBird: 0
+  visualTransform: {fileID: 0}
+  visualSmoothTime: 0.03
   _IsGrounded: 0
   _isWaterSurface: 0
   _IsInAir: 0
@@ -677,7 +683,7 @@ MonoBehaviour:
   isMoveAble: 0
   _resetAnimation: 0
   _isJumping: 0
-  JumpCooldownTimer: 2.8
+  JumpCooldownTimer: 1.4
   isSpeedoptional: 0
   normalGravity: 2
   heavyGravity: 5.5
@@ -693,7 +699,7 @@ MonoBehaviour:
   _characterMinHealth: 0
   _currentHealth: 0
   _isDead: 0
-  respawnCooldown: 6
+  respawnCooldown: 2.5
   canbeRespawn: 1
   _IsHeadUnderwater: 0
   _IsBodyOnWater: 0

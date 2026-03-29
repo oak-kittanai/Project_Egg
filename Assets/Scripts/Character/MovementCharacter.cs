@@ -51,7 +51,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     [Header("Character Setting (Health & Respawn)")]
     [Networked] public int characterMaxHealth { get; set; }
-    [Networked] public int characterMinHealth { get; set; }
     [Networked, OnChangedRender(nameof(OnHealthChanged))] public int currentHealth { get; set; }
 
     [Networked] public bool isDead { get; set; }
@@ -80,6 +79,11 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     [SerializeField] public float betweenCarryPosition = 0.65f;
 
+    // Local
+    public bool localIsBeingCarriedPredict;
+    public NetworkId localCarrierIdPredict;
+
+    [Header("")]
     public float rayDistance = 1.2f;
     public float interactRadius = 1.5f;
     public float playerInteractRadius = 1f;
@@ -136,10 +140,14 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         if (stats != null)
         {
             characterMaxHealth = stats.s_maxHealth;
-            characterMinHealth = 0;
         }
 
-        currentHealth = characterMaxHealth;
+        if (HasStateAuthority)
+        {
+            currentHealth = characterMaxHealth;
+            isDead = false;
+        }
+
         JumpCooldown = TickTimer.CreateFromSeconds(Runner, JumpCooldownTimer);
         resetAnimation = true;
 
@@ -180,7 +188,11 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         rb2D.AddForce(vec * knockbackForce, ForceMode2D.Impulse);
         _damageFlash.CallDamageFlash_RPC();
 
-        if (currentHealth <= characterMinHealth) CharacterDie();
+        if (currentHealth <= 0)
+        {
+            isMoveAble = false;
+            CharacterDie();
+        }
         else InvincibleTimer = TickTimer.CreateFromSeconds(Runner, invincibleDuration);
     }
 
@@ -197,7 +209,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         if (isDead) return;
 
         isDead = true;
-        isMoveAble = false;
 
         if (IsBeingCarried)
         {
@@ -212,7 +223,11 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             duckset.DropFriend(true);
         }
 
+
         rb2D.linearVelocity = Vector2.zero;
+        rb2D.simulated = false;
+        // Play animation Dead
+
         if (canbeRespawn) respawnTimer = TickTimer.CreateFromSeconds(Runner, respawnCooldown);
     }
 
@@ -220,13 +235,18 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     {
         isDead = false;
         isMoveAble = true;
-        currentHealth = characterMaxHealth;
+        if (HasStateAuthority)
+        {
+            currentHealth = characterMaxHealth;
+        }
 
         stilldrowning = false;
         IsHeadUnderwater = false;
         isWaterSurface = false;
         IsFalling = false;
         FallingBusy = false;
+
+        rb2D.simulated = true;
 
         rb2D.linearVelocity = Vector2.zero;
         rb2D.angularVelocity = 0f;
@@ -280,22 +300,19 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
         if (IsBeingCarried)
         {
-            rb2D.simulated = false;
+            rb2D.bodyType = RigidbodyType2D.Kinematic;
+            rb2D.linearVelocity = Vector2.zero;
             isMoveAble = false;
 
-            if (Runner.TryFindObject(CarrierId, out var duckObj) && HasStateAuthority)
+            if (Runner.TryFindObject(CarrierId, out var duckObj))
             {
                 rb2D.position = duckObj.GetComponent<Rigidbody2D>().position + Vector2.up * betweenCarryPosition;
-                rb2D.linearVelocity = Vector2.zero;
             }
         }
         else
         {
-            if (!rb2D.simulated)
-            {
-                rb2D.position = transform.position;
-                rb2D.simulated = true;
-            }
+            if (rb2D.bodyType == RigidbodyType2D.Kinematic) rb2D.bodyType = RigidbodyType2D.Dynamic;
+            if (!rb2D.simulated) rb2D.simulated = true;
             isMoveAble = true;
         }
 
@@ -374,16 +391,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         bool wasGrounded = IsGrounded;
         bool hitGround = Physics2D.Raycast(transform.position, Vector2.down, rayDistance, mask);
 
-        if (isJumping && rb2D.linearVelocity.y > 0.05f) IsGrounded = false;
-        else IsGrounded = hitGround;
-
-        if (!wasGrounded && IsGrounded)
-        {
-            isJumping = false;
-            resetAnimation = true;
-        }
-
         bool isNearGround = Physics2D.Raycast(transform.position, Vector2.down, rayDistance + nearGroundDistance, mask);
+
         LayerMask waterMask = LayerMask.GetMask("Water");
         Vector2 headPosition = (Vector2)transform.position + (Vector2.up * headOffset);
         Vector2 bodyPosition = (Vector2)transform.position + (Vector2.up * bodyOffset);
@@ -391,6 +400,17 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         Collider2D bodyCollider = Physics2D.OverlapCircle(transform.position, 0.5f, waterMask);
         IsHeadUnderwater = Physics2D.OverlapPoint(headPosition, waterMask);
         IsBodyOnWater = Physics2D.OverlapPoint(bodyPosition, waterMask);
+
+        if (isJumping && rb2D.linearVelocity.y > 0.05f) IsGrounded = false;
+        else IsGrounded = hitGround && !IsHeadUnderwater;
+
+        if (!wasGrounded && IsGrounded)
+        {
+            isJumping = false;
+            resetAnimation = true;
+        }
+
+        Debug.Log("isGround : " + IsGrounded);
 
         if (bodyCollider != null)
         {
@@ -454,19 +474,19 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     {
         if (HasInputAuthority) CheckInteractablePrompt();
 
-        if (IsBeingCarried && Runner.TryFindObject(CarrierId, out var duckObj))
+        bool effectivelyCarried = IsBeingCarried || localIsBeingCarriedPredict;
+        NetworkId effectiveCarrierId = IsBeingCarried ? CarrierId : localCarrierIdPredict;
+
+        if (effectivelyCarried && Runner.TryFindObject(effectiveCarrierId, out var duckObj) && duckObj.TryGetComponent<MovementCharacter>(out var duckMC))
         {
             if (spriteRenderer != null) spriteRenderer.sortingOrder = originalSortingOrder - 1;
 
-            if (visualTransform != null)
+            if (visualTransform != null && duckMC.visualTransform != null)
             {
-                visualTransform.position = duckObj.transform.position + new Vector3(0, betweenCarryPosition, 0);
+                visualTransform.position = duckMC.visualTransform.position + new Vector3(0, betweenCarryPosition, 0);
             }
 
-            if (cAnimation != null && duckObj.TryGetComponent<MovementCharacter>(out var duckMC))
-            {
-                cAnimation.FlipX = duckMC.cAnimation.FlipX;
-            }
+            if (cAnimation != null) cAnimation.FlipX = duckMC.cAnimation.FlipX;
         }
         else
         {

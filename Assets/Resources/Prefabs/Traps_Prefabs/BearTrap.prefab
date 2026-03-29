@@ -201,7 +201,6 @@ MonoBehaviour:
   NetworkedBehaviours:
   - {fileID: 8347546913742788566}
   - {fileID: 2773800375211028375}
-  - {fileID: 7764153561861741568}
   ForceRemoteRenderTimeframe: 0
 --- !u!114 &2773800375211028375
 MonoBehaviour:
@@ -218,6 +217,7 @@ MonoBehaviour:
   cooldownTime: 1.5
   damageAmount: 1
   knockbackForce: 5
+  doDamageColl2D: {fileID: 7739149955437505156}
   trapAnimator: {fileID: 6590150637966079089}
 --- !u!1 &4529620114154594664
 GameObject:
@@ -229,7 +229,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1491052843244465091}
   - component: {fileID: 7739149955437505156}
-  - component: {fileID: 7764153561861741568}
   m_Layer: 0
   m_Name: Trap_HitBlock
   m_TagString: Untagged
@@ -286,7 +285,7 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: -0.0032382607, y: -0.23518425}
+  m_Offset: {x: 0.017285556, y: -0.23518425}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0, y: 0}
@@ -296,20 +295,5 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1.2054931, y: 0.5793035}
+  m_Size: {x: 0.9509985, y: 0.5793035}
   m_EdgeRadius: 0
---- !u!114 &7764153561861741568
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4529620114154594664}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d6c2ea7cb747ffa44af7abd235d40365, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DoDamage
-  cooldownTime: 1.5
-  damageAmount: 1
-  knockbackForce: 1

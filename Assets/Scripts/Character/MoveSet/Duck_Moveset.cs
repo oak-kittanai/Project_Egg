@@ -11,7 +11,7 @@ public class Duck_Moveset : MovementCharacter
 
     [Header("Water Jump Setting")]
     [Networked] private TickTimer WaterJumpCooldownTimer { get; set; }
-    [SerializeField] private float waterJumpCooldown = 3f;
+    [SerializeField] private float waterJumpCooldown = 1.5f;
 
     [Header("Carry setting")]
     [SerializeField] public float throwForceX = 4f;
@@ -24,6 +24,9 @@ public class Duck_Moveset : MovementCharacter
     [SerializeField] float swimMaxSpeed = 5f;
     [SerializeField] float divingTime = 5f;
     [SerializeField] float divePhase = 0.5f;
+
+    [SerializeField] float emergencyAcceleration = 1f;
+    [SerializeField] float emergencyDeceleration = 2f;
 
     [Networked] public bool onDiving { get; set; }
     [Networked] bool onDivingControl { get; set; }
@@ -150,13 +153,13 @@ public class Duck_Moveset : MovementCharacter
         IsCarry = true;
         CarriedFriendId = friend.Object.Id;
 
-        // 🚨 สไตล์ Local: ไม่ต้องดัก Host/Client แค่ส่ง RPC ให้นกจัดการตัวเอง
+        friend.localIsBeingCarriedPredict = true;
+        friend.localCarrierIdPredict = Object.Id;
+
         friend.RPC_UpdateCarry(true, Object.Id);
 
         if (IsGrounded) cAnimation.ReturnToBlendAnimation();
         else if (isWaterSurface) cAnimation.UpdateGroundTypeOnDuck(true);
-
-        Debug.Log("Duck picked up a friend!");
     }
 
     public void DropFriend(bool throwFriend = true)
@@ -166,15 +169,20 @@ public class Duck_Moveset : MovementCharacter
             if (obj.TryGetComponent<MovementCharacter>(out var friend))
             {
                 float throwDir = cAnimation.FlipX ? 1f : -1f;
-                // 🚨 สไตล์ Local: สั่ง RPC ปล่อยและโยน พร้อมแนบ Object.Id ไปเป็นพิกัดอ้างอิง
+
+                friend.localIsBeingCarriedPredict = false;
+
+                if (throwFriend && friend.visualTransform != null)
+                {
+                    friend.visualTransform.position = transform.position + new Vector3(throwDir * 1f, 1f, 0);
+                }
+
                 friend.RPC_UpdateCarry(false, Object.Id, throwFriend, throwDir, throwForceX, throwForceY);
             }
         }
+
         IsCarry = false;
         CarriedFriendId = default;
-
-        if (IsGrounded) cAnimation.ReturnToBlendAnimation();
-        else if (isWaterSurface) cAnimation.UpdateGroundTypeOnDuck(true);
     }
 
     public void HandleWaterLogic(NetworkInputData input)
@@ -338,7 +346,7 @@ public class Duck_Moveset : MovementCharacter
                 Vector2 currentVel = rb2D.linearVelocity;
                 Vector2 speedDif = targetVel - currentVel;
 
-                float accelRate = inputDir.sqrMagnitude > 0.01f ? swimAcceleration : swimDeceleration;
+                float accelRate = inputDir.sqrMagnitude > 0.01f ? emergencyAcceleration : swimDeceleration;
 
                 rb2D.AddForce(speedDif * accelRate);
 

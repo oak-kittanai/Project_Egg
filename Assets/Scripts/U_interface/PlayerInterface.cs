@@ -2,10 +2,8 @@
 using UnityEngine.UI;
 using TMPro;
 
-public class PlayerInterface : MonoBehaviour
+public class PlayerInterface : Singleton<PlayerInterface>
 {
-    public static PlayerInterface Instance;
-
     [Header("Profile Setting")]
     public Image characterProfile_Ref;
     public Sprite character_Duck;
@@ -32,11 +30,6 @@ public class PlayerInterface : MonoBehaviour
     public GameObject interactPromptObj;
     public Vector3 promptOffset = new Vector3(0f, 1.5f, 0f);
     private Transform currentInteractTarget;
-
-    private void Awake()
-    {
-        if (Instance == null) Instance = this;
-    }
 
     private void Start()
     {

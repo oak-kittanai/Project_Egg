@@ -386,6 +386,11 @@ public class GameManager : SingletonNetwork<GameManager>
         }
     }
 
+    #region Player
+
+
+    #endregion
+
     public override void Render()
     {
         if (!IsGameReady)
