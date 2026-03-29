@@ -41,7 +41,6 @@ public class CharacterAnimation : NetworkBehaviour
     public override void Spawned()
     {
         if (animator == null) animator = GetComponent<Animator>();
-        if (movement == null) movement = GetComponentInParent<MovementCharacter>();
 
         CacheAnimatorParameters();
     }
@@ -50,6 +49,11 @@ public class CharacterAnimation : NetworkBehaviour
     {
         animator = GetComponent<Animator>();
         spriteRenderer = GetComponent<SpriteRenderer>();
+    }
+
+    public void InitializeMovement(MovementCharacter mc)
+    {
+        movement = mc;
     }
 
     public override void Render()

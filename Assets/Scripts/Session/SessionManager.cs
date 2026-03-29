@@ -194,48 +194,51 @@ public class SessionManager : SingletonNetwork<SessionManager>
 
     public async Task StartSession(NetworkRunner runner, string sessionKey)
     {
-        Debug.Log("Start session Successfully");
+        Debug.Log("Starting Host Session...");
         if (runner == null)
         {
-            Debug.Log("can't start seesion find runner");
+            Debug.LogError("Cannot start session: NetworkRunner is null.");
             return;
         }
-        else
+
+        _isAlreadyInRoom = true;
+
+        var sceneManager = runner.GetComponent<NetworkSceneManagerDefault>();
+        if (sceneManager == null)
         {
-            _isAlreadyInRoom = true;
-
-            var startSessionArgs = new StartGameArgs()
-            {
-                GameMode = GameMode.Host,
-                SessionName = sessionKey,
-                PlayerCount = 2
-            };
-
-            var res = await runner.StartGame(startSessionArgs);
-            if (!res.Ok)
-            {
-                SessionHub.Instance.ShowDebugText("Create Session Fail");
-                Debug.LogError($"JoinSession failed: {res.ShutdownReason}");
-                return;
-            }
-            else if (res.Ok)
-            {
-                SessionHub.Instance.ShowDebugText("Success Create Session");
-            }
-
-            runTime = runner.Spawn(runtimeUpdate);
-
-            if (runTime != null)
-            {
-                RuntimeUpdate rtUpdate = runTime.GetComponent<RuntimeUpdate>();
-                if (rtUpdate != null)
-                {
-                    rtUpdate.UpdateCode(sessionKey);
-                }
-            }
-
-            shipType = runner.Spawn(shipTypePrefabs);
+            sceneManager = runner.gameObject.AddComponent<NetworkSceneManagerDefault>();
+            Debug.Log("Added NetworkSceneManagerDefault to Runner automatically.");
         }
+
+        var startSessionArgs = new StartGameArgs()
+        {
+            GameMode = GameMode.Host,
+            SessionName = sessionKey,
+            PlayerCount = 2,
+            SceneManager = sceneManager
+        };
+
+        var res = await runner.StartGame(startSessionArgs);
+
+        if (!res.Ok)
+        {
+            SessionHub.Instance.ShowDebugText("Create Session Fail");
+            Debug.LogError($"StartSession failed: {res.ShutdownReason}");
+            _isAlreadyInRoom = false;
+            return;
+        }
+
+        SessionHub.Instance.ShowDebugText("Success Create Session");
+        Debug.Log("Start session Successfully");
+
+        runTime = runner.Spawn(runtimeUpdate);
+
+        if (runTime != null && runTime.TryGetComponent<RuntimeUpdate>(out var rtUpdate))
+        {
+            rtUpdate.UpdateCode(sessionKey);
+        }
+
+        shipType = runner.Spawn(shipTypePrefabs);
     }
 
     public async void JoinRoom(string sessionKey)
@@ -249,14 +252,19 @@ public class SessionManager : SingletonNetwork<SessionManager>
         if (networkRunner == null) AddRunner();
 
         if (GlobalLoadingManager.Instance != null) GlobalLoadingManager.Instance.ShowLoading();
-
         ShowLoadingScreen(true);
+
+        var sceneManager = networkRunner.GetComponent<NetworkSceneManagerDefault>();
+        if (sceneManager == null)
+        {
+            sceneManager = networkRunner.gameObject.AddComponent<NetworkSceneManagerDefault>();
+        }
 
         var startJoiningArgs = new StartGameArgs()
         {
             GameMode = GameMode.Client,
             SessionName = sessionKey,
-            SceneManager = networkRunner.GetComponent<NetworkSceneManagerDefault>()
+            SceneManager = sceneManager
         };
 
         var res = await networkRunner.StartGame(startJoiningArgs);
@@ -264,18 +272,19 @@ public class SessionManager : SingletonNetwork<SessionManager>
         if (!res.Ok)
         {
             Debug.LogError($"JoinSession failed: {res.ShutdownReason}");
-            SessionHub.Instance.ShowDebugText($"Join Session Fail :{res.ShutdownReason}");
-            ShowLoadingScreen(false); // ถ้า Join พัง ก็ปิดหน้าโหลด
+            SessionHub.Instance.ShowDebugText($"Join Session Fail: {res.ShutdownReason}");
+            SessionHub.Instance.OnJoinFailed();
+            ShowLoadingScreen(false);
+            _isAlreadyInRoom = false;
             return;
         }
-        else if (res.Ok)
-        {
-            _sessionKey = sessionKey;
-            SessionHub.Instance.ShowDebugText("Success Joining Session");
-            SessionHub.Instance.DoneJoin();
-            SessionHub.Instance.GetKey(_sessionKey);
-            Debug.Log("Successfully joined");
-        }
+
+        _sessionKey = sessionKey;
+        _isAlreadyInRoom = true;
+        SessionHub.Instance.ShowDebugText("Success Joining Session");
+        SessionHub.Instance.DoneJoin();
+        SessionHub.Instance.GetKey(_sessionKey);
+        Debug.Log("Successfully joined");
     }
 
     private string GenerateSessionCode(int length = 6)
@@ -326,6 +335,12 @@ public class SessionManager : SingletonNetwork<SessionManager>
         {
             Debug.Log("Shutting down runner...");
             await networkRunner.Shutdown();
+
+            if (networkRunner.gameObject != null)
+            {
+                Destroy(networkRunner.gameObject);
+            }
+
             networkRunner = null;
             Debug.Log("Runner shutdown complete");
         }
@@ -335,7 +350,7 @@ public class SessionManager : SingletonNetwork<SessionManager>
         GM = null;
         Players.Clear();
 
-        await Task.Delay(100);
+        await Task.Delay(200);
 
         AddRunner();
     }

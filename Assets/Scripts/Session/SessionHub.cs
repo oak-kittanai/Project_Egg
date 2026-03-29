@@ -365,9 +365,10 @@ public class SessionHub : SingletonNetwork<SessionHub>
         }
         else if (_sessionNumberInsertField.text.Length == 6)
         {
-            string key = _sessionNumberInsertField.text;
+            _JoinRoomButton.interactable = false;
 
-            _JoinRoomButton.interactable = SessionManager.Instance.JoinSession(key);
+            string key = _sessionNumberInsertField.text;
+            SessionManager.Instance.JoinSession(key);
         }
     }
 
@@ -382,6 +383,8 @@ public class SessionHub : SingletonNetwork<SessionHub>
             LobbyGameObject.SetActive(false);
             SetMainButtonOff(true);
         }
+
+        ResetMenuButtons();
     }
 
     public void DoneJoin()
@@ -399,8 +402,17 @@ public class SessionHub : SingletonNetwork<SessionHub>
         }
     }
 
+    public void OnJoinFailed()
+    {
+        _JoinRoomButton.interactable = true;
+        _sessionNumberInsertField.text = "Connection Failed";
+    }
+
     public void LeaveRoom()
     {
+        _leaveButton.interactable = false;
+        _leaveButton2.interactable = false;
+
         if (AlreadyJoin)
         {
             SessionManager.Instance.LeaveSession(AlreadyJoin);
@@ -427,6 +439,8 @@ public class SessionHub : SingletonNetwork<SessionHub>
                 _CreateSessionButton.gameObject.SetActive(true);
             }
         }
+
+        ResetMenuButtons();
     }
 
     public void GetKey(string key)
@@ -444,10 +458,16 @@ public class SessionHub : SingletonNetwork<SessionHub>
 
     public void CreateRoom()
     {
+        _CreateSessionButton.interactable = false;
+        _joinSessionButton.interactable = false;
+
         SessionManager.Instance.GenerateCode();
 
         _joinSessionButton.gameObject.SetActive(false);
         _leaveButton.gameObject.SetActive(true);
+
+        _leaveButton.interactable = true;
+        _leaveButton2.interactable = true;
 
         _startButton.gameObject.SetActive(true);
     }
@@ -455,6 +475,21 @@ public class SessionHub : SingletonNetwork<SessionHub>
     public void UpdateList(int playerCount)
     {
         _playerCount = playerCount;
+    }
+
+    public void ResetMenuButtons()
+    {
+        _CreateSessionButton.interactable = true;
+        _joinSessionButton.interactable = true;
+        _JoinRoomButton.interactable = true;
+
+        _leaveButton.interactable = true;
+        _leaveButton2.interactable = true;
+
+        if (_startButton != null)
+        {
+            _startButton.interactable = false;
+        }
     }
 
     public void DesetButton()

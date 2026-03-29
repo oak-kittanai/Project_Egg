@@ -105,6 +105,11 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         if (_damageFlash == null) _damageFlash = GetComponentInChildren<DamageFlash>();
         if (spriteRenderer == null) spriteRenderer = GetComponentInChildren<SpriteRenderer>();
 
+        if (cAnimation != null)
+        {
+            cAnimation.InitializeMovement(this);
+        }
+
         if (spriteRenderer != null) originalSortingOrder = spriteRenderer.sortingOrder;
         if (visualTransform == null && transform.Find("Player_Animation") != null)
         {
