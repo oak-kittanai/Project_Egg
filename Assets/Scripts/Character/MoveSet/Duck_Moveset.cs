@@ -139,10 +139,16 @@ public class Duck_Moveset : MovementCharacter
             foreach (var hit in hitsPlayer)
             {
                 if (hit.gameObject == gameObject) continue;
-                if (hit.TryGetComponent<MovementCharacter>(out var otherPlayer))
+
+                MovementCharacter[] allCharacters = hit.GetComponents<MovementCharacter>();
+
+                foreach (var character in allCharacters)
                 {
-                    PickupFriend(otherPlayer);
-                    return;
+                    if (character.enabled == true)
+                    {
+                        PickupFriend(character);
+                        return;
+                    }
                 }
             }
         }
@@ -158,31 +164,42 @@ public class Duck_Moveset : MovementCharacter
 
         friend.RPC_UpdateCarry(true, Object.Id);
 
-        if (IsGrounded) cAnimation.ReturnToBlendAnimation();
-        else if (isWaterSurface) cAnimation.UpdateGroundTypeOnDuck(true);
+        if (normalCollider != null) normalCollider.enabled = false;
+        if (carryCollider != null) carryCollider.enabled = true;
+
+        resetAnimation = true;
     }
 
     public void DropFriend(bool throwFriend = true)
     {
         if (Runner.TryFindObject(CarriedFriendId, out var obj))
         {
-            if (obj.TryGetComponent<MovementCharacter>(out var friend))
+            MovementCharacter[] allCharacters = obj.GetComponents<MovementCharacter>();
+            foreach (var friend in allCharacters)
             {
-                float throwDir = cAnimation.FlipX ? 1f : -1f;
-
-                friend.localIsBeingCarriedPredict = false;
-
-                if (throwFriend && friend.visualTransform != null)
+                if (friend.enabled)
                 {
-                    friend.visualTransform.position = transform.position + new Vector3(throwDir * 1f, 1f, 0);
-                }
+                    float throwDir = cAnimation.FlipX ? 1f : -1f;
+                    friend.localIsBeingCarriedPredict = false;
 
-                friend.RPC_UpdateCarry(false, Object.Id, throwFriend, throwDir, throwForceX, throwForceY);
+                    if (throwFriend && friend.visualTransform != null)
+                    {
+                        friend.visualTransform.position = transform.position + new Vector3(throwDir * 1f, 1f, 0);
+                    }
+
+                    friend.RPC_UpdateCarry(false, Object.Id, throwFriend, throwDir, throwForceX, throwForceY);
+                    break;
+                }
             }
         }
 
+        if (normalCollider != null) normalCollider.enabled = true;
+        if (carryCollider != null) carryCollider.enabled = false;
+
         IsCarry = false;
         CarriedFriendId = default;
+
+        resetAnimation = true;
     }
 
     public void HandleWaterLogic(NetworkInputData input)

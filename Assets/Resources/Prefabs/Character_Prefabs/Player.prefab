@@ -539,6 +539,7 @@ GameObject:
   - component: {fileID: 4217623029068874858}
   - component: {fileID: 3711502725299142497}
   - component: {fileID: 1019386123444590845}
+  - component: {fileID: 2326915062844445405}
   m_Layer: 7
   m_Name: Player
   m_TagString: Player
@@ -606,7 +607,6 @@ MonoBehaviour:
   decelerationSpeedOptional: 3
   optionalMaxSpeed: 1
   _characterMaxHealth: 5
-  _characterMinHealth: 0
   _currentHealth: 0
   _isDead: 0
   respawnCooldown: 2.5
@@ -618,12 +618,17 @@ MonoBehaviour:
   nearGroundDistance: 1.5
   currentWater: {fileID: 1954370135117116909, guid: b33f250204d54704d8bed00ffe60fbbf, type: 3}
   _stilldrowning: 0
-  _isEPressed: 0
   _CarrierId:
     Raw: 0
   _IsBeingCarried: 0
   _IsInteractBusy: 0
   betweenCarryPosition: 0.7
+  normalCollider: {fileID: 1019386123444590845}
+  carryCollider: {fileID: 2326915062844445405}
+  localIsBeingCarriedPredict: 0
+  localCarrierIdPredict:
+    Raw: 0
+  _isEPressed: 0
   rayDistance: 0.55
   interactRadius: 0.8
   playerInteractRadius: 0.7
@@ -696,7 +701,6 @@ MonoBehaviour:
   decelerationSpeedOptional: 6.5
   optionalMaxSpeed: 19
   _characterMaxHealth: 5
-  _characterMinHealth: 0
   _currentHealth: 0
   _isDead: 0
   respawnCooldown: 2.5
@@ -708,12 +712,17 @@ MonoBehaviour:
   nearGroundDistance: 1.5
   currentWater: {fileID: 1954370135117116909, guid: b33f250204d54704d8bed00ffe60fbbf, type: 3}
   _stilldrowning: 0
-  _isEPressed: 0
   _CarrierId:
     Raw: 0
   _IsBeingCarried: 0
   _IsInteractBusy: 0
   betweenCarryPosition: 0.7
+  normalCollider: {fileID: 1019386123444590845}
+  carryCollider: {fileID: 2326915062844445405}
+  localIsBeingCarriedPredict: 0
+  localCarrierIdPredict:
+    Raw: 0
+  _isEPressed: 0
   rayDistance: 0.55
   interactRadius: 0.8
   playerInteractRadius: 1
@@ -888,6 +897,43 @@ CapsuleCollider2D:
   m_CompositeOrder: 0
   m_Offset: {x: -0.029501198, y: 0.002748339}
   m_Size: {x: 0.6493287, y: 0.83}
+  m_Direction: 0
+--- !u!70 &2326915062844445405
+CapsuleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5009953336907088200}
+  m_Enabled: 0
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: -0.029501198, y: 0.33811086}
+  m_Size: {x: 0.6493287, y: 1.5007249}
   m_Direction: 0
 --- !u!1 &5289796130646658275
 GameObject:

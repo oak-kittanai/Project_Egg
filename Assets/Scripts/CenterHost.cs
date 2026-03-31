@@ -147,80 +147,29 @@ public class CenterHost : SingletonNetwork<CenterHost>
 
     public void SpawnPlayer(PlayerRef player, characterType Type, bool isHost)
     {
-        if (isHost)
-        {
-            currentHost = Type;
-        }
-        else
-        {
-            currentClient = Type;
-        }
-
-        Vector2 spawnPos = Vector2.zero;
-        Debug.Log("Try Spawn Player");
-        if (isHost)
-        {
-            spawnPos = HostSpawnPos;
-        }
-        else
-        {
-            spawnPos = ClientSpawnPos;
-        }
-
+        Vector2 spawnPos = isHost ? HostSpawnPos : ClientSpawnPos;
+        Debug.Log($"Try Spawn Player: {Type} at {spawnPos}");
 
         if (hostRunner != null)
         {
-            NetworkObject playerObj = hostRunner.Spawn(PlayerPrefab, spawnPos, Quaternion.identity, player, InitializeObjBeforeSpawn);
+            NetworkObject playerObj = hostRunner.Spawn(PlayerPrefab, spawnPos, Quaternion.identity, player, (runner, obj) =>
+            {
+                CharacterStats playerStats = obj.GetComponent<CharacterStats>();
+                if (playerStats != null)
+                {
+                    playerStats.skinType = Type;
+                }
+
+                obj.name = $"Player ({Type}) {(isHost ? "Host" : "Client")}";
+                Debug.Log($"Initialized Network Data for: {obj.name}");
+            });
+
             hostRunner.SetPlayerObject(player, playerObj);
-        }
-        else Debug.Log("can't find Runner to spawn player");
-    }
-
-    private void InitializeObjBeforeSpawn(NetworkRunner runner, NetworkObject playerObj)
-    {
-        CharacterStats playerStats = playerObj.GetComponent<CharacterStats>();
-        CharacterAnimation playerAnimation = playerObj.GetComponentInChildren<CharacterAnimation>();
-        Bird_Moveset bird = playerObj.GetComponent<Bird_Moveset>();
-        Duck_Moveset duck = playerObj.GetComponent<Duck_Moveset>();
-
-        if (playerObj.InputAuthority == runner.LocalPlayer)
-        {
-            playerStats.skinType = currentHost;
-            playerObj.name = $"Player ({playerStats.skinType})Host";
-            Debug.Log("Spawn Player Host");
-
-            if (playerStats.skinType == characterType.Duck)
-            {
-                if (bird != null) bird.enabled = false;
-                if (duck != null) duck.enabled = true;
-            }
-            else
-            {
-                if (duck != null) duck.enabled = false;
-                if (bird != null) bird.enabled = true;
-            }
-            hostStats = playerStats;
         }
         else
         {
-            playerStats.skinType = currentClient;
-            playerObj.name = $"Player ({playerStats.skinType})Client";
-            Debug.Log("Spawn Player Client");
-
-            if (playerStats.skinType == characterType.Duck)
-            {
-                if (bird != null) bird.enabled = false;
-                if (duck != null) duck.enabled = true;
-            }
-            else
-            {
-                if (duck != null) duck.enabled = false;
-                if (bird != null) bird.enabled = true;
-            }
-            clientStats = playerStats;
+            Debug.LogError("Can't find Runner to spawn player");
         }
-
-        Debug.Log("Local player configured: " + playerObj.name);
     }
 
     #endregion

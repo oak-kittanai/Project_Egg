@@ -19,7 +19,7 @@ public class CharacterAnimation : NetworkBehaviour
 
     private string _lastLocalState = "";
 
-    [SerializeField] public bool Carrying => movement is Duck_Moveset duck && duck.IsCarry;
+    [SerializeField] public bool Carrying => movement != null && movement.isCarrying;
     [SerializeField] public bool BeingCarried => movement.IsBeingCarried;
     [SerializeField] public bool isBird => movement is MovementCharacter move && move.isBird;
 

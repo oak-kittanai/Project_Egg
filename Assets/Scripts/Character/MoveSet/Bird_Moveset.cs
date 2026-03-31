@@ -188,10 +188,7 @@ public class Bird_Moveset : MovementCharacter
                     {
                         if (carrierObj.TryGetComponent<MovementCharacter>(out var duck))
                         {
-                            if (duck.HasStateAuthority)
-                            {
-                                duck.rb2D.linearVelocity = new Vector2(duck.rb2D.linearVelocity.x, stats.s_flySpeed);
-                            }
+                            duck.rb2D.linearVelocity = new Vector2(duck.rb2D.linearVelocity.x, stats.s_flySpeed);
                         }
                     }
                 }

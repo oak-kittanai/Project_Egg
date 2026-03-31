@@ -1,9 +1,12 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using Fusion;
 
-public class PlayerInterface : Singleton<PlayerInterface>
+public class PlayerInterface : MonoBehaviour
 {
+    public static PlayerInterface Instance;
+
     [Header("Profile Setting")]
     public Image characterProfile_Ref;
     public Sprite character_Duck;
@@ -17,7 +20,7 @@ public class PlayerInterface : Singleton<PlayerInterface>
     public Sprite ThirdHealth;
     public Sprite FourthHealth;
     public Sprite FifthHealth;
-    
+
 
     [Header("Quest Setting")]
     public GameObject questContainer;
@@ -30,6 +33,11 @@ public class PlayerInterface : Singleton<PlayerInterface>
     public GameObject interactPromptObj;
     public Vector3 promptOffset = new Vector3(0f, 1.5f, 0f);
     private Transform currentInteractTarget;
+
+    private void Awake()
+    {
+        Instance = this;
+    }
 
     private void Start()
     {

@@ -45,13 +45,7 @@ public class TrapPressure : NetworkBehaviour
 
     private void OnTriggerExit2D(Collider2D collision)
     {
-        //if (collision.CompareTag("Player") && collision.TryGetComponent<MovementCharacter>(out var player))
-        //{
-        //    if (playersInTrap.Contains(player))
-        //    {
-        //        playersInTrap.Remove(player);
-        //    }
-        //}
+        if (Object == null || !Object.IsValid) return;
 
         if (collision.CompareTag("Player") && collision.TryGetComponent<MovementCharacter>(out var player))
         {
@@ -63,11 +57,11 @@ public class TrapPressure : NetworkBehaviour
                 {
                     Vector2 currentDirection = _isRevers ? -defaultDirection : defaultDirection;
 
-                    float velocityInDirection = Vector2.Dot(player.rb2D.velocity, currentDirection.normalized);
+                    float velocityInDirection = Vector2.Dot(player.rb2D.linearVelocity, currentDirection.normalized);
 
                     if (velocityInDirection > 0)
                     {
-                        player.rb2D.velocity -= currentDirection.normalized * velocityInDirection * 0.8f;
+                        player.rb2D.linearVelocity -= currentDirection.normalized * velocityInDirection * 0.8f;
                     }
                 }
             }
@@ -76,9 +70,9 @@ public class TrapPressure : NetworkBehaviour
 
     public override void FixedUpdateNetwork()
     {
-        playersInTrap.RemoveAll(p => p == null || !p.Object.IsValid);
-
         if (!_isActive) return;
+
+        playersInTrap.RemoveAll(p => p == null || !p.Object.IsValid);
 
         foreach (var player in playersInTrap)
         {

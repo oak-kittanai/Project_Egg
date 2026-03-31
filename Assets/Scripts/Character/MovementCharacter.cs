@@ -1,6 +1,5 @@
 ﻿using Fusion;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class MovementCharacter : NetworkBehaviour, IDamageable
 {
@@ -11,7 +10,9 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [SerializeField] public Collider2D coll2D;
     [SerializeField] public PlayerGUI localGUI;
     [SerializeField] public SpriteRenderer spriteRenderer;
-    [Networked] public bool isBird { get; set; }
+
+    [Networked, OnChangedRender(nameof(OnCharacterTypeChanged))]
+    public bool isBird { get; set; }
 
     [Header("Visual Smoothing")]
     [SerializeField] public Transform visualTransform;
@@ -25,7 +26,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [Networked] public bool IsInAir { get; set; }
     [Networked] public Vector2 MoveInput { get; set; }
     [Networked] public bool isFloating { get; set; }
-    [SerializeField] public bool isMoveAble;
+    [SerializeField] public bool isMoveAble = true;
 
     [Networked] public bool resetAnimation { get; set; }
     [Networked] public bool isJumping { get; set; }
@@ -33,6 +34,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [Networked] private TickTimer JumpCooldown { get; set; }
     [SerializeField] private float JumpCooldownTimer = 2f;
 
+    [Header("Gravity Settings")]
     [SerializeField] public bool isSpeedoptional;
     [SerializeField] public float normalGravity = 3.5f;
     [SerializeField] public float heavyGravity = 6.5f;
@@ -49,15 +51,13 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [SerializeField] public float decelerationSpeedOptional = 3f;
     [SerializeField] public float optionalMaxSpeed = 1f;
 
-    [Header("Character Setting (Health & Respawn)")]
+    [Header("Health & Respawn")]
     [Networked] public int characterMaxHealth { get; set; }
     [Networked, OnChangedRender(nameof(OnHealthChanged))] public int currentHealth { get; set; }
-
     [Networked] public bool isDead { get; set; }
 
     [Networked] TickTimer respawnTimer { get; set; }
     [SerializeField] float respawnCooldown = 3f;
-
     [SerializeField] bool canbeRespawn = true;
 
     [Header("Water Setting")]
@@ -69,32 +69,31 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [SerializeField] public NetworkInteractableWater currentWater;
     [Networked] public bool stilldrowning { get; set; }
 
-    [SerializeField] public bool _isEPressed;
-
     [Header("Passenger System")]
     [Networked] public NetworkId CarrierId { get; set; }
     [Networked] public bool IsBeingCarried { get; set; }
     [SerializeField] public bool isCarrying => this is Duck_Moveset duck && duck.IsCarry;
     [Networked] public bool IsInteractBusy { get; set; }
-
     [SerializeField] public float betweenCarryPosition = 0.65f;
 
-    // Local
+    [Header("Carry Colliders")]
+    public Collider2D normalCollider;
+    public Collider2D carryCollider;
+
+    // Local Predict Variables
     public bool localIsBeingCarriedPredict;
     public NetworkId localCarrierIdPredict;
+    [SerializeField] public bool _isEPressed;
 
-    [Header("")]
+    [Header("Interaction & Physics")]
     public float rayDistance = 1.2f;
     public float interactRadius = 1.5f;
     public float playerInteractRadius = 1f;
 
-    [Header("I-Frames")]
+    [Header("I-Frames & Effects")]
     [Networked] private TickTimer InvincibleTimer { get; set; }
     [SerializeField] private float invincibleDuration = 1.5f;
-
     [SerializeField] private DamageFlash _damageFlash;
-
-    [Header("Material Setting")]
     [SerializeField] public Color duck_Color;
     [SerializeField] public Color bird_Color;
 
@@ -109,188 +108,80 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         if (_damageFlash == null) _damageFlash = GetComponentInChildren<DamageFlash>();
         if (spriteRenderer == null) spriteRenderer = GetComponentInChildren<SpriteRenderer>();
 
-        if (cAnimation != null)
-        {
-            cAnimation.InitializeMovement(this);
-        }
-
+        if (cAnimation != null) cAnimation.InitializeMovement(this);
         if (spriteRenderer != null) originalSortingOrder = spriteRenderer.sortingOrder;
+
         if (visualTransform == null && transform.Find("Player_Animation") != null)
         {
             visualTransform = transform.Find("Player_Animation");
         }
-
-        isMoveAble = true;
     }
+
+    #region CoreNetwork
 
     public override void Spawned()
     {
-        if (stats.skinType == characterType.Bird) isBird = true;
-        else isBird = false;
+        bool isThisCharacterBird = (stats != null && stats.skinType == characterType.Bird);
 
-        MaterialPropertyBlock mpb = new MaterialPropertyBlock();
-        spriteRenderer.GetPropertyBlock(mpb);
+        if (isThisCharacterBird && this is Duck_Moveset) { this.enabled = false; return; }
+        if (!isThisCharacterBird && this.GetType().Name == "Bird_Moveset") { this.enabled = false; return; }
 
-        if (isBird) mpb.SetColor("_OutlineColor", bird_Color);
-        else mpb.SetColor("_OutlineColor", duck_Color);
+        if (cAnimation != null) cAnimation.InitializeMovement(this);
 
-        spriteRenderer.SetPropertyBlock(mpb);
-
-        if (cAnimation != null) cAnimation.UpdateSkin(stats.skinType);
-        if (stats != null)
+        if (HasStateAuthority)
+        {
+            isBird = isThisCharacterBird;
+            characterMaxHealth = stats != null ? stats.s_maxHealth : 5;
+            currentHealth = characterMaxHealth;
+            isDead = false;
+        }
+        else if (stats != null)
         {
             characterMaxHealth = stats.s_maxHealth;
         }
 
-        if (HasStateAuthority)
+        MaterialPropertyBlock mpb = new MaterialPropertyBlock();
+        if (spriteRenderer != null)
         {
-            currentHealth = characterMaxHealth;
-            isDead = false;
+            spriteRenderer.GetPropertyBlock(mpb);
+            mpb.SetColor("_OutlineColor", isThisCharacterBird ? bird_Color : duck_Color);
+            spriteRenderer.SetPropertyBlock(mpb);
         }
 
+        if (cAnimation != null) cAnimation.UpdateSkin(stats.skinType);
         JumpCooldown = TickTimer.CreateFromSeconds(Runner, JumpCooldownTimer);
         resetAnimation = true;
 
         if (GameManager.Instance != null) GameManager.Instance.RegisterPlayer(this);
-        if (localGUI != null) localGUI.SetCharacterType(isBird);
-
-        if (visualTransform != null)
-        {
-            visualTransform.SetParent(null);
-        }
+        if (localGUI != null) localGUI.SetCharacterType(isThisCharacterBird);
+        if (visualTransform != null) visualTransform.SetParent(null);
 
         if (HasInputAuthority)
         {
-            OnHealthChanged();
-            if (PlayerInterface.Instance != null) PlayerInterface.Instance.UpdateProfileUI(isBird);
+            Invoke(nameof(ForceUpdateUI), 0.5f);
         }
     }
 
-    public override void Despawned(NetworkRunner runner, bool hasState)
+    private void ForceUpdateUI()
     {
-        if (visualTransform != null)
-        {
-            Destroy(visualTransform.gameObject);
-        }
-    }
-
-    public void TakeDamage(int dmg, float knockbackForce, Vector2 vec)
-    {
-        if (isDead || !InvincibleTimer.ExpiredOrNotRunning(Runner)) return;
-        RPC_TakeDamage(dmg, knockbackForce, vec);
-    }
-
-    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    public void RPC_TakeDamage(int dmg, float knockbackForce, Vector2 vec)
-    {
-        currentHealth -= dmg;
-        rb2D.linearVelocity = Vector2.zero;
-        rb2D.AddForce(vec * knockbackForce, ForceMode2D.Impulse);
-        _damageFlash.CallDamageFlash_RPC();
-
-        if (currentHealth <= 0)
-        {
-            isMoveAble = false;
-            CharacterDie();
-        }
-        else InvincibleTimer = TickTimer.CreateFromSeconds(Runner, invincibleDuration);
-    }
-
-    public void OnHealthChanged()
-    {
-        if (HasInputAuthority && PlayerInterface.Instance != null)
-        {
-            PlayerInterface.Instance.UpdateHealthUI(currentHealth);
-        }
-    }
-
-    public virtual void CharacterDie()
-    {
-        if (isDead) return;
-
-        isDead = true;
-
-        if (IsBeingCarried)
-        {
-            if (Runner.TryFindObject(CarrierId, out var carrierObj) && carrierObj.TryGetComponent<Duck_Moveset>(out var duck))
-            {
-                duck.DropFriend(false);
-            }
-            RPC_UpdateCarry(false, default);
-        }
-        else if (this is Duck_Moveset duckset && duckset.IsCarry)
-        {
-            duckset.DropFriend(true);
-        }
-
-
-        rb2D.linearVelocity = Vector2.zero;
-        rb2D.simulated = false;
-        // Play animation Dead
-
-        if (canbeRespawn) respawnTimer = TickTimer.CreateFromSeconds(Runner, respawnCooldown);
-    }
-
-    public virtual void Respawn()
-    {
-        isDead = false;
-        isMoveAble = true;
-        if (HasStateAuthority)
-        {
-            currentHealth = characterMaxHealth;
-        }
-
-        stilldrowning = false;
-        IsHeadUnderwater = false;
-        isWaterSurface = false;
-        IsFalling = false;
-        FallingBusy = false;
-
-        rb2D.simulated = true;
-
-        rb2D.linearVelocity = Vector2.zero;
-        rb2D.angularVelocity = 0f;
-        rb2D.gravityScale = normalGravity;
-
-        if (GameManager.Instance != null)
-        {
-            transform.position = GameManager.Instance.GetRespawnPosition();
-            if (visualTransform != null) visualTransform.position = transform.position;
-        }
-
-        cAnimation.ReturnToBlendAnimation();
-    }
-
-    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    public void RPC_UpdateCarry(bool state, NetworkId carrierId, bool doThrow = false, float throwDir = 1f, float forceX = 4f, float forceY = 4f)
-    {
-        IsBeingCarried = state;
-        CarrierId = carrierId;
-        IsInteractBusy = state;
-
-        if (!state && doThrow)
-        {
-            if (Runner.TryFindObject(carrierId, out var duckObj))
-            {
-                rb2D.position = duckObj.transform.position + new Vector3(0, betweenCarryPosition, 0);
-            }
-
-            rb2D.simulated = true;
-            rb2D.linearVelocity = Vector2.zero;
-            rb2D.AddForce(new Vector2(throwDir * forceX, forceY), ForceMode2D.Impulse);
-        }
+        OnHealthChanged();
+        OnCharacterTypeChanged();
     }
 
     public override void FixedUpdateNetwork()
     {
-        if (GameManager.Instance == null || GameManager.Instance.Object == null || !GameManager.Instance.Object.IsValid) { rb2D.linearVelocity = Vector2.zero; return; }
-        if (!GameManager.Instance.isLoadMapDone) { rb2D.linearVelocity = Vector2.zero; return; }
+        // 1. Guard Clauses
+        if (GameManager.Instance == null || GameManager.Instance.Object == null || !GameManager.Instance.Object.IsValid || !GameManager.Instance.isLoadMapDone)
+        {
+            rb2D.linearVelocity = Vector2.zero;
+            return;
+        }
 
+        // 2. Initial Position Setup
         if (!hasSetInitialPosition)
         {
             transform.position = GameManager.Instance.GetRespawnPosition();
             if (visualTransform != null) visualTransform.position = transform.position;
-
             hasSetInitialPosition = true;
             if (HasStateAuthority) GameManager.Instance.PlayerFinishedLoading();
         }
@@ -298,29 +189,43 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         if (!GameManager.Instance.IsGameReady) { rb2D.linearVelocity = Vector2.zero; return; }
         if (isDead) { if (HasStateAuthority && canbeRespawn && respawnTimer.Expired(Runner)) Respawn(); return; }
 
-        if (IsBeingCarried)
-        {
-            rb2D.bodyType = RigidbodyType2D.Kinematic;
-            rb2D.linearVelocity = Vector2.zero;
-            isMoveAble = false;
+        // 3. Passenger Physics Setup
+        bool effectivelyCarried = IsBeingCarried || localIsBeingCarriedPredict;
+        NetworkId effectiveCarrierId = IsBeingCarried ? CarrierId : localCarrierIdPredict;
 
-            if (Runner.TryFindObject(CarrierId, out var duckObj))
-            {
-                rb2D.position = duckObj.GetComponent<Rigidbody2D>().position + Vector2.up * betweenCarryPosition;
-            }
+        if (effectivelyCarried)
+        {
+            if (rb2D.bodyType != RigidbodyType2D.Kinematic) rb2D.bodyType = RigidbodyType2D.Kinematic;
+            rb2D.linearVelocity = Vector2.zero;
+
+            if (coll2D != null && !coll2D.isTrigger) coll2D.isTrigger = true;
+
+            isMoveAble = false;
         }
         else
         {
             if (rb2D.bodyType == RigidbodyType2D.Kinematic) rb2D.bodyType = RigidbodyType2D.Dynamic;
-            if (!rb2D.simulated) rb2D.simulated = true;
+
+            if (coll2D != null && coll2D.isTrigger) coll2D.isTrigger = false;
+
             isMoveAble = true;
         }
 
-        if (HasStateAuthority) CheckGround();
+        // 4. Passenger Movement Sync (Host)
+        if (HasStateAuthority && effectivelyCarried)
+        {
+            if (Runner.TryFindObject(effectiveCarrierId, out var duckObj) && duckObj.TryGetComponent<Rigidbody2D>(out var duckRb))
+            {
+                rb2D.MovePosition(duckRb.position + Vector2.up * betweenCarryPosition);
+            }
+        }
+
+        // 5. Environment Check & Input
+        if (HasStateAuthority || HasInputAuthority) CheckGround();
 
         if (GetInput(out NetworkInputData input))
         {
-            if (!IsBeingCarried)
+            if (isMoveAble)
             {
                 HandleMovement(input);
                 HandleJump(input);
@@ -332,21 +237,26 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         OnFixedUpdateSpecific();
     }
 
+    public override void Despawned(NetworkRunner runner, bool hasState)
+    {
+        if (visualTransform != null) Destroy(visualTransform.gameObject);
+    }
+
+    #endregion
+
+    #region CharacterSystem
+
     private void HandleMovement(NetworkInputData input)
     {
-        if (isMoveAble)
-        {
-            float targetSpeed = input.horizontal * stats.maxSpeed;
-            float currentSpeed = rb2D.linearVelocity.x;
-            float accelRate = 0;
+        float targetSpeed = input.horizontal * stats.maxSpeed;
+        float currentSpeed = rb2D.linearVelocity.x;
+        float accelRate = isSpeedoptional
+            ? (Mathf.Abs(targetSpeed) > 0.01f ? accelerationSpeedOptional : decelerationSpeedOptional)
+            : (Mathf.Abs(targetSpeed) > 0.01f ? stats.acceleration : stats.deceleration);
 
-            if (isSpeedoptional) accelRate = Mathf.Abs(targetSpeed) > 0.01f ? accelerationSpeedOptional : decelerationSpeedOptional;
-            else accelRate = Mathf.Abs(targetSpeed) > 0.01f ? stats.acceleration : stats.deceleration;
-
-            float speedDif = targetSpeed - currentSpeed;
-            rb2D.AddForce(Vector2.right * (speedDif * accelRate));
-            cAnimation.UpdateAnimationController(new Vector2(input.horizontal, rb2D.linearVelocity.y));
-        }
+        float speedDif = targetSpeed - currentSpeed;
+        rb2D.AddForce(Vector2.right * (speedDif * accelRate));
+        cAnimation.UpdateAnimationController(new Vector2(input.horizontal, rb2D.linearVelocity.y));
     }
 
     protected virtual void HandleJump(NetworkInputData input)
@@ -376,33 +286,221 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                 {
                     cAnimation.InteractAnimation();
                     interactable.Interact();
-                    return;
+                    break;
                 }
             }
         }
         _isEPressed = input.Keyboard_E;
     }
 
-    public void SetResetAnimation(bool o) => resetAnimation = o;
+    public void TakeDamage(int dmg, float knockbackForce, Vector2 vec)
+    {
+        if (isDead || !InvincibleTimer.ExpiredOrNotRunning(Runner)) return;
+        RPC_TakeDamage(dmg, knockbackForce, vec);
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    public void RPC_TakeDamage(int dmg, float knockbackForce, Vector2 vec)
+    {
+        currentHealth -= dmg;
+        rb2D.linearVelocity = Vector2.zero;
+        rb2D.AddForce(vec * knockbackForce, ForceMode2D.Impulse);
+        if (_damageFlash != null) _damageFlash.CallDamageFlash_RPC();
+
+        if (currentHealth <= 0)
+        {
+            isMoveAble = false;
+            CharacterDie();
+        }
+        else
+        {
+            InvincibleTimer = TickTimer.CreateFromSeconds(Runner, invincibleDuration);
+        }
+    }
+
+    public virtual void CharacterDie()
+    {
+        if (isDead) return;
+        isDead = true;
+
+        if (IsBeingCarried)
+        {
+            if (Runner.TryFindObject(CarrierId, out var carrierObj) && carrierObj.TryGetComponent<Duck_Moveset>(out var duck))
+            {
+                duck.DropFriend(false);
+            }
+            RPC_UpdateCarry(false, default);
+        }
+        else if (isCarrying)
+        {
+            ((Duck_Moveset)this).DropFriend(true);
+        }
+
+        rb2D.linearVelocity = Vector2.zero;
+        rb2D.simulated = false;
+
+        if (canbeRespawn) respawnTimer = TickTimer.CreateFromSeconds(Runner, respawnCooldown);
+    }
+
+    public virtual void Respawn()
+    {
+        isDead = false;
+        isMoveAble = true;
+        if (HasStateAuthority) currentHealth = characterMaxHealth;
+
+        stilldrowning = false;
+        IsHeadUnderwater = false;
+        isWaterSurface = false;
+        IsFalling = false;
+        FallingBusy = false;
+
+        rb2D.simulated = true;
+        rb2D.linearVelocity = Vector2.zero;
+        rb2D.angularVelocity = 0f;
+        rb2D.gravityScale = normalGravity;
+
+        if (GameManager.Instance != null)
+        {
+            transform.position = GameManager.Instance.GetRespawnPosition();
+            if (visualTransform != null) visualTransform.position = transform.position;
+        }
+
+        if (cAnimation != null) cAnimation.ReturnToBlendAnimation();
+    }
+
+    #endregion
+
+    #region CarrySystem
+
+    [Rpc(RpcSources.All, RpcTargets.All)]
+    public void RPC_UpdateCarry(bool state, NetworkId carrierId, bool doThrow = false, float throwDir = 1f, float forceX = 4f, float forceY = 4f)
+    {
+        if (HasStateAuthority)
+        {
+            IsBeingCarried = state;
+            CarrierId = carrierId;
+            IsInteractBusy = state;
+        }
+
+        localIsBeingCarriedPredict = state;
+        localCarrierIdPredict = carrierId;
+
+        if (Runner.TryFindObject(carrierId, out var duckObj) && duckObj.TryGetComponent<Collider2D>(out var duckColl))
+        {
+            Physics2D.IgnoreCollision(coll2D, duckColl, state);
+        }
+
+        if (!state)
+        {
+            if (HasStateAuthority)
+            {
+                if (duckObj != null)
+                {
+                    rb2D.position = duckObj.transform.position + new Vector3(0, betweenCarryPosition, 0);
+                }
+
+                rb2D.bodyType = RigidbodyType2D.Dynamic;
+                rb2D.linearVelocity = Vector2.zero;
+
+                if (doThrow)
+                {
+                    rb2D.AddForce(new Vector2(throwDir * forceX, forceY), ForceMode2D.Impulse);
+                }
+
+                IsGrounded = false;
+                IsInAir = true;
+                resetAnimation = false;
+            }
+
+            if (cAnimation != null)
+            {
+                cAnimation.FallingAndFloatAnimation(true, false);
+            }
+        }
+    }
+
+    #endregion
+
+    #region OnChange
+
+    public void OnHealthChanged()
+    {
+        if (HasInputAuthority && PlayerInterface.Instance != null)
+        {
+            PlayerInterface.Instance.UpdateHealthUI(currentHealth);
+        }
+    }
+
+    public void OnCharacterTypeChanged()
+    {
+        if (HasInputAuthority && PlayerInterface.Instance != null)
+        {
+            PlayerInterface.Instance.UpdateProfileUI(isBird);
+        }
+    }
+
+    #endregion
+
+    #region CheckSystem
 
     private void CheckGround()
     {
-        LayerMask mask = LayerMask.GetMask("Ground", "Platform");
         bool wasGrounded = IsGrounded;
-        bool hitGround = Physics2D.Raycast(transform.position, Vector2.down, rayDistance, mask);
+        bool effectivelyCarried = IsBeingCarried || localIsBeingCarriedPredict;
+        NetworkId effectiveCarrierId = IsBeingCarried ? CarrierId : localCarrierIdPredict;
 
-        bool isNearGround = Physics2D.Raycast(transform.position, Vector2.down, rayDistance + nearGroundDistance, mask);
+        float referenceVelocityY = rb2D.linearVelocity.y;
+        bool isNearGround = false;
 
-        LayerMask waterMask = LayerMask.GetMask("Water");
-        Vector2 headPosition = (Vector2)transform.position + (Vector2.up * headOffset);
-        Vector2 bodyPosition = (Vector2)transform.position + (Vector2.up * bodyOffset);
+        if (effectivelyCarried && Runner.TryFindObject(effectiveCarrierId, out var duckObj) && duckObj.TryGetComponent<MovementCharacter>(out var duckMC))
+        {
+            IsGrounded = duckMC.IsGrounded;
+            IsInAir = duckMC.IsInAir;
+            isWaterSurface = duckMC.isWaterSurface;
+            IsHeadUnderwater = duckMC.IsHeadUnderwater;
+            IsBodyOnWater = duckMC.IsBodyOnWater;
 
-        Collider2D bodyCollider = Physics2D.OverlapCircle(transform.position, 0.5f, waterMask);
-        IsHeadUnderwater = Physics2D.OverlapPoint(headPosition, waterMask);
-        IsBodyOnWater = Physics2D.OverlapPoint(bodyPosition, waterMask);
+            referenceVelocityY = duckMC.rb2D.linearVelocity.y;
 
-        if (isJumping && rb2D.linearVelocity.y > 0.05f) IsGrounded = false;
-        else IsGrounded = hitGround && !IsHeadUnderwater;
+            if (isJumping)
+            {
+                IsGrounded = false;
+                IsInAir = true;
+            }
+        }
+        else
+        {
+            LayerMask mask = LayerMask.GetMask("Ground", "Platform");
+            LayerMask waterMask = LayerMask.GetMask("Water");
+
+            bool hitGround = Physics2D.Raycast(transform.position, Vector2.down, rayDistance, mask);
+            isNearGround = Physics2D.Raycast(transform.position, Vector2.down, rayDistance + nearGroundDistance, mask);
+
+            Vector2 headPosition = (Vector2)transform.position + (Vector2.up * headOffset);
+            Vector2 bodyPosition = (Vector2)transform.position + (Vector2.up * bodyOffset);
+
+            Collider2D bodyCollider = Physics2D.OverlapCircle(transform.position, 0.5f, waterMask);
+            IsHeadUnderwater = Physics2D.OverlapPoint(headPosition, waterMask);
+            IsBodyOnWater = Physics2D.OverlapPoint(bodyPosition, waterMask);
+
+            IsGrounded = (!isJumping || rb2D.linearVelocity.y <= 0.05f) && hitGround && !IsHeadUnderwater;
+
+            if (bodyCollider != null)
+            {
+                if (currentWater == null || currentWater.gameObject != bodyCollider.gameObject)
+                {
+                    currentWater = bodyCollider.GetComponentInParent<NetworkInteractableWater>() ?? bodyCollider.GetComponent<NetworkInteractableWater>();
+                }
+                if (IsBodyOnWater && !IsHeadUnderwater) { isWaterSurface = true; stilldrowning = false; }
+                else if (IsHeadUnderwater) { isWaterSurface = false; stilldrowning = true; }
+            }
+            else
+            {
+                currentWater = null; isWaterSurface = false; stilldrowning = false;
+            }
+
+            IsInAir = !IsGrounded && !isWaterSurface;
+        }
 
         if (!wasGrounded && IsGrounded)
         {
@@ -410,64 +508,41 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             resetAnimation = true;
         }
 
-        Debug.Log("isGround : " + IsGrounded);
-
-        if (bodyCollider != null)
-        {
-            if (currentWater == null || currentWater.gameObject != bodyCollider.gameObject)
-            {
-                currentWater = bodyCollider.GetComponent<NetworkInteractableWater>();
-                if (currentWater == null) currentWater = bodyCollider.GetComponentInParent<NetworkInteractableWater>();
-            }
-        }
-        else currentWater = null;
-
-        bool isBodyInWater = bodyCollider != null;
-
-        if (isBodyInWater && IsBodyOnWater && !IsHeadUnderwater)
-        {
-            isWaterSurface = true; stilldrowning = false;
-        }
-        else if (isBodyInWater && IsHeadUnderwater)
-        {
-            isWaterSurface = false; stilldrowning = true;
-        }
-        else if (!isBodyInWater)
-        {
-            isWaterSurface = false; stilldrowning = false;
-        }
-
-        IsInAir = !IsGrounded;
-
         if (IsGrounded)
         {
             isOptional = false;
             FallingBusy = false;
-            if (!IsInteractBusy && resetAnimation)
+            if (resetAnimation)
             {
-                cAnimation.ReturnToBlendAnimation();
+                if (cAnimation != null) cAnimation.ReturnToBlendAnimation();
                 resetAnimation = false;
             }
         }
 
-        if (isWaterSurface) IsInAir = false;
-
         if (IsInAir)
         {
-            if (rb2D.linearVelocity.y < -0.1f)
+            if (referenceVelocityY < -0.1f)
             {
                 isJumping = false;
                 if (!FallingBusy && !isOptional)
                 {
-                    FallingCheck();
-                    cAnimation.FallingAndFloatAnimation(true, isNearGround);
+                    if (!effectivelyCarried) FallingCheck();
+                    if (cAnimation != null) cAnimation.FallingAndFloatAnimation(true, isNearGround);
                 }
             }
         }
-        else
+        else if (!effectivelyCarried)
         {
             rb2D.gravityScale = isOptional ? optionalGravity : normalGravity;
         }
+    }
+
+    private void FallingCheck()
+    {
+        float speedPercent = Mathf.Abs(rb2D.linearVelocity.y) / maxGravity;
+        rb2D.gravityScale = Mathf.Lerp(normalGravity, heavyGravity, speedPercent);
+        float cappedY = Mathf.Max(rb2D.linearVelocity.y, -maxGravity);
+        rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, cappedY);
     }
 
     public override void Render()
@@ -480,18 +555,16 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         if (effectivelyCarried && Runner.TryFindObject(effectiveCarrierId, out var duckObj) && duckObj.TryGetComponent<MovementCharacter>(out var duckMC))
         {
             if (spriteRenderer != null) spriteRenderer.sortingOrder = originalSortingOrder - 1;
-
             if (visualTransform != null && duckMC.visualTransform != null)
             {
                 visualTransform.position = duckMC.visualTransform.position + new Vector3(0, betweenCarryPosition, 0);
+                visualVelocity = Vector3.zero;
             }
-
             if (cAnimation != null) cAnimation.FlipX = duckMC.cAnimation.FlipX;
         }
         else
         {
             if (spriteRenderer != null) spriteRenderer.sortingOrder = originalSortingOrder;
-
             if (visualTransform != null)
             {
                 visualTransform.position = Vector3.SmoothDamp(visualTransform.position, transform.position, ref visualVelocity, visualSmoothTime);
@@ -520,25 +593,15 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         }
 
         if (closestItem != null && PlayerInterface.Instance != null)
-        {
             PlayerInterface.Instance.ShowInteractPrompt(closestItem);
-        }
         else if (PlayerInterface.Instance != null)
-        {
             PlayerInterface.Instance.HideInteractPrompt();
-        }
-    }
-
-    private void FallingCheck()
-    {
-        float speedPercent = Mathf.Abs(rb2D.linearVelocity.y) / maxGravity;
-        rb2D.gravityScale = Mathf.Lerp(normalGravity, heavyGravity, speedPercent);
-        float cappedY = Mathf.Max(rb2D.linearVelocity.y, -maxGravity);
-        rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, cappedY);
     }
 
     private void InFrontCheck() { }
     protected virtual void OnFixedUpdateSpecific() { }
+
+    #endregion
 
     private void OnDrawGizmosSelected()
     {
