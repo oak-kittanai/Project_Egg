@@ -53,6 +53,8 @@ public class Menu_Interface : NetworkBehaviour
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
     public void HostToggleMenu_RPC()
     {
+        Debug.Log("HostToggleMenu_RPC Run");
+
         if (!IsHostMenuForced)
         {
             IsHostMenuForced = true;
@@ -64,6 +66,8 @@ public class Menu_Interface : NetworkBehaviour
     public void ClientToggleLocalMenu()
     {
         if (IsHostMenuForced) return;
+
+        Debug.Log("ClientToggleLocalMenu Run");
 
         bool isCurrentlyOpen = menuContainer.activeSelf;
         menuContainer.SetActive(!isCurrentlyOpen);
@@ -94,8 +98,8 @@ public class Menu_Interface : NetworkBehaviour
 
     public void OnQueueUpdated()
     {
-        if (currentResumeQueueShow != null) currentResumeQueueShow.text = $"Resume: {ResumeVotes}/2";
-        if (currentResetQueueShow != null) currentResetQueueShow.text = $"Reset: {ResetVotes}/2";
+        if (currentResumeQueueShow != null) currentResumeQueueShow.text = $"{ResumeVotes}/2";
+        if (currentResetQueueShow != null) currentResetQueueShow.text = $"{ResetVotes}/2";
     }
 
     private void OnVoteResumeClicked()
