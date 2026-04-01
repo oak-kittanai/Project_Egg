@@ -10,7 +10,6 @@ public class Menu_Interface : NetworkBehaviour
     [Header("UI Panels")]
     [SerializeField] GameObject menuContainer;
     [SerializeField] GameObject settingObject;
-
     [SerializeField] GameObject hostVotePanel;
 
     [Header("Buttons")]
@@ -53,8 +52,6 @@ public class Menu_Interface : NetworkBehaviour
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
     public void HostToggleMenu_RPC()
     {
-        Debug.Log("HostToggleMenu_RPC Run");
-
         if (!IsHostMenuForced)
         {
             IsHostMenuForced = true;
@@ -67,8 +64,6 @@ public class Menu_Interface : NetworkBehaviour
     {
         if (IsHostMenuForced) return;
 
-        Debug.Log("ClientToggleLocalMenu Run");
-
         bool isCurrentlyOpen = menuContainer.activeSelf;
         menuContainer.SetActive(!isCurrentlyOpen);
 
@@ -76,6 +71,9 @@ public class Menu_Interface : NetworkBehaviour
         {
             hostVotePanel.SetActive(false);
             voteResumeButton.gameObject.SetActive(false);
+
+            resetButton.gameObject.SetActive(false);
+
             localResumeButton.gameObject.SetActive(true);
         }
     }
@@ -91,6 +89,8 @@ public class Menu_Interface : NetworkBehaviour
             voteResumeButton.gameObject.SetActive(true);
             localResumeButton.gameObject.SetActive(false);
 
+            resetButton.gameObject.SetActive(true);
+
             voteResumeButton.interactable = true;
             resetButton.interactable = true;
         }
@@ -98,8 +98,8 @@ public class Menu_Interface : NetworkBehaviour
 
     public void OnQueueUpdated()
     {
-        if (currentResumeQueueShow != null) currentResumeQueueShow.text = $"{ResumeVotes}/2";
-        if (currentResetQueueShow != null) currentResetQueueShow.text = $"{ResetVotes}/2";
+        if (currentResumeQueueShow != null) currentResumeQueueShow.text = $"RESUME {ResumeVotes}/2";
+        if (currentResetQueueShow != null) currentResetQueueShow.text = $"RESET {ResetVotes}/2";
     }
 
     private void OnVoteResumeClicked()
@@ -129,15 +129,23 @@ public class Menu_Interface : NetworkBehaviour
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
     private void RPC_SubmitVote(NetworkBool isResume)
     {
+        int requiredVotes = 2;
+        if (Runner != null)
+        {
+            int playerCount = 0;
+            foreach (var p in Runner.ActivePlayers) playerCount++;
+            if (playerCount > 0) requiredVotes = playerCount;
+        }
+
         if (isResume)
         {
             ResumeVotes++;
-            if (ResumeVotes >= 2) IsHostMenuForced = false;
+            if (ResumeVotes >= requiredVotes) IsHostMenuForced = false;
         }
         else
         {
             ResetVotes++;
-            if (ResetVotes >= 2)
+            if (ResetVotes >= requiredVotes)
             {
                 IsHostMenuForced = false;
                 if (GameManager.Instance != null) GameManager.Instance.ResetAllPlayersToSpawn();
