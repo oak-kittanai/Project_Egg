@@ -44,13 +44,20 @@ public class SnowBallProjectile : NetworkBehaviour
 
         if (collision.gameObject.CompareTag("Player"))
         {
-            if (collision.gameObject.TryGetComponent<IDamageable>(out var damageable))
+            MovementCharacter[] allCharacterMovement = collision.GetComponents<MovementCharacter>();
+
+            foreach (var character in allCharacterMovement)
             {
-                Vector2 knockbackDir = (collision.transform.position - transform.position).normalized;
-                knockbackDir.y = 1f;
-                damageable.TakeDamage(damageAmount, knockbackForce, knockbackDir.normalized);
-            }
-            DespawnSnowball();
+                if (character.enabled)
+                {
+                    Vector2 knockbackDir = (collision.transform.position - transform.position).normalized;
+                    knockbackDir.y = 1f;
+
+                    character.TakeDamage(damageAmount, knockbackForce, knockbackDir.normalized);
+
+                    DespawnSnowball();
+                }
+            } 
         }
     }
 

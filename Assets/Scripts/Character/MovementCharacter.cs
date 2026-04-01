@@ -97,6 +97,9 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [SerializeField] public Color duck_Color;
     [SerializeField] public Color bird_Color;
 
+    [Header("Etc")]
+    [Networked] public bool _wasEscPressed { get; set; }
+
     private void Awake()
     {
         if (stats == null) stats = GetComponent<CharacterStats>();
@@ -170,14 +173,12 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     public override void FixedUpdateNetwork()
     {
-        // 1. Guard Clauses
         if (GameManager.Instance == null || GameManager.Instance.Object == null || !GameManager.Instance.Object.IsValid || !GameManager.Instance.isLoadMapDone)
         {
             rb2D.linearVelocity = Vector2.zero;
             return;
         }
 
-        // 2. Initial Position Setup
         if (!hasSetInitialPosition)
         {
             transform.position = GameManager.Instance.GetRespawnPosition();
@@ -189,7 +190,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         if (!GameManager.Instance.IsGameReady) { rb2D.linearVelocity = Vector2.zero; return; }
         if (isDead) { if (HasStateAuthority && canbeRespawn && respawnTimer.Expired(Runner)) Respawn(); return; }
 
-        // 3. Passenger Physics Setup
         bool effectivelyCarried = IsBeingCarried || localIsBeingCarriedPredict;
         NetworkId effectiveCarrierId = IsBeingCarried ? CarrierId : localCarrierIdPredict;
 
@@ -211,7 +211,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             isMoveAble = true;
         }
 
-        // 4. Passenger Movement Sync (Host)
         if (HasStateAuthority && effectivelyCarried)
         {
             if (Runner.TryFindObject(effectiveCarrierId, out var duckObj) && duckObj.TryGetComponent<Rigidbody2D>(out var duckRb))
@@ -220,7 +219,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             }
         }
 
-        // 5. Environment Check & Input
         if (HasStateAuthority || HasInputAuthority) CheckGround();
 
         if (GetInput(out NetworkInputData input))
@@ -231,6 +229,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                 HandleJump(input);
             }
             HandleInteraction(input);
+            HandleEtcInput(input);
         }
 
         InFrontCheck();
@@ -245,6 +244,25 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     #endregion
 
     #region CharacterSystem
+
+    private void HandleEtcInput(NetworkInputData input)
+    {
+        bool isEscPressed = input.Keyboard_ESC && !_wasEscPressed;
+
+        if (isEscPressed)
+        {
+            if (HasStateAuthority)
+            {
+                Menu_Interface.Instance.HostToggleMenu_RPC();
+            }
+            else if (HasInputAuthority)
+            {
+                Menu_Interface.Instance.ClientToggleLocalMenu();
+            }
+        }
+
+        _wasEscPressed = input.Keyboard_ESC;
+    }
 
     private void HandleMovement(NetworkInputData input)
     {
@@ -310,12 +328,18 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         if (currentHealth <= 0)
         {
             isMoveAble = false;
-            CharacterDie();
+            DeathMechanic_RPC();
         }
         else
         {
             InvincibleTimer = TickTimer.CreateFromSeconds(Runner, invincibleDuration);
         }
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.All)]
+    public virtual void DeathMechanic_RPC()
+    {
+        CharacterDie();
     }
 
     public virtual void CharacterDie()
@@ -339,7 +363,23 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         rb2D.linearVelocity = Vector2.zero;
         rb2D.simulated = false;
 
-        if (canbeRespawn) respawnTimer = TickTimer.CreateFromSeconds(Runner, respawnCooldown);
+        if (HasStateAuthority && canbeRespawn)
+        {
+            respawnTimer = TickTimer.CreateFromSeconds(Runner, respawnCooldown);
+        }
+
+        if (HasStateAuthority)
+        {
+            MovementCharacter[] allPlayers = FindObjectsByType<MovementCharacter>(FindObjectsSortMode.None);
+
+            foreach (var partner in allPlayers)
+            {
+                if (partner != this && !partner.isDead)
+                {
+                    partner.DeathMechanic_RPC();
+                }
+            }
+        }
     }
 
     public virtual void Respawn()
@@ -416,7 +456,14 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             {
                 cAnimation.FallingAndFloatAnimation(true, false);
             }
+
+            OnDroppedEvent();
         }
+    }
+
+    public virtual void OnDroppedEvent()
+    {
+
     }
 
     #endregion
@@ -452,7 +499,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         float referenceVelocityY = rb2D.linearVelocity.y;
         bool isNearGround = false;
 
-        if (effectivelyCarried && Runner.TryFindObject(effectiveCarrierId, out var duckObj) && duckObj.TryGetComponent<MovementCharacter>(out var duckMC))
+        if (effectivelyCarried && Runner.TryFindObject(effectiveCarrierId, out var duckObj) && duckObj.TryGetComponent<MovementCharacter>(out var duckMC) && IsBeingCarried)
         {
             IsGrounded = duckMC.IsGrounded;
             IsInAir = duckMC.IsInAir;

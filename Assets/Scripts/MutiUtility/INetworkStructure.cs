@@ -111,6 +111,16 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
                 press_T = false;
             }
 
+            bool press_ESC;
+            if (Keyboard.current.escapeKey.isPressed)
+            {
+                press_ESC = true;
+            }
+            else
+            {
+                press_ESC = false;
+            }
+
             // ---
 
             Vector2 mousePosition = Mouse.current.position.ReadValue();
@@ -136,6 +146,7 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
             data.Keyboard_F = press_F;
             data.Keyboard_E = press_E;
             data.Keyboard_T = press_T;
+            data.Keyboard_ESC = press_ESC;
         }
 
         input.Set(data);
@@ -266,6 +277,7 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
 
 public struct NetworkInputData : INetworkInput
 {
+    // Input
     public Vector2 mousePos;
     public float horizontal;
     public float vertical;
@@ -273,6 +285,5 @@ public struct NetworkInputData : INetworkInput
     public bool Keyboard_F;
     public bool Keyboard_E;
     public bool Keyboard_T;
-    //public bool skill_1;
-    //public bool skill_2;
+    public bool Keyboard_ESC;
 }

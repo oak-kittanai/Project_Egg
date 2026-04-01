@@ -153,15 +153,23 @@ public class JellyfishTrap : NetworkBehaviour
 
         foreach (var hit in hits)
         {
-            if (hit.TryGetComponent<IDamageable>(out var damageable))
-            {
-                Vector2 knockbackDir = (hit.transform.position - transform.position).normalized;
-                knockbackDir.y = Mathf.Abs(knockbackDir.y) + 0.5f;
+            MovementCharacter[] allCharacterMovement = hit.GetComponents<MovementCharacter>();
 
-                damageable.TakeDamage(damageAmount, knockbackForce, knockbackDir.normalized);
+            foreach (var character in allCharacterMovement)
+            {
+                if (character.enabled)
+                {
+                    float pushDirectionX = Mathf.Sign(hit.transform.position.x - transform.position.x);
+                    Vector2 knockbackDirection = new Vector2(pushDirectionX, 1f).normalized;
+
+                    character.TakeDamage(damageAmount, knockbackForce, knockbackDirection);
+
+                    Debug.Log($"Do damage To {character.name}: - {damageAmount} hp");
+                }
             }
         }
     }
+
 
     bool IsTarget(Collider2D collision)
     {

@@ -1,6 +1,8 @@
 using Fusion;
 using System.Collections;
 using UnityEngine;
+using static Unity.Collections.Unicode;
+using static UnityEngine.RuleTile.TilingRuleOutput;
 
 public class Trap_Ice : NetworkBehaviour
 {
@@ -14,12 +16,19 @@ public class Trap_Ice : NetworkBehaviour
 
         if (other.CompareTag("Player"))
         {
-            if (other.TryGetComponent<IDamageable>(out var damageable))
-            {
-                Vector2 knockbackDir = (other.transform.position - transform.position).normalized;
-                knockbackDir.y = 1f;
+            MovementCharacter[] allCharacterMovement = other.GetComponents<MovementCharacter>();
 
-                damageable.TakeDamage(damageAmount, knockbackForce, knockbackDir.normalized);
+            foreach (var character in allCharacterMovement)
+            {
+                if (character.enabled)
+                {
+                    float pushDirectionX = Mathf.Sign(other.transform.position.x - transform.position.x);
+                    Vector2 knockbackDirection = new Vector2(pushDirectionX, 1f).normalized;
+
+                    character.TakeDamage(damageAmount, knockbackForce, knockbackDirection);
+
+                    Debug.Log($"Do damage To {character.name}: - {damageAmount} hp");
+                }
             }
         }
     }

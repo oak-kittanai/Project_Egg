@@ -101,7 +101,7 @@ public class Bird_Moveset : MovementCharacter
                 if (DrownTimer.Expired(Runner))
                 {
                     startTimer = false;
-                    CharacterDie();
+                    DeathMechanic_RPC();
                 }
                 else
                 {
@@ -196,6 +196,38 @@ public class Bird_Moveset : MovementCharacter
         }
 
         _wasJumpPressed = input.jump;
+    }
+    public override void OnDroppedEvent()
+    {
+        base.OnDroppedEvent();
+
+        if (HasStateAuthority)
+        {
+            IsFlying = false;
+            FlightTimer = TickTimer.None;
+
+            FallingBusy = false;
+            AlreadyFloating = false;
+            isOptional = false;
+            IsAlreadyFly = false;
+        }
+
+        if (HasInputAuthority && localGUI != null)
+        {
+            localGUI.StopFlightBar();
+        }
+
+        if (rb2D != null)
+        {
+            rb2D.sharedMaterial = defaultMaterial;
+            rb2D.linearDamping = 0f;
+            rb2D.gravityScale = normalGravity;
+        }
+
+        if (cAnimation != null)
+        {
+            cAnimation.FallingAndFloatAnimation(true, false);
+        }
     }
 
     private void StartFloating()

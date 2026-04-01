@@ -25,32 +25,36 @@ public class BearTrapScript : NetworkBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-
-        if (other.CompareTag("Player") && other.TryGetComponent<MovementCharacter>(out var player))
+        if (other.CompareTag("Player"))
         {
-            if (player.HasInputAuthority && !IsTriggered)
+            MovementCharacter[] allCharacterMovement = other.GetComponents<MovementCharacter>();
+
+            foreach (var character in allCharacterMovement)
             {
-                localTriggerPredict = true;
-                localPredictTimer = Time.time + cooldownTime;
-            }
-
-            if (HasStateAuthority)
-            {
-                if (!CooldownTimer.ExpiredOrNotRunning(Runner)) return;
-
-                IsTriggered = true;
-                CooldownTimer = TickTimer.CreateFromSeconds(Runner, cooldownTime);
-
-                if (doDamageColl2D != null)
+                if (character.enabled)
                 {
-                    doDamageColl2D.enabled = true;
+                    if (character.HasInputAuthority && !IsTriggered)
+                    {
+                        localTriggerPredict = true;
+                        localPredictTimer = Time.time + cooldownTime;
+                    }
+
+                    if (HasStateAuthority)
+                    {
+                        if (!CooldownTimer.ExpiredOrNotRunning(Runner)) return;
+
+                        IsTriggered = true;
+                        CooldownTimer = TickTimer.CreateFromSeconds(Runner, cooldownTime);
+
+                        if (doDamageColl2D != null) doDamageColl2D.enabled = true;
+
+                        float pushDirectionX = Mathf.Sign(other.transform.position.x - transform.position.x);
+                        Vector2 knockbackDirection = new Vector2(pushDirectionX, 1f).normalized;
+                        character.TakeDamage(damageAmount, knockbackForce, knockbackDirection);
+
+                        Debug.Log($"Do damage To {character.name}: - {damageAmount} hp");
+                    }
                 }
-
-                float pushDirectionX = Mathf.Sign(other.transform.position.x - transform.position.x);
-                Vector2 knockbackDirection = new Vector2(pushDirectionX, 1f).normalized;
-                player.TakeDamage(damageAmount, knockbackForce, knockbackDirection);
-
-                Debug.Log($"Do damage To {player.name}: -{damageAmount} hp");
             }
         }
     }
