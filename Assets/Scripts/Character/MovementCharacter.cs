@@ -251,17 +251,18 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
         if (isEscPressed)
         {
-            Debug.Log("Try to Press ESC key : " + isEscPressed);
+            if (Menu_Interface.Instance != null)
+            {
+                if (Menu_Interface.Instance.IsAnyMenuOpen()) return;
 
-            if (HasStateAuthority)
-            {
-                Debug.Log("Host Esc");
-                Menu_Interface.Instance.HostToggleMenu_RPC();
-            }
-            else if (HasInputAuthority)
-            {
-                Debug.Log("Client Esc");
-                Menu_Interface.Instance.ClientToggleLocalMenu();
+                if (HasStateAuthority)
+                {
+                    Menu_Interface.Instance.HostToggleMenu_RPC();
+                }
+                else if (HasInputAuthority)
+                {
+                    Menu_Interface.Instance.ClientToggleLocalMenu();
+                }
             }
         }
 

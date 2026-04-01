@@ -49,6 +49,11 @@ public class Menu_Interface : NetworkBehaviour
         quitButton.onClick.AddListener(OnQuitClicked);
     }
 
+    public bool IsAnyMenuOpen()
+    {
+        return menuContainer != null && menuContainer.activeSelf;
+    }
+
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
     public void HostToggleMenu_RPC()
     {
@@ -64,18 +69,13 @@ public class Menu_Interface : NetworkBehaviour
     {
         if (IsHostMenuForced) return;
 
-        bool isCurrentlyOpen = menuContainer.activeSelf;
-        menuContainer.SetActive(!isCurrentlyOpen);
+        menuContainer.SetActive(true);
 
-        if (!isCurrentlyOpen)
-        {
-            hostVotePanel.SetActive(false);
-            voteResumeButton.gameObject.SetActive(false);
+        hostVotePanel.SetActive(false);
+        voteResumeButton.gameObject.SetActive(false);
+        resetButton.gameObject.SetActive(false);
 
-            resetButton.gameObject.SetActive(false);
-
-            localResumeButton.gameObject.SetActive(true);
-        }
+        localResumeButton.gameObject.SetActive(true);
     }
 
     public void OnGlobalMenuStateChanged()
@@ -87,19 +87,43 @@ public class Menu_Interface : NetworkBehaviour
         {
             hostVotePanel.SetActive(true);
             voteResumeButton.gameObject.SetActive(true);
-            localResumeButton.gameObject.SetActive(false);
-
             resetButton.gameObject.SetActive(true);
+
+            localResumeButton.gameObject.SetActive(false);
 
             voteResumeButton.interactable = true;
             resetButton.interactable = true;
         }
     }
 
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    private void RPC_SubmitVote(NetworkBool isResume)
+    {
+        int playersInGame = 0;
+        foreach (var player in Runner.ActivePlayers) playersInGame++;
+
+        int requiredVotes = Mathf.Max(1, playersInGame);
+
+        if (isResume)
+        {
+            ResumeVotes++;
+            if (ResumeVotes >= requiredVotes) IsHostMenuForced = false;
+        }
+        else
+        {
+            ResetVotes++;
+            if (ResetVotes >= requiredVotes)
+            {
+                IsHostMenuForced = false;
+                if (GameManager.Instance != null) GameManager.Instance.ResetAllPlayersToSpawn();
+            }
+        }
+    }
+
     public void OnQueueUpdated()
     {
-        if (currentResumeQueueShow != null) currentResumeQueueShow.text = $"RESUME {ResumeVotes}/2";
-        if (currentResetQueueShow != null) currentResetQueueShow.text = $"RESET {ResetVotes}/2";
+        if (currentResumeQueueShow != null) currentResumeQueueShow.text = $"{ResumeVotes}/2";
+        if (currentResetQueueShow != null) currentResetQueueShow.text = $"{ResetVotes}/2";
     }
 
     private void OnVoteResumeClicked()
@@ -123,33 +147,6 @@ public class Menu_Interface : NetworkBehaviour
         {
             resetButton.interactable = false;
             RPC_SubmitVote(false);
-        }
-    }
-
-    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    private void RPC_SubmitVote(NetworkBool isResume)
-    {
-        int requiredVotes = 2;
-        if (Runner != null)
-        {
-            int playerCount = 0;
-            foreach (var p in Runner.ActivePlayers) playerCount++;
-            if (playerCount > 0) requiredVotes = playerCount;
-        }
-
-        if (isResume)
-        {
-            ResumeVotes++;
-            if (ResumeVotes >= requiredVotes) IsHostMenuForced = false;
-        }
-        else
-        {
-            ResetVotes++;
-            if (ResetVotes >= requiredVotes)
-            {
-                IsHostMenuForced = false;
-                if (GameManager.Instance != null) GameManager.Instance.ResetAllPlayersToSpawn();
-            }
         }
     }
 
