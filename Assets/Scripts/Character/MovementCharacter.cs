@@ -251,13 +251,18 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
         if (isEscPressed)
         {
-            if (HasStateAuthority)
+            if (Menu_Interface.Instance != null)
             {
-                Menu_Interface.Instance.HostToggleMenu_RPC();
-            }
-            else if (HasInputAuthority)
-            {
-                Menu_Interface.Instance.ClientToggleLocalMenu();
+                if (Menu_Interface.Instance.IsAnyMenuOpen()) return;
+
+                if (HasStateAuthority)
+                {
+                    Menu_Interface.Instance.HostToggleMenu_RPC();
+                }
+                else if (HasInputAuthority)
+                {
+                    Menu_Interface.Instance.ClientToggleLocalMenu();
+                }
             }
         }
 
