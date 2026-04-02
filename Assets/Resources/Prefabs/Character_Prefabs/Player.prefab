@@ -636,6 +636,7 @@ MonoBehaviour:
   _damageFlash: {fileID: 0}
   duck_Color: {r: 0, g: 0.4745098, b: 1, a: 0}
   bird_Color: {r: 1, g: 0.54901963, b: 0, a: 0}
+  __wasEscPressed: 0
   _isJumpAble: 0
   waterJumpCooldown: 6
   throwForceX: 7
@@ -730,6 +731,7 @@ MonoBehaviour:
   _damageFlash: {fileID: 0}
   duck_Color: {r: 0, g: 0.4745098, b: 1, a: 0}
   bird_Color: {r: 1, g: 0.54901963, b: 0, a: 0}
+  __wasEscPressed: 0
   normalFlyTime: 0.9
   carryFlyTime: 0.8
   floatingGravity: 1
@@ -1820,8 +1822,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 506285829
+  m_SortingLayer: 6
   m_SortingOrder: 1
   m_Sprite: {fileID: -5224715236324516501, guid: a0fdef8056e92e14e911068728c536b8, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
