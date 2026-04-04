@@ -344,6 +344,12 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [Rpc(RpcSources.All, RpcTargets.All)]
     public virtual void DeathMechanic_RPC()
     {
+        if (localGUI != null)
+        {
+            localGUI.StopOxygenTracking();
+            localGUI.StopFlightBar();
+        }
+
         CharacterDie();
     }
 

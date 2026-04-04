@@ -17,6 +17,8 @@ public class PlayerGUI : MonoBehaviour
     private bool isTrackingOxygen = false;
     private int maxBubbles;
 
+    private int lastBubblesCount = -1;
+
     [Header("Flight Bar")]
     public Slider flightBar;
     private TickTimer activeFlightTimer;
@@ -69,19 +71,24 @@ public class PlayerGUI : MonoBehaviour
         maxBubbles = maxAir;
         isTrackingOxygen = true;
 
+        lastBubblesCount = -1;
+
         UpdateOxygenBubbles(maxBubbles);
     }
 
     public void StopOxygenTracking()
     {
         isTrackingOxygen = false;
-
         if (oxygenContainer != null) oxygenContainer.SetActive(false);
     }
 
     public void UpdateOxygenBubbles(int currentBubbles)
     {
         if (oxygenBubbles == null || oxygenBubbles.Length == 0) return;
+
+        if (currentBubbles == lastBubblesCount) return;
+
+        lastBubblesCount = currentBubbles;
 
         for (int i = 0; i < oxygenBubbles.Length; i++)
         {
