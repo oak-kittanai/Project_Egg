@@ -594,7 +594,7 @@ MonoBehaviour:
   isMoveAble: 0
   _resetAnimation: 0
   _isJumping: 0
-  JumpCooldownTimer: 1.4
+  JumpCooldownTimer: 0.5
   isSpeedoptional: 0
   normalGravity: 2
   heavyGravity: 5.5
@@ -638,7 +638,7 @@ MonoBehaviour:
   bird_Color: {r: 1, g: 0.54901963, b: 0, a: 0}
   __wasEscPressed: 0
   _isJumpAble: 0
-  waterJumpCooldown: 6
+  waterJumpCooldown: 5
   throwForceX: 7
   throwForceY: 7
   swimSpeed: 10
@@ -689,7 +689,7 @@ MonoBehaviour:
   isMoveAble: 0
   _resetAnimation: 0
   _isJumping: 0
-  JumpCooldownTimer: 1.4
+  JumpCooldownTimer: 0.5
   isSpeedoptional: 0
   normalGravity: 2
   heavyGravity: 5.5
@@ -700,7 +700,7 @@ MonoBehaviour:
   optionalGravity: 0
   accelerationSpeedOptional: 3.5
   decelerationSpeedOptional: 6.5
-  optionalMaxSpeed: 19
+  optionalMaxSpeed: 15
   _characterMaxHealth: 5
   _currentHealth: 0
   _isDead: 0
