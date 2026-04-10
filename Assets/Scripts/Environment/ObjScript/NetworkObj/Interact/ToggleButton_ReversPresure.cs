@@ -1,7 +1,6 @@
 using Fusion;
 using UnityEngine;
 
-// 1. เพิ่ม Interface Interactable เพื่อให้ระบบ Interact เรียกใช้งานได้
 public class ToggleButton_ReversPresure : NetworkBehaviour, Interactable
 {
     public enum PressureMode
