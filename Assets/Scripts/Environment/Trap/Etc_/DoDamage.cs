@@ -1,9 +1,10 @@
 using Fusion;
 using UnityEngine;
+using UnityEngine.TextCore.Text;
 
 public class DoDamage : NetworkBehaviour
 {
-    [Header("Stat")]
+    [Header("Trap Setting")]
     [SerializeField] private float cooldownTime = 1.5f;
     [SerializeField] private int damageAmount = 1;
     [SerializeField] private float knockbackForce = 5f;
@@ -13,18 +14,37 @@ public class DoDamage : NetworkBehaviour
     {
         if (!CooldownTimer.ExpiredOrNotRunning(Runner)) return;
 
-        if (other.CompareTag("Player"))
+        MovementCharacter[] allCharacterMovement = other.GetComponents<MovementCharacter>();
+
+        foreach (var character in allCharacterMovement)
         {
-            if (other.TryGetComponent<IDamageable>(out var damageable))
+            if (character.enabled)
             {
-                Vector2 knockbackDir = (other.transform.position - transform.position).normalized;
-                knockbackDir.y = 1f;
+                if (HasStateAuthority)
+                {
+                    if (!CooldownTimer.ExpiredOrNotRunning(Runner)) return;
 
-                damageable.TakeDamage(damageAmount, knockbackForce, knockbackDir.normalized);
+                    CooldownTimer = TickTimer.CreateFromSeconds(Runner, cooldownTime);
 
-                CooldownTimer = TickTimer.CreateFromSeconds(Runner, cooldownTime);
+                    if (other.CompareTag("Player"))
+                    {
+                        if (other.TryGetComponent<IDamageable>(out var damageable))
+                        {
+                            float pushDirectionX = Mathf.Sign(other.transform.position.x - transform.position.x);
+                            Vector2 knockbackDirection = new Vector2(pushDirectionX, 1f).normalized;
+
+                            character.TakeDamage(damageAmount, knockbackForce, knockbackDirection);
+
+                            CooldownTimer = TickTimer.CreateFromSeconds(Runner, cooldownTime);
+                        }
+                    }
+
+                    Debug.Log($"Do damage To {character.name}: - {damageAmount} hp");
+                }
             }
         }
+
+        
     }
 
 }

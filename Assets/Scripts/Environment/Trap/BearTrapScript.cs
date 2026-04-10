@@ -5,8 +5,6 @@ public class BearTrapScript : NetworkBehaviour
 {
     [Header("Trap Settings")]
     [SerializeField] private float cooldownTime = 2.4f;
-    [SerializeField] private int damageAmount = 1;
-    [SerializeField] private float knockbackForce = 5f;
     [Networked] private TickTimer CooldownTimer { get; set; }
 
     [SerializeField] Collider2D doDamageColl2D;
@@ -46,13 +44,7 @@ public class BearTrapScript : NetworkBehaviour
                         IsTriggered = true;
                         CooldownTimer = TickTimer.CreateFromSeconds(Runner, cooldownTime);
 
-                        if (doDamageColl2D != null) doDamageColl2D.enabled = true;
-
-                        float pushDirectionX = Mathf.Sign(other.transform.position.x - transform.position.x);
-                        Vector2 knockbackDirection = new Vector2(pushDirectionX, 1f).normalized;
-                        character.TakeDamage(damageAmount, knockbackForce, knockbackDirection);
-
-                        Debug.Log($"Do damage To {character.name}: - {damageAmount} hp");
+                        if (doDamageColl2D != null) doDamageColl2D.enabled = false;
                     }
                 }
             }

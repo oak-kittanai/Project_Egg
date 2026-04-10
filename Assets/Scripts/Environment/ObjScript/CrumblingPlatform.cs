@@ -18,11 +18,13 @@ public class CrumblingPlatform : NetworkBehaviour
 
     private BoxCollider2D boxCollider;
     private SpriteRenderer sr;
+    private Animator animator;
 
     private void Awake()
     {
         boxCollider = GetComponent<BoxCollider2D>();
         sr = GetComponent<SpriteRenderer>();
+        animator = GetComponent<Animator>();
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
@@ -57,7 +59,7 @@ public class CrumblingPlatform : NetworkBehaviour
     {
         CurrentState = PlatformState.Broken;
         StateTimer = TickTimer.CreateFromSeconds(Runner, respawnTime);
-
+        animator.SetTrigger("Break");
         boxCollider.enabled = false;
     }
 
@@ -65,7 +67,7 @@ public class CrumblingPlatform : NetworkBehaviour
     {
         CurrentState = PlatformState.Idle;
         StateTimer = TickTimer.None;
-
+        animator.SetTrigger("Reset");
         boxCollider.enabled = true;
     }
 
@@ -73,6 +75,7 @@ public class CrumblingPlatform : NetworkBehaviour
     {
         if (CurrentState == PlatformState.Broken)
         {
+            animator.SetTrigger("Break");
             sr.enabled = false;
         }
         else
