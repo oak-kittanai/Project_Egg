@@ -4,8 +4,11 @@ using UnityEngine;
 public class BearTrapScript : NetworkBehaviour
 {
     [Header("Trap Settings")]
+    [SerializeField] private float delayBeforeSnap = 0.5f;
+
     [SerializeField] private float cooldownTime = 2.4f;
     [Networked] private TickTimer CooldownTimer { get; set; }
+    [Networked] private TickTimer DelayTimer { get; set; }
 
     [SerializeField] Collider2D doDamageColl2D;
 
@@ -23,31 +26,18 @@ public class BearTrapScript : NetworkBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.CompareTag("Player"))
+        if (!HasStateAuthority) return;
+
+        if (other.CompareTag("Player") && CooldownTimer.ExpiredOrNotRunning(Runner))
         {
-            MovementCharacter[] allCharacterMovement = other.GetComponents<MovementCharacter>();
+            // 1. เหยียบปุ๊บ เซ็ตค่าทันทีเพื่อให้ภาพเริ่มเล่น
+            IsTriggered = true;
 
-            foreach (var character in allCharacterMovement)
-            {
-                if (character.enabled)
-                {
-                    if (character.HasInputAuthority && !IsTriggered)
-                    {
-                        localTriggerPredict = true;
-                        localPredictTimer = Time.time + cooldownTime;
-                    }
+            // 2. เริ่มนับถอยหลังก่อนจะทำดาเมจ
+            DelayTimer = TickTimer.CreateFromSeconds(Runner, delayBeforeSnap);
 
-                    if (HasStateAuthority)
-                    {
-                        if (!CooldownTimer.ExpiredOrNotRunning(Runner)) return;
-
-                        IsTriggered = true;
-                        CooldownTimer = TickTimer.CreateFromSeconds(Runner, cooldownTime);
-
-                        if (doDamageColl2D != null) doDamageColl2D.enabled = false;
-                    }
-                }
-            }
+            // 3. เริ่มนับ Cooldown ไปด้วยเลย
+            CooldownTimer = TickTimer.CreateFromSeconds(Runner, cooldownTime);
         }
     }
 
@@ -55,24 +45,30 @@ public class BearTrapScript : NetworkBehaviour
     {
         if (!HasStateAuthority) return;
 
+        // เช็คจังหวะที่จะเปิด Collider ดาเมจ
+        if (IsTriggered && DelayTimer.Expired(Runner))
+        {
+            if (doDamageColl2D != null && !doDamageColl2D.enabled)
+            {
+                doDamageColl2D.enabled = true; // งับจริงแล้ว! เปิด Collider
+            }
+        }
+
+        // เมื่อ Cooldown หมด ให้รีเซ็ตทุกอย่าง
         if (IsTriggered && CooldownTimer.Expired(Runner))
         {
             IsTriggered = false;
-
-            if (doDamageColl2D != null) doDamageColl2D.enabled = false;
+            DelayTimer = TickTimer.None;
+            if (doDamageColl2D != null) doDamageColl2D.enabled = false; // ปิด Collider รอครั้งต่อไป
         }
     }
 
     public override void Render()
     {
-        if (IsTriggered || Time.time > localPredictTimer)
-        {
-            localTriggerPredict = false;
-        }
-
         if (trapAnimator != null)
         {
-            trapAnimator.SetBool("Trigger", IsTriggered || localTriggerPredict);
+            // ใช้ IsTriggered คุม Animation เหมือนเดิม แต่จังหวะงับจะดูแฟร์ขึ้นเพราะมีดีเลย์
+            trapAnimator.SetBool("Trigger", IsTriggered);
         }
     }
 }
