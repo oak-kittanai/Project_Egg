@@ -74,17 +74,28 @@ public class TrapPressure : NetworkBehaviour
 
         playersInTrap.RemoveAll(p => p == null || !p.Object.IsValid);
 
-        foreach (var player in playersInTrap)
+        if (HasStateAuthority)
         {
-            if (HasStateAuthority)
+            foreach (var player in playersInTrap)
             {
                 if (player.rb2D != null)
                 {
-                    if (player.rb2D.IsSleeping()) player.rb2D.WakeUp();
 
+                    if (player.rb2D.IsSleeping()) player.rb2D.WakeUp();
                     Vector2 currentDirection = _isRevers ? -defaultDirection : defaultDirection;
 
-                    player.rb2D.AddForce(currentDirection.normalized * pushForce, forceMode);
+                    float currentSpeedInDir = Vector2.Dot(player.rb2D.linearVelocity, currentDirection.normalized);
+
+                    float targetPushSpeed = 4f;
+
+                    if (player.rb2D.linearVelocity.magnitude < 0.1f)
+                    {
+                        player.rb2D.AddForce(currentDirection.normalized * (pushForce * 0.5f), ForceMode2D.Impulse);
+                    }
+                    else if (currentSpeedInDir < targetPushSpeed)
+                    {
+                        player.rb2D.AddForce(currentDirection.normalized * pushForce, ForceMode2D.Force);
+                    }
                 }
             }
         }
