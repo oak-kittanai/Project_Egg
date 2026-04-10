@@ -5,38 +5,31 @@ public class BearTrapScript : NetworkBehaviour
 {
     [Header("Trap Settings")]
     [SerializeField] private float delayBeforeSnap = 0.5f;
-
     [SerializeField] private float cooldownTime = 2.4f;
+    [SerializeField] private ParticleSystem damageParticles;
+
     [Networked] private TickTimer CooldownTimer { get; set; }
     [Networked] private TickTimer DelayTimer { get; set; }
+    [Networked] private NetworkBool IsTriggered { get; set; }
+    [Networked] private NetworkBool HasPlayedFX { get; set; }
 
     [SerializeField] Collider2D doDamageColl2D;
-
-    [Header("Visuals")]
     [SerializeField] private Animator trapAnimator;
-    [Networked] private NetworkBool IsTriggered { get; set; }
-
-    private bool localTriggerPredict;
-    private float localPredictTimer;
 
     private void Awake()
     {
         if (doDamageColl2D != null) doDamageColl2D.enabled = false;
     }
 
-    private void OnTriggerEnter2D(Collider2D other)
+    private void OnTriggerStay2D(Collider2D other)
     {
         if (!HasStateAuthority) return;
 
-        if (other.CompareTag("Player") && CooldownTimer.ExpiredOrNotRunning(Runner))
+        if (!IsTriggered && other.CompareTag("Player") && CooldownTimer.ExpiredOrNotRunning(Runner))
         {
-            // 1. เหยียบปุ๊บ เซ็ตค่าทันทีเพื่อให้ภาพเริ่มเล่น
             IsTriggered = true;
-
-            // 2. เริ่มนับถอยหลังก่อนจะทำดาเมจ
+            HasPlayedFX = false;
             DelayTimer = TickTimer.CreateFromSeconds(Runner, delayBeforeSnap);
-
-            // 3. เริ่มนับ Cooldown ไปด้วยเลย
             CooldownTimer = TickTimer.CreateFromSeconds(Runner, cooldownTime);
         }
     }
@@ -45,30 +38,61 @@ public class BearTrapScript : NetworkBehaviour
     {
         if (!HasStateAuthority) return;
 
-        // เช็คจังหวะที่จะเปิด Collider ดาเมจ
-        if (IsTriggered && DelayTimer.Expired(Runner))
+        // งับ
+        if (IsTriggered && !HasPlayedFX && DelayTimer.Expired(Runner))
         {
-            if (doDamageColl2D != null && !doDamageColl2D.enabled)
+            HasPlayedFX = true;
+
+            if (doDamageColl2D != null)
             {
-                doDamageColl2D.enabled = true; // งับจริงแล้ว! เปิด Collider
+                doDamageColl2D.enabled = true;
+
+                ContactFilter2D filter = new ContactFilter2D();
+                filter.SetLayerMask(LayerMask.GetMask("Player"));
+
+                Collider2D[] results = new Collider2D[5];
+                int hitCount = doDamageColl2D.OverlapCollider(filter, results);
+
+                if (hitCount > 0)
+                {
+                    RPC_PlaySnapEffect();
+                }
             }
         }
 
-        // เมื่อ Cooldown หมด ให้รีเซ็ตทุกอย่าง
+        // รีเซ็ต
         if (IsTriggered && CooldownTimer.Expired(Runner))
         {
             IsTriggered = false;
+            HasPlayedFX = false;
             DelayTimer = TickTimer.None;
-            if (doDamageColl2D != null) doDamageColl2D.enabled = false; // ปิด Collider รอครั้งต่อไป
+
+            if (doDamageColl2D != null)
+            {
+                doDamageColl2D.enabled = false;
+            }
+
+            RPC_ResetTrapVisuals();
         }
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_PlaySnapEffect()
+    {
+        if (damageParticles != null)
+        {
+            Instantiate(damageParticles, transform.position, Quaternion.identity);
+        }
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_ResetTrapVisuals()
+    {
+            trapAnimator.SetBool("Trigger", false);
     }
 
     public override void Render()
     {
-        if (trapAnimator != null)
-        {
-            // ใช้ IsTriggered คุม Animation เหมือนเดิม แต่จังหวะงับจะดูแฟร์ขึ้นเพราะมีดีเลย์
             trapAnimator.SetBool("Trigger", IsTriggered);
-        }
     }
 }
