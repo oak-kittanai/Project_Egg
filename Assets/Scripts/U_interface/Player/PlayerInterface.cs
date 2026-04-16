@@ -91,6 +91,7 @@ public class PlayerInterface : MonoBehaviour
             interactPromptObj.transform.position = currentInteractTarget.position + promptOffset;
         }
     }
+
     public void ShowInteractPrompt(Transform targetItem)
     {
         currentInteractTarget = targetItem;
