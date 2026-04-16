@@ -1,12 +1,28 @@
 ﻿using Fusion;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using static UnityEngine.CullingGroup;
+
+public enum SessionState
+{
+    MainMenu,
+    Setting,
+    SessionSelect,
+    Join,
+    CharacterSelect
+}
 
 public class SessionManager : SingletonNetwork<SessionManager>
 {
+    #region Variables & Data Structures
+    [Header("Session State")]
+    public SessionState currentState;
+    public event Action<SessionState> OnStateChanged;
+
     [Header("Session")]
     [SerializeField] string _sessionKey;
     [SerializeField] public bool _isAlreadyInRoom;
@@ -40,6 +56,34 @@ public class SessionManager : SingletonNetwork<SessionManager>
 
     [Header("UI System")]
     [SerializeField] public GameObject globalLoadingScreen;
+    #endregion
+
+    #region Initialization & Setup
+    public void Setup()
+    {
+        if (networkRunner == null)
+        {
+            try { ReStartNetworkRunner(); }
+            catch { ReStartNetworkRunner(); }
+        }
+        else
+        {
+            ReStartNetworkRunner();
+        }
+    }
+
+    private void Start()
+    {
+        ChangeState(SessionState.MainMenu);
+    }
+    #endregion
+
+    #region State & UI Management
+    public void ChangeState(SessionState newState)
+    {
+        currentState = newState;
+        OnStateChanged?.Invoke(newState);
+    }
 
     public void ShowLoadingScreen(bool show)
     {
@@ -48,60 +92,9 @@ public class SessionManager : SingletonNetwork<SessionManager>
             globalLoadingScreen.SetActive(show);
         }
     }
+    #endregion
 
-    public async void StartGame()
-    {
-        _isAlreadyInRoom = false;
-
-        ShowLoadingScreen(true);
-
-        if (GlobalLoadingManager.Instance != null) GlobalLoadingManager.Instance.ShowLoading();
-
-        if (networkRunner.IsServer)
-        {
-            INetworkStructure networkStructure = networkRunner.GetComponent<INetworkStructure>();
-
-            NetworkObject CHObject = networkRunner.Spawn(CenterHostObject);
-            CenterHost CH = CHObject.GetComponent<CenterHost>();
-            CH.AddComponent(networkRunner, networkStructure, PlayerPrefabs);
-
-            await LoadStartGame("Stage1-S1");
-            _isAlreadyInRoom = false;
-
-            GM = networkRunner.Spawn(GameManagerPrefabs);
-            gameManager = GM.GetComponent<GameManager>();
-            gameManager.GetNetworkRunner(networkRunner);
-
-            foreach (PlayersData player in Players)
-            {
-                NetworkRunner playerRun = player.runner;
-                PlayerRef playerRef = player.playerRef;
-
-                if (RuntimeUpdate.Instance != null)
-                {
-                    if (playerRef == playerRun.LocalPlayer)
-                    {
-                        CH.SpawnPlayer(playerRef, CharacterTypeShip.Instance.currentHost, true);
-                    }
-                    else
-                    {
-                        CH.SpawnPlayer(playerRef, CharacterTypeShip.Instance.currentClient, false);
-                    }
-                }
-                else
-                {
-                    Debug.Log("runtime is null");
-                }
-            }
-        }
-        SessionHub.Instance.DesetButton();
-    }
-
-    public void SelfDestory()
-    {
-        Destroy(this.gameObject);
-    }
-
+    #region Player Management
     public PlayersData GetPlayerByNum(int playerNum)
     {
         return Players.Find(p => p.playerNum == playerNum);
@@ -130,43 +123,55 @@ public class SessionManager : SingletonNetwork<SessionManager>
         Debug.Log($"Player added: {player.PlayerId} and add {runner}");
     }
 
-    public async Task LoadStartGame(string sceneName)
+    public void UpdatePlayerCount(NetworkRunner runner)
     {
-        await networkRunner.LoadScene(sceneName, LoadSceneMode.Single);
-    }
-
-    public void Setup()
-    {
-        if (networkRunner == null)
+        if (runner != null && runner.SessionInfo != null)
         {
-            try { ReStartNetworkRunner(); }
-            catch { ReStartNetworkRunner(); }
-        }
-        else
-        {
-            ReStartNetworkRunner();
+            if (runner.IsServer && runner.SessionInfo.PlayerCount == 2)
+            {
+                runner.SessionInfo.IsOpen = false;
+                runner.SessionInfo.IsVisible = false;
+            }
+            else
+            {
+                runner.SessionInfo.IsOpen = true;
+                runner.SessionInfo.IsVisible = true;
+            }
         }
     }
+    #endregion
 
-    #region SessionRoom
-
+    #region Session & Room Flow
     public async void GenerateCode()
     {
         if (networkRunner == null)
         {
             Debug.LogError("can't find networkRunner");
+            return;
         }
-        else
-        {
-            _sessionKey = GenerateSessionCode();
-            await StartSession(networkRunner, _sessionKey);
 
+        // can add loading code
+
+        _sessionKey = GenerateSessionCode();
+
+        bool isSuccess = await StartSession(networkRunner, _sessionKey);
+
+        ShowLoadingScreen(false);
+
+        if (isSuccess)
+        {
             _isAlreadyInRoom = true;
             if (!string.IsNullOrEmpty(_sessionKey))
             {
                 SessionHub.Instance.GetKey(_sessionKey);
                 Debug.Log($"Create session Key : {_sessionKey}");
             }
+
+            ChangeState(SessionState.CharacterSelect);
+        }
+        else
+        {
+            SessionHub.Instance.ResetMenuButtons();
         }
     }
 
@@ -192,23 +197,13 @@ public class SessionManager : SingletonNetwork<SessionManager>
         SessionHub.Instance.onDisconnected();
     }
 
-    public async Task StartSession(NetworkRunner runner, string sessionKey)
+    public async Task<bool> StartSession(NetworkRunner runner, string sessionKey)
     {
         Debug.Log("Starting Host Session...");
-        if (runner == null)
-        {
-            Debug.LogError("Cannot start session: NetworkRunner is null.");
-            return;
-        }
+        if (runner == null) return false;
 
         _isAlreadyInRoom = true;
-
-        var sceneManager = runner.GetComponent<NetworkSceneManagerDefault>();
-        if (sceneManager == null)
-        {
-            sceneManager = runner.gameObject.AddComponent<NetworkSceneManagerDefault>();
-            Debug.Log("Added NetworkSceneManagerDefault to Runner automatically.");
-        }
+        var sceneManager = runner.GetComponent<NetworkSceneManagerDefault>() ?? runner.gameObject.AddComponent<NetworkSceneManagerDefault>();
 
         var startSessionArgs = new StartGameArgs()
         {
@@ -225,20 +220,20 @@ public class SessionManager : SingletonNetwork<SessionManager>
             SessionHub.Instance.ShowDebugText("Create Session Fail");
             Debug.LogError($"StartSession failed: {res.ShutdownReason}");
             _isAlreadyInRoom = false;
-            return;
+            return false;
         }
 
         SessionHub.Instance.ShowDebugText("Success Create Session");
         Debug.Log("Start session Successfully");
 
         runTime = runner.Spawn(runtimeUpdate);
-
         if (runTime != null && runTime.TryGetComponent<RuntimeUpdate>(out var rtUpdate))
         {
             rtUpdate.UpdateCode(sessionKey);
         }
-
         shipType = runner.Spawn(shipTypePrefabs);
+
+        return true;
     }
 
     public async void JoinRoom(string sessionKey)
@@ -289,7 +284,7 @@ public class SessionManager : SingletonNetwork<SessionManager>
 
     private string GenerateSessionCode(int length = 6)
     {
-        const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        const string chars = "0123456789";
         var sb = new StringBuilder(length);
         var random = new System.Random();
 
@@ -300,11 +295,64 @@ public class SessionManager : SingletonNetwork<SessionManager>
 
         return sb.ToString();
     }
-
     #endregion
 
-    #region Runner
+    #region Core Game Loop
+    public async Task LoadStartGame(string sceneName)
+    {
+        await networkRunner.LoadScene(sceneName, LoadSceneMode.Single);
+    }
 
+    public async void StartGame()
+    {
+        _isAlreadyInRoom = false;
+
+        ShowLoadingScreen(true);
+
+        if (GlobalLoadingManager.Instance != null) GlobalLoadingManager.Instance.ShowLoading();
+
+        if (networkRunner.IsServer)
+        {
+            INetworkStructure networkStructure = networkRunner.GetComponent<INetworkStructure>();
+
+            NetworkObject CHObject = networkRunner.Spawn(CenterHostObject);
+            CenterHost CH = CHObject.GetComponent<CenterHost>();
+            CH.AddComponent(networkRunner, networkStructure, PlayerPrefabs);
+
+            await LoadStartGame("Stage1-S1");
+            _isAlreadyInRoom = false;
+
+            GM = networkRunner.Spawn(GameManagerPrefabs);
+            gameManager = GM.GetComponent<GameManager>();
+            gameManager.GetNetworkRunner(networkRunner);
+
+            foreach (PlayersData player in Players)
+            {
+                NetworkRunner playerRun = player.runner;
+                PlayerRef playerRef = player.playerRef;
+
+                if (RuntimeUpdate.Instance != null)
+                {
+                    if (playerRef == playerRun.LocalPlayer)
+                    {
+                        CH.SpawnPlayer(playerRef, CharacterTypeShip.Instance.currentHost, true);
+                    }
+                    else
+                    {
+                        CH.SpawnPlayer(playerRef, CharacterTypeShip.Instance.currentClient, false);
+                    }
+                }
+                else
+                {
+                    Debug.Log("runtime is null");
+                }
+            }
+        }
+        SessionHub.Instance.DesetButton();
+    }
+    #endregion
+
+    #region Network Runner Management
     public void AddRunner()
     {
         Debug.Log("Add runner");
@@ -354,23 +402,12 @@ public class SessionManager : SingletonNetwork<SessionManager>
 
         AddRunner();
     }
-
     #endregion
 
-    public void UpdatePlayerCount(NetworkRunner runner)
+    #region Utility
+    public void SelfDestory()
     {
-        if (runner != null && runner.SessionInfo != null)
-        {
-            if (runner.IsServer && runner.SessionInfo.PlayerCount == 2)
-            {
-                runner.SessionInfo.IsOpen = false;
-                runner.SessionInfo.IsVisible = false;
-            }
-            else
-            {
-                runner.SessionInfo.IsOpen = true;
-                runner.SessionInfo.IsVisible = true;
-            }
-        }
+        Destroy(this.gameObject);
     }
+    #endregion
 }

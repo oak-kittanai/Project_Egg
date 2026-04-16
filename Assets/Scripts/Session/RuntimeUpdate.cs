@@ -17,6 +17,9 @@ public class RuntimeUpdate : SingletonNetwork<RuntimeUpdate>
 
     [Networked] string ServerCode { get; set; }
 
+    [Networked] public NetworkBool isHostReady { get; set; }
+    [Networked] public NetworkBool isClientReady { get; set; }
+
     [Networked] public bool startAble { get; set; }
 
     public override void Spawned()
@@ -24,27 +27,74 @@ public class RuntimeUpdate : SingletonNetwork<RuntimeUpdate>
         CodeAnnouncement_RPC();
     }
 
-    public override void FixedUpdateNetwork()
+    public override void Render()
     {
         SessionHub.Instance.UpdateOverTime();
     }
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    public void ChangeTypeRequest_RPC(bool fromHost)
+    public void PlayerReady_RPC(bool isHost)
     {
+        if (isHost)
+        {
+            if (!isHostReady && (_currentHostType == 0 || _currentHostType == _currentClientType)) return;
+
+            isHostReady = !isHostReady;
+        }
+        else
+        {
+            if (!isClientReady && (_currentClientType == 0 || _currentClientType == _currentHostType)) return;
+
+            isClientReady = !isClientReady;
+        }
+
+        if (isHost) UpdatePlayerReady_RPC(isHost, isHostReady);
+        else UpdatePlayerReady_RPC(isHost, isClientReady);
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    public void UpdatePlayerReady_RPC(bool isHost, bool isReady)
+    {
+        SessionHub.Instance.ChangeReadySprite(isHost, isReady);
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    public void ChangeTypeRequest_RPC(bool fromHost, bool isBack)
+    {
+        if (fromHost && isHostReady) return;
+        if (!fromHost && isClientReady) return;
+
         if (fromHost)
         {
-            _currentHostType++;
-            if (_currentHostType > 2)
-                _currentHostType = 0;
-
+            if (isBack)
+            {
+                _currentHostType--;
+                if (_currentHostType < 0)
+                    _currentHostType = 2;
+            }
+            else
+            {
+                _currentHostType++;
+                if (_currentHostType > 2)
+                    _currentHostType = 0;
+            }
+            
             SessionHub.Instance.ChangeType(true, _currentHostType);
         }
         else
         {
-            _currentClientType++;
-            if (_currentClientType > 2)
-                _currentClientType = 0;
+            if (isBack)
+            {
+                _currentClientType--;
+                if (_currentClientType < 0)
+                    _currentClientType = 2;
+            }
+            else
+            {
+                _currentClientType++;
+                if (_currentClientType > 2)
+                    _currentClientType = 0;
+            }
 
             SessionHub.Instance.ChangeType(false, _currentClientType);
         }
