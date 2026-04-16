@@ -70,6 +70,7 @@ public class Bird_Moveset : MovementCharacter
                     IsAlreadyFly = false;
                     resetAnimation = true;
                 }
+                else if (duck.IsHeadUnderwater) { /* do drowning but duck carry animation */ }
 
                 if (HasStateAuthority || HasInputAuthority)
                 {
@@ -109,9 +110,15 @@ public class Bird_Moveset : MovementCharacter
                 }
             }
         }
-        else
+        else if (startTimer)
         {
+            DrownTimer = TickTimer.None;
             startTimer = false;
+
+            if (Runner.IsForward && localGUI != null)
+            {
+                localGUI.StopOxygenTracking();
+            }
         }
     }
 
@@ -119,8 +126,48 @@ public class Bird_Moveset : MovementCharacter
     {
         startTimer = true;
         DrownTimer = TickTimer.CreateFromSeconds(Runner, drowningTime);
+
+        if (localGUI != null)
+        {
+            localGUI.StartOxygenTracking(DrownTimer, Runner, Mathf.CeilToInt(drowningTime));
+        }
     }
 
+    public override void OnDroppedEvent()
+    {
+        base.OnDroppedEvent();
+
+        if (HasStateAuthority)
+        {
+            IsFlying = false;
+            FlightTimer = TickTimer.None;
+
+            FallingBusy = false;
+            AlreadyFloating = false;
+            isOptional = false;
+            IsAlreadyFly = false;
+        }
+
+        if (HasInputAuthority && localGUI != null)
+        {
+            localGUI.StopFlightBar();
+        }
+
+        if (rb2D != null)
+        {
+            rb2D.sharedMaterial = defaultMaterial;
+            rb2D.linearDamping = 0f;
+            rb2D.gravityScale = normalGravity;
+        }
+
+        if (cAnimation != null)
+        {
+            cAnimation.FallingAndFloatAnimation(true, false);
+        }
+    }
+
+
+    #region FlyLogic
     private void HandleFlightLogic(NetworkInputData input)
     {
         bool isPressed = input.jump && !_wasJumpPressed;
@@ -197,39 +244,6 @@ public class Bird_Moveset : MovementCharacter
 
         _wasJumpPressed = input.jump;
     }
-    public override void OnDroppedEvent()
-    {
-        base.OnDroppedEvent();
-
-        if (HasStateAuthority)
-        {
-            IsFlying = false;
-            FlightTimer = TickTimer.None;
-
-            FallingBusy = false;
-            AlreadyFloating = false;
-            isOptional = false;
-            IsAlreadyFly = false;
-        }
-
-        if (HasInputAuthority && localGUI != null)
-        {
-            localGUI.StopFlightBar();
-        }
-
-        if (rb2D != null)
-        {
-            rb2D.sharedMaterial = defaultMaterial;
-            rb2D.linearDamping = 0f;
-            rb2D.gravityScale = normalGravity;
-        }
-
-        if (cAnimation != null)
-        {
-            cAnimation.FallingAndFloatAnimation(true, false);
-        }
-    }
-
     private void StartFloating()
     {
         FallingBusy = true;
@@ -297,4 +311,5 @@ public class Bird_Moveset : MovementCharacter
             rb2D.sharedMaterial = defaultMaterial;
         }
     }
+    #endregion
 }

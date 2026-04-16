@@ -125,20 +125,14 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
 
             Vector2 mousePosition = Mouse.current.position.ReadValue();
 
-            // need to add skill
-            /*
-            bool skill1 = false;
-            if (Keyboard.current.spaceKey.isPressed || Keyboard.current.upArrowKey.isPressed)
-            {
-                skill = true;
-            }
-            else
-            {
-                skill = false;
-            }
-            data.skill_1 = skill1
-            */
+            // For Test
 
+            bool press_X;
+            if (Keyboard.current.xKey.isPressed) press_X = true;
+            else press_X = false;
+            data.Keyboard_X = press_X;
+
+            // Data Input
             data.mousePos = mousePosition;
             data.horizontal = moveX;
             data.vertical = moveY;
@@ -147,6 +141,7 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
             data.Keyboard_E = press_E;
             data.Keyboard_T = press_T;
             data.Keyboard_ESC = press_ESC;
+
         }
 
         input.Set(data);
@@ -286,4 +281,7 @@ public struct NetworkInputData : INetworkInput
     public bool Keyboard_E;
     public bool Keyboard_T;
     public bool Keyboard_ESC;
+
+    // For Test
+    public bool Keyboard_X;
 }
