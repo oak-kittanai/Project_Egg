@@ -5,7 +5,7 @@ using System.Collections.Generic;
 public class TrapPressure : NetworkBehaviour
 {
     [Header("Stat&Mode")]
-    [SerializeField] float pushForce = 50f;
+    [SerializeField] float pushForce = 50f; //แรงผัก...ผลไม้
     [SerializeField] ForceMode2D forceMode = ForceMode2D.Force;
 
     [Networked] public NetworkBool _isActive { get; set; }
@@ -72,32 +72,46 @@ public class TrapPressure : NetworkBehaviour
     {
         if (!_isActive) return;
 
-        playersInTrap.RemoveAll(p => p == null || !p.Object.IsValid);
+        Collider2D[] hitResults = new Collider2D[10];
 
-        if (HasStateAuthority)
+        int hitCount = Runner.GetPhysicsScene2D().OverlapBox(
+            transform.position,
+            transform.localScale,
+            0,
+            hitResults,
+            LayerMask.GetMask("Player")
+        );
+
+        for (int i = 0; i < hitCount; i++)
         {
-            foreach (var player in playersInTrap)
+            var hit = hitResults[i];
+            if (hit != null && hit.TryGetComponent<MovementCharacter>(out var player))
             {
-                if (player.rb2D != null)
+                if (HasStateAuthority || player.HasInputAuthority)
                 {
-
-                    if (player.rb2D.IsSleeping()) player.rb2D.WakeUp();
-                    Vector2 currentDirection = _isRevers ? -defaultDirection : defaultDirection;
-
-                    float currentSpeedInDir = Vector2.Dot(player.rb2D.linearVelocity, currentDirection.normalized);
-
-                    float targetPushSpeed = 4f;
-
-                    if (player.rb2D.linearVelocity.magnitude < 0.1f)
-                    {
-                        player.rb2D.AddForce(currentDirection.normalized * (pushForce * 0.5f), ForceMode2D.Impulse);
-                    }
-                    else if (currentSpeedInDir < targetPushSpeed)
-                    {
-                        player.rb2D.AddForce(currentDirection.normalized * pushForce, ForceMode2D.Force);
-                    }
+                    ApplyTrapForce(player);
                 }
             }
+        }
+    }
+
+    private void ApplyTrapForce(MovementCharacter player)
+    {
+        if (player.rb2D == null) return;
+
+        if (player.rb2D.IsSleeping()) player.rb2D.WakeUp();
+
+        Vector2 currentDirection = _isRevers ? -defaultDirection : defaultDirection;
+        float currentSpeedInDir = Vector2.Dot(player.rb2D.linearVelocity, currentDirection.normalized);
+        float targetPushSpeed = 4f;
+
+        if (player.rb2D.linearVelocity.magnitude < 0.1f)
+        {
+            player.rb2D.AddForce(currentDirection.normalized * (pushForce * 0.5f), ForceMode2D.Impulse);
+        }
+        else if (currentSpeedInDir < targetPushSpeed)
+        {
+            player.rb2D.AddForce(currentDirection.normalized * pushForce, ForceMode2D.Force);
         }
     }
 

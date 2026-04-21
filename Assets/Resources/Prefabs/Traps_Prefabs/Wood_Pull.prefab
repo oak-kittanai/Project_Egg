@@ -10,6 +10,8 @@ GameObject:
   m_Component:
   - component: {fileID: 7645742481141235507}
   - component: {fileID: 4963602968289765415}
+  - component: {fileID: -4616117517164613701}
+  - component: {fileID: -5360029216243306225}
   m_Layer: 0
   m_Name: Wood_Pull
   m_TagString: Trap
@@ -91,6 +93,46 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &-4616117517164613701
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 646998487757343400}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 71270f08b3576ed4f80ddeda09d75a45, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TrapPressure
+  pushForce: 50
+  forceMode: 0
+  __isActive:
+    _value: 0
+  __isRevers:
+    _value: 1
+  defaultDirection: {x: 0, y: 0}
+  anim: {fileID: 0}
+--- !u!114 &-5360029216243306225
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 646998487757343400}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
+  SortKey: 1040766367
+  ObjectInterest: 1
+  Flags: 262145
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: -4616117517164613701}
+  - {fileID: 8247105511062757322}
+  ForceRemoteRenderTimeframe: 0
 --- !u!1 &4703558070731930329
 GameObject:
   m_ObjectHideFlags: 0

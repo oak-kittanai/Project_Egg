@@ -200,12 +200,12 @@ MonoBehaviour:
   SortKey: 1375089249
   ObjectInterest: 1
   Flags: 262145
-  NestedObjects: []
+  NestedObjects:
+  - {fileID: 3524373183021908036}
+  - {fileID: 6947383342489761951}
   NetworkedBehaviours:
   - {fileID: 879210811263012535}
   - {fileID: 3857968264757173912}
-  - {fileID: 5001892244335095007}
-  - {fileID: 1578877348380513284}
   ForceRemoteRenderTimeframe: 0
 --- !u!114 &3857968264757173912
 MonoBehaviour:
@@ -238,6 +238,26 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 240631072542596828}
     m_Modifications:
+    - target: {fileID: -1771813149768544742, guid: c352e38beacf9844f9cc004ee9fd41c2, type: 3}
+      propertyPath: Flags
+      value: 262145
+      objectReference: {fileID: 0}
+    - target: {fileID: -1771813149768544742, guid: c352e38beacf9844f9cc004ee9fd41c2, type: 3}
+      propertyPath: SortKey
+      value: 453064794
+      objectReference: {fileID: 0}
+    - target: {fileID: -1771813149768544742, guid: c352e38beacf9844f9cc004ee9fd41c2, type: 3}
+      propertyPath: NetworkedBehaviours.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: -1771813149768544742, guid: c352e38beacf9844f9cc004ee9fd41c2, type: 3}
+      propertyPath: 'NetworkedBehaviours.Array.data[0]'
+      value: 
+      objectReference: {fileID: 7284572216526635307}
+    - target: {fileID: -1771813149768544742, guid: c352e38beacf9844f9cc004ee9fd41c2, type: 3}
+      propertyPath: 'NetworkedBehaviours.Array.data[1]'
+      value: 
+      objectReference: {fileID: 1578877348380513284}
     - target: {fileID: 4243206118027827743, guid: c352e38beacf9844f9cc004ee9fd41c2, type: 3}
       propertyPath: m_LocalPosition.x
       value: -0.04
@@ -303,6 +323,28 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4243206118027827743, guid: c352e38beacf9844f9cc004ee9fd41c2, type: 3}
   m_PrefabInstance: {fileID: 505336663774295685}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &6947383342489761951 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: -1771813149768544742, guid: c352e38beacf9844f9cc004ee9fd41c2, type: 3}
+  m_PrefabInstance: {fileID: 505336663774295685}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
+--- !u!114 &7284572216526635307 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: -2155906107405535314, guid: c352e38beacf9844f9cc004ee9fd41c2, type: 3}
+  m_PrefabInstance: {fileID: 505336663774295685}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 71270f08b3576ed4f80ddeda09d75a45, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TrapPressure
 --- !u!1001 &6305136163573272158
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -311,6 +353,26 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 240631072542596828}
     m_Modifications:
+    - target: {fileID: -1771813149768544742, guid: c352e38beacf9844f9cc004ee9fd41c2, type: 3}
+      propertyPath: Flags
+      value: 262145
+      objectReference: {fileID: 0}
+    - target: {fileID: -1771813149768544742, guid: c352e38beacf9844f9cc004ee9fd41c2, type: 3}
+      propertyPath: SortKey
+      value: 3361905919
+      objectReference: {fileID: 0}
+    - target: {fileID: -1771813149768544742, guid: c352e38beacf9844f9cc004ee9fd41c2, type: 3}
+      propertyPath: NetworkedBehaviours.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: -1771813149768544742, guid: c352e38beacf9844f9cc004ee9fd41c2, type: 3}
+      propertyPath: 'NetworkedBehaviours.Array.data[0]'
+      value: 
+      objectReference: {fileID: 3860984825527564784}
+    - target: {fileID: -1771813149768544742, guid: c352e38beacf9844f9cc004ee9fd41c2, type: 3}
+      propertyPath: 'NetworkedBehaviours.Array.data[1]'
+      value: 
+      objectReference: {fileID: 5001892244335095007}
     - target: {fileID: 4243206118027827743, guid: c352e38beacf9844f9cc004ee9fd41c2, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -360,6 +422,28 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: c352e38beacf9844f9cc004ee9fd41c2, type: 3}
+--- !u!114 &3524373183021908036 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: -1771813149768544742, guid: c352e38beacf9844f9cc004ee9fd41c2, type: 3}
+  m_PrefabInstance: {fileID: 6305136163573272158}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
+--- !u!114 &3860984825527564784 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: -2155906107405535314, guid: c352e38beacf9844f9cc004ee9fd41c2, type: 3}
+  m_PrefabInstance: {fileID: 6305136163573272158}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 71270f08b3576ed4f80ddeda09d75a45, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TrapPressure
 --- !u!114 &5001892244335095007 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 1362934349969678977, guid: c352e38beacf9844f9cc004ee9fd41c2, type: 3}

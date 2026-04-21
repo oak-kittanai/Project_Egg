@@ -296,11 +296,11 @@ MonoBehaviour:
   NestedObjects:
   - {fileID: 931674708230571717}
   - {fileID: 4666268538636427848}
+  - {fileID: 5328872307984237826}
+  - {fileID: 3252855758931760504}
   NetworkedBehaviours:
   - {fileID: 3173272042105038667}
   - {fileID: 7910296705285526176}
-  - {fileID: 4355167634159954329}
-  - {fileID: 7695160842196876221}
   ForceRemoteRenderTimeframe: 0
 --- !u!114 &7910296705285526176
 MonoBehaviour:
@@ -430,6 +430,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 191894117766812031}
     m_Modifications:
+    - target: {fileID: -5360029216243306225, guid: 29bc865d999e25d4a9e7f242f331f386, type: 3}
+      propertyPath: SortKey
+      value: 2656298750
+      objectReference: {fileID: 0}
     - target: {fileID: 646998487757343400, guid: 29bc865d999e25d4a9e7f242f331f386, type: 3}
       propertyPath: m_Name
       value: Wood_Pull
@@ -479,17 +483,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 29bc865d999e25d4a9e7f242f331f386, type: 3}
---- !u!114 &7695160842196876221 stripped
+--- !u!114 &3252855758931760504 stripped
 MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 8247105511062757322, guid: 29bc865d999e25d4a9e7f242f331f386, type: 3}
+  m_CorrespondingSourceObject: {fileID: -5360029216243306225, guid: 29bc865d999e25d4a9e7f242f331f386, type: 3}
   m_PrefabInstance: {fileID: 1781506562060985463}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 71270f08b3576ed4f80ddeda09d75a45, type: 3}
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TrapPressure
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
 --- !u!4 &8260178413065952068 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7645742481141235507, guid: 29bc865d999e25d4a9e7f242f331f386, type: 3}
@@ -503,6 +507,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 191894117766812031}
     m_Modifications:
+    - target: {fileID: -1771813149768544742, guid: c352e38beacf9844f9cc004ee9fd41c2, type: 3}
+      propertyPath: SortKey
+      value: 1946187273
+      objectReference: {fileID: 0}
     - target: {fileID: 4243206118027827743, guid: c352e38beacf9844f9cc004ee9fd41c2, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0.9
@@ -557,17 +565,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4243206118027827743, guid: c352e38beacf9844f9cc004ee9fd41c2, type: 3}
   m_PrefabInstance: {fileID: 3358194876251310872}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &4355167634159954329 stripped
+--- !u!114 &5328872307984237826 stripped
 MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 1362934349969678977, guid: c352e38beacf9844f9cc004ee9fd41c2, type: 3}
+  m_CorrespondingSourceObject: {fileID: -1771813149768544742, guid: c352e38beacf9844f9cc004ee9fd41c2, type: 3}
   m_PrefabInstance: {fileID: 3358194876251310872}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 71270f08b3576ed4f80ddeda09d75a45, type: 3}
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TrapPressure
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
 --- !u!1001 &5631279377421448223
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -191,6 +191,8 @@ GameObject:
   m_Component:
   - component: {fileID: 4243206118027827743}
   - component: {fileID: 3200087153193914528}
+  - component: {fileID: -2155906107405535314}
+  - component: {fileID: -1771813149768544742}
   m_Layer: 0
   m_Name: Wood_Pressure
   m_TagString: Trap
@@ -272,3 +274,43 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &-2155906107405535314
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8933274779052825863}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 71270f08b3576ed4f80ddeda09d75a45, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TrapPressure
+  pushForce: 50
+  forceMode: 0
+  __isActive:
+    _value: 0
+  __isRevers:
+    _value: 0
+  defaultDirection: {x: 0, y: 0}
+  anim: {fileID: 0}
+--- !u!114 &-1771813149768544742
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8933274779052825863}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
+  SortKey: 4087559341
+  ObjectInterest: 1
+  Flags: 262145
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: -2155906107405535314}
+  - {fileID: 1362934349969678977}
+  ForceRemoteRenderTimeframe: 0
