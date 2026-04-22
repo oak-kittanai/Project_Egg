@@ -63,6 +63,7 @@ public class Bird_Moveset : MovementCharacter
         if (GetInput(out NetworkInputData input))
         {
             HandleFlightLogic(input);
+            HandleThrowLogic(input);
         }
 
         if (IsGrounded)
@@ -189,7 +190,6 @@ public class Bird_Moveset : MovementCharacter
             cAnimation.FallingAndFloatAnimation(true, false);
         }
     }
-
 
     #region FlyLogic
     private void HandleFlightLogic(NetworkInputData input)
@@ -419,6 +419,8 @@ public class Bird_Moveset : MovementCharacter
 
     public override void Render()
     {
+        base.Render();
+
         if (_prepareToThrow)
         {
             if (!lineRenderer.enabled) lineRenderer.enabled = true;
