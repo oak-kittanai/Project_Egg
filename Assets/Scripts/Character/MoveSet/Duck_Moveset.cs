@@ -82,6 +82,7 @@ public class Duck_Moveset : MovementCharacter
 
             if (isJumpPressed && WaterJumpCooldownTimer.ExpiredOrNotRunning(Runner))
             {
+                HandleJumpOffWater();
             }
         }
         else if (!onDiving && !isJumping && IsGrounded)

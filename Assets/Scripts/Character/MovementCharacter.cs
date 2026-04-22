@@ -232,7 +232,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             HandleEtcInput(input);
         }
 
-        InFrontCheck();
         OnFixedUpdateSpecific();
     }
 
@@ -656,7 +655,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             PlayerInterface.Instance.HideInteract();
     }
 
-    private void InFrontCheck() { }
     protected virtual void OnFixedUpdateSpecific() { }
 
     #endregion
