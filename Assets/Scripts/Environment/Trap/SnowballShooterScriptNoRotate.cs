@@ -10,6 +10,7 @@ public class Turret_Shooter : NetworkBehaviour
 
     [Header("Shooting Settings")]
     public NetworkObject bulletPrefab;
+    [SerializeField] float projectileSpeed = 10f;
 
     public float fireRate = 1.5f;
 
@@ -61,7 +62,7 @@ public class Turret_Shooter : NetworkBehaviour
 
         if (GameManager.Instance != null && bulletPrefab != null)
         {
-            GameManager.Instance.ProjectileSpawn(bulletPrefab, spawnPos, direction, bulletRotation);
+            GameManager.Instance.ProjectileSpawn(bulletPrefab, spawnPos, direction, bulletRotation, projectileSpeed);
         }
     }
 

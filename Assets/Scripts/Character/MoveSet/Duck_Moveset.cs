@@ -82,7 +82,6 @@ public class Duck_Moveset : MovementCharacter
 
             if (isJumpPressed && WaterJumpCooldownTimer.ExpiredOrNotRunning(Runner))
             {
-                HandleJumpOffWater();
             }
         }
         else if (!onDiving && !isJumping && IsGrounded)
@@ -380,6 +379,15 @@ public class Duck_Moveset : MovementCharacter
                 EndDiveLogic();
                 Debug.Log("Reach the surface");
             }
+        }
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    public void PlayHitAnimation_RPC()
+    {
+        if (cAnimation != null)
+        {
+            
         }
     }
 

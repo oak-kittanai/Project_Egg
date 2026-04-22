@@ -17,7 +17,7 @@ public class StoneItem : NetworkBehaviour, Interactable
         Debug.Log($"Picked up {(isOrangeStone ? "Orange" : "Blue")} Stone!");
     }
 
-    public void Interact()
+    public void Interact(MovementCharacter player)
     {
         Collect();
     }

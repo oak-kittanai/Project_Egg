@@ -92,7 +92,7 @@ public class PlayerInterface : MonoBehaviour
         }
     }
 
-    public void ShowInteractPrompt(Transform targetItem)
+    public void ShowInteract(Transform targetItem)
     {
         currentInteractTarget = targetItem;
         if (interactPromptObj != null && !interactPromptObj.activeSelf)
@@ -101,7 +101,7 @@ public class PlayerInterface : MonoBehaviour
         }
     }
 
-    public void HideInteractPrompt()
+    public void HideInteract()
     {
         currentInteractTarget = null;
         if (interactPromptObj != null && interactPromptObj.activeSelf)

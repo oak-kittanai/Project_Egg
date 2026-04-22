@@ -387,6 +387,7 @@ public class SessionHub : SingletonNetwork<SessionHub>
             if (ChangeCharacterButtonForHostReduce != null) ChangeCharacterButtonForHostReduce.interactable = true;
             if (ChangeCharacterButtonForClientReduce != null) ChangeCharacterButtonForClientReduce.interactable = false;
             if (_hostReadyButton != null) _hostReadyButton.interactable = true;
+            if (_clientReadyButton != null) _clientReadyButton.interactable = false;
         }
         else
         {
@@ -394,6 +395,7 @@ public class SessionHub : SingletonNetwork<SessionHub>
             if (ChangeCharacterButtonForClientAdd != null) ChangeCharacterButtonForClientAdd.interactable = true;
             if (ChangeCharacterButtonForHostReduce != null) ChangeCharacterButtonForHostReduce.interactable = false;
             if (ChangeCharacterButtonForClientReduce != null) ChangeCharacterButtonForClientReduce.interactable = true;
+            if (_hostReadyButton != null) _hostReadyButton.interactable = false;
             if (_clientReadyButton != null) _clientReadyButton.interactable = true;
         }
     }

@@ -285,17 +285,18 @@ public class GameManager : SingletonNetwork<GameManager>
         }
     }
 
-    public void ProjectileSpawn(NetworkObject objToSpawn, Vector2 posToSpawn, Vector2 direction, Quaternion rota)
+    public void ProjectileSpawn(NetworkObject objToSpawn, Vector2 posToSpawn, Vector2 direction, Quaternion rota, float speed)
     {
         if (!HasStateAuthority) return;
 
         Vector3 spawnPos = new Vector3(posToSpawn.x, posToSpawn.y, 0f);
-        NetworkRunner.Spawn(objToSpawn, spawnPos, rota);
 
-        Rigidbody2D rb = objToSpawn.GetComponent<Rigidbody2D>();
+        NetworkObject spawnedObj = Runner.Spawn(objToSpawn, spawnPos, rota);
+
+        Rigidbody2D rb = spawnedObj.GetComponent<Rigidbody2D>();
         if (rb != null)
         {
-            rb.linearVelocity = direction * 10f;
+            rb.linearVelocity = direction * speed;
         }
     }
 

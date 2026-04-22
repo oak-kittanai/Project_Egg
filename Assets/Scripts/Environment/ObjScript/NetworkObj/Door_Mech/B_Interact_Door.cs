@@ -26,7 +26,7 @@ public class B_Interact_Door : NetworkBehaviour, Interactable
         UpdateStatus();
     }
 
-    public void Interact()
+    public void Interact(MovementCharacter player)
     {
         if (HasStateAuthority)
         {

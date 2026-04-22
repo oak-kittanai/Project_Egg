@@ -1,4 +1,4 @@
 interface Interactable
 {
-    void Interact();
+    void Interact(MovementCharacter player);
 }

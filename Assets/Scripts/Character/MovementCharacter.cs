@@ -308,7 +308,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                 if (hit.TryGetComponent<Interactable>(out var interactable))
                 {
                     cAnimation.InteractAnimation();
-                    interactable.Interact();
+                    interactable.Interact(this);
                     break;
                 }
             }
@@ -605,7 +605,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     public override void Render()
     {
-        if (HasInputAuthority) CheckInteractablePrompt();
+        if (HasInputAuthority) CheckInteractable();
 
         bool effectivelyCarried = IsBeingCarried || localIsBeingCarriedPredict;
         NetworkId effectiveCarrierId = IsBeingCarried ? CarrierId : localCarrierIdPredict;
@@ -630,7 +630,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         }
     }
 
-    private void CheckInteractablePrompt()
+    private void CheckInteractable()
     {
         Collider2D[] hitsItem = Physics2D.OverlapCircleAll(transform.position, interactRadius);
         Transform closestItem = null;
@@ -651,9 +651,9 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         }
 
         if (closestItem != null && PlayerInterface.Instance != null)
-            PlayerInterface.Instance.ShowInteractPrompt(closestItem);
+            PlayerInterface.Instance.ShowInteract(closestItem);
         else if (PlayerInterface.Instance != null)
-            PlayerInterface.Instance.HideInteractPrompt();
+            PlayerInterface.Instance.HideInteract();
     }
 
     private void InFrontCheck() { }
