@@ -32,7 +32,7 @@ public class InsertItem_Mech : NetworkBehaviour, Interactable
         openPosition = closedPosition + Vector3.up * openHeight;
     }
 
-    public void Interact()
+    public void Interact(MovementCharacter player)
     {
         if (HasStateAuthority)
         {

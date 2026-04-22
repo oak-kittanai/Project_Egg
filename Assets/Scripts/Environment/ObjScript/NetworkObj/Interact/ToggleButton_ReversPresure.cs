@@ -24,7 +24,7 @@ public class ToggleButton_ReversPresure : NetworkBehaviour, Interactable
     public Sprite unpressed;
     public Sprite pressed;
 
-    public void Interact()
+    public void Interact(MovementCharacter player)
     {
         RPC_TogglePressure();
     }

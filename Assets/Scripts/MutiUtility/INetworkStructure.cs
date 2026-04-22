@@ -130,6 +130,12 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
             bool press_X;
             if (Keyboard.current.xKey.isPressed) press_X = true;
             else press_X = false;
+
+            bool press_Z;
+            if (Keyboard.current.zKey.isPressed) press_Z = true;
+            else press_Z = false;
+
+            data.Keyboard_Z = press_Z;
             data.Keyboard_X = press_X;
 
             // Data Input
@@ -284,4 +290,5 @@ public struct NetworkInputData : INetworkInput
 
     // For Test
     public bool Keyboard_X;
+    public bool Keyboard_Z;
 }

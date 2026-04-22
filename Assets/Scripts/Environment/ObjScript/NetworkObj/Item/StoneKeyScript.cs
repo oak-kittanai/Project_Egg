@@ -7,7 +7,7 @@ public class StoneKeyScript : NetworkBehaviour, Interactable
     [SerializeField] public bool isOrangeStone;
     [SerializeField] public bool isBlueStone;
 
-    public void Interact()
+    public void Interact(MovementCharacter player)
     {
         if (isOrangeStone)
         {

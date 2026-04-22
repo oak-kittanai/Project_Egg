@@ -9,7 +9,7 @@ public class CoopSwitch : NetworkBehaviour, Interactable
     [SerializeField] Sprite switchOff;
     [SerializeField] Sprite switchOn;
 
-    public void Interact()
+    public void Interact(MovementCharacter player)
     {
         if (HasStateAuthority)
         {

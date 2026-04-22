@@ -14,10 +14,21 @@ public class BreakableRock : NetworkBehaviour, Interactable
         selfNet = GetComponent<NetworkObject>();
     }
 
-    public void Interact()
+    public void Interact(MovementCharacter player)
     {
-        BreakAndDrop();
-    }
+        if (!HasStateAuthority) return;
+
+        if (player is Duck_Moveset duck)
+        {
+            duck.PlayHitAnimation_RPC();
+
+            BreakAndDrop();
+        }
+        else
+        {
+            Debug.Log("can't find duck");
+        }
+    }   
 
     void BreakAndDrop()
     {

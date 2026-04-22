@@ -14,7 +14,7 @@ public class Toggle_Presure_Trap : NetworkBehaviour, Interactable
     public Sprite switchOnSprite;
     public Sprite switchOffSprite;
 
-    public void Interact()
+    public void Interact(MovementCharacter player)
     {
         if (HasStateAuthority)
         {

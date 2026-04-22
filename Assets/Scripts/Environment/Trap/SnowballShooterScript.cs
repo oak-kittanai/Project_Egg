@@ -20,6 +20,7 @@ public class SnowballShooterTrap : NetworkBehaviour
 
     [Header("Firing Settings")]
     [SerializeField] float fireRate = 2.5f;
+    [SerializeField] float projectileSpeed = 10f;
 
     [SerializeField] NetworkObject snowballPrefab;
 
@@ -116,7 +117,7 @@ public class SnowballShooterTrap : NetworkBehaviour
         Vector2 spawnPos = (Vector2)Pivot.position + ((Vector2)Pivot.right * 0.5f);
         Vector2 fireDirection = Pivot.right;
 
-        GameManager.Instance.ProjectileSpawn(snowballPrefab, spawnPos, fireDirection, Pivot.rotation);
+        GameManager.Instance.ProjectileSpawn(snowballPrefab, spawnPos, fireDirection, Pivot.rotation, projectileSpeed);
     }
 
     public void SetTrapActive(bool active)

@@ -7,7 +7,7 @@ public class KeyScript : NetworkObject, Interactable
     [SerializeField] public bool isOrangeKey;
     [SerializeField] public bool isBlueKey;
 
-    public void Interact()
+    public void Interact(MovementCharacter player)
     {
         if (isOrangeKey)
         {

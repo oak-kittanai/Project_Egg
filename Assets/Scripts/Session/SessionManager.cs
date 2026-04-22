@@ -9,6 +9,7 @@ using static UnityEngine.CullingGroup;
 
 public enum SessionState
 {
+    Lobby,
     MainMenu,
     Setting,
     SessionSelect,
