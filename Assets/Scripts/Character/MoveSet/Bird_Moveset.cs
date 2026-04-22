@@ -31,7 +31,7 @@ public class Bird_Moveset : MovementCharacter
     [SerializeField] bool startTimer;
 
     [Header("ThrowSystem")]
-    [SerializeField] NetworkObject throwAblePrefab;
+    [SerializeField] public NetworkObject throwAblePrefab;
     [Networked] public bool _prepareToThrow { get; set; }
 
     [SerializeField] float projectileSpeed;
@@ -346,7 +346,14 @@ public class Bird_Moveset : MovementCharacter
 
         if (isXPressed)
         {
-            _prepareToThrow = !_prepareToThrow;
+            if (_canThrowItem)
+            {
+                _prepareToThrow = !_prepareToThrow;
+            }
+            else
+            {
+                _prepareToThrow = false;
+            }
         }
 
         if (_prepareToThrow)
@@ -370,6 +377,8 @@ public class Bird_Moveset : MovementCharacter
         Vector2 direction = throwPoint.right;
 
         GameManager.Instance.ProjectileSpawn(throwAblePrefab, throwPos, direction, throwPoint.rotation, projectileSpeed);
+
+        _canThrowItem = false;
 
         CancelThrow();
     }

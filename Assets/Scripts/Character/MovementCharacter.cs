@@ -97,6 +97,9 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [SerializeField] public Color duck_Color;
     [SerializeField] public Color bird_Color;
 
+    // Throw System
+    [Networked] public bool _canThrowItem { get; set; }
+
     [Header("Etc")]
     [Networked] public bool _wasEscPressed { get; set; }
 
@@ -304,11 +307,25 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             foreach (var hit in hitsItem)
             {
                 if (hit.gameObject == gameObject) continue;
+
                 if (hit.TryGetComponent<Interactable>(out var interactable))
                 {
                     cAnimation.InteractAnimation();
                     interactable.Interact(this);
                     break;
+                }
+                else if (hit.TryGetComponent<ThrowAbleItem>(out var throwableItem))
+                {
+                    if (isBird)
+                    {
+                        cAnimation.InteractAnimation();
+
+                        if (throwableItem.PickupItem())
+                        {
+                            _canThrowItem = true;
+                        }
+                        break;
+                    }
                 }
             }
         }
@@ -645,6 +662,18 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                 {
                     minDistance = dist;
                     closestItem = hit.transform;
+                }
+            }
+            else if (hit.TryGetComponent<ThrowAbleItem>(out var throwableItem))
+            {
+                if (isBird)
+                {
+                    float dist = Vector2.Distance(transform.position, hit.transform.position);
+                    if (dist < minDistance)
+                    {
+                        minDistance = dist;
+                        closestItem = hit.transform;
+                    }
                 }
             }
         }
