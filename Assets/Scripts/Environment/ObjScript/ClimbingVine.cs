@@ -46,7 +46,7 @@ public class ClimbingVine : NetworkBehaviour, Interactable
             }
         }
     }
-    public void Interact()
+    public void Interact(MovementCharacter player)
     {
 
     }
