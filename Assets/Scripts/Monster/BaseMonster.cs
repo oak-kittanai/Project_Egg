@@ -28,6 +28,7 @@ public class BaseMonster : NetworkBehaviour
 {
     [Header("Ref")]
     public Rigidbody2D rb2D;
+    public Animator animator;
 
     [Header("Session State")]
     [Networked, OnChangedRender(nameof(OnStateChangedCallback))] public AttackDirection currentState { get; set; }
@@ -84,6 +85,10 @@ public class BaseMonster : NetworkBehaviour
         if (rb2D == null) rb2D = GetComponent<Rigidbody2D>();
         if (rb2D != null) Debug.Log($"{this.name} Has Rb2D");
         else Debug.Log($"{this.name} can't find Rb2D");
+
+        if (animator == null) animator = GetComponentInChildren<Animator>();
+        if (animator != null) Debug.Log($"{this.name} Has Animator");
+        else Debug.Log($"{this.name} can't find Animator");
 
         spawnPos = transform.position;
     }
