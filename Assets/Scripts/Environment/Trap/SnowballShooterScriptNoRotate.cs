@@ -29,7 +29,7 @@ public class Turret_Shooter : NetworkBehaviour
 
         foreach (var hit in hits)
         {
-            if (hit.GetComponent<MovementCharacter>() == null) continue;
+            if (!hit.TryGetComponent<MovementCharacter>(out _)) continue;
 
             Vector2 dirToTarget = (hit.transform.position - transform.position).normalized;
             float distance = Vector2.Distance(transform.position, hit.transform.position);

@@ -38,7 +38,6 @@ public class BearTrapScript : NetworkBehaviour
     {
         if (!HasStateAuthority) return;
 
-        // งับ
         if (IsTriggered && !HasPlayedFX && DelayTimer.Expired(Runner))
         {
             HasPlayedFX = true;

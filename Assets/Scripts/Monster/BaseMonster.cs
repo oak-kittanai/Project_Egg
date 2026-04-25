@@ -19,7 +19,6 @@ public enum AttackDirection
 public class AttackPattern
 {
     public int attackNumber;
-    public AttackDirection nextState;
     public float delayBetweenActionOption; // if 0 isDelayBetweenActionOption will be false and use base Delay
     public int attackPerPhase;
 }
@@ -29,14 +28,15 @@ public class BaseMonster : NetworkBehaviour
     [Header("Ref")]
     public Rigidbody2D rb2D;
     public Animator animator;
+    public SpriteRenderer spriteRenderer;
 
     [Header("Session State")]
     [Networked, OnChangedRender(nameof(OnStateChangedCallback))] public AttackDirection currentState { get; set; }
     public event Action<AttackDirection> OnStateChanged;
 
     [Header("Setting")]
-    [Networked] Vector3 spawnPos { get; set; }
-    [SerializeField] float maxReachDistance = 10f; // make sure monster didn't go any further
+    [SerializeField] Vector3 spawnPos;
+    [SerializeField] public float maxReachDistance = 10f; // make sure monster didn't go any further
 
     [Header("Networked etc")]
     // Stun
@@ -53,10 +53,18 @@ public class BaseMonster : NetworkBehaviour
     [SerializeField] public float knockbackForce = 12f;
 
     [Header("Detect")]
+    // Detect Player
     [SerializeField] public LayerMask targetLayer;
     [SerializeField] public float detectionRadius = 15f;
     [SerializeField] public Vector2 defaultDashDirection = Vector2.right;
 
+    //
+    [SerializeField] public float attackRadius = 15f;
+
+    [Networked] public NetworkBool isReturningToSpawn { get; set; }
+    [SerializeField] float returnSpeed = 8f;
+
+    [SerializeField] LayerMask playerLayer;
     [Networked] public Vector2 targetPosition { get; set; }
     [Networked] public NetworkBool hasSpottedPlayer { get; set; }
 
@@ -65,6 +73,10 @@ public class BaseMonster : NetworkBehaviour
 
     [Networked] public int currentDashCount { get; set; }
     [Networked] public int setDashCount { get; set; }
+
+    public AttackDirection nextState;
+
+    [SerializeField] public GameObject hitBox;
 
     [Networked] public TickTimer delayActionTimer { get; set; }
     [Networked] public NetworkBool isDelayBetweenActionOption { get; set; }
@@ -90,12 +102,50 @@ public class BaseMonster : NetworkBehaviour
         if (animator != null) Debug.Log($"{this.name} Has Animator");
         else Debug.Log($"{this.name} can't find Animator");
 
+        if (spriteRenderer == null) spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+        if (spriteRenderer != null) Debug.Log($"{this.name} Has spriteRenderer");
+        else Debug.Log($"{this.name} can't find spriteRenderer");
+
         spawnPos = transform.position;
     }
 
     public override void FixedUpdateNetwork()
     {
         base.FixedUpdateNetwork();
+        if (!HasStateAuthority) return;
+
+        HandleStunLogic();
+
+        PlayerRadar();
+
+        if (isStun)
+        {
+            if (rb2D != null) rb2D.linearVelocity = Vector2.zero;
+            return;
+        }
+
+        float distFromSpawn = Vector2.Distance(transform.position, spawnPos);
+
+        if (distFromSpawn > maxReachDistance && !isReturningToSpawn)
+        {
+            isReturningToSpawn = true;
+            hasSpottedPlayer = false;
+            currentState = AttackDirection.None;
+        }
+
+        if (isReturningToSpawn)
+        {
+            Vector2 returnDir = ((Vector2)spawnPos - (Vector2)transform.position).normalized;
+            rb2D.linearVelocity = returnDir * returnSpeed;
+
+            if (distFromSpawn < 0.5f)
+            {
+                isReturningToSpawn = false;
+                rb2D.linearVelocity = Vector2.zero;
+            }
+
+            return;
+        }
 
         MonsterSpecificUpdate();
     }
@@ -106,7 +156,36 @@ public class BaseMonster : NetworkBehaviour
         OnStateChanged?.Invoke(currentState);
     }
 
+    public void PlayAnimation(string animationName)
+    {
+        animator.Play(animationName);
+    }
+
     #region AttackMechanic
+
+    public void PlayerRadar()
+    {
+        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, detectionRadius, playerLayer);
+
+        bool foundPlayer = false;
+
+        foreach (var hit in hits)
+        {
+            if (!hit.TryGetComponent<MovementCharacter>(out _)) continue;
+
+            targetPosition = hit.transform.position;
+            hasSpottedPlayer = true;
+            foundPlayer = true;
+
+            break;
+        }
+
+        if (!foundPlayer && hasSpottedPlayer)
+        {
+            hasSpottedPlayer = false;
+            currentState = AttackDirection.None;
+        }
+    }
 
     public AttackDirection CheckDirection(Vector2 playerPosition)
     {
@@ -131,7 +210,7 @@ public class BaseMonster : NetworkBehaviour
         }
     }
 
-    public void AttackToDirection()
+    public void AttackToDirection(AttackDirection targetDir)
     {
         if (attackPatterns == null || attackPatterns.Count == 0) return;
 
@@ -142,7 +221,7 @@ public class BaseMonster : NetworkBehaviour
             currentAttacksLeftInPhase = currentPattern.attackPerPhase;
         }
 
-        currentState = currentPattern.nextState;
+        currentState = targetDir;
         currentAttacksLeftInPhase--;
 
         if (currentPattern.delayBetweenActionOption > 0f)
@@ -234,6 +313,7 @@ public class BaseMonster : NetworkBehaviour
 
     }
 
+
     public override void Render()
     {
 
@@ -241,13 +321,16 @@ public class BaseMonster : NetworkBehaviour
 
     private void OnDrawGizmosSelected()
     {
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(this.transform.position, detectionRadius);
-    }
+        Vector3 selfPos = transform.position;
+        Vector3 spawnpointPos = spawnPos;
 
-    private void OnDrawGizmos()
-    {
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(selfPos, detectionRadius);
+
         Gizmos.color = Color.blue;
-        Gizmos.DrawWireSphere(spawnPos, maxReachDistance);
+        Gizmos.DrawWireSphere(spawnpointPos, maxReachDistance);
+
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(selfPos, attackRadius);
     }
 }
