@@ -21,6 +21,7 @@ public class Enemy_KnightJay : BaseMonster
         else
         {
             PlayAnimation("Jay_Attack_Animation");
+            //TriggerHitBox_RPC(true);
         }
     }
 
@@ -59,19 +60,32 @@ public class Enemy_KnightJay : BaseMonster
                 }
                 else spriteRenderer.flipX = false;
 
-                currentState = AttackDirection.None;
+                currentAttackDirectionState = AttackDirection.None;
             }
         }
         else
         {
             rb2D.linearVelocity = Vector2.zero;
-            currentState = AttackDirection.None;
+            currentAttackDirectionState = AttackDirection.None;
         }
     }
 
     public override void Render()
     {
         base.Render();
+
+        /*if (hasSpottedPlayer || isReturningToSpawn)
+        {
+            currentState = MonState.Walk;
+        }
+        else if (!hasSpottedPlayer && !isReturningToSpawn)
+        {
+            currentState = MonState.Idle;
+        }
+        else if (currentAttackDirectionState != AttackDirection.None && hasSpottedPlayer)
+        {
+            currentState = MonState.Attack;
+        }*/
     }
 
     public override void Despawned(NetworkRunner runner, bool hasState)

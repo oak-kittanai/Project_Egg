@@ -15,6 +15,13 @@ public enum AttackDirection
     Up
 }
 
+public enum MonState
+{
+    Idle,
+    Walk,
+    Attack
+}
+
 [System.Serializable]
 public class AttackPattern
 {
@@ -31,8 +38,11 @@ public class BaseMonster : NetworkBehaviour
     public SpriteRenderer spriteRenderer;
 
     [Header("Session State")]
-    [Networked, OnChangedRender(nameof(OnStateChangedCallback))] public AttackDirection currentState { get; set; }
+    [Networked, OnChangedRender(nameof(OnStateChangedCallback))] public AttackDirection currentAttackDirectionState { get; set; }
     public event Action<AttackDirection> OnStateChanged;
+
+    [Networked, OnChangedRender(nameof(OnMonStateChangedCallback))] public MonState currentState { get; set; }
+    public event Action<MonState> OnMonsterStateChanged;
 
     [Header("Setting")]
     [SerializeField] Vector3 spawnPos;
@@ -130,7 +140,7 @@ public class BaseMonster : NetworkBehaviour
         {
             isReturningToSpawn = true;
             hasSpottedPlayer = false;
-            currentState = AttackDirection.None;
+            currentAttackDirectionState = AttackDirection.None;
         }
 
         if (isReturningToSpawn)
@@ -152,8 +162,12 @@ public class BaseMonster : NetworkBehaviour
 
     private void OnStateChangedCallback()
     {
+        OnStateChanged?.Invoke(currentAttackDirectionState);
+    }
 
-        OnStateChanged?.Invoke(currentState);
+    private void OnMonStateChangedCallback()
+    {
+        OnMonsterStateChanged?.Invoke(currentState);
     }
 
     public void PlayAnimation(string animationName)
@@ -183,7 +197,7 @@ public class BaseMonster : NetworkBehaviour
         if (!foundPlayer && hasSpottedPlayer)
         {
             hasSpottedPlayer = false;
-            currentState = AttackDirection.None;
+            currentAttackDirectionState = AttackDirection.None;
         }
     }
 
@@ -221,7 +235,7 @@ public class BaseMonster : NetworkBehaviour
             currentAttacksLeftInPhase = currentPattern.attackPerPhase;
         }
 
-        currentState = targetDir;
+        currentAttackDirectionState = targetDir;
         currentAttacksLeftInPhase--;
 
         if (currentPattern.delayBetweenActionOption > 0f)
@@ -236,7 +250,7 @@ public class BaseMonster : NetworkBehaviour
         if (currentAttacksLeftInPhase <= 0)
         {
             phaseRestTimer = TickTimer.CreateFromSeconds(Runner, restTimeAfterPhase);
-            currentState = AttackDirection.None;
+            currentAttackDirectionState = AttackDirection.None;
 
             currentPatternIndex++;
 
@@ -245,6 +259,12 @@ public class BaseMonster : NetworkBehaviour
                 currentPatternIndex = 0;
             }
         }
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    public void TriggerHitBox_RPC(bool o)
+    {
+        hitBox.SetActive(false);
     }
 
     #endregion
@@ -316,7 +336,7 @@ public class BaseMonster : NetworkBehaviour
 
     public override void Render()
     {
-
+        
     }
 
     private void OnDrawGizmosSelected()
