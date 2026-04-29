@@ -86,12 +86,15 @@ public class BaseMonster : NetworkBehaviour
 
     public AttackDirection nextState;
 
-    [SerializeField] public GameObject hitBox;
-
     [Networked] public TickTimer delayActionTimer { get; set; }
     [Networked] public NetworkBool isDelayBetweenActionOption { get; set; }
     [SerializeField] public float delayBetweenActionOption;
     [SerializeField] public float delayBetweenAction = 1f;
+
+    [Header("HitBox System")]
+    [SerializeField] public Transform hitBoxPivot;
+
+    [SerializeField] public GameObject hitBox;
 
     [Header("Attack Patterns Data")]
     public System.Collections.Generic.List<AttackPattern> attackPatterns = new System.Collections.Generic.List<AttackPattern>();
@@ -199,6 +202,30 @@ public class BaseMonster : NetworkBehaviour
             hasSpottedPlayer = false;
             currentAttackDirectionState = AttackDirection.None;
         }
+    }
+
+    public void RotateHitBoxToDirection(AttackDirection dir)
+    {
+        if (hitBoxPivot == null) return;
+
+        float zRotation = 0f;
+
+        switch (dir)
+        {
+            case AttackDirection.Right90Degree: zRotation = 0f; break;
+            case AttackDirection.Up: zRotation = 90f; break;
+            case AttackDirection.Left260Degree: zRotation = 180f; break;
+            case AttackDirection.Down: zRotation = -90f; break;
+
+            case AttackDirection.Right45Degree: zRotation = 45f; break;
+            case AttackDirection.Right135Degree: zRotation = -45f; break;
+            case AttackDirection.Left305Degree: zRotation = 135f; break;
+            case AttackDirection.Left215Degree: zRotation = -135f; break;
+
+            case AttackDirection.None: return;
+        }
+
+        hitBoxPivot.rotation = Quaternion.Euler(0, 0, zRotation);
     }
 
     public AttackDirection CheckDirection(Vector2 playerPosition)

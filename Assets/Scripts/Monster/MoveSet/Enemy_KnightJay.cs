@@ -21,71 +21,61 @@ public class Enemy_KnightJay : BaseMonster
         else
         {
             PlayAnimation("Jay_Attack_Animation");
-            //TriggerHitBox_RPC(true);
+        }
+    }
+
+    private void HanleJayStateCheck()
+    {
+        if (currentState == MonState.Attack)
+        {
+            TriggerHitBox_RPC(true);
+        }
+        else
+        {
+            TriggerHitBox_RPC(false);
         }
     }
 
     protected override void MonsterSpecificUpdate()
     {
-        if (phaseRestTimer.IsRunning && !phaseRestTimer.Expired(Runner))
-        {
-            rb2D.linearVelocity = Vector2.zero;
-            return;
-        }
-        if (!delayActionTimer.ExpiredOrNotRunning(Runner))
-        {
-            rb2D.linearVelocity = Vector2.zero;
-            return;
-        }
+        if (phaseRestTimer.IsRunning && !phaseRestTimer.Expired(Runner)) return;
+        if (!delayActionTimer.ExpiredOrNotRunning(Runner)) return;
 
         if (hasSpottedPlayer)
         {
             AttackDirection playerCurrentDir = CheckDirection(targetPosition);
-
             float distanceToPlayer = Vector2.Distance(transform.position, targetPosition);
 
-            if (distanceToPlayer <= (attackRadius - 0.2f))
+            if (distanceToPlayer <= attackRadius)
             {
                 rb2D.linearVelocity = Vector2.zero;
+
+                RotateHitBoxToDirection(playerCurrentDir);
                 AttackToDirection(playerCurrentDir);
+
+                currentState = MonState.Attack;
             }
             else
             {
                 Vector2 moveDir = (targetPosition - (Vector2)transform.position).normalized;
                 rb2D.linearVelocity = moveDir * walkSpeed;
 
-                if (moveDir.x < 0)
-                {
-                    spriteRenderer.flipX = true;
-                }
-                else spriteRenderer.flipX = false;
-
-                currentAttackDirectionState = AttackDirection.None;
+                currentState = MonState.Walk;
             }
         }
         else
         {
             rb2D.linearVelocity = Vector2.zero;
-            currentAttackDirectionState = AttackDirection.None;
+
+            currentState = MonState.Idle;
         }
+
+        HanleJayStateCheck();
     }
 
     public override void Render()
     {
         base.Render();
-
-        /*if (hasSpottedPlayer || isReturningToSpawn)
-        {
-            currentState = MonState.Walk;
-        }
-        else if (!hasSpottedPlayer && !isReturningToSpawn)
-        {
-            currentState = MonState.Idle;
-        }
-        else if (currentAttackDirectionState != AttackDirection.None && hasSpottedPlayer)
-        {
-            currentState = MonState.Attack;
-        }*/
     }
 
     public override void Despawned(NetworkRunner runner, bool hasState)
