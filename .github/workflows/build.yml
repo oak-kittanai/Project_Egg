@@ -80,6 +80,55 @@ jobs:
           retention-days: 14
 
   # ──────────────────────────────────────────────────────────────
+  # NOTIFY — post download link to Discord after a successful build
+  # ──────────────────────────────────────────────────────────────
+  notify:
+    name: Notify Discord
+    runs-on: ubuntu-latest
+    needs: build
+    if: needs.build.result == 'success'
+    steps:
+      - name: Post to Discord
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          BUILD_NUM: ${{ github.run_number }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+          ACTOR: ${{ github.actor }}
+        run: |
+          # Truncate commit message to keep the embed tidy
+          SHORT_MSG="${COMMIT_MSG:0:72}"
+          [ "${#COMMIT_MSG}" -gt 72 ] && SHORT_MSG="${SHORT_MSG}…"
+
+          curl -fsSL -X POST "$DISCORD_WEBHOOK" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"embeds\": [{
+                \"title\": \"✅ Build #${BUILD_NUM} สำเร็จแล้ว!\",
+                \"description\": \"**Project Egg** — StandaloneWindows64\\n\\n> ${SHORT_MSG}\",
+                \"color\": 3066993,
+                \"fields\": [
+                  {
+                    \"name\": \"📦 ดาวน์โหลด Artifact\",
+                    \"value\": \"[คลิกที่นี่เพื่อดาวน์โหลด](${RUN_URL})\\n(ต้องล็อกอิน GitHub)\",
+                    \"inline\": false
+                  },
+                  {
+                    \"name\": \"Triggered by\",
+                    \"value\": \"${ACTOR}\",
+                    \"inline\": true
+                  },
+                  {
+                    \"name\": \"Retention\",
+                    \"value\": \"14 วัน\",
+                    \"inline\": true
+                  }
+                ],
+                \"footer\": { \"text\": \"GitHub Actions • Project Egg\" }
+              }]
+            }"
+
+  # ──────────────────────────────────────────────────────────────
   # CLEANUP — keep only the 2 most recent artifacts per name prefix
   # to stay inside GitHub's 500 MB free-tier storage quota.
   # ──────────────────────────────────────────────────────────────
