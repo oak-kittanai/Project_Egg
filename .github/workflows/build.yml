@@ -145,9 +145,12 @@ jobs:
           targetPlatform: WebGL
           buildName:      WebGL   # output → build/WebGL/WebGL/
 
-      # GitHub Pages needs .nojekyll to serve .wasm / Unity files correctly.
+      # Fix ownership (unity-builder writes as root), then add .nojekyll.
+      # .nojekyll is required so GitHub Pages serves .wasm / Unity files correctly.
       - name: Add .nojekyll
-        run: touch build/WebGL/WebGL/.nojekyll
+        run: |
+          sudo chown -R $USER:$USER build/
+          touch build/WebGL/WebGL/.nojekyll
 
       # Publishes to gh-pages branch; force_orphan keeps branch history lean.
       - name: Deploy to GitHub Pages
