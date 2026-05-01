@@ -108,6 +108,18 @@ public class CharacterAnimation : NetworkBehaviour
         }
     }
 
+    public void FaceTo(float o)
+    {
+        if (o < -0.01f)
+        {
+            FlipX = false;
+        }
+        else if (o > 0.01f)
+        {
+            FlipX = true;
+        }
+    }
+
     private void PlayAnimationNetworked(string stateName)
     {
         if (!HasState(stateName))

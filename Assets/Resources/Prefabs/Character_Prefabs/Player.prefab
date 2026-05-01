@@ -637,6 +637,7 @@ MonoBehaviour:
   _damageFlash: {fileID: 0}
   duck_Color: {r: 0, g: 0.4745098, b: 1, a: 0}
   bird_Color: {r: 1, g: 0.54901963, b: 0, a: 0}
+  __canThrowItem: 0
   __wasEscPressed: 0
   _isJumpAble: 0
   waterJumpCooldown: 2
@@ -732,6 +733,7 @@ MonoBehaviour:
   _damageFlash: {fileID: 0}
   duck_Color: {r: 0, g: 0.4745098, b: 1, a: 0}
   bird_Color: {r: 1, g: 0.54901963, b: 0, a: 0}
+  __canThrowItem: 0
   __wasEscPressed: 0
   normalFlyTime: 0.9
   carryFlyTime: 0.8
@@ -746,10 +748,10 @@ MonoBehaviour:
   startTimer: 0
   throwAblePrefab: {fileID: 5283567399167749245, guid: f6ee7c8d2993a114cbcc32c8f96ce6a2, type: 3}
   __prepareToThrow: 0
-  projectileSpeed: 0
+  projectileSpeed: 16
   throwPoint: {fileID: 6854471763443873901}
   lineRenderer: {fileID: 4634795394724478210}
-  lineCounts: 0
+  lineCounts: 10
   timeIntervalinPoints: 0.01
   currentAimX: 0
   aimSweepSpeed: 3
@@ -1327,7 +1329,7 @@ LineRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: b56dca7d33865224d9950857f3cb8f42, type: 2}
+  - {fileID: 2100000, guid: 3437479e177edbc4f8910a55d65cbafc, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1354,26 +1356,35 @@ LineRenderer:
   - {x: 0, y: 0, z: 1}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.1
+    widthMultiplier: 0.3
     widthCurve:
       serializedVersion: 2
       m_Curve:
       - serializedVersion: 3
         time: 0
-        value: 1
+        value: 0.6011238
         inSlope: 0
         outSlope: 0
         tangentMode: 0
         weightedMode: 0
         inWeight: 0.33333334
         outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.8442622
+        value: 0.45098042
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 0, b: 0, a: 1}
-      key1: {r: 1, g: 0, b: 0, a: 1}
+      key0: {r: 1, g: 0.9618751, b: 0, a: 1}
+      key1: {r: 1, g: 0.9071804, b: 0, a: 1}
       key2: {r: 1, g: 1, b: 1, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -1401,9 +1412,9 @@ LineRenderer:
       m_NumColorKeys: 2
       m_NumAlphaKeys: 2
     numCornerVertices: 0
-    numCapVertices: 0
+    numCapVertices: 90
     alignment: 0
-    textureMode: 0
+    textureMode: 2
     textureScale: {x: 1, y: 1}
     shadowBias: 0.5
     generateLightingData: 0
@@ -2072,7 +2083,7 @@ Transform:
   m_GameObject: {fileID: 9136495723938416591}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.387, y: 0.292, z: 0}
+  m_LocalPosition: {x: 0, y: 0.07, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

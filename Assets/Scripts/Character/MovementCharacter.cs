@@ -166,6 +166,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         {
             Invoke(nameof(ForceUpdateUI), 0.5f);
         }
+
+        isMoveAble = true;
     }
 
     private void ForceUpdateUI()
@@ -210,8 +212,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             if (rb2D.bodyType == RigidbodyType2D.Kinematic) rb2D.bodyType = RigidbodyType2D.Dynamic;
 
             if (coll2D != null && coll2D.isTrigger) coll2D.isTrigger = false;
-
-            isMoveAble = true;
         }
 
         if (HasStateAuthority && effectivelyCarried)
@@ -231,7 +231,11 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                 HandleMovement(input);
                 HandleJump(input);
             }
-            HandleInteraction(input);
+
+            if (!IsInteractBusy)
+            {
+                HandleInteraction(input);
+            }
             HandleEtcInput(input);
         }
 
@@ -490,7 +494,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     public virtual void OnDroppedEvent()
     {
-
+        isMoveAble = true;
     }
 
     #endregion

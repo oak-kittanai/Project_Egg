@@ -1,5 +1,7 @@
 ﻿using Fusion;
+using System;
 using UnityEngine;
+using static UnityEngine.CullingGroup;
 
 public class Bird_Moveset : MovementCharacter
 {
@@ -345,18 +347,30 @@ public class Bird_Moveset : MovementCharacter
 
         if (isXPressed)
         {
-            if (_canThrowItem)
+            if (_canThrowItem && !(isWaterSurface || stilldrowning))
             {
                 _prepareToThrow = !_prepareToThrow;
+
+                if (!_prepareToThrow)
+                {
+                    CancelThrow();
+                }
             }
             else
             {
-                _prepareToThrow = false;
+                if (_prepareToThrow)
+                {
+                    CancelThrow();
+                }
             }
         }
 
+        float inputAD = input.horizontal;
+
         if (_prepareToThrow)
         {
+            isMoveAble = false;
+            cAnimation.FaceTo(inputAD);
             UpdateOscillatingAim();
             IsInteractBusy = true;
 
@@ -384,6 +398,7 @@ public class Bird_Moveset : MovementCharacter
 
     private void CancelThrow()
     {
+        isMoveAble = true;
         _prepareToThrow = false;
         IsInteractBusy = false;
 
@@ -395,10 +410,11 @@ public class Bird_Moveset : MovementCharacter
         float time = (float)Runner.SimulationTime;
 
         float currentAngle = Mathf.Sin(time * aimSweepSpeed) * maxAimAngle;
+        float currentFaceTo = cAnimation.FlipX ? 0f : 180f;
 
         currentAimX = currentAngle;
 
-        throwPoint.localRotation = Quaternion.Euler(0, 0, currentAngle);
+        throwPoint.localRotation = Quaternion.Euler(0, currentFaceTo, currentAngle);
     }
 
     public void DrawLine()
