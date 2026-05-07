@@ -464,7 +464,7 @@ GameObject:
   - component: {fileID: 180149684}
   - component: {fileID: 180149683}
   m_Layer: 5
-  m_Name: Leave_Button
+  m_Name: Leave_Button_JoinRoom
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2339,12 +2339,12 @@ GameObject:
   m_Component:
   - component: {fileID: 1146950543}
   m_Layer: 5
-  m_Name: LobbyUI
+  m_Name: MainMenu_UI
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1146950543
 RectTransform:
   m_ObjectHideFlags: 0
@@ -3444,7 +3444,7 @@ GameObject:
   - component: {fileID: 1407447507}
   - component: {fileID: 1407447506}
   m_Layer: 5
-  m_Name: Character_name
+  m_Name: Character_name_h
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3841,7 +3841,7 @@ GameObject:
   - component: {fileID: 1574510119}
   - component: {fileID: 1574510121}
   m_Layer: 5
-  m_Name: Ready/Not
+  m_Name: Ready/Not_c
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5063,7 +5063,7 @@ GameObject:
   - component: {fileID: 2075871789}
   - component: {fileID: 2075871788}
   m_Layer: 5
-  m_Name: Ready/Not
+  m_Name: Ready/Not_h
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5442,11 +5442,15 @@ PrefabInstance:
     - target: {fileID: 44562366507545555, guid: 2a585ce85a41bfe428999078832f2881, type: 3}
       propertyPath: _playerHost
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 417018327}
     - target: {fileID: 44562366507545555, guid: 2a585ce85a41bfe428999078832f2881, type: 3}
       propertyPath: DebugTextObj
       value: 
       objectReference: {fileID: 931614403}
+    - target: {fileID: 44562366507545555, guid: 2a585ce85a41bfe428999078832f2881, type: 3}
+      propertyPath: GameMainMenu
+      value: 
+      objectReference: {fileID: 1146950542}
     - target: {fileID: 44562366507545555, guid: 2a585ce85a41bfe428999078832f2881, type: 3}
       propertyPath: _leaveButton
       value: 
@@ -5482,7 +5486,7 @@ PrefabInstance:
     - target: {fileID: 44562366507545555, guid: 2a585ce85a41bfe428999078832f2881, type: 3}
       propertyPath: LobbyGameObject
       value: 
-      objectReference: {fileID: 3058923723641069471}
+      objectReference: {fileID: 1155444743}
     - target: {fileID: 44562366507545555, guid: 2a585ce85a41bfe428999078832f2881, type: 3}
       propertyPath: _JoinRoomButton
       value: 
@@ -5490,7 +5494,7 @@ PrefabInstance:
     - target: {fileID: 44562366507545555, guid: 2a585ce85a41bfe428999078832f2881, type: 3}
       propertyPath: _hostReadyButton
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 2075871788}
     - target: {fileID: 44562366507545555, guid: 2a585ce85a41bfe428999078832f2881, type: 3}
       propertyPath: _playerBirdImage
       value: 
@@ -5510,11 +5514,11 @@ PrefabInstance:
     - target: {fileID: 44562366507545555, guid: 2a585ce85a41bfe428999078832f2881, type: 3}
       propertyPath: CharacterHostIcon
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 137657715}
     - target: {fileID: 44562366507545555, guid: 2a585ce85a41bfe428999078832f2881, type: 3}
       propertyPath: SessionGameObject
       value: 
-      objectReference: {fileID: 1155444743}
+      objectReference: {fileID: 3058923723641069471}
     - target: {fileID: 44562366507545555, guid: 2a585ce85a41bfe428999078832f2881, type: 3}
       propertyPath: _clientReadyButton
       value: 
@@ -5534,7 +5538,7 @@ PrefabInstance:
     - target: {fileID: 44562366507545555, guid: 2a585ce85a41bfe428999078832f2881, type: 3}
       propertyPath: CharacterNameText_h
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 1407447506}
     - target: {fileID: 44562366507545555, guid: 2a585ce85a41bfe428999078832f2881, type: 3}
       propertyPath: _CreateSessionButton
       value: 
@@ -5543,6 +5547,10 @@ PrefabInstance:
       propertyPath: _CreateSessionNumber
       value: 
       objectReference: {fileID: 463609828}
+    - target: {fileID: 44562366507545555, guid: 2a585ce85a41bfe428999078832f2881, type: 3}
+      propertyPath: _leaveButtonJoinRoom
+      value: 
+      objectReference: {fileID: 180149683}
     - target: {fileID: 44562366507545555, guid: 2a585ce85a41bfe428999078832f2881, type: 3}
       propertyPath: _sessionNumberInsertField
       value: 
@@ -5566,7 +5574,7 @@ PrefabInstance:
     - target: {fileID: 44562366507545555, guid: 2a585ce85a41bfe428999078832f2881, type: 3}
       propertyPath: ChangeCharacterButtonForHostAdd
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 595074943}
     - target: {fileID: 44562366507545555, guid: 2a585ce85a41bfe428999078832f2881, type: 3}
       propertyPath: ChangeCharacterButtonForClientAdd
       value: 
@@ -5574,7 +5582,7 @@ PrefabInstance:
     - target: {fileID: 44562366507545555, guid: 2a585ce85a41bfe428999078832f2881, type: 3}
       propertyPath: ChangeCharacterButtonForHostReduce
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 2142959945}
     - target: {fileID: 44562366507545555, guid: 2a585ce85a41bfe428999078832f2881, type: 3}
       propertyPath: ChangeCharacterButtonForClientReduce
       value: 
@@ -5684,7 +5692,7 @@ GameObject:
   - component: {fileID: 8913733788493817931}
   - component: {fileID: 4580292585861261879}
   m_Layer: 5
-  m_Name: Character_name
+  m_Name: Character_name_c
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5829,7 +5837,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!1 &3313593563259660470
 GameObject:
   m_ObjectHideFlags: 0

@@ -19,7 +19,7 @@ public class SessionHub : SingletonNetwork<SessionHub>
     [SerializeField] Button _clipBoardCopy;
     [SerializeField] string _sessionKey;
     [SerializeField] Button _leaveButton;
-    [SerializeField] Button _leaveButton2;
+    [SerializeField] Button _leaveButtonJoinRoom;
     [SerializeField] string _inputRoomKey;
     [SerializeField] bool AlreadyJoin => SessionManager.Instance != null && SessionManager.Instance._isAlreadyInRoom;
     [SerializeField] int _playerCount;
@@ -36,12 +36,14 @@ public class SessionHub : SingletonNetwork<SessionHub>
     [SerializeField] Button _JoinRoomButton;
 
     [Header("InLobby")]
-    // Lobby
-    [SerializeField] GameObject LobbyGameObject;
+    [SerializeField] GameObject GameMainMenu;
     [SerializeField] Button playButton;
     [SerializeField] Button settingButton;
     [SerializeField] Button exitButton;
 
+    // Lobby
+    [SerializeField] GameObject LobbyGameObject;
+    
     // Session
     [SerializeField] GameObject SessionGameObject;
     [SerializeField] GameObject _playerHost;
@@ -94,7 +96,7 @@ public class SessionHub : SingletonNetwork<SessionHub>
     {
         // Lobby
         if (exitButton != null) exitButton.onClick.AddListener(ExitTheGame);
-        if (playButton != null) playButton.onClick.AddListener(ChangeStateToMainMenu);
+        if (playButton != null) playButton.onClick.AddListener(ChangeStateToLobbyMenu);
 
         // Session
         if (_joinSessionButton != null) _joinSessionButton.onClick.AddListener(JoinSessionRoom);
@@ -102,7 +104,7 @@ public class SessionHub : SingletonNetwork<SessionHub>
         if (_JoinRoomButton != null) _JoinRoomButton.onClick.AddListener(JoinRoom);
 
         if (_leaveButton != null) _leaveButton.onClick.AddListener(LeaveRoom);
-        if (_leaveButton2 != null) _leaveButton2.onClick.AddListener(LeaveRoom);
+        if (_leaveButtonJoinRoom != null) _leaveButtonJoinRoom.onClick.AddListener(ChangeStateToLobbyMenu);
 
         // Character Selection
         if (ChangeCharacterButtonForHostAdd != null) ChangeCharacterButtonForHostAdd.onClick.AddListener(AddFromHost);
@@ -148,12 +150,12 @@ public class SessionHub : SingletonNetwork<SessionHub>
 
         switch (newState)
         {
-            case SessionState.Lobby:
-                OpenLobbyUI();
-                break;
-
             case SessionState.MainMenu:
                 OpenMainMenuUI();
+                break;
+
+            case SessionState.Lobby:
+                OpenLobbyUI();
                 break;
 
             case SessionState.Join:
@@ -175,6 +177,7 @@ public class SessionHub : SingletonNetwork<SessionHub>
     #region UI Panel Management
     private void HideAllPanels()
     {
+        if (GameMainMenu != null) GameMainMenu.SetActive(false);
         if (JoinSession != null) JoinSession.SetActive(false);
         if (SessionGameObject != null) SessionGameObject.SetActive(false);
         if (LobbyGameObject != null) LobbyGameObject.SetActive(false);
@@ -185,14 +188,16 @@ public class SessionHub : SingletonNetwork<SessionHub>
     public void OpenLobbyUI()
     {
         HideAllPanels();
+        SetMainButtonOff(true);
         if (LobbyGameObject != null) LobbyGameObject.SetActive(true);
     }
 
     public void OpenMainMenuUI()
     {
         HideAllPanels();
-        SetMainButtonOff(true);
         ResetMenuButtons();
+
+        if (GameMainMenu != null) GameMainMenu.SetActive(true);
     }
 
     public void OpenJoinUI()
@@ -205,7 +210,7 @@ public class SessionHub : SingletonNetwork<SessionHub>
     public void OpenSessionUI()
     {
         HideAllPanels();
-        if (SessionGameObject != null) SessionGameObject.SetActive(true);
+        if (SessionGameObject != null) SessionGameObject.SetActive(true);   
 
         if (networkRunner != null && networkRunner.IsServer)
         {
@@ -213,7 +218,7 @@ public class SessionHub : SingletonNetwork<SessionHub>
         }
 
         if (_leaveButton != null) { _leaveButton.gameObject.SetActive(true); _leaveButton.interactable = true; }
-        if (_leaveButton2 != null) { _leaveButton2.gameObject.SetActive(true); _leaveButton2.interactable = true; }
+        if (_leaveButtonJoinRoom != null) { _leaveButtonJoinRoom.gameObject.SetActive(true); _leaveButtonJoinRoom.interactable = true; }
     }
     #endregion
 
@@ -271,7 +276,7 @@ public class SessionHub : SingletonNetwork<SessionHub>
     public void LeaveRoom()
     {
         if (_leaveButton != null) _leaveButton.interactable = false;
-        if (_leaveButton2 != null) _leaveButton2.interactable = false;
+        if (_leaveButtonJoinRoom != null) _leaveButtonJoinRoom.interactable = false;
 
         if (AlreadyJoin && SessionManager.Instance != null)
         {
@@ -608,7 +613,7 @@ public class SessionHub : SingletonNetwork<SessionHub>
         if (_JoinRoomButton != null) _JoinRoomButton.interactable = true;
 
         if (_leaveButton != null) _leaveButton.interactable = true;
-        if (_leaveButton2 != null) _leaveButton2.interactable = true;
+        if (_leaveButtonJoinRoom != null) _leaveButtonJoinRoom.interactable = true;
 
         if (_startButton != null) _startButton.interactable = false;
     }
@@ -623,7 +628,7 @@ public class SessionHub : SingletonNetwork<SessionHub>
         if (_JoinRoomButton != null) _JoinRoomButton.onClick.RemoveAllListeners();
         if (_clipBoardCopy != null) _clipBoardCopy.onClick.RemoveAllListeners();
         if (_leaveButton != null) _leaveButton.onClick.RemoveAllListeners();
-        if (_leaveButton2 != null) _leaveButton2.onClick.RemoveAllListeners();
+        if (_leaveButtonJoinRoom != null) _leaveButtonJoinRoom.onClick.RemoveAllListeners();
         if (_startButton != null) _startButton.onClick.RemoveAllListeners();
 
         StopAllCoroutines();

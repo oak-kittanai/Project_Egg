@@ -9,8 +9,8 @@ using static UnityEngine.CullingGroup;
 
 public enum SessionState
 {
-    Lobby,
     MainMenu,
+    Lobby,
     Setting,
     SessionSelect,
     Join,
@@ -75,7 +75,7 @@ public class SessionManager : SingletonNetwork<SessionManager>
 
     private void Start()
     {
-        ChangeState(SessionState.Lobby);
+        ChangeState(SessionState.MainMenu);
     }
     #endregion
 
@@ -329,14 +329,14 @@ public class SessionManager : SingletonNetwork<SessionManager>
 
         if (networkRunner.IsServer)
         {
+            await LoadStartGame("Stage1-S1");
+            _isAlreadyInRoom = false;
+
             INetworkStructure networkStructure = networkRunner.GetComponent<INetworkStructure>();
 
             NetworkObject CHObject = networkRunner.Spawn(CenterHostObject);
             CenterHost CH = CHObject.GetComponent<CenterHost>();
             CH.AddComponent(networkRunner, networkStructure, PlayerPrefabs);
-
-            await LoadStartGame("Stage1-S1");
-            _isAlreadyInRoom = false;
 
             GM = networkRunner.Spawn(GameManagerPrefabs);
             gameManager = GM.GetComponent<GameManager>();
