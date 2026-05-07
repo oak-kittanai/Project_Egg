@@ -75,7 +75,7 @@ public class SessionManager : SingletonNetwork<SessionManager>
 
     private void Start()
     {
-        ChangeState(SessionState.MainMenu);
+        ChangeState(SessionState.Lobby);
     }
     #endregion
 
@@ -174,6 +174,21 @@ public class SessionManager : SingletonNetwork<SessionManager>
         {
             SessionHub.Instance.ResetMenuButtons();
         }
+    }
+
+    public void LoadToMainMenu()
+    {
+        ChangeState(SessionState.MainMenu);
+    }
+
+    public void LoadToLobbyMenu()
+    {
+        ChangeState(SessionState.Lobby);
+    }
+
+    public void LoadToSettingMenu()
+    {
+        ChangeState(SessionState.Setting);
     }
 
     public bool JoinSession(string key)
