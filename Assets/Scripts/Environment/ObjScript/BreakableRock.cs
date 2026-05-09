@@ -7,7 +7,7 @@ public class BreakableRock : NetworkBehaviour, Interactable
 
     [SerializeField] NetworkObject itemToDrop;
     [SerializeField] int dropAmount = 1;
-    [SerializeField] float dropForce = 3f;
+    //[SerializeField] float dropForce = 3f;
 
     private void Awake()
     {

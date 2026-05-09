@@ -5,7 +5,7 @@ using UnityEngine.TextCore.Text;
 public class DoDamage : NetworkBehaviour
 {
     [Header("Trap Setting")]
-    [SerializeField] private float cooldownTime = 1.5f;
+    //[SerializeField] private float cooldownTime = 1.5f;
     [SerializeField] private int damageAmount = 1;
     [SerializeField] private float knockbackForce = 5f;
 

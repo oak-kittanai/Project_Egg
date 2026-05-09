@@ -5,8 +5,7 @@ using System.Collections.Generic;
 public class TrapPressure : NetworkBehaviour
 {
     [Header("Stat&Mode")]
-    [SerializeField] float pushForce = 50f; //แรงผัก...ผลไม้
-    [SerializeField] ForceMode2D forceMode = ForceMode2D.Force;
+    [SerializeField] float pushForce = 50f;
 
     [Networked] public NetworkBool _isActive { get; set; }
     [Networked] public NetworkBool _isRevers { get; set; }

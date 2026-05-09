@@ -26,7 +26,7 @@ public class Duck_Moveset : MovementCharacter
     [SerializeField] float divePhase = 0.5f;
 
     [SerializeField] float emergencyAcceleration = 1f;
-    [SerializeField] float emergencyDeceleration = 2f;
+    //[SerializeField] float emergencyDeceleration = 2f;
 
     [Networked] public bool onDiving { get; set; }
     [Networked] bool onDivingControl { get; set; }
@@ -36,7 +36,7 @@ public class Duck_Moveset : MovementCharacter
     [Networked] public bool emergencySwimBool { get; set; }
 
     [Networked] private TickTimer EmergencyTimer { get; set; }
-    [SerializeField] private bool emergencyToggle;
+    [Networked] public bool emergencyToggle { get; set; }
     [SerializeField] private float emergencySwimTimer = 2f;
 
     [Networked] private TickTimer DiveTimer { get; set; }
@@ -388,7 +388,7 @@ public class Duck_Moveset : MovementCharacter
     {
         if (cAnimation != null)
         {
-            
+            cAnimation.SmashAnimation();
         }
     }
 

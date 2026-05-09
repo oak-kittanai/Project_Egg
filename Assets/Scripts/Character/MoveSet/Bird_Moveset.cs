@@ -29,7 +29,7 @@ public class Bird_Moveset : MovementCharacter
     // Drowning
     [Networked] private TickTimer DrownTimer { get; set; }
     [SerializeField] float drowningTime = 3f;
-    [SerializeField] bool startTimer;
+    [Networked] public bool startTimer { get; set; }
 
     [Header("ThrowSystem")]
     [SerializeField] public NetworkObject throwAblePrefab;

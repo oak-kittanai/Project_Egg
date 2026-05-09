@@ -50,7 +50,7 @@ public class BearTrapScript : NetworkBehaviour
                 filter.SetLayerMask(LayerMask.GetMask("Player"));
 
                 Collider2D[] results = new Collider2D[5];
-                int hitCount = doDamageColl2D.OverlapCollider(filter, results);
+                int hitCount = doDamageColl2D.Overlap(filter, results);
 
                 if (hitCount > 0)
                 {
