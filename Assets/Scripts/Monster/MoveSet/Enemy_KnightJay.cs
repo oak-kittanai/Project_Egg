@@ -26,6 +26,8 @@ public class Enemy_KnightJay : BaseMonster
 
     private void HanleJayStateCheck()
     {
+        if (!HasStateAuthority) return;
+
         if (currentState == MonState.Attack)
         {
             TriggerHitBox_RPC(true);

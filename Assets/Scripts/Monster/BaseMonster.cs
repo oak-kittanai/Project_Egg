@@ -30,12 +30,13 @@ public class AttackPattern
     public int attackPerPhase;
 }
 
-public class BaseMonster : NetworkBehaviour
+public class BaseMonster : NetworkBehaviour, IstunAble
 {
     [Header("Ref")]
     public Rigidbody2D rb2D;
     public Animator animator;
     public SpriteRenderer spriteRenderer;
+    public Collider2D col;
 
     [Header("Session State")]
     [Networked, OnChangedRender(nameof(OnStateChangedCallback))] public AttackDirection currentAttackDirectionState { get; set; }
@@ -118,6 +119,10 @@ public class BaseMonster : NetworkBehaviour
         if (spriteRenderer == null) spriteRenderer = GetComponentInChildren<SpriteRenderer>();
         if (spriteRenderer != null) Debug.Log($"{this.name} Has spriteRenderer");
         else Debug.Log($"{this.name} can't find spriteRenderer");
+
+        if (col == null) col = GetComponent<Collider2D>();
+        if (col != null) Debug.Log($"{this.name} Has Collider");
+        else Debug.Log($"{this.name} can't find Collider");
 
         spawnPos = transform.position;
     }
@@ -302,6 +307,8 @@ public class BaseMonster : NetworkBehaviour
     {
         if (isStun)
         {
+            col.isTrigger = true;
+
             if (stunTimer.Expired(Runner))
             {
                 StunExpired();
@@ -316,6 +323,11 @@ public class BaseMonster : NetworkBehaviour
         }
     }
 
+    public void TriggerStun()
+    {
+        TakeDamage();
+    }
+
     public void TakeDamage()
     {
         if (isStunAble && !isStun)
@@ -323,6 +335,7 @@ public class BaseMonster : NetworkBehaviour
             isStun = true;
             isStunAble = false;
             SetStunTimer();
+            Debug.Log($"Monster [{this.name}] : is Stun");
         }
         else Debug.Log("can't Stun, do nothing");
     }
@@ -331,6 +344,7 @@ public class BaseMonster : NetworkBehaviour
     {
         isStun = false;
         SetStunAbleTimer();
+        col.isTrigger = false;
     }
 
     #endregion

@@ -34,8 +34,6 @@ public class DoDamage : NetworkBehaviour
                 }
             }
         }
-
-        
     }
 
 }

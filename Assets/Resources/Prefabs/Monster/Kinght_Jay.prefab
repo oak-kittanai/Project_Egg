@@ -204,7 +204,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d6c2ea7cb747ffa44af7abd235d40365, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DoDamage
-  cooldownTime: 1.5
   damageAmount: 1
   knockbackForce: 5
 --- !u!1 &7982048727846197004
@@ -222,7 +221,7 @@ GameObject:
   - component: {fileID: 1756195056505730648}
   m_Layer: 0
   m_Name: Kinght_Jay
-  m_TagString: Untagged
+  m_TagString: Monster
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -259,16 +258,17 @@ MonoBehaviour:
   rb2D: {fileID: 225394393010166091}
   animator: {fileID: 7125880080165953558}
   spriteRenderer: {fileID: 0}
+  col: {fileID: 0}
   _currentAttackDirectionState: 0
   _currentState: 0
   spawnPos: {x: 0, y: 0, z: 0}
   maxReachDistance: 8
   _isStun:
     _value: 0
-  stunTimeAmount: 3
+  stunTimeAmount: 5
   _isStunAble:
     _value: 0
-  stunAbleCooldown: 3
+  stunAbleCooldown: 5
   damage: 1
   knockbackForce: 12
   targetLayer:
