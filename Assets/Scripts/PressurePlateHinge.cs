@@ -1,7 +1,6 @@
 using Fusion;
 using UnityEngine;
 
-[RequireComponent(typeof(BoxCollider2D))]
 public class PressurePlateHinge : NetworkBehaviour
 {
     [Header("Setting")]

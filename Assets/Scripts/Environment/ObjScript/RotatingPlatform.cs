@@ -1,7 +1,6 @@
 using UnityEngine;
 using Fusion;
 
-[RequireComponent(typeof(Rigidbody2D))]
 public class RotatingPlatform : NetworkBehaviour
 {
     [Header("Rotate Setting")]

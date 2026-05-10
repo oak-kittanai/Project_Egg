@@ -1,7 +1,6 @@
 using UnityEngine;
 using Fusion;
 
-[RequireComponent(typeof(Rigidbody2D))]
 public class HingeDoor : NetworkBehaviour
 {
     [Header("Hinge Setting")]
