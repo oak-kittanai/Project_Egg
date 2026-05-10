@@ -1,54 +1,76 @@
 using UnityEngine;
+using Fusion;
 
-[RequireComponent(typeof(BoxCollider2D))]
-public class RotatingPlatform : MonoBehaviour
+[RequireComponent(typeof(Rigidbody2D))]
+public class RotatingPlatform : NetworkBehaviour
 {
-    [Header("Settings")]
-    [Tooltip("ความเร็วในการหมุน")]
-    [SerializeField] float rotationSpeed = 100.0f;
-    [SerializeField] bool alwaysRotating = false;
+    [Header("Rotate Setting")]
+    [SerializeField] private float rotateDuration = 1.5f; 
+    [SerializeField] private float pauseDuration = 2.0f;
+    [SerializeField] private bool rotateClockwise = true; //หมุนตามเข็ม
 
-    [SerializeField] bool rotateRevert = true;
-    public bool isStanding = false;
-    [SerializeField] private int playersCount = 0;
+    private Rigidbody2D rb;
 
-    private void Update()
+    // === ตัวแปร Network ===
+    [Networked] private float StartAngle { get; set; }
+    [Networked] private float TargetAngle { get; set; }
+    [Networked] private float RotationProgress { get; set; }
+    [Networked] private NetworkBool IsPausing { get; set; }
+    [Networked] private TickTimer PauseTimer { get; set; }
+    [Networked] private float CurrentAngle { get; set; }
+
+    private void Awake()
     {
-        // มีคนเหยียบหรือติ๊กเปิดหมุนตลอด
-        if (alwaysRotating || playersCount > 0)
+        rb = GetComponent<Rigidbody2D>();
+        rb.isKinematic = true;
+    }
+
+    public override void Spawned()
+    {
+        if (HasStateAuthority)
         {
-            RotationActive();
+            StartAngle = transform.eulerAngles.z;
+            TargetAngle = StartAngle + (rotateClockwise ? -90f : 90f);
+            RotationProgress = 0f;
         }
     }
 
-    private void RotationActive()
+    public override void FixedUpdateNetwork()
     {
-        // ทิศ
-        float direction = rotateRevert ? -1f : 1f;
+        if (!HasStateAuthority) return;
 
-        transform.Rotate(0, 0, direction * rotationSpeed * Time.deltaTime);
-    }
-
-    private void OnCollisionEnter2D(Collision2D collision)
-    {
-        isStanding = true;
-
-        if (collision.gameObject.CompareTag("Player"))
+        if (IsPausing)
         {
-            if (collision.transform.position.y > transform.position.y)
+            if (PauseTimer.Expired(Runner))
             {
-                playersCount++;
+                IsPausing = false;
+                StartAngle = TargetAngle;
+                TargetAngle = StartAngle + (rotateClockwise ? -90f : 90f);
+                RotationProgress = 0f;
+                PauseTimer = TickTimer.None;
             }
         }
+        else
+        {
+            RotationProgress += Runner.DeltaTime / rotateDuration;
+
+            if (RotationProgress >= 1f)
+            {
+                RotationProgress = 1f;
+                IsPausing = true;
+                PauseTimer = TickTimer.CreateFromSeconds(Runner, pauseDuration);
+            }
+
+            float easedProgress = Mathf.SmoothStep(0f, 1f, RotationProgress);
+
+            CurrentAngle = Mathf.Lerp(StartAngle, TargetAngle, easedProgress);
+
+            rb.MoveRotation(CurrentAngle);
+        }
     }
 
-    private void OnCollisionExit2D(Collision2D collision)
+    public override void Render()
     {
-        isStanding = false;
-
-        if (collision.gameObject.CompareTag("Player"))
-        {
-            playersCount = Mathf.Max(0, playersCount - 1);
-        }
+        transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.Euler(0, 0, CurrentAngle), Runner.DeltaTime * 15f);
     }
 }
