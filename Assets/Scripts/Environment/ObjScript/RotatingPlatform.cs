@@ -21,7 +21,7 @@ public class RotatingPlatform : NetworkBehaviour
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
-        rb.isKinematic = true;
+        rb.bodyType = RigidbodyType2D.Kinematic;
     }
 
     public override void Spawned()
