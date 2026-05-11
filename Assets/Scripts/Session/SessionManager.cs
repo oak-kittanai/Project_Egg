@@ -39,6 +39,8 @@ public class SessionManager : SingletonNetwork<SessionManager>
     [NetworkPrefab] public NetworkObject CenterHostObject;
     [NetworkPrefab] public NetworkObject PlayerPrefabs;
 
+    [SerializeField] string SceneToPlay;
+
     [Header("StoreToSpawn")]
     public List<PlayersData> Players = new List<PlayersData>();
 
@@ -315,7 +317,7 @@ public class SessionManager : SingletonNetwork<SessionManager>
 
     #region Core Game Loop
     public async Task LoadStartGame(string sceneName)
-    {
+    {   
         await networkRunner.LoadScene(sceneName, LoadSceneMode.Single);
     }
 
@@ -329,7 +331,7 @@ public class SessionManager : SingletonNetwork<SessionManager>
 
         if (networkRunner.IsServer)
         {
-            await LoadStartGame("Stage1-S1");
+            await LoadStartGame(SceneToPlay);
             _isAlreadyInRoom = false;
 
             INetworkStructure networkStructure = networkRunner.GetComponent<INetworkStructure>();
