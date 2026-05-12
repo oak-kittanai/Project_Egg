@@ -5,8 +5,10 @@ public class DialogueManager : MonoBehaviour
 {
     public static DialogueManager Instance { get; private set; }
 
-    private Queue<DialogueLine> lines = new Queue<DialogueLine>();
+    private List<DialogueLine> lines = new List<DialogueLine>();
     private DialogueConfig currentHeader;
+
+    private int currentLineIndex = 0;
 
     private void Awake() => Instance = this;
 
@@ -16,20 +18,43 @@ public class DialogueManager : MonoBehaviour
         DialogueData data = JsonReader.Read(config.JsonFile);
 
         lines.Clear();
-        foreach (var line in data.lines) lines.Enqueue(line);
-
-        DisplayNextLine();
-    }
-
-    public void DisplayNextLine()
-    {
-        if (lines.Count == 0)
+        if (data != null && data.lines != null)
         {
-            DialogueHUB.Instance.CloseDialogue();
-            return;
+            lines.AddRange(data.lines);
         }
 
-        DialogueLine line = lines.Dequeue();
+        currentLineIndex = 0;
+        ShowCurrentLine();
+    }
+
+    public void NextLine()
+    {
+        if (currentLineIndex < lines.Count - 1)
+        {
+            currentLineIndex++;
+            ShowCurrentLine();
+        }
+        else
+        {
+            DialogueHUB.Instance.CloseDialogue();
+        }
+    }
+
+    public void PreviousLine()
+    {
+        if (currentLineIndex > 0)
+        {
+            currentLineIndex--;
+            ShowCurrentLine();
+        }
+    }
+
+    private void ShowCurrentLine()
+    {
+        if (lines.Count == 0) return;
+
+        DialogueLine line = lines[currentLineIndex];
+
         string text = currentHeader.isThaiLanguage ? line.thai : line.eng;
 
         DialogueHUB.Instance.DisplayLine(currentHeader.NameofSpeaker, text, currentHeader.effect);

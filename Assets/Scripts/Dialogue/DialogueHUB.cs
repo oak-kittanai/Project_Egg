@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 public class DialogueHUB : MonoBehaviour
 {
@@ -9,7 +10,21 @@ public class DialogueHUB : MonoBehaviour
     [SerializeField] private CustomTextGen miraAnimator;
     [SerializeField] private CustomTextGen kaelAnimator;
 
+    [SerializeField] Button nextButton;
+    [SerializeField] Button prevButton;
+
     private void Awake() => Instance = this;
+
+    private void Start()
+    {
+        SetButton();
+    }
+
+    public void SetButton()
+    {
+        nextButton.onClick.AddListener(DialogueManager.Instance.NextLine);
+        prevButton.onClick.AddListener(DialogueManager.Instance.PreviousLine);
+    }
 
     public void DisplayLine(string speaker, string message, TextEffectType effect)
     {
@@ -24,5 +39,16 @@ public class DialogueHUB : MonoBehaviour
     {
         miraBox.SetActive(false);
         kaelBox.SetActive(false);
+    }
+
+    private void OnDestroy()
+    {
+        DesetButton();
+    }
+
+    public void DesetButton()
+    {
+        nextButton.onClick.RemoveAllListeners();
+        prevButton.onClick.RemoveAllListeners();
     }
 }
