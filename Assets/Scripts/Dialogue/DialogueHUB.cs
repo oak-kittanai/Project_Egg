@@ -5,6 +5,8 @@ public class DialogueHUB : MonoBehaviour
 {
     public static DialogueHUB Instance { get; private set; }
 
+    [SerializeField] private GameObject dialogueObject;
+
     [SerializeField] private GameObject miraBox;
     [SerializeField] private GameObject kaelBox;
     [SerializeField] private CustomTextGen miraAnimator;
@@ -28,6 +30,7 @@ public class DialogueHUB : MonoBehaviour
 
     public void DisplayLine(string speaker, string message, TextEffectType effect)
     {
+        dialogueObject.SetActive(true);
         miraBox.SetActive(speaker == "Mira");
         kaelBox.SetActive(speaker == "Kael");
 
@@ -37,6 +40,7 @@ public class DialogueHUB : MonoBehaviour
 
     public void CloseDialogue()
     {
+        dialogueObject.SetActive(false);
         miraBox.SetActive(false);
         kaelBox.SetActive(false);
     }
