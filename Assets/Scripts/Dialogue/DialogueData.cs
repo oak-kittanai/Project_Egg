@@ -5,7 +5,8 @@ public enum TextEffectType
     None,
     Typewriter,
     Shake,
-    Wave
+    Wave,
+    Angry
 }
 
 [System.Serializable]
