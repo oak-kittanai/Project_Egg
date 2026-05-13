@@ -4,15 +4,23 @@ using Fusion;
 
 public class OffScreenIndicator : NetworkBehaviour
 {
-    [Header("References")]
+    [Header("Ref")]
     public MovementCharacter targetPlayer;
     public RectTransform indicatorUI;
     public RectTransform arrowPivot;
 
-    [Header("UI Images")]
+    [Header("UI Components")]
     public Image portraitImage;
+    public Image arrowImage;
+    public Image profileFrameImage;
+
+    [Header("Bird/Mira Settings")]
     public Sprite birdFaceSprite;
+    public Sprite birdArrowSprite;
+
+    [Header("Duck/Kael Settings")]
     public Sprite duckFaceSprite;
+    public Sprite duckArrowSprite;
 
     [Header("Settings")]
     public float edgePadding = 50f;
@@ -23,9 +31,13 @@ public class OffScreenIndicator : NetworkBehaviour
     {
         mainCam = Camera.main;
         targetPlayer = null;
-        indicatorUI.gameObject.SetActive(false);
 
-        Debug.Log("UI Indicator พร้อมทำงานในระบบ Networked แล้ว");
+        if (indicatorUI != null)
+        {
+            indicatorUI.gameObject.SetActive(false);
+        }
+
+        Debug.Log("UI Indicator Work fine");
     }
 
     private void Update()
@@ -77,13 +89,18 @@ public class OffScreenIndicator : NetworkBehaviour
         }
     }
 
-    public void SetTarget(MovementCharacter friend, Sprite faceSprite)
+    public void SetTarget(MovementCharacter friend, Sprite faceSprite, Sprite arrowSprite)
     {
         targetPlayer = friend;
 
         if (portraitImage != null && faceSprite != null)
         {
             portraitImage.sprite = faceSprite;
+        }
+
+        if (arrowImage != null && arrowSprite != null)
+        {
+            arrowImage.sprite = arrowSprite;
         }
     }
 
@@ -112,11 +129,11 @@ public class OffScreenIndicator : NetworkBehaviour
         {
             if (myFriendPlayer.isBird)
             {
-                SetTarget(myFriendPlayer, birdFaceSprite);
+                SetTarget(myFriendPlayer, birdFaceSprite, birdArrowSprite);
             }
             else
             {
-                SetTarget(myFriendPlayer, duckFaceSprite);
+                SetTarget(myFriendPlayer, duckFaceSprite, duckArrowSprite);
             }
         }
     }
