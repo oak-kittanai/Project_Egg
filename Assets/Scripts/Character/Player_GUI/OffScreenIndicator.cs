@@ -73,23 +73,20 @@ public class OffScreenIndicator : NetworkBehaviour
                 screenPos *= -1;
             }
 
+            Vector3 screenCenter = new Vector3(Screen.width / 2f, Screen.height / 2f, 0f);
+            Vector3 directionToTarget = screenPos - screenCenter;
+
             Vector3 clampedPos = screenPos;
             clampedPos.x = Mathf.Clamp(clampedPos.x, edgePadding, Screen.width - edgePadding);
             clampedPos.y = Mathf.Clamp(clampedPos.y, edgePadding, Screen.height - edgePadding);
-
             indicatorUI.position = clampedPos;
-
-            Vector3 dir = (targetPlayer.transform.position - mainCam.transform.position).normalized;
-            float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
 
             if (arrowPivot != null)
             {
+                float angle = Mathf.Atan2(directionToTarget.y, directionToTarget.x) * Mathf.Rad2Deg;
+
                 arrowPivot.rotation = Quaternion.Euler(0, 0, angle);
             }
-        }
-        else
-        {
-            if (indicatorUI.gameObject.activeSelf) indicatorUI.gameObject.SetActive(false);
         }
     }
 
