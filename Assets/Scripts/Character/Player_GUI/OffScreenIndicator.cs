@@ -88,6 +88,10 @@ public class OffScreenIndicator : NetworkBehaviour
                 arrowPivot.rotation = Quaternion.Euler(0, 0, angle);
             }
         }
+        else
+        {
+            if (indicatorUI.gameObject.activeSelf) indicatorUI.gameObject.SetActive(false);
+        }
     }
 
     public void SetTarget(MovementCharacter friend, Sprite faceSprite, Sprite arrowSprite)
