@@ -34,28 +34,35 @@ public class TriggerDialogue : NetworkBehaviour
                     {
                         if (character.isBird)
                         {
-                            UpdateCurrentDialogue(birdDialogueSequence);
+                            RPC_TriggerDialogueNetwork(1, currentIndex);
                         }
                         else
                         {
-                            UpdateCurrentDialogue(duckDialogueSequence);
+                            RPC_TriggerDialogueNetwork(2, currentIndex);
                         }
                     }
                     else
                     {
-                        UpdateCurrentDialogue(dialogueSequence);
+                        RPC_TriggerDialogueNetwork(0, currentIndex);
                     }
                 }
             }
         }
     }
 
-    private void UpdateCurrentDialogue(DialogueConfig[] config)
+    [Rpc(RpcSources.All, RpcTargets.All)]
+    private void RPC_TriggerDialogueNetwork(int sequenceType, int index)
     {
-        if (currentIndex < config.Length)
+        DialogueConfig[] selectedConfig = null;
+
+        if (sequenceType == 0) selectedConfig = dialogueSequence;
+        else if (sequenceType == 1) selectedConfig = birdDialogueSequence;
+        else if (sequenceType == 2) selectedConfig = duckDialogueSequence;
+
+        if (selectedConfig != null && index < selectedConfig.Length)
         {
-            DialogueManager.Instance.StartDialogue(config[currentIndex]);
-            currentIndex++;
+            DialogueManager.Instance.StartDialogue(selectedConfig[index]);
+            currentIndex = index + 1;
             hasTriggeredLocal = true;
         }
         else

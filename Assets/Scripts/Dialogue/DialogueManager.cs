@@ -54,7 +54,6 @@ public class DialogueManager : MonoBehaviour
         if (lines.Count == 0) return;
 
         DialogueLine line = lines[currentLineIndex];
-
         string text = currentHeader.isThaiLanguage ? line.thai : line.eng;
 
         DialogueHUB.Instance.DisplayLine(currentHeader.NameofSpeaker, text, currentHeader.effect);
