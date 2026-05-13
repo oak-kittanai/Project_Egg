@@ -3,6 +3,8 @@ using Fusion;
 
 public class CameraCharacter : NetworkBehaviour
 {
+    public static Camera LocalCamera { get; private set; }
+
     public delegate void ParallaxCameraDelegate(float deltaMovement);
     public ParallaxCameraDelegate onCameraTranslate;
 
@@ -19,6 +21,8 @@ public class CameraCharacter : NetworkBehaviour
     {
         if (HasInputAuthority)
         {
+            LocalCamera = GetComponentInChildren<Camera>();
+
             oldPosition = transform.position.x;
             offset = transform.localPosition;
 

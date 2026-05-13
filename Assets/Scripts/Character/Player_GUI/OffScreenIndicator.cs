@@ -29,7 +29,6 @@ public class OffScreenIndicator : NetworkBehaviour
 
     public override void Spawned()
     {
-        mainCam = Camera.main;
         targetPlayer = null;
 
         if (indicatorUI != null)
@@ -49,6 +48,11 @@ public class OffScreenIndicator : NetworkBehaviour
 
     private void LateUpdate()
     {
+        if (mainCam == null)
+        {
+            mainCam = CameraCharacter.LocalCamera;
+        }
+
         if (targetPlayer == null || mainCam == null)
         {
             if (indicatorUI.gameObject.activeSelf) indicatorUI.gameObject.SetActive(false);
@@ -127,6 +131,8 @@ public class OffScreenIndicator : NetworkBehaviour
 
         if (myLocalPlayer != null && myFriendPlayer != null)
         {
+            mainCam = myLocalPlayer.GetComponentInChildren<Camera>();
+
             if (myFriendPlayer.isBird)
             {
                 SetTarget(myFriendPlayer, birdFaceSprite, birdArrowSprite);
