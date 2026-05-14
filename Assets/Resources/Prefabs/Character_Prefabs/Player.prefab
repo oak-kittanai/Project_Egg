@@ -541,6 +541,7 @@ GameObject:
   - component: {fileID: 1019386123444590845}
   - component: {fileID: 2326915062844445405}
   - component: {fileID: -4954465623273972117}
+  - component: {fileID: 7183814836345501160}
   m_Layer: 7
   m_Name: Player
   m_TagString: Player
@@ -587,6 +588,13 @@ MonoBehaviour:
   spriteRenderer: {fileID: 3464039886670934113}
   playerAudioSource: {fileID: -4954465623273972117}
   jumpSoundClip: {fileID: 8300000, guid: de7b9db8e4a2ce247ae0879bf0d28fb1, type: 3}
+  landingSoundClip: {fileID: 8300000, guid: 89bfe5baebba4b5458ae67985ad462a0, type: 3}
+  dmgSoundClip: {fileID: 8300000, guid: ed2bed66dc78a3746bb6f9528917fcc2, type: 3}
+  dieSoundClip: {fileID: 0}
+  respawnSoundClip: {fileID: 8300000, guid: bfe3c54a697abbe41bbf14f7e2180144, type: 3}
+  movementAudioSource: {fileID: 7183814836345501160}
+  walkSoundClip: {fileID: 8300000, guid: 89bfe5baebba4b5458ae67985ad462a0, type: 3}
+  swimSoundClip: {fileID: 0}
   _isBird: 0
   visualTransform: {fileID: 0}
   visualSmoothTime: 0.03
@@ -642,6 +650,10 @@ MonoBehaviour:
   bird_Color: {r: 1, g: 0.54901963, b: 0, a: 0}
   __canThrowItem: 0
   __wasEscPressed: 0
+  drivingSoundClip: {fileID: 0}
+  stopDrivingSoundClip: {fileID: 0}
+  pickupSoundClip: {fileID: 0}
+  dropSoundClip: {fileID: 0}
   _isJumpAble: 0
   waterJumpCooldown: 2
   throwForceX: 7
@@ -683,7 +695,14 @@ MonoBehaviour:
   localGUI: {fileID: 843996908277204990}
   spriteRenderer: {fileID: 3464039886670934113}
   playerAudioSource: {fileID: -4954465623273972117}
-  jumpSoundClip: {fileID: 0}
+  jumpSoundClip: {fileID: 8300000, guid: 7c11918bcbe05d14ab8418dc7ebc26a9, type: 3}
+  landingSoundClip: {fileID: 8300000, guid: 89bfe5baebba4b5458ae67985ad462a0, type: 3}
+  dmgSoundClip: {fileID: 8300000, guid: ed2bed66dc78a3746bb6f9528917fcc2, type: 3}
+  dieSoundClip: {fileID: 8300000, guid: bfe3c54a697abbe41bbf14f7e2180144, type: 3}
+  respawnSoundClip: {fileID: 0}
+  movementAudioSource: {fileID: 7183814836345501160}
+  walkSoundClip: {fileID: 8300000, guid: 89bfe5baebba4b5458ae67985ad462a0, type: 3}
+  swimSoundClip: {fileID: 0}
   _isBird: 0
   visualTransform: {fileID: 0}
   visualSmoothTime: 0.03
@@ -742,6 +761,9 @@ MonoBehaviour:
   normalFlyTime: 0.9
   carryFlyTime: 0.8
   floatingGravity: 1
+  flySoundClip: {fileID: 8300000, guid: de7b9db8e4a2ce247ae0879bf0d28fb1, type: 3}
+  stopFlySoundClip: {fileID: 8300000, guid: 0e94c813a806dfc4f8f0520d09774b40, type: 3}
+  throwSoundClip: {fileID: 0}
   zeroFrictionMaterial: {fileID: 6200000, guid: b71115bdd90209b478eff619dce9253a, type: 2}
   _IsAlreadyFly: 0
   _AlreadyFloating: 0
@@ -979,6 +1001,103 @@ AudioSource:
   DopplerLevel: 1
   MinDistance: 1
   MaxDistance: 500
+  Pan2D: 0
+  rolloffMode: 0
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+--- !u!82 &7183814836345501160
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5009953336907088200}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 0}
+  m_Resource: {fileID: 0}
+  m_PlayOnAwake: 0
+  m_Volume: 1
+  m_Pitch: 1
+  Loop: 1
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 20
   Pan2D: 0
   rolloffMode: 0
   BypassEffects: 0

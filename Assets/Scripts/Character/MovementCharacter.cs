@@ -15,6 +15,16 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [Header("Audio System")]
     [SerializeField] public AudioSource playerAudioSource;
     [SerializeField] public AudioClip jumpSoundClip;
+    [SerializeField] public AudioClip landingSoundClip;
+    [SerializeField] public AudioClip dmgSoundClip;
+    [SerializeField] public AudioClip dieSoundClip;
+    [SerializeField] public AudioClip respawnSoundClip;
+
+    [Header("Movement Audio")]
+    [SerializeField] public AudioSource movementAudioSource; // ลำโพง 2 
+    [SerializeField] public AudioClip walkSoundClip;   
+    [SerializeField] public AudioClip swimSoundClip;   
+
 
     [Networked, OnChangedRender(nameof(OnCharacterTypeChanged))]
     public bool isBird { get; set; }
@@ -299,9 +309,12 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         {
             isJumping = true;
             //เสียงโดด
-            if (HasStateAuthority)
+            if (HasInputAuthority)
             {
-                RPC_PlayJumpSound();
+                if (playerAudioSource != null && jumpSoundClip != null)
+                {
+                    playerAudioSource.PlayOneShot(jumpSoundClip);
+                }
             }
             rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, 0f);
             rb2D.AddForce(Vector2.up * stats.s_jumpForce, ForceMode2D.Impulse);
@@ -356,6 +369,13 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     public void RPC_TakeDamage(int dmg, float knockbackForce, Vector2 vec)
     {
         currentHealth -= dmg;
+        if (HasInputAuthority)
+        {
+            if (playerAudioSource != null && dmgSoundClip != null)
+            {
+                playerAudioSource.PlayOneShot(dmgSoundClip);
+            }
+        }
         rb2D.linearVelocity = Vector2.zero;
         rb2D.AddForce(vec * knockbackForce, ForceMode2D.Impulse);
         if (_damageFlash != null) _damageFlash.CallDamageFlash_RPC();
@@ -387,7 +407,10 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     {
         if (isDead) return;
         isDead = true;
-
+        if (HasStateAuthority)
+        {
+            RPC_PlayDieSound();
+        }
         if (IsBeingCarried)
         {
             if (Runner.TryFindObject(CarrierId, out var carrierObj) && carrierObj.TryGetComponent<Duck_Moveset>(out var duck))
@@ -427,6 +450,10 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     {
         isDead = false;
         isMoveAble = true;
+        if (HasStateAuthority)
+        {
+            RPC_PlayRespawnSound();
+        }
         if (HasStateAuthority) currentHealth = characterMaxHealth;
 
         stilldrowning = false;
@@ -594,6 +621,13 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         {
             isJumping = false;
             resetAnimation = true;
+            if (HasInputAuthority)
+            {
+                if (playerAudioSource != null && landingSoundClip != null)
+                {
+                    playerAudioSource.PlayOneShot(landingSoundClip);
+                }
+            }
         }
 
         if (IsGrounded)
@@ -658,6 +692,46 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                 visualTransform.position = Vector3.SmoothDamp(visualTransform.position, transform.position, ref visualVelocity, visualSmoothTime);
             }
         }
+        ManageMovementSounds();
+
+    }
+    private void ManageMovementSounds()
+    {
+        if (movementAudioSource == null) return;
+
+        AudioClip targetClip = null;
+
+        bool isMovingOnGround = IsGrounded && Mathf.Abs(rb2D.linearVelocity.x) > 0.1f;
+        bool isMovingInWater = (isWaterSurface || IsHeadUnderwater) && (Mathf.Abs(rb2D.linearVelocity.x) > 0.1f || Mathf.Abs(rb2D.linearVelocity.y) > 0.1f);
+
+        if (isMovingOnGround && !isJumping)
+        {
+            targetClip = walkSoundClip; //เสียงเดิน
+        }
+        else if (isMovingInWater)
+        {
+            targetClip = swimSoundClip; //เดินในน้ำ
+        }
+
+        if (targetClip != null)
+        {
+            if (movementAudioSource.clip != targetClip)
+            {
+                movementAudioSource.clip = targetClip;
+                movementAudioSource.Play();
+            }
+            else if (!movementAudioSource.isPlaying)
+            {
+                movementAudioSource.Play();
+            }
+        }
+        else
+        {
+            if (movementAudioSource.isPlaying)
+            {
+                movementAudioSource.Stop();
+            }
+        }
     }
 
     private void CheckInteractable()
@@ -703,11 +777,18 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     #endregion
 
     [Rpc(RpcSources.All, RpcTargets.All)]
-    public void RPC_PlayJumpSound()
+    public void RPC_PlayRespawnSound()
     {
-        if (playerAudioSource != null && jumpSoundClip != null)
+        if (playerAudioSource != null && respawnSoundClip != null)
         {
-            playerAudioSource.PlayOneShot(jumpSoundClip);
+            playerAudioSource.PlayOneShot(respawnSoundClip);
+        }
+    }
+    public void RPC_PlayDieSound()
+    {
+        if (playerAudioSource != null && dieSoundClip != null)
+        {
+            playerAudioSource.PlayOneShot(dieSoundClip);
         }
     }
     private void OnDrawGizmosSelected()

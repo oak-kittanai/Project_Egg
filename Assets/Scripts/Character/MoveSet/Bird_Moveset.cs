@@ -10,6 +10,11 @@ public class Bird_Moveset : MovementCharacter
     [SerializeField] float carryFlyTime = 3f;
     [SerializeField] float floatingGravity = 0.1f;
 
+    //SOUND
+    [SerializeField] public AudioClip flySoundClip;
+    [SerializeField] public AudioClip stopFlySoundClip;
+    [SerializeField] public AudioClip throwSoundClip;
+
     [Header("Physics Materials")]
     [SerializeField] PhysicsMaterial2D zeroFrictionMaterial;
     private PhysicsMaterial2D defaultMaterial;
@@ -296,6 +301,13 @@ public class Bird_Moveset : MovementCharacter
     {
         IsFlying = true;
         isJumping = false;
+        if (HasInputAuthority)
+        {
+            if (playerAudioSource != null && flySoundClip != null)
+            {
+                playerAudioSource.PlayOneShot(flySoundClip);
+            }
+        }
 
         float duration = IsBeingCarried ? carryFlyTime : normalFlyTime;
         FlightTimer = TickTimer.CreateFromSeconds(Runner, duration);
@@ -321,6 +333,13 @@ public class Bird_Moveset : MovementCharacter
     private void StopFlying()
     {
         IsFlying = false;
+        if (HasInputAuthority)
+        {
+            if (playerAudioSource != null && stopFlySoundClip != null)
+            {
+                playerAudioSource.PlayOneShot(stopFlySoundClip);
+            }
+        }
         FlightTimer = TickTimer.None;
 
         if (HasInputAuthority)
@@ -390,6 +409,13 @@ public class Bird_Moveset : MovementCharacter
         Vector2 direction = throwPoint.right;
 
         GameManager.Instance.ProjectileSpawn(throwAblePrefab, throwPos, direction, throwPoint.rotation, projectileSpeed);
+        if (HasInputAuthority)
+        {
+            if (playerAudioSource != null && throwSoundClip != null)
+            {
+                playerAudioSource.PlayOneShot(throwSoundClip);
+            }
+        }
 
         _canThrowItem = false;
 

@@ -6,6 +6,12 @@ public class Duck_Moveset : MovementCharacter
     [Header("Duck Setting")]
     [Networked] bool ReadyToDive { get; set; }
 
+    //SOUND
+    [SerializeField] public AudioClip drivingSoundClip;
+    [SerializeField] public AudioClip stopDrivingSoundClip;
+    [SerializeField] public AudioClip pickupSoundClip;
+    [SerializeField] public AudioClip dropSoundClip;
+
     [Networked] bool isJumpingUp { get; set; }
     [Networked] public bool isJumpAble { get; set; }
 
@@ -157,6 +163,13 @@ public class Duck_Moveset : MovementCharacter
     public void PickupFriend(MovementCharacter friend)
     {
         IsCarry = true;
+        if (HasInputAuthority)
+        {
+            if (playerAudioSource != null && pickupSoundClip != null)
+            {
+                playerAudioSource.PlayOneShot(pickupSoundClip);
+            }
+        }
         CarriedFriendId = friend.Object.Id;
 
         friend.localIsBeingCarriedPredict = true;
@@ -185,6 +198,13 @@ public class Duck_Moveset : MovementCharacter
                     if (throwFriend && friend.visualTransform != null)
                     {
                         friend.visualTransform.position = transform.position + new Vector3(throwDir * 1f, 1f, 0);
+                        if (HasInputAuthority)
+                        {
+                            if (playerAudioSource != null && dropSoundClip != null)
+                            {
+                                playerAudioSource.PlayOneShot(dropSoundClip);
+                            }
+                        }
                     }
 
                     friend.RPC_UpdateCarry(false, Object.Id, throwFriend, throwDir, throwForceX, throwForceY);
@@ -279,6 +299,13 @@ public class Duck_Moveset : MovementCharacter
     {
         if (currentWater == null) return;
         if (IsCarry) return;
+        if (HasInputAuthority)
+        {
+            if (playerAudioSource != null && drivingSoundClip != null)
+            {
+                playerAudioSource.PlayOneShot(drivingSoundClip);
+            }
+        }
 
         isMoveAble = false;
         ReadyToDive = false;
@@ -375,6 +402,13 @@ public class Duck_Moveset : MovementCharacter
                 {
                     float exitForce = rb2D.mass * rb2D.linearVelocity.y;
                     currentWater.Splash(transform.position, exitForce);
+                    if (HasInputAuthority)
+                    {
+                        if (playerAudioSource != null && stopDrivingSoundClip != null)
+                        {
+                            playerAudioSource.PlayOneShot(stopDrivingSoundClip);
+                        }
+                    }
                 }
 
                 EndDiveLogic();
