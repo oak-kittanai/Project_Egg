@@ -28,20 +28,19 @@ public class BaseMonster : NetworkBehaviour
     [Networked, OnChangedRender(nameof(OnMonStateChangedCallback))] public MonState currentState { get; set; }
     public event Action<MonState> OnMonsterStateChanged;
 
-    [Header("Damage Setting")]
+    [Header("Damage Settings")]
     [SerializeField] public int damage = 1;
     [SerializeField] public float knockbackForce = 12f;
 
     [Header("Detect")]
     [SerializeField] public LayerMask playerLayer;
-    [SerializeField] public float detectRadius = 15f;
+    [SerializeField] public float detectionRadius = 15f;
     [SerializeField] public float attackRadius = 15f;
 
-    //ตำแหน่งผู้เล่น
     [Networked] public Vector2 targetPosition { get; set; }
     [Networked] public NetworkBool hasSpotPlayer { get; set; }
 
-    [Header("HitBox")]
+    [Header("HitBox System")]
     [SerializeField] public Transform hitBoxPivot;
     [SerializeField] public GameObject hitBox;
 
@@ -79,7 +78,7 @@ public class BaseMonster : NetworkBehaviour
 
     public void PlayerRadar()
     {
-        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, detectRadius, playerLayer);
+        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, detectionRadius, playerLayer);
         bool foundPlayer = false;
 
         foreach (var hit in hits)
@@ -159,12 +158,12 @@ public class BaseMonster : NetworkBehaviour
 
     protected virtual void MonsterSpecificUpdate() { }
 
-    private void OnDrawGizmosSelected()
+    //Giz Good
+    protected virtual void OnDrawGizmos()
     {
-        Vector3 selfPos = transform.position;
         Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(selfPos, detectRadius);
+        Gizmos.DrawWireSphere(transform.position, detectionRadius);
         Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(selfPos, attackRadius);
+        Gizmos.DrawWireSphere(transform.position, attackRadius);
     }
 }

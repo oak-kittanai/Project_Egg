@@ -4,20 +4,20 @@ using UnityEngine;
 public class Enemy_KnightJay : BaseMonster
 {
     [Header("Dash Setting")]
-    //ดีเลย์ก่อนพุ่งเผื่อเวลาให้จับ Pos
+    [Tooltip("หน่วงเวลาเก็บ Pos")]
     [SerializeField] float prepareDelay = 0.6f;
     [SerializeField] float dashSpeed = 15f;
-    //หน่วงการแสดงผล Hitbox
     [SerializeField] float despawnDelay = 0.3f;
 
     [Networked] private NetworkBool isPreparing { get; set; }
     [Networked] private NetworkBool isDashing { get; set; }
     [Networked] private NetworkBool hasFinishedDash { get; set; }
-    [Networked] private Vector2 lockTargetPos { get; set; }
+    [Networked] private Vector2 lockedTargetPos { get; set; }
 
     [Networked] private TickTimer actionTimer { get; set; }
     [Networked] private TickTimer dashFailsafeTimer { get; set; }
 
+    //หันหน้า
     [Networked] private NetworkBool isFlip { get; set; }
 
     public override void Spawned()
@@ -33,6 +33,7 @@ public class Enemy_KnightJay : BaseMonster
             isFlip = false;
         }
     }
+
     private void HandleJayAnimations(AttackDirection state)
     {
         if (state == AttackDirection.None)
@@ -62,13 +63,13 @@ public class Enemy_KnightJay : BaseMonster
         {
             if (rb2D != null) rb2D.linearVelocity = Vector2.zero;
 
-            transform.position = Vector2.MoveTowards(transform.position, lockTargetPos, dashSpeed * Runner.DeltaTime);
+            transform.position = Vector2.MoveTowards(transform.position, lockedTargetPos, dashSpeed * Runner.DeltaTime);
 
-            float distance = Vector2.Distance(transform.position, lockTargetPos);
+            float distance = Vector2.Distance(transform.position, lockedTargetPos);
 
             if (distance <= 0.1f || dashFailsafeTimer.Expired(Runner))
             {
-                transform.position = lockTargetPos;
+                transform.position = lockedTargetPos;
 
                 TriggerHitBox_RPC(true);
                 HideVisuals_RPC();
@@ -85,14 +86,17 @@ public class Enemy_KnightJay : BaseMonster
 
             if (actionTimer.Expired(Runner))
             {
-                lockTargetPos = targetPosition;
+                lockedTargetPos = targetPosition;
                 isPreparing = false;
                 isDashing = true;
-                dashFailsafeTimer = TickTimer.CreateFromSeconds(Runner, 2f);
-                if (col != null) col.enabled = false;
-                isFlip = lockTargetPos.x < transform.position.x;
 
-                AttackDirection dashDir = CheckDirection(lockTargetPos);
+                dashFailsafeTimer = TickTimer.CreateFromSeconds(Runner, 2f);
+
+                if (col != null) col.enabled = false;
+
+                isFlip = lockedTargetPos.x < transform.position.x;
+
+                AttackDirection dashDir = CheckDirection(lockedTargetPos);
                 RotateHitBoxToDirection(dashDir);
                 currentAttackDirectionState = dashDir;
             }
@@ -113,6 +117,7 @@ public class Enemy_KnightJay : BaseMonster
             currentAttackDirectionState = AttackDirection.None;
         }
     }
+
     public override void Render()
     {
         if (spriteRenderer != null)
@@ -138,8 +143,8 @@ public class Enemy_KnightJay : BaseMonster
         if (isDashing || isPreparing)
         {
             Gizmos.color = Color.magenta;
-            Gizmos.DrawLine(transform.position, lockTargetPos);
-            Gizmos.DrawWireSphere(lockTargetPos, 0.5f);
+            Gizmos.DrawLine(transform.position, lockedTargetPos);
+            Gizmos.DrawWireSphere(lockedTargetPos, 0.5f);
         }
 
         if (hasSpotPlayer && !isDashing)
