@@ -4,33 +4,16 @@ using UnityEngine;
 
 public enum AttackDirection
 {
-    None,
-    Right45Degree,
-    Right90Degree,
-    Right135Degree,
-    Down,
-    Left215Degree,
-    Left260Degree,
-    Left305Degree,
-    Up
+    None, Right45Degree, Right90Degree, Right135Degree,
+    Down, Left215Degree, Left260Degree, Left305Degree, Up
 }
 
 public enum MonState
 {
-    Idle,
-    Walk,
-    Attack
+    Idle, Walk, Attack
 }
 
-[System.Serializable]
-public class AttackPattern
-{
-    public int attackNumber;
-    public float delayBetweenActionOption; // if 0 isDelayBetweenActionOption will be false and use base Delay
-    public int attackPerPhase;
-}
-
-public class BaseMonster : NetworkBehaviour, IstunAble
+public class BaseMonster : NetworkBehaviour
 {
     [Header("Ref")]
     public Rigidbody2D rb2D;
@@ -45,86 +28,29 @@ public class BaseMonster : NetworkBehaviour, IstunAble
     [Networked, OnChangedRender(nameof(OnMonStateChangedCallback))] public MonState currentState { get; set; }
     public event Action<MonState> OnMonsterStateChanged;
 
-    [Header("Setting")]
-    [SerializeField] Vector3 spawnPos;
-    [SerializeField] public float maxReachDistance = 10f; // make sure monster didn't go any further
-
-    [Header("Networked etc")]
-    // Stun
-    [Networked] public NetworkBool isStun { get; set; }
-    [Networked] public TickTimer stunTimer { get; set; }
-    [SerializeField] float stunTimeAmount = 3f;
-
-    [Networked] public NetworkBool isStunAble { get; set; }
-    [Networked] public TickTimer stunAbleAgainTimer { get; set; }
-    [SerializeField] public float stunAbleCooldown = 3f;
-
-    [Header("Damage Settings")]
+    [Header("Damage Setting")]
     [SerializeField] public int damage = 1;
     [SerializeField] public float knockbackForce = 12f;
 
     [Header("Detect")]
-    // Detect Player
-    [SerializeField] public LayerMask targetLayer;
-    [SerializeField] public float detectionRadius = 15f;
-    [SerializeField] public Vector2 defaultDashDirection = Vector2.right;
-
-    //
+    [SerializeField] public LayerMask playerLayer;
+    [SerializeField] public float detectRadius = 15f;
     [SerializeField] public float attackRadius = 15f;
 
-    [Networked] public NetworkBool isReturningToSpawn { get; set; }
-    [SerializeField] float returnSpeed = 8f;
-
-    [SerializeField] LayerMask playerLayer;
+    //ตำแหน่งผู้เล่น
     [Networked] public Vector2 targetPosition { get; set; }
-    [Networked] public NetworkBool hasSpottedPlayer { get; set; }
+    [Networked] public NetworkBool hasSpotPlayer { get; set; }
 
-    [Header("AttackState_Setting")]
-    [Networked] public NetworkBool isPreparing { get; set; }
-
-    [Networked] public int currentDashCount { get; set; }
-    [Networked] public int setDashCount { get; set; }
-
-    public AttackDirection nextState;
-
-    [Networked] public TickTimer delayActionTimer { get; set; }
-    [Networked] public NetworkBool isDelayBetweenActionOption { get; set; }
-    [SerializeField] public float delayBetweenActionOption;
-    [SerializeField] public float delayBetweenAction = 1f;
-
-    [Header("HitBox System")]
+    [Header("HitBox")]
     [SerializeField] public Transform hitBoxPivot;
-
     [SerializeField] public GameObject hitBox;
-
-    [Header("Attack Patterns Data")]
-    public System.Collections.Generic.List<AttackPattern> attackPatterns = new System.Collections.Generic.List<AttackPattern>();
-
-    [Header("Pattern Tracking (Networked)")]
-    [Networked] public int currentPatternIndex { get; set; }
-    [Networked] public int currentAttacksLeftInPhase { get; set; }
-    [Networked] public TickTimer phaseRestTimer { get; set; }
-    [SerializeField] public float restTimeAfterPhase = 2f;
 
     public override void Spawned()
     {
         if (rb2D == null) rb2D = GetComponent<Rigidbody2D>();
-        if (rb2D != null) Debug.Log($"{this.name} Has Rb2D");
-        else Debug.Log($"{this.name} can't find Rb2D");
-
         if (animator == null) animator = GetComponentInChildren<Animator>();
-        if (animator != null) Debug.Log($"{this.name} Has Animator");
-        else Debug.Log($"{this.name} can't find Animator");
-
         if (spriteRenderer == null) spriteRenderer = GetComponentInChildren<SpriteRenderer>();
-        if (spriteRenderer != null) Debug.Log($"{this.name} Has spriteRenderer");
-        else Debug.Log($"{this.name} can't find spriteRenderer");
-
         if (col == null) col = GetComponent<Collider2D>();
-        if (col != null) Debug.Log($"{this.name} Has Collider");
-        else Debug.Log($"{this.name} can't find Collider");
-
-        spawnPos = transform.position;
     }
 
     public override void FixedUpdateNetwork()
@@ -132,39 +58,7 @@ public class BaseMonster : NetworkBehaviour, IstunAble
         base.FixedUpdateNetwork();
         if (!HasStateAuthority) return;
 
-        HandleStunLogic();
-
         PlayerRadar();
-
-        if (isStun)
-        {
-            if (rb2D != null) rb2D.linearVelocity = Vector2.zero;
-            return;
-        }
-
-        float distFromSpawn = Vector2.Distance(transform.position, spawnPos);
-
-        if (distFromSpawn > maxReachDistance && !isReturningToSpawn)
-        {
-            isReturningToSpawn = true;
-            hasSpottedPlayer = false;
-            currentAttackDirectionState = AttackDirection.None;
-        }
-
-        if (isReturningToSpawn)
-        {
-            Vector2 returnDir = ((Vector2)spawnPos - (Vector2)transform.position).normalized;
-            rb2D.linearVelocity = returnDir * returnSpeed;
-
-            if (distFromSpawn < 0.5f)
-            {
-                isReturningToSpawn = false;
-                rb2D.linearVelocity = Vector2.zero;
-            }
-
-            return;
-        }
-
         MonsterSpecificUpdate();
     }
 
@@ -180,15 +74,12 @@ public class BaseMonster : NetworkBehaviour, IstunAble
 
     public void PlayAnimation(string animationName)
     {
-        animator.Play(animationName);
+        if (animator != null) animator.Play(animationName);
     }
-
-    #region AttackMechanic
 
     public void PlayerRadar()
     {
-        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, detectionRadius, playerLayer);
-
+        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, detectRadius, playerLayer);
         bool foundPlayer = false;
 
         foreach (var hit in hits)
@@ -196,15 +87,14 @@ public class BaseMonster : NetworkBehaviour, IstunAble
             if (!hit.TryGetComponent<MovementCharacter>(out _)) continue;
 
             targetPosition = hit.transform.position;
-            hasSpottedPlayer = true;
+            hasSpotPlayer = true;
             foundPlayer = true;
-
             break;
         }
 
-        if (!foundPlayer && hasSpottedPlayer)
+        if (!foundPlayer && hasSpotPlayer)
         {
-            hasSpottedPlayer = false;
+            hasSpotPlayer = false;
             currentAttackDirectionState = AttackDirection.None;
         }
     }
@@ -212,7 +102,6 @@ public class BaseMonster : NetworkBehaviour, IstunAble
     public void RotateHitBoxToDirection(AttackDirection dir)
     {
         if (hitBoxPivot == null) return;
-
         float zRotation = 0f;
 
         switch (dir)
@@ -221,12 +110,10 @@ public class BaseMonster : NetworkBehaviour, IstunAble
             case AttackDirection.Up: zRotation = 90f; break;
             case AttackDirection.Left260Degree: zRotation = 180f; break;
             case AttackDirection.Down: zRotation = -90f; break;
-
             case AttackDirection.Right45Degree: zRotation = 45f; break;
             case AttackDirection.Right135Degree: zRotation = -45f; break;
             case AttackDirection.Left305Degree: zRotation = 135f; break;
             case AttackDirection.Left215Degree: zRotation = -135f; break;
-
             case AttackDirection.None: return;
         }
 
@@ -256,141 +143,27 @@ public class BaseMonster : NetworkBehaviour, IstunAble
         }
     }
 
-    public void AttackToDirection(AttackDirection targetDir)
-    {
-        if (attackPatterns == null || attackPatterns.Count == 0) return;
-
-        AttackPattern currentPattern = attackPatterns[currentPatternIndex];
-
-        if (currentAttacksLeftInPhase <= 0 && !phaseRestTimer.IsRunning)
-        {
-            currentAttacksLeftInPhase = currentPattern.attackPerPhase;
-        }
-
-        currentAttackDirectionState = targetDir;
-        currentAttacksLeftInPhase--;
-
-        if (currentPattern.delayBetweenActionOption > 0f)
-        {
-            delayActionTimer = TickTimer.CreateFromSeconds(Runner, currentPattern.delayBetweenActionOption);
-        }
-        else
-        {
-            delayActionTimer = TickTimer.CreateFromSeconds(Runner, delayBetweenAction);
-        }
-
-        if (currentAttacksLeftInPhase <= 0)
-        {
-            phaseRestTimer = TickTimer.CreateFromSeconds(Runner, restTimeAfterPhase);
-            currentAttackDirectionState = AttackDirection.None;
-
-            currentPatternIndex++;
-
-            if (currentPatternIndex >= attackPatterns.Count)
-            {
-                currentPatternIndex = 0;
-            }
-        }
-    }
-
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
     public void TriggerHitBox_RPC(bool o)
     {
-        hitBox.SetActive(false);
+        if (hitBox != null) hitBox.SetActive(o);
     }
 
-    #endregion
-
-    #region StunFunction
-
-    public void HandleStunLogic()
+    public void InstantKill()
     {
-        if (isStun)
+        if (HasStateAuthority)
         {
-            col.isTrigger = true;
-
-            if (stunTimer.Expired(Runner))
-            {
-                StunExpired();
-            }
-        }
-        else if (!isStunAble)
-        {
-            if (stunAbleAgainTimer.ExpiredOrNotRunning(Runner))
-            {
-                isStunAble = true;
-            }
+            Runner.Despawn(Object);
         }
     }
 
-    public void TriggerStun()
-    {
-        TakeDamage();
-    }
-
-    public void TakeDamage()
-    {
-        if (isStunAble && !isStun)
-        {
-            isStun = true;
-            isStunAble = false;
-            SetStunTimer();
-            Debug.Log($"Monster [{this.name}] : is Stun");
-        }
-        else Debug.Log("can't Stun, do nothing");
-    }
-
-    public void StunExpired()
-    {
-        isStun = false;
-        SetStunAbleTimer();
-        col.isTrigger = false;
-    }
-
-    #endregion
-
-    #region SetTimer
-
-    private void SetStunAbleTimer()
-    {
-        stunAbleAgainTimer = TickTimer.CreateFromSeconds(Runner,stunAbleCooldown);
-    }
-
-    private void SetStunTimer()
-    {
-        stunTimer = TickTimer.CreateFromSeconds(Runner, stunTimeAmount);
-    }
-
-    private void SetDelayActionTimer()
-    {
-        if (isDelayBetweenActionOption) delayActionTimer = TickTimer.CreateFromSeconds(Runner, delayBetweenActionOption);
-        else delayActionTimer = TickTimer.CreateFromSeconds(Runner, delayBetweenAction);
-    }
-
-    #endregion
-
-    protected virtual void MonsterSpecificUpdate()
-    {
-
-    }
-
-
-    public override void Render()
-    {
-        
-    }
+    protected virtual void MonsterSpecificUpdate() { }
 
     private void OnDrawGizmosSelected()
     {
         Vector3 selfPos = transform.position;
-        Vector3 spawnpointPos = spawnPos;
-
         Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(selfPos, detectionRadius);
-
-        Gizmos.color = Color.blue;
-        Gizmos.DrawWireSphere(spawnpointPos, maxReachDistance);
-
+        Gizmos.DrawWireSphere(selfPos, detectRadius);
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(selfPos, attackRadius);
     }
