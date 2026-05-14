@@ -9,6 +9,10 @@ public class Enemy_KnightJay : BaseMonster
     [SerializeField] float dashSpeed = 15f;
     [SerializeField] float despawnDelay = 0.3f;
 
+    [Header("Respawn Setting")]
+    [SerializeField] bool canRespawn = true;
+    [SerializeField] float respawnTime = 5f;
+
     [Networked] private NetworkBool isPreparing { get; set; }
     [Networked] private NetworkBool isDashing { get; set; }
     [Networked] private NetworkBool hasFinishedDash { get; set; }
@@ -20,6 +24,9 @@ public class Enemy_KnightJay : BaseMonster
     //หันหน้า
     [Networked] private NetworkBool isFlip { get; set; }
 
+    [Networked] private Vector2 startPosition { get; set; }
+    [Networked] private NetworkBool isHidden { get; set; }
+
     public override void Spawned()
     {
         base.Spawned();
@@ -27,11 +34,24 @@ public class Enemy_KnightJay : BaseMonster
 
         if (HasStateAuthority)
         {
-            isPreparing = false;
-            isDashing = false;
-            hasFinishedDash = false;
-            isFlip = false;
+            startPosition = transform.position; 
+            ResetMonster();
         }
+    }
+
+    private void ResetMonster()
+    {
+        isPreparing = false;
+        isDashing = false;
+        hasFinishedDash = false;
+        isFlip = false;
+        isHidden = false;
+        currentAttackDirectionState = AttackDirection.None;
+
+        transform.position = startPosition;
+        if (rb2D != null) rb2D.linearVelocity = Vector2.zero;
+
+        SetVisuals_RPC(true); 
     }
 
     private void HandleJayAnimations(AttackDirection state)
@@ -50,11 +70,27 @@ public class Enemy_KnightJay : BaseMonster
     {
         if (!HasStateAuthority) return;
 
+        if (isHidden)
+        {
+            if (actionTimer.Expired(Runner)) ResetMonster();
+            return;
+        }
+
         if (hasFinishedDash)
         {
             if (actionTimer.Expired(Runner))
             {
-                Runner.Despawn(Object);
+                if (canRespawn)
+                {
+                    isHidden = true;
+                    transform.position = startPosition; 
+                    SetVisuals_RPC(false);
+                    actionTimer = TickTimer.CreateFromSeconds(Runner, respawnTime);
+                }
+                else
+                {
+                    Runner.Despawn(Object);
+                }
             }
             return;
         }
@@ -72,7 +108,7 @@ public class Enemy_KnightJay : BaseMonster
                 transform.position = lockedTargetPos;
 
                 TriggerHitBox_RPC(true);
-                HideVisuals_RPC();
+                SetVisuals_RPC(false); 
 
                 hasFinishedDash = true;
                 actionTimer = TickTimer.CreateFromSeconds(Runner, despawnDelay);
@@ -127,9 +163,11 @@ public class Enemy_KnightJay : BaseMonster
     }
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    private void HideVisuals_RPC()
+    private void SetVisuals_RPC(bool show)
     {
-        if (spriteRenderer != null) spriteRenderer.enabled = false;
+        if (spriteRenderer != null) spriteRenderer.enabled = show;
+        if (col != null) col.enabled = show;
+        if (!show) TriggerHitBox_RPC(false); 
     }
 
     public override void Despawned(NetworkRunner runner, bool hasState)

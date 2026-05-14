@@ -359,8 +359,8 @@ MonoBehaviour:
   playerLayer:
     serializedVersion: 2
     m_Bits: 128
-  detectRadius: 5.87
-  attackRadius: 3.29
+  detectionRadius: 4
+  attackRadius: 3
   _targetPosition: {x: 0, y: 0}
   _hasSpotPlayer:
     _value: 0
@@ -369,6 +369,8 @@ MonoBehaviour:
   prepareDelay: 0.6
   dashSpeed: 8
   despawnDelay: 0.3
+  canRespawn: 1
+  respawnTime: 5
 --- !u!1 &8005734353801774666
 GameObject:
   m_ObjectHideFlags: 0
