@@ -8,6 +8,10 @@ public class BearTrapScript : NetworkBehaviour
     [SerializeField] private float cooldownTime = 2.4f;
     [SerializeField] private ParticleSystem damageParticles;
 
+    [Header("Audio Setting")]
+    [SerializeField] private AudioSource audioSource;
+    [SerializeField] private AudioClip bearTrapSoundClip;
+
     [Networked] private TickTimer CooldownTimer { get; set; }
     [Networked] private TickTimer DelayTimer { get; set; }
     [Networked] private NetworkBool IsTriggered { get; set; }
@@ -28,6 +32,7 @@ public class BearTrapScript : NetworkBehaviour
         if (!IsTriggered && other.CompareTag("Player") && CooldownTimer.ExpiredOrNotRunning(Runner))
         {
             IsTriggered = true;
+            RPC_PlayShootSound();
             HasPlayedFX = false;
             DelayTimer = TickTimer.CreateFromSeconds(Runner, delayBeforeSnap);
             CooldownTimer = TickTimer.CreateFromSeconds(Runner, cooldownTime);
@@ -90,6 +95,14 @@ public class BearTrapScript : NetworkBehaviour
             trapAnimator.SetBool("Trigger", false);
     }
 
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_PlayShootSound()
+    {
+        if (audioSource != null && bearTrapSoundClip != null)
+        {
+            audioSource.PlayOneShot(bearTrapSoundClip);
+        }
+    }
     public override void Render()
     {
             trapAnimator.SetBool("Trigger", IsTriggered);
