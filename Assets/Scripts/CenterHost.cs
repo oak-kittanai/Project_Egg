@@ -46,13 +46,7 @@ public class CenterHost : SingletonNetwork<CenterHost>
 
     public override void FixedUpdateNetwork()
     {
-        /*if (Runner.SessionInfo.PlayerCount == 2)
-        {
-            if (firstStart)
-            {
-                StartCoroutine(WaitForLoad());
-            }
-        }*/
+
     }
     
     #region ComponentZone
@@ -122,10 +116,6 @@ public class CenterHost : SingletonNetwork<CenterHost>
             else
             {
                 Debug.Log("Host Player Ready to spawn");
-                if (PlayerPrefab != null)
-                {
-                    //StartCoroutine(WaitForSecToSpawn(player));
-                }
             }
         }
 
@@ -141,7 +131,6 @@ public class CenterHost : SingletonNetwork<CenterHost>
     IEnumerator WaitForSecToSpawn(PlayerRef player)
     {
         yield return new WaitForSeconds(0.4f);
-        //SpawnPlayer(player);
     }
 
 
@@ -160,7 +149,7 @@ public class CenterHost : SingletonNetwork<CenterHost>
                     playerStats.skinType = Type;
                 }
 
-                obj.name = $"Player ({Type}) {(isHost ? "Host" : "Client")}";
+                obj.name = $"{Type}";
                 Debug.Log($"Initialized Network Data for: {obj.name}");
             });
 
