@@ -18,7 +18,7 @@ public class WeighingScale_Mech : NetworkBehaviour
     [SerializeField] bool isItemOnRightSide;
     [Networked] float itemOnRightWeight { get; set; }
 
-    [SerializeField] string birdName = "Bird", duckName = "Duck";
+    string birdName = "Bird", duckName = "Duck";
 
     [SerializeField] TMP_Text showTextWeight_L;
     [SerializeField] TMP_Text showTextWeight_R;
