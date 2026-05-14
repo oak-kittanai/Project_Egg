@@ -11,6 +11,11 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [SerializeField] public PlayerGUI localGUI;
     [SerializeField] public SpriteRenderer spriteRenderer;
 
+    //SOUND
+    [Header("Audio System")]
+    [SerializeField] public AudioSource playerAudioSource;
+    [SerializeField] public AudioClip jumpSoundClip;
+
     [Networked, OnChangedRender(nameof(OnCharacterTypeChanged))]
     public bool isBird { get; set; }
 
@@ -293,6 +298,11 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         if (input.jump && IsGrounded && JumpCooldown.ExpiredOrNotRunning(Runner))
         {
             isJumping = true;
+            //เสียงโดด
+            if (HasStateAuthority)
+            {
+                RPC_PlayJumpSound();
+            }
             rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, 0f);
             rb2D.AddForce(Vector2.up * stats.s_jumpForce, ForceMode2D.Impulse);
             IsGrounded = false;
@@ -692,6 +702,14 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     #endregion
 
+    [Rpc(RpcSources.All, RpcTargets.All)]
+    public void RPC_PlayJumpSound()
+    {
+        if (playerAudioSource != null && jumpSoundClip != null)
+        {
+            playerAudioSource.PlayOneShot(jumpSoundClip);
+        }
+    }
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.blue; Gizmos.DrawRay(transform.position, Vector2.down * rayDistance);
