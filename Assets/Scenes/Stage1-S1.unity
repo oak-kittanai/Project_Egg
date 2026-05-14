@@ -13386,6 +13386,90 @@ Mesh:
       - serializedVersion: 1
         m_IndexStart: 0
         m_IndexCount: 0
+--- !u!1 &509250088
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 509250089}
+  - component: {fileID: 509250090}
+  m_Layer: 0
+  m_Name: Spot Light 2D (10)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &509250089
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 509250088}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: 0.89499235, w: 0.4460815}
+  m_LocalPosition: {x: 78.19, y: 17.91, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1977323453}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 121.907}
+--- !u!114 &509250090
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 509250088}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 073797afb82c5a1438f328866b10b3f0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.2D.Runtime::UnityEngine.Rendering.Universal.Light2D
+  m_ComponentVersion: 2
+  m_LightType: 3
+  m_BlendStyleIndex: 0
+  m_FalloffIntensity: 0.5
+  m_Color: {r: 1, g: 0.58492285, b: 0.042452812, a: 1}
+  m_Intensity: 0.61
+  m_LightVolumeIntensity: 1
+  m_LightVolumeEnabled: 0
+  m_ApplyToSortingLayers: 00000000c31de0805f963a17b590b6158139d31759663c23f3f4d272297d3f22
+  m_LightCookieSprite: {fileID: 0}
+  m_DeprecatedPointLightCookieSprite: {fileID: 0}
+  m_LightOrder: 0
+  m_AlphaBlendOnOverlap: 0
+  m_OverlapOperation: 0
+  m_NormalMapDistance: 3
+  m_NormalMapQuality: 2
+  m_UseNormalMap: 0
+  m_ShadowsEnabled: 1
+  m_ShadowIntensity: 0.75
+  m_ShadowSoftness: 0.3
+  m_ShadowSoftnessFalloffIntensity: 0.5
+  m_ShadowVolumeIntensityEnabled: 0
+  m_ShadowVolumeIntensity: 0.75
+  m_LocalBounds:
+    m_Center: {x: 0, y: -0.00000011920929, z: 0}
+    m_Extent: {x: 0.9985302, y: 0.99853027, z: 0}
+  m_PointLightInnerAngle: 49.34
+  m_PointLightOuterAngle: 60.85
+  m_PointLightInnerRadius: 16.392141
+  m_PointLightOuterRadius: 24.356348
+  m_ShapeLightParametricSides: 5
+  m_ShapeLightParametricAngleOffset: 0
+  m_ShapeLightParametricRadius: 1
+  m_ShapeLightFalloffSize: 0.5
+  m_ShapeLightFalloffOffset: {x: 0, y: 0}
+  m_ShapePath:
+  - {x: -0.5, y: -0.5, z: 0}
+  - {x: 0.5, y: -0.5, z: 0}
+  - {x: 0.5, y: 0.5, z: 0}
+  - {x: -0.5, y: 0.5, z: 0}
 --- !u!1 &512482180
 GameObject:
   m_ObjectHideFlags: 0
@@ -13412,7 +13496,7 @@ Transform:
   m_GameObject: {fileID: 512482180}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: 0.9999981, w: -0.0019642946}
-  m_LocalPosition: {x: 86.06, y: 36.91, z: 0}
+  m_LocalPosition: {x: 86.06, y: 35.68, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -13458,7 +13542,7 @@ MonoBehaviour:
     m_Extent: {x: 0.9985302, y: 0.99853027, z: 0}
   m_PointLightInnerAngle: 62.219994
   m_PointLightOuterAngle: 93.5
-  m_PointLightInnerRadius: 16.152159
+  m_PointLightInnerRadius: 16.810097
   m_PointLightOuterRadius: 23.681797
   m_ShapeLightParametricSides: 5
   m_ShapeLightParametricAngleOffset: 0
@@ -22868,7 +22952,7 @@ Transform:
   m_GameObject: {fileID: 992277480}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: 0.9999683, w: 0.007962759}
-  m_LocalPosition: {x: 110.47, y: 28.86, z: 0}
+  m_LocalPosition: {x: 111.9, y: 28.84, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -22914,7 +22998,7 @@ MonoBehaviour:
     m_Extent: {x: 0.9985302, y: 0.99853027, z: 0}
   m_PointLightInnerAngle: 33.379997
   m_PointLightOuterAngle: 64.66
-  m_PointLightInnerRadius: 8.704362
+  m_PointLightInnerRadius: 15.650112
   m_PointLightOuterRadius: 21.315174
   m_ShapeLightParametricSides: 5
   m_ShapeLightParametricAngleOffset: 0
@@ -76952,15 +77036,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 661640149192912974, guid: e33aa6401f63f2846a48f9b70ab03a7c, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.96424776
+      value: 0.70999575
       objectReference: {fileID: 0}
     - target: {fileID: 661640149192912974, guid: e33aa6401f63f2846a48f9b70ab03a7c, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0.26500252
+      value: -0.704206
       objectReference: {fileID: 0}
     - target: {fileID: 661640149192912974, guid: e33aa6401f63f2846a48f9b70ab03a7c, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: -30.734
+      objectReference: {fileID: 0}
+    - target: {fileID: 1082572203449467978, guid: e33aa6401f63f2846a48f9b70ab03a7c, type: 3}
+      propertyPath: m_PointLightOuterRadius
+      value: 1.7664629
       objectReference: {fileID: 0}
     - target: {fileID: 4636591951158524393, guid: e33aa6401f63f2846a48f9b70ab03a7c, type: 3}
       propertyPath: m_LocalPosition.x
@@ -94494,15 +94582,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5923316009397028551, guid: b04d26216afa85241befdf4d0c9a6e06, type: 3}
       propertyPath: m_LocalScale.x
-      value: 1.51167
+      value: 1.7574676
       objectReference: {fileID: 0}
     - target: {fileID: 5923316009397028551, guid: b04d26216afa85241befdf4d0c9a6e06, type: 3}
       propertyPath: m_LocalScale.y
-      value: 1.51167
+      value: 1.7574676
       objectReference: {fileID: 0}
     - target: {fileID: 5923316009397028551, guid: b04d26216afa85241befdf4d0c9a6e06, type: 3}
       propertyPath: m_LocalScale.z
-      value: 1.51167
+      value: 1.7574676
       objectReference: {fileID: 0}
     - target: {fileID: 5923316009397028551, guid: b04d26216afa85241befdf4d0c9a6e06, type: 3}
       propertyPath: m_LocalPosition.x
@@ -97205,6 +97293,7 @@ Transform:
   - {fileID: 1687913955}
   - {fileID: 1992504376}
   - {fileID: 512482181}
+  - {fileID: 509250089}
   - {fileID: 992277481}
   - {fileID: 2079528432}
   - {fileID: 1597302092}
