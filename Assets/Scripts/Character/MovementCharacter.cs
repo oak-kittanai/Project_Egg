@@ -347,10 +347,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                     {
                         cAnimation.InteractAnimation();
 
-                        if (throwableItem.PickupItem())
-                        {
-                            _canThrowItem = true;
-                        }
+                        _canThrowItem = throwableItem.PickupItem();
                         break;
                     }
                 }

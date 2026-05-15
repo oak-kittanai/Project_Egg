@@ -18,6 +18,7 @@ public class SessionHub : SingletonNetwork<SessionHub>
     [SerializeField] TMP_Text _sessionKeyText;
     [SerializeField] Button _clipBoardCopy;
     [SerializeField] string _sessionKey;
+    [SerializeField] Button _leaveLobbyButton;
     [SerializeField] Button _leaveButton;
     [SerializeField] Button _leaveButtonJoinRoom;
     [SerializeField] string _inputRoomKey;
@@ -103,6 +104,7 @@ public class SessionHub : SingletonNetwork<SessionHub>
         if (_CreateSessionButton != null) _CreateSessionButton.onClick.AddListener(CreateRoom);
         if (_JoinRoomButton != null) _JoinRoomButton.onClick.AddListener(JoinRoom);
 
+        if (_leaveLobbyButton != null) _leaveLobbyButton.onClick.AddListener(ChangeStateToMainMenu);
         if (_leaveButton != null) _leaveButton.onClick.AddListener(LeaveRoom);
         if (_leaveButtonJoinRoom != null) _leaveButtonJoinRoom.onClick.AddListener(ChangeStateToLobbyMenu);
 
@@ -627,6 +629,7 @@ public class SessionHub : SingletonNetwork<SessionHub>
         if (_CreateSessionButton != null) _CreateSessionButton.onClick.RemoveAllListeners();
         if (_JoinRoomButton != null) _JoinRoomButton.onClick.RemoveAllListeners();
         if (_clipBoardCopy != null) _clipBoardCopy.onClick.RemoveAllListeners();
+        if (_leaveLobbyButton != null) _leaveLobbyButton.onClick.RemoveAllListeners();
         if (_leaveButton != null) _leaveButton.onClick.RemoveAllListeners();
         if (_leaveButtonJoinRoom != null) _leaveButtonJoinRoom.onClick.RemoveAllListeners();
         if (_startButton != null) _startButton.onClick.RemoveAllListeners();
