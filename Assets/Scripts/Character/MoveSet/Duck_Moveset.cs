@@ -32,7 +32,6 @@ public class Duck_Moveset : MovementCharacter
     [SerializeField] float divePhase = 0.5f;
 
     [SerializeField] float emergencyAcceleration = 1f;
-    //[SerializeField] float emergencyDeceleration = 2f;
 
     [Networked] public bool onDiving { get; set; }
     [Networked] bool onDivingControl { get; set; }

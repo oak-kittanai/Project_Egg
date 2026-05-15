@@ -82,15 +82,18 @@ public class ThrowAble : NetworkBehaviour, ThrowAbleItem
     {
         if (AlreadyThrow) return;
 
+        if (player.HeldItemName.ToString() != "")
+        {
+            Debug.Log("hand full can't pick");
+            return;
+        }
+
         if (Object != null && Object.IsValid)
         {
-            if (player != null)
-            {
-                player._canThrowItem = true;
-            }
+            player.HeldItemName = itemName;
 
             GameManager.Instance.RequestDespawn(selfNet);
-            Debug.Log("Try to Despawn");
+            Debug.Log($"{player.name} pick {itemName}");
         }
     }
 

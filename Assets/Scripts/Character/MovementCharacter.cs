@@ -112,6 +112,20 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [SerializeField] public Color duck_Color;
     [SerializeField] public Color bird_Color;
 
+    [Header("Inventory System (1 Slot)")]
+    [Networked, OnChangedRender(nameof(OnHeldItemChanged))]
+    public NetworkString<_32> HeldItemName { get; set; }
+
+    public void OnHeldItemChanged()
+    {
+        if (HasInputAuthority && PlayerInterface.Instance != null)
+        {
+            Debug.Log($"UI Update : {HeldItemName}");
+        }
+
+        if (HeldItemName == "Rock") _canThrowItem = true; else _canThrowItem = false;
+    }
+
     // Throw System
     [Networked] public bool _canThrowItem { get; set; }
 
@@ -760,7 +774,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             {
                 if (isBird)
                 {
-                    if (throwableItem.AlreadyThrow) continue;
+                    if (throwableItem.AlreadyThrow || HeldItemName.ToString() != "") continue;
 
                     float dist = Vector2.Distance(transform.position, hit.transform.position);
                     if (dist < minDistance)

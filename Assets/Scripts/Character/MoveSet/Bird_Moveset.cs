@@ -417,6 +417,7 @@ public class Bird_Moveset : MovementCharacter
         }
 
         _canThrowItem = false;
+        HeldItemName = "";
 
         CancelThrow();
     }
