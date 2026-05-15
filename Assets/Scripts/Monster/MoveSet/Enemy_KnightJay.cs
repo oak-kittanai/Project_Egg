@@ -178,6 +178,8 @@ public class Enemy_KnightJay : BaseMonster
 
     private void OnDrawGizmos()
     {
+        base.OnDrawGizmos();
+
         if (isDashing || isPreparing)
         {
             Gizmos.color = Color.magenta;
