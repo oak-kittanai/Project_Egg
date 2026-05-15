@@ -308,7 +308,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         if (input.jump && IsGrounded && JumpCooldown.ExpiredOrNotRunning(Runner))
         {
             isJumping = true;
-            //เสียงโดด
+
             if (HasInputAuthority)
             {
                 if (playerAudioSource != null && jumpSoundClip != null)

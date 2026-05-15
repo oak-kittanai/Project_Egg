@@ -7,14 +7,20 @@ public class TriggerDialogue : NetworkBehaviour
     [SerializeField] bool isOneTimeTrigger = true;
     private bool hasTriggeredLocal = false;
 
+    [SerializeField] bool isPlayWithBGM;
+    [SerializeField] bool isEndWithDialogue;
+
     [SerializeField] DialogueConfig[] dialogueSequence;
-    private int currentIndex = 0;
+    private int normalIndex = 0;
 
     [Header("Character Specific Settings")]
     [SerializeField] bool differentCharacterDialogue;
 
     [SerializeField] DialogueConfig[] birdDialogueSequence;
+    private int birdIndex = 0;
+
     [SerializeField] DialogueConfig[] duckDialogueSequence;
+    private int duckIndex = 0;
 
     private void OnTriggerEnter2D(Collider2D other)
     {
@@ -24,27 +30,24 @@ public class TriggerDialogue : NetworkBehaviour
 
         foreach (var character in allCharacterMovement)
         {
-            if (character.enabled)
+            if (character.enabled && other.CompareTag("Player"))
             {
-                if (other.CompareTag("Player"))
-                {
-                    if (!character.HasInputAuthority) return;
+                if (!character.HasInputAuthority) return;
 
-                    if (differentCharacterDialogue)
+                if (differentCharacterDialogue)
+                {
+                    if (character.isBird)
                     {
-                        if (character.isBird)
-                        {
-                            RPC_TriggerDialogueNetwork(1, currentIndex);
-                        }
-                        else
-                        {
-                            RPC_TriggerDialogueNetwork(2, currentIndex);
-                        }
+                        RPC_TriggerDialogueNetwork(1, birdIndex);
                     }
                     else
                     {
-                        RPC_TriggerDialogueNetwork(0, currentIndex);
+                        RPC_TriggerDialogueNetwork(2, duckIndex);
                     }
+                }
+                else
+                {
+                    RPC_TriggerDialogueNetwork(0, normalIndex);
                 }
             }
         }
@@ -55,6 +58,11 @@ public class TriggerDialogue : NetworkBehaviour
     {
         DialogueConfig[] selectedConfig = null;
 
+        if (isPlayWithBGM)
+        {
+            //AudioManager.Instance.PlayBGM("DialogueTheme");
+        }
+
         if (sequenceType == 0) selectedConfig = dialogueSequence;
         else if (sequenceType == 1) selectedConfig = birdDialogueSequence;
         else if (sequenceType == 2) selectedConfig = duckDialogueSequence;
@@ -62,11 +70,19 @@ public class TriggerDialogue : NetworkBehaviour
         if (selectedConfig != null && index < selectedConfig.Length)
         {
             DialogueManager.Instance.StartDialogue(selectedConfig[index]);
-            currentIndex = index + 1;
+
+            if (sequenceType == 0) normalIndex = index + 1;
+            else if (sequenceType == 1) birdIndex = index + 1;
+            else if (sequenceType == 2) duckIndex = index + 1;
+
             hasTriggeredLocal = true;
         }
         else
         {
+            if (isEndWithDialogue)
+            {
+                AudioManager.Instance.StopBGM();
+            }
             Debug.Log("Dialogue End");
         }
     }
