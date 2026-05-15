@@ -165,5 +165,7 @@ public class BaseMonster : NetworkBehaviour
         Gizmos.DrawWireSphere(transform.position, detectionRadius);
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, attackRadius);
+
+        if (!Application.isPlaying || Object == null || !Object.IsValid) return;
     }
 }
