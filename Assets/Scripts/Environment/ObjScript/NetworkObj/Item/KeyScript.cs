@@ -18,4 +18,9 @@ public class KeyScript : NetworkObject, Interactable
             GameManager.Instance.AddKey(false);
         }
     }
+
+    public bool CanInteract(MovementCharacter player)
+    {
+        return true;
+    }
 }

@@ -2,7 +2,9 @@ using UnityEngine;
 
 interface ThrowAbleItem
 {
-    void PickupItem_RPC();
+    bool AlreadyThrow { get; set; }
+
+    void PickupItem_RPC(MovementCharacter player);
 
     bool PickupItem();
 }

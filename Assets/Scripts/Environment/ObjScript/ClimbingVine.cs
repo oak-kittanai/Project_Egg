@@ -14,13 +14,10 @@ public class ClimbingVine : NetworkBehaviour, Interactable
     [SerializeField] private float vineDeceleration = 5f;
     [SerializeField] private float vineMaxSpeedX = 2f;
 
-    //เก็บ List ผู้เล่น
     private List<MovementCharacter> playersInTrigger = new List<MovementCharacter>();
 
-    //เก็บสถานะการเกาะเถาวัลย์
     private List<MovementCharacter> climbingPlayers = new List<MovementCharacter>();
 
-    //กัน Spame ปุ่ม
     private Dictionary<MovementCharacter, bool> previousEPress = new Dictionary<MovementCharacter, bool>();
 
     private void OnTriggerEnter2D(Collider2D collision)
@@ -73,6 +70,11 @@ public class ClimbingVine : NetworkBehaviour, Interactable
                 }
             }
         }
+    }
+
+    public bool CanInteract(MovementCharacter player)
+    {
+        return true;
     }
 
     private void HandleClimbing(MovementCharacter player, NetworkInputData input)

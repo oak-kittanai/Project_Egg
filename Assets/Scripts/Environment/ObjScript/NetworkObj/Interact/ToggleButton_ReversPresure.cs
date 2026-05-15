@@ -58,6 +58,11 @@ public class ToggleButton_ReversPresure : NetworkBehaviour, Interactable
         }
     }
 
+    public bool CanInteract(MovementCharacter player)
+    {
+        return true;
+    }
+
     public override void Render()
     {
         if (sr != null)

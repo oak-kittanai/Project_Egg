@@ -77,6 +77,11 @@ public class InsertItem_Mech : NetworkBehaviour, Interactable
         }
     }
 
+    public bool CanInteract(MovementCharacter player)
+    {
+        return true;
+    }
+
     public override void Render()
     {
         if (HasOrangeStone && HasBlueStone)

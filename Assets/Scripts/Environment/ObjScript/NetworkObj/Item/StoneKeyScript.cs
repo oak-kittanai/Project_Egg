@@ -18,4 +18,9 @@ public class StoneKeyScript : NetworkBehaviour, Interactable
             GameManager.Instance.RPC_RequestAddStone(false);
         }
     }
+
+    public bool CanInteract(MovementCharacter player)
+    {
+        return true;
+    }
 }

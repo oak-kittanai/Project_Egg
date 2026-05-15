@@ -24,6 +24,8 @@ public class TriggerDialogue : NetworkBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
+        if (!HasStateAuthority) return;
+
         if (isOneTimeTrigger && hasTriggeredLocal) return;
 
         MovementCharacter[] allCharacterMovement = other.GetComponents<MovementCharacter>();
@@ -32,8 +34,6 @@ public class TriggerDialogue : NetworkBehaviour
         {
             if (character.enabled && other.CompareTag("Player"))
             {
-                if (!character.HasInputAuthority) return;
-
                 if (differentCharacterDialogue)
                 {
                     if (character.isBird)
@@ -49,6 +49,7 @@ public class TriggerDialogue : NetworkBehaviour
                 {
                     RPC_TriggerDialogueNetwork(0, normalIndex);
                 }
+                break;
             }
         }
     }

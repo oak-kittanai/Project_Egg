@@ -49,6 +49,10 @@ public class Toggle_Presure_Trap : NetworkBehaviour, Interactable
         }
     }
 
+    public bool CanInteract(MovementCharacter player)
+    {
+        return true;
+    }
     public override void Render()
     {
         if (sr != null)

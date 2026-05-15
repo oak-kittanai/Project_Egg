@@ -14,13 +14,13 @@ public class ThrowAble : NetworkBehaviour, ThrowAbleItem
 
     private void Awake()
     {
-        selfNet = GetComponent<NetworkObject>();
-        rb2D = GetComponent<Rigidbody2D>();
+        if (selfNet == null) selfNet = GetComponent<NetworkObject>();
+        if (rb2D == null) rb2D = GetComponent<Rigidbody2D>();
     }
 
     public override void Spawned()
     {
-        selfNet = GetComponent<NetworkObject>();
+        if (selfNet == null) selfNet = GetComponent<NetworkObject>();
         OnCheckItemCollider();
     }
 
@@ -48,20 +48,34 @@ public class ThrowAble : NetworkBehaviour, ThrowAbleItem
                 {
                     monster.InstantKill();
                     isLethal = false;
-                    rb2D.linearVelocity = Vector2.zero; 
+                    rb2D.linearVelocity = Vector2.zero;
 
                     break;
                 }
             }
         }
+
+        if (AlreadyThrow)
+        {
+            AlreadyThrow = false;
+            isLethal = false;
+        }
     }
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    public void PickupItem_RPC()
+    public void PickupItem_RPC(MovementCharacter player)
     {
+        if (AlreadyThrow) return;
+
         if (Object != null && Object.IsValid)
         {
+            if (player != null)
+            {
+                player._canThrowItem = true;
+            }
+
             GameManager.Instance.RequestDespawn(selfNet);
+            Debug.Log("Try to Despawn");
         }
     }
 

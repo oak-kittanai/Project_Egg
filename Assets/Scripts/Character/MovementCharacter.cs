@@ -339,16 +339,19 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                 {
                     cAnimation.InteractAnimation();
                     interactable.Interact(this);
+                    Debug.Log($"Try to Interact with {hit.name}");
                     break;
                 }
                 else if (hit.TryGetComponent<ThrowAbleItem>(out var throwableItem))
                 {
                     if (isBird)
                     {
-                        cAnimation.InteractAnimation();
+                        if (throwableItem.AlreadyThrow) continue;
 
-                        _canThrowItem = true;
-                        throwableItem.PickupItem_RPC();
+                        cAnimation.InteractAnimation(); 
+
+                        throwableItem.PickupItem_RPC(this);
+                        Debug.Log($"Try to pickup the item : {hit.name}");
                         break;
                     }
                 }
@@ -741,8 +744,11 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         foreach (var hit in hitsItem)
         {
             if (hit.gameObject == gameObject) continue;
+
             if (hit.TryGetComponent<Interactable>(out var interactable))
             {
+                if (!interactable.CanInteract(this)) continue;
+
                 float dist = Vector2.Distance(transform.position, hit.transform.position);
                 if (dist < minDistance)
                 {
@@ -754,6 +760,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             {
                 if (isBird)
                 {
+                    if (throwableItem.AlreadyThrow) continue;
+
                     float dist = Vector2.Distance(transform.position, hit.transform.position);
                     if (dist < minDistance)
                     {
