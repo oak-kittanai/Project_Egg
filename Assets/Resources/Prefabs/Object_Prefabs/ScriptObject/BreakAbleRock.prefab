@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 705382238490353640}
   - component: {fileID: 8435920208396272353}
   - component: {fileID: 661784451826234151}
+  - component: {fileID: -5427681617278280416}
   m_Layer: 0
   m_Name: BreakAbleRock
   m_TagString: Untagged
@@ -105,12 +106,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d4225c3962dcae04ebb2af0a8d5dfe85, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BreakableRock
-  spriteRenderer: {fileID: 0}
+  spriteRenderer: {fileID: 7287256958114173626}
+  coll: {fileID: 661784451826234151}
   selfNet: {fileID: 8435920208396272353}
   itemToDrop: {fileID: 5283567399167749245, guid: f6ee7c8d2993a114cbcc32c8f96ce6a2, type: 3}
   dropAmount: 1
-  canDrop: 0
+  canDrop: 1
   alreadyBreakRock: {fileID: 0}
+  animator: {fileID: -5427681617278280416}
 --- !u!114 &8435920208396272353
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -185,3 +188,25 @@ PolygonCollider2D:
       - {x: 0.33333334, y: -0.33333334}
       - {x: 0.33333334, y: -0.041666668}
   m_UseDelaunayMesh: 0
+--- !u!95 &-5427681617278280416
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7501679775272779697}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 0}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
