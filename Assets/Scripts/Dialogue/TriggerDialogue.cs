@@ -67,9 +67,13 @@ public class TriggerDialogue : NetworkBehaviour
         else if (sequenceType == 1) selectedConfig = birdDialogueSequence;
         else if (sequenceType == 2) selectedConfig = duckDialogueSequence;
 
-        if (selectedConfig != null && selectedConfig.Length > 0)
+        if (selectedConfig != null && index < selectedConfig.Length)
         {
             DialogueManager.Instance.StartDialogueSequence(selectedConfig);
+
+            if (sequenceType == 0) normalIndex = index + 1;
+            else if (sequenceType == 1) birdIndex = index + 1;
+            else if (sequenceType == 2) duckIndex = index + 1;
 
             isOneTimeTrigger = true;
             hasTriggeredLocal = true;

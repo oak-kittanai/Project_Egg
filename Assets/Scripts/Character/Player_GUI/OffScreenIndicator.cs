@@ -120,6 +120,10 @@ public class OffScreenIndicator : NetworkBehaviour
 
         foreach (var player in allPlayers)
         {
+            if (!player.enabled) continue;
+
+            if (!player.CompareTag("Player")) continue;
+
             if (player.HasInputAuthority)
             {
                 myLocalPlayer = player;
@@ -132,7 +136,10 @@ public class OffScreenIndicator : NetworkBehaviour
 
         if (myLocalPlayer != null && myFriendPlayer != null)
         {
-            mainCam = myLocalPlayer.GetComponentInChildren<Camera>();
+            if (mainCam == null)
+            {
+                mainCam = CameraCharacter.LocalCamera;
+            }
 
             if (myFriendPlayer.isBird)
             {

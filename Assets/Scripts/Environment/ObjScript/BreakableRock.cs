@@ -12,6 +12,7 @@ public class BreakableRock : NetworkBehaviour, Interactable
     [SerializeField] bool canDrop;
 
     [SerializeField] Sprite alreadyBreakRock;
+    [SerializeField] Animator animator;
 
     private void Awake()
     {
@@ -45,13 +46,11 @@ public class BreakableRock : NetworkBehaviour, Interactable
                 ChangeSprite();
             }
         }
-
-        GameManager.Instance.RequestDespawn(selfNet);
     }
 
     public void ChangeSprite()
     {
-        spriteRenderer.sprite = alreadyBreakRock;
+        animator.Play(""); // add Break Animation
     }
 
     public void SpawnItem()
