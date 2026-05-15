@@ -7,6 +7,9 @@ public class TriggerDialogue : NetworkBehaviour
     [SerializeField] bool isOneTimeTrigger = true;
     private bool hasTriggeredLocal = false;
 
+    [SerializeField] bool isPlayWithBGM;
+    [SerializeField] bool isEndWithDialogue;
+
     [SerializeField] DialogueConfig[] dialogueSequence;
     private int currentIndex = 0;
 
@@ -55,6 +58,11 @@ public class TriggerDialogue : NetworkBehaviour
     {
         DialogueConfig[] selectedConfig = null;
 
+        if (isPlayWithBGM)
+        {
+            AudioManager.Instance.PlayBGM("");
+        }
+
         if (sequenceType == 0) selectedConfig = dialogueSequence;
         else if (sequenceType == 1) selectedConfig = birdDialogueSequence;
         else if (sequenceType == 2) selectedConfig = duckDialogueSequence;
@@ -67,6 +75,10 @@ public class TriggerDialogue : NetworkBehaviour
         }
         else
         {
+            if (isEndWithDialogue)
+            {
+                AudioManager.Instance.StopBGM();
+            }
             Debug.Log("Dialogue End");
         }
     }
