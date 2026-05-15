@@ -3,13 +3,20 @@ using UnityEngine;
 
 public class BreakableRock : NetworkBehaviour, Interactable
 {
+    [SerializeField] SpriteRenderer spriteRenderer;
+
     [SerializeField] NetworkObject selfNet;
     [SerializeField] NetworkObject itemToDrop;
     [SerializeField] int dropAmount = 1;
 
+    [SerializeField] bool canDrop;
+
+    [SerializeField] Sprite alreadyBreakRock;
+
     private void Awake()
     {
         if (selfNet == null) selfNet = GetComponent<NetworkObject>();
+        if (spriteRenderer  == null) spriteRenderer = GetComponent<SpriteRenderer>();
     }
 
     public void Interact(MovementCharacter player)
@@ -29,15 +36,22 @@ public class BreakableRock : NetworkBehaviour, Interactable
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
     public void RPC_BreakRock()
     {
-        if (itemToDrop != null)
+        if (itemToDrop != null && canDrop)
         {
             for (int i = 0; i < dropAmount; i++)
             {
                 SpawnItem();
+                canDrop = false;
+                ChangeSprite();
             }
         }
 
         GameManager.Instance.RequestDespawn(selfNet);
+    }
+
+    public void ChangeSprite()
+    {
+        spriteRenderer.sprite = alreadyBreakRock;
     }
 
     public void SpawnItem()

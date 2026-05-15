@@ -50,7 +50,6 @@ public class ThrowAble : NetworkBehaviour, ThrowAbleItem
                     isLethal = false;
                     rb2D.linearVelocity = Vector2.zero; 
 
-
                     break;
                 }
             }

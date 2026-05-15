@@ -1,7 +1,6 @@
 ﻿using Fusion;
 using System;
 using UnityEngine;
-using static UnityEngine.CullingGroup;
 
 public class Bird_Moveset : MovementCharacter
 {
