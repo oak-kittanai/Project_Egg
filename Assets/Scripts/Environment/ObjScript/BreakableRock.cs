@@ -28,6 +28,8 @@ public class BreakableRock : NetworkBehaviour, Interactable
 
     public void Interact(MovementCharacter player)
     {
+        if (!HasStateAuthority) return;
+
         if (player is Duck_Moveset duck)
         {
             duck.PlayHitAnimation_RPC();
