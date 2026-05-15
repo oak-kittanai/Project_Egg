@@ -49,9 +49,24 @@ public class ThrowAble : NetworkBehaviour, ThrowAbleItem
                     monster.InstantKill();
                     isLethal = false;
                     rb2D.linearVelocity = Vector2.zero;
-
                     break;
                 }
+            }
+        }
+
+        if (collision.gameObject.CompareTag("Ground") || collision.gameObject.CompareTag("Platform"))
+        {
+            float currentSpeed = rb2D.linearVelocity.magnitude;
+
+            float newSpeed = Mathf.Max(0f, currentSpeed - 5f);
+
+            if (currentSpeed > 0.1f)
+            {
+                rb2D.linearVelocity = rb2D.linearVelocity.normalized * newSpeed;
+            }
+            else
+            {
+                rb2D.linearVelocity = Vector2.zero;
             }
         }
 
