@@ -8,6 +8,9 @@ public class AudioManager : MonoBehaviour
     [Header("Configs")]
     [SerializeField] private SoundConfig[] soundList;
 
+    [Header("BGM Settings")]
+    [SerializeField] private AudioSource bgmSource;
+
     private void Awake()
     {
         if (Instance == null) Instance = this;
@@ -33,6 +36,29 @@ public class AudioManager : MonoBehaviour
 
         source.Play();
         Destroy(tempAudioObj, s.clip.length);
+    }
+
+    public void PlayBGM(string name)
+    {
+        SoundConfig s = Array.Find(soundList, sound => sound.soundName == name);
+
+        if (s == null)
+        {
+            Debug.LogWarning($"Can't find '{name}' BGM");
+            return;
+        }
+
+        if (bgmSource.clip == s.clip) return;
+
+        bgmSource.clip = s.clip;
+        bgmSource.volume = s.volume;
+        bgmSource.loop = true;
+        bgmSource.Play();
+    }
+
+    public void StopBGM()
+    {
+        bgmSource.Stop();
     }
 }
 
