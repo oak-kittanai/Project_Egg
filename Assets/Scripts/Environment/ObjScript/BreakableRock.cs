@@ -4,6 +4,7 @@ using UnityEngine;
 public class BreakableRock : NetworkBehaviour, Interactable
 {
     [SerializeField] SpriteRenderer spriteRenderer;
+    [SerializeField] Collider2D collider2D;
 
     [SerializeField] NetworkObject selfNet;
     [SerializeField] NetworkObject itemToDrop;
@@ -18,6 +19,7 @@ public class BreakableRock : NetworkBehaviour, Interactable
     {
         if (selfNet == null) selfNet = GetComponent<NetworkObject>();
         if (spriteRenderer  == null) spriteRenderer = GetComponent<SpriteRenderer>();
+        if (collider2D == null) collider2D = GetComponent<Collider2D>();
     }
 
     public void Interact(MovementCharacter player)
@@ -44,6 +46,7 @@ public class BreakableRock : NetworkBehaviour, Interactable
                 SpawnItem();
                 canDrop = false;
                 ChangeSprite();
+                collider2D.enabled = false;
             }
         }
     }

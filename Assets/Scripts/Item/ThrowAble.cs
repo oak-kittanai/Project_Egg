@@ -56,9 +56,17 @@ public class ThrowAble : NetworkBehaviour, ThrowAbleItem
         }
     }
 
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    public void PickupItem_RPC()
+    {
+        if (Object != null && Object.IsValid)
+        {
+            GameManager.Instance.RequestDespawn(selfNet);
+        }
+    }
+
     public bool PickupItem()
     {
-        GameManager.Instance.RequestDespawn(selfNet);
         return true;
     }
 }
