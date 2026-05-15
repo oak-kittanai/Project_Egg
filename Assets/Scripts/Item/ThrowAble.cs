@@ -58,7 +58,7 @@ public class ThrowAble : NetworkBehaviour, ThrowAbleItem
         {
             float currentSpeed = rb2D.linearVelocity.magnitude;
 
-            float newSpeed = Mathf.Max(0f, currentSpeed - 5f);
+            float newSpeed = Mathf.Max(0f, currentSpeed - 10f);
 
             if (currentSpeed > 0.1f)
             {
