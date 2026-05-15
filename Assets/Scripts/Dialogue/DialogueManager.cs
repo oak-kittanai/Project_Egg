@@ -8,11 +8,24 @@ public class DialogueManager : MonoBehaviour
     private List<DialogueLine> lines = new List<DialogueLine>();
     private DialogueConfig currentHeader;
 
+    private DialogueConfig[] currentSequence;
+    private int currentConfigIndex = 0;
+
     private int currentLineIndex = 0;
 
     private void Awake() => Instance = this;
 
-    public void StartDialogue(DialogueConfig config)
+    public void StartDialogueSequence(DialogueConfig[] sequence)
+    {
+        if (sequence == null || sequence.Length == 0) return;
+
+        currentSequence = sequence;
+        currentConfigIndex = 0;
+
+        LoadConfig(currentSequence[currentConfigIndex]);
+    }
+
+    private void LoadConfig(DialogueConfig config)
     {
         currentHeader = config;
         DialogueData data = JsonReader.Read(config.JsonFile);
@@ -36,7 +49,16 @@ public class DialogueManager : MonoBehaviour
         }
         else
         {
-            DialogueHUB.Instance.CloseDialogue();
+            if (currentSequence != null && currentConfigIndex < currentSequence.Length - 1)
+            {
+                currentConfigIndex++;
+                LoadConfig(currentSequence[currentConfigIndex]);
+            }
+            else
+            {
+                DialogueHUB.Instance.CloseDialogue();
+                AudioManager.Instance.StopBGM();
+            }
         }
     }
 

@@ -4,33 +4,30 @@ using UnityEngine;
 public class BreakableRock : NetworkBehaviour, Interactable
 {
     [SerializeField] NetworkObject selfNet;
-
     [SerializeField] NetworkObject itemToDrop;
     [SerializeField] int dropAmount = 1;
-    //[SerializeField] float dropForce = 3f;
 
     private void Awake()
     {
-        selfNet = GetComponent<NetworkObject>();
+        if (selfNet == null) selfNet = GetComponent<NetworkObject>();
     }
 
     public void Interact(MovementCharacter player)
     {
-        if (!HasStateAuthority) return;
-
         if (player is Duck_Moveset duck)
         {
             duck.PlayHitAnimation_RPC();
 
-            BreakAndDrop();
+            RPC_BreakRock();
         }
         else
         {
-            Debug.Log("can't find duck");
+            Debug.Log("not duck");
         }
-    }   
+    }
 
-    void BreakAndDrop()
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    public void RPC_BreakRock()
     {
         if (itemToDrop != null)
         {
