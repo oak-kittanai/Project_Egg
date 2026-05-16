@@ -11,6 +11,8 @@ GameObject:
   - component: {fileID: 3637123184640833889}
   - component: {fileID: 4837743400751801811}
   - component: {fileID: 4085200768413368804}
+  - component: {fileID: -1951000849905964048}
+  - component: {fileID: 2158221783423152118}
   m_Layer: 0
   m_Name: TreeSap1
   m_TagString: Untagged
@@ -121,7 +123,7 @@ BoxCollider2D:
   m_CallbackLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_IsTrigger: 1
+  m_IsTrigger: 0
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
@@ -137,3 +139,40 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 1.5747833, y: 2.1333334}
   m_EdgeRadius: 0
+--- !u!114 &-1951000849905964048
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4146498306445525267}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7c6e16d556844aa488b6d51b32a1d273, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TreeSapObstacle
+  sapSprites:
+  - {fileID: -8067267773793585591, guid: 98187d44117dcf445a1e744c714f1b11, type: 3}
+  - {fileID: -354917319158521935, guid: 161d9705e201dd241ae599e34f1eff2b, type: 3}
+  - {fileID: -4759227129084849079, guid: fd305a175ce588242b9940a400dfa0ab, type: 3}
+  - {fileID: 2566518995534085463, guid: 14ef38b68a7a4fe4a829660bbc2ec47e, type: 3}
+  hitCooldown: 0.5
+--- !u!114 &2158221783423152118
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4146498306445525267}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
+  SortKey: 2273073826
+  ObjectInterest: 1
+  Flags: 262145
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: -1951000849905964048}
+  ForceRemoteRenderTimeframe: 0
