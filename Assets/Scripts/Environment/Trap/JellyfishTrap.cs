@@ -1,9 +1,5 @@
 using UnityEngine;
 using Fusion;
-
-[RequireComponent(typeof(SpriteRenderer))]
-[RequireComponent(typeof(Animator))]
-[RequireComponent(typeof(LineRenderer))]
 public class JellyfishTrap : NetworkBehaviour
 {
     public enum JellyState
@@ -14,7 +10,7 @@ public class JellyfishTrap : NetworkBehaviour
         Hidden
     }
 
-    [Header("Settings")]
+    [Header("Setting")]
     [SerializeField] float explosionRadius = 2.5f;
     [SerializeField] float chargeTime = 1.5f;
     [SerializeField] float respawnTime = 3.0f;
@@ -68,12 +64,10 @@ public class JellyfishTrap : NetworkBehaviour
             StateTimer = TickTimer.None;
         }
 
-        // บังคับอัปเดตภาพทันทีที่เกิด เพื่อให้ Client ที่เพิ่งจอยเข้ามาเห็นภาพที่ถูกต้อง
         _prevState = CurrentState;
         UpdateVisualsForce();
     }
 
-    // 🛠️ แก้จาก Enter เป็น Stay เพื่อป้องกันบั๊กผู้เล่นยืนแช่ในจุดเกิดตอนมัน Respawn
     private void OnTriggerStay2D(Collider2D collision)
     {
         if (!HasStateAuthority) return;
@@ -94,7 +88,7 @@ public class JellyfishTrap : NetworkBehaviour
             case JellyState.Charging:
                 if (StateTimer.Expired(Runner))
                 {
-                    CheckDamage(); // แจกดาเมจ 1 ครั้งถ้วน
+                    CheckDamage();
                     CurrentState = JellyState.Exploding;
                     StateTimer = TickTimer.CreateFromSeconds(Runner, explosionAnimDuration);
                 }
@@ -120,14 +114,12 @@ public class JellyfishTrap : NetworkBehaviour
 
     public override void Render()
     {
-        // 1. จัดการเปลี่ยนแอนิเมชันและการเปิด/ปิด (ทำแค่จังหวะที่ State เปลี่ยน)
         if (_prevState != CurrentState)
         {
             UpdateVisualsForce();
             _prevState = CurrentState;
         }
 
-        // 2. จัดการภาพระหว่างที่กำลังชาร์จ (ขยายตัว + วาดวงกลมแดง)
         if (CurrentState == JellyState.Charging && StateTimer.IsRunning)
         {
             float timeRemaining = StateTimer.RemainingTime(Runner) ?? 0f;
@@ -141,7 +133,6 @@ public class JellyfishTrap : NetworkBehaviour
         }
     }
 
-    // ฟังก์ชันรวบยอดสำหรับบังคับอัปเดตภาพให้ตรงกับ State
     private void UpdateVisualsForce()
     {
         if (CurrentState == JellyState.Charging) anim.SetTrigger("Charge");
@@ -169,12 +160,10 @@ public class JellyfishTrap : NetworkBehaviour
 
             foreach (var character in allCharacterMovement)
             {
-                // โค้ดกระเด็นและหักเลือดทำงานได้สมบูรณ์มากครับ
                 if (character.enabled)
                 {
                     float pushDirectionX = Mathf.Sign(hit.transform.position.x - transform.position.x);
 
-                    // ปรับให้กระเด็นขึ้นเล็กน้อย (Y = 0.5f) เพื่อให้ดูเป็นธรรมชาติขึ้น
                     Vector2 knockbackDirection = new Vector2(pushDirectionX, 0.5f).normalized;
 
                     character.TakeDamage(damageAmount, knockbackForce, knockbackDirection);

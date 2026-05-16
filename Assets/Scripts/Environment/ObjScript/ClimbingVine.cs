@@ -132,6 +132,11 @@ public class ClimbingVine : NetworkBehaviour, Interactable
             climbingPlayers.Add(player);
         }
 
+        if (player is Bird_Moveset bird)
+        {
+            bird.ForceCancelFlight();
+        }
+
         player.isOptional = true;
         player.isSpeedoptional = true;
 

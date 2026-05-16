@@ -354,6 +354,13 @@ public class Bird_Moveset : MovementCharacter
             rb2D.sharedMaterial = defaultMaterial;
         }
     }
+
+    public void ForceCancelFlight()
+    {
+        if (IsFlying) StopFlying();
+        if (AlreadyFloating) StopFloating();
+        IsAlreadyFly = false;
+    }
     #endregion
 
     #region ThrowLogic
