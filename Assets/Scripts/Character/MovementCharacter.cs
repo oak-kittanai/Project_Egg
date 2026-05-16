@@ -115,6 +115,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [Header("Inventory System (1 Slot)")]
     [Networked, OnChangedRender(nameof(OnHeldItemChanged))]
     public NetworkString<_32> HeldItemName { get; set; }
+    private bool _wasDropPressed;
 
     public void OnHeldItemChanged()
     {
@@ -266,6 +267,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                 HandleInteraction(input);
             }
             HandleEtcInput(input);
+            HandleDrop(input);
         }
 
         OnFixedUpdateSpecific();
@@ -319,7 +321,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     protected virtual void HandleJump(NetworkInputData input)
     {
-        if (input.jump && IsGrounded && JumpCooldown.ExpiredOrNotRunning(Runner))
+        if (input.KeybindJump && IsGrounded && JumpCooldown.ExpiredOrNotRunning(Runner))
         {
             isJumping = true;
 
@@ -341,7 +343,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     private void HandleInteraction(NetworkInputData input)
     {
-        bool isEPressed = input.Keyboard_E && !_isEPressed;
+        bool isEPressed = input.KeybindInteract && !_isEPressed;
         if (isEPressed)
         {
             Collider2D[] hitsItem = Physics2D.OverlapCircleAll(transform.position, interactRadius);
@@ -371,7 +373,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                 }
             }
         }
-        _isEPressed = input.Keyboard_E;
+        _isEPressed = input.KeybindInteract;
     }
 
     public void TakeDamage(int dmg, float knockbackForce, Vector2 vec)
@@ -794,6 +796,26 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     protected virtual void OnFixedUpdateSpecific() { }
 
+    #endregion
+
+    #region DropItem
+
+    private void HandleDrop(NetworkInputData input)
+    {
+        bool isDropPressed = input.KeybindDropItem && !_wasDropPressed;
+
+        if (isDropPressed && HeldItemName.ToString() != "")
+        {
+            if (this is Bird_Moveset bird && bird._prepareToThrow) return;
+
+            float offsetDir = cAnimation.FlipX ? 0.6f : -0.6f;
+            Vector2 dropPosition = (Vector2)transform.position + new Vector2(offsetDir, 0.5f);
+
+            GameManager.Instance.RPC_DropItemByName(HeldItemName.ToString(), dropPosition, this);
+        }
+
+        _wasDropPressed = input.KeybindDropItem;
+    }
     #endregion
 
     [Rpc(RpcSources.All, RpcTargets.All)]

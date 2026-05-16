@@ -81,8 +81,8 @@ public class ClimbingVine : NetworkBehaviour, Interactable
     {
         bool isClimbing = climbingPlayers.Contains(player);
         bool wasPressed = previousEPress.ContainsKey(player) && previousEPress[player];
-        bool pressedE = input.Keyboard_E && !wasPressed;
-        previousEPress[player] = input.Keyboard_E;
+        bool pressedE = input.KeybindInteract && !wasPressed;
+        previousEPress[player] = input.KeybindInteract;
 
         if (pressedE)
         {
@@ -100,7 +100,7 @@ public class ClimbingVine : NetworkBehaviour, Interactable
 
         if (isClimbing)
         {
-            if (input.jump)
+            if (input.KeybindJump)
             {
                 StopClimbing(player);
                 return;

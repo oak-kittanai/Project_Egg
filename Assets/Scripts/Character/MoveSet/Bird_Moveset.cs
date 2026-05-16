@@ -199,7 +199,7 @@ public class Bird_Moveset : MovementCharacter
     #region FlyLogic
     private void HandleFlightLogic(NetworkInputData input)
     {
-        bool isPressed = input.jump && !_wasJumpPressed;
+        bool isPressed = input.KeybindJump && !_wasJumpPressed;
 
         if (!IsBeingCarried)
         {
@@ -271,7 +271,7 @@ public class Bird_Moveset : MovementCharacter
             }
         }
 
-        _wasJumpPressed = input.jump;
+        _wasJumpPressed = input.KeybindJump;
     }
     private void StartFloating()
     {
@@ -367,8 +367,8 @@ public class Bird_Moveset : MovementCharacter
 
     public void HandleThrowLogic(NetworkInputData input)
     {
-        bool isXPressed = input.Keyboard_X && !_wasXPressed;
-        bool isZPressed = input.Keyboard_Z && !_wasZPressed;
+        bool isXPressed = input.KeybindPrepareThrowItem && !_wasXPressed;
+        bool isZPressed = input.KeybindThrowItem && !_wasZPressed;
 
         if (isXPressed)
         {
@@ -405,8 +405,8 @@ public class Bird_Moveset : MovementCharacter
             }
         }
 
-        _wasXPressed = input.Keyboard_X;
-        _wasZPressed = input.Keyboard_Z;
+        _wasXPressed = input.KeybindPrepareThrowItem;
+        _wasZPressed = input.KeybindThrowItem;
     }
 
     private void ExecuteThrow()
