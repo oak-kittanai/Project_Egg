@@ -10,8 +10,9 @@ public class CrumblingPlatform : NetworkBehaviour
 
     [Header("Settings")]
     [SerializeField] float crumbleDelay = 1.0f;
-
     [SerializeField] float respawnTime = 3.0f;
+    [Tooltip("ความแรงในการสั่นก่อนพัง")]
+    [SerializeField] float shakeIntensity = 0.05f;
 
     [Networked] public PlatformState CurrentState { get; set; }
     [Networked] private TickTimer StateTimer { get; set; }
@@ -20,11 +21,20 @@ public class CrumblingPlatform : NetworkBehaviour
     private SpriteRenderer sr;
     private Animator animator;
 
+    private PlatformState lastState;
+    private Vector3 originalPos;
+
     private void Awake()
     {
         boxCollider = GetComponent<BoxCollider2D>();
         sr = GetComponent<SpriteRenderer>();
         animator = GetComponent<Animator>();
+    }
+
+    public override void Spawned()
+    {
+        originalPos = transform.position;
+        lastState = CurrentState;
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
@@ -59,7 +69,6 @@ public class CrumblingPlatform : NetworkBehaviour
     {
         CurrentState = PlatformState.Broken;
         StateTimer = TickTimer.CreateFromSeconds(Runner, respawnTime);
-        animator.SetTrigger("Break");
         boxCollider.enabled = false;
     }
 
@@ -67,20 +76,32 @@ public class CrumblingPlatform : NetworkBehaviour
     {
         CurrentState = PlatformState.Idle;
         StateTimer = TickTimer.None;
-        animator.SetTrigger("Reset");
         boxCollider.enabled = true;
     }
 
     public override void Render()
     {
-        if (CurrentState == PlatformState.Broken)
+        if (lastState != CurrentState)
         {
-            animator.SetTrigger("Break");
-            sr.enabled = false;
+            if (CurrentState == PlatformState.Broken)
+            {
+                if (animator != null) animator.SetTrigger("Break");
+                if (sr != null) sr.enabled = false;
+
+                transform.position = originalPos;
+            }
+            else if (CurrentState == PlatformState.Idle)
+            {
+                if (animator != null) animator.SetTrigger("Reset");
+                if (sr != null) sr.enabled = true;
+            }
+
+            lastState = CurrentState;
         }
-        else
+
+        if (CurrentState == PlatformState.Shaking)
         {
-            sr.enabled = true;
+            transform.position = originalPos + (Vector3)Random.insideUnitCircle * shakeIntensity;
         }
     }
 }
