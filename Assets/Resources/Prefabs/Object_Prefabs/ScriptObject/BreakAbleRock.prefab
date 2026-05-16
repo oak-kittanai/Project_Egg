@@ -84,7 +84,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: -2
   m_Sprite: {fileID: 380291502196500599, guid: a3fe2c39faa9d48449c02ff92bb0136f, type: 3}
-  m_Color: {r: 0.8113208, g: 0.8113208, b: 0.8113208, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -108,10 +108,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BreakableRock
   spriteRenderer: {fileID: 7287256958114173626}
   coll: {fileID: 661784451826234151}
+  _isBroken:
+    _value: 0
   selfNet: {fileID: 8435920208396272353}
   itemToDrop: {fileID: 5283567399167749245, guid: f6ee7c8d2993a114cbcc32c8f96ce6a2, type: 3}
   dropAmount: 1
   canDrop: 1
+  isPlayerSpecific: 0
   alreadyBreakRock: {fileID: 0}
   animator: {fileID: -5427681617278280416}
 --- !u!114 &8435920208396272353
