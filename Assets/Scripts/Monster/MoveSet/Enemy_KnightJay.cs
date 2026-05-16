@@ -27,6 +27,8 @@ public class Enemy_KnightJay : BaseMonster
     [Networked] private Vector2 startPosition { get; set; }
     [Networked] private NetworkBool isHidden { get; set; }
 
+    [Networked] private Vector2 netPos { get; set; }
+
     public override void Spawned()
     {
         base.Spawned();
@@ -34,7 +36,7 @@ public class Enemy_KnightJay : BaseMonster
 
         if (HasStateAuthority)
         {
-            startPosition = transform.position; 
+            startPosition = transform.position;
             ResetMonster();
         }
     }
@@ -49,9 +51,11 @@ public class Enemy_KnightJay : BaseMonster
         currentAttackDirectionState = AttackDirection.None;
 
         transform.position = startPosition;
+        netPos = startPosition;
+
         if (rb2D != null) rb2D.linearVelocity = Vector2.zero;
 
-        SetVisuals_RPC(true); 
+        SetVisuals_RPC(true);
     }
 
     private void HandleJayAnimations(AttackDirection state)
@@ -83,7 +87,8 @@ public class Enemy_KnightJay : BaseMonster
                 if (canRespawn)
                 {
                     isHidden = true;
-                    transform.position = startPosition; 
+                    transform.position = startPosition;
+                    netPos = startPosition;
                     SetVisuals_RPC(false);
                     actionTimer = TickTimer.CreateFromSeconds(Runner, respawnTime);
                 }
@@ -100,15 +105,16 @@ public class Enemy_KnightJay : BaseMonster
             if (rb2D != null) rb2D.linearVelocity = Vector2.zero;
 
             transform.position = Vector2.MoveTowards(transform.position, lockedTargetPos, dashSpeed * Runner.DeltaTime);
+            netPos = transform.position;
 
             float distance = Vector2.Distance(transform.position, lockedTargetPos);
 
             if (distance <= 0.1f || dashFailsafeTimer.Expired(Runner))
             {
                 transform.position = lockedTargetPos;
+                netPos = transform.position;
 
-                TriggerHitBox_RPC(true);
-                SetVisuals_RPC(false); 
+                SetVisuals_RPC(false);
 
                 hasFinishedDash = true;
                 actionTimer = TickTimer.CreateFromSeconds(Runner, despawnDelay);
@@ -117,6 +123,7 @@ public class Enemy_KnightJay : BaseMonster
         else if (isPreparing)
         {
             if (rb2D != null) rb2D.linearVelocity = Vector2.zero;
+            netPos = transform.position;
 
             isFlip = targetPosition.x < transform.position.x;
 
@@ -135,6 +142,8 @@ public class Enemy_KnightJay : BaseMonster
                 AttackDirection dashDir = CheckDirection(lockedTargetPos);
                 RotateHitBoxToDirection(dashDir);
                 currentAttackDirectionState = dashDir;
+
+                TriggerHitBox_RPC(true);
             }
         }
         else if (hasSpotPlayer)
@@ -143,6 +152,7 @@ public class Enemy_KnightJay : BaseMonster
             actionTimer = TickTimer.CreateFromSeconds(Runner, prepareDelay);
 
             if (rb2D != null) rb2D.linearVelocity = Vector2.zero;
+            netPos = transform.position;
             currentAttackDirectionState = AttackDirection.None;
 
             isFlip = targetPosition.x < transform.position.x;
@@ -150,12 +160,18 @@ public class Enemy_KnightJay : BaseMonster
         else
         {
             if (rb2D != null) rb2D.linearVelocity = Vector2.zero;
+            netPos = transform.position;
             currentAttackDirectionState = AttackDirection.None;
         }
     }
 
     public override void Render()
     {
+        if (!HasStateAuthority)
+        {
+            transform.position = Vector2.Lerp(transform.position, netPos, Time.deltaTime * 20f);
+        }
+
         if (spriteRenderer != null)
         {
             spriteRenderer.flipX = isFlip;
@@ -167,7 +183,7 @@ public class Enemy_KnightJay : BaseMonster
     {
         if (spriteRenderer != null) spriteRenderer.enabled = show;
         if (col != null) col.enabled = show;
-        if (!show) TriggerHitBox_RPC(false); 
+        if (!show) TriggerHitBox_RPC(false);
     }
 
     public override void Despawned(NetworkRunner runner, bool hasState)
