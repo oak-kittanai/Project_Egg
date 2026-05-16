@@ -9,7 +9,7 @@ public class ToggleButton_ReversPresure : NetworkBehaviour, Interactable
         OneTimeUse
     }
 
-    [Header("Settings")]
+    [Header("Setting")]
     [SerializeField] private TrapPressure[] targetTraps;
     [SerializeField] private PressureMode mode = PressureMode.Reusable;
 
@@ -25,13 +25,14 @@ public class ToggleButton_ReversPresure : NetworkBehaviour, Interactable
 
     public void Interact(MovementCharacter player)
     {
-        RPC_TogglePressure();
+        if (HasStateAuthority)
+        {
+            TogglePressure();
+        }
     }
 
-    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    private void RPC_TogglePressure()
+    private void TogglePressure()
     {
-
         if (IsPermanentlyActivated) return;
 
         IsPressed = !IsPressed;
