@@ -13,7 +13,6 @@ public class ToggleButton_ReversPresure : NetworkBehaviour, Interactable
     [SerializeField] private TrapPressure[] targetTraps;
     [SerializeField] private PressureMode mode = PressureMode.Reusable;
 
-    [Tooltip("ถ้า True = กดแล้ว Reverse, ถ้า False = กดแล้วกลับเป็นปกติ")]
     [SerializeField] private bool reverseOnPress = true;
 
     [Networked] public NetworkBool IsPressed { get; set; }

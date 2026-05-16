@@ -170,6 +170,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d3de91892c35bf6438f2c5e3dfe84651, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ToggleButton_ReversPresure
-  targetTrap: []
-  _isRevers:
+  targetTraps:
+  - {fileID: 0}
+  mode: 0
+  reverseOnPress: 1
+  _IsPressed:
     _value: 0
+  _IsPermanentlyActivated:
+    _value: 0
+  sr: {fileID: 0}
+  unpressed: {fileID: 0}
+  pressed: {fileID: 0}

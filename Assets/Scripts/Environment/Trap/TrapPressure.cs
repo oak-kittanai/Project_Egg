@@ -6,9 +6,10 @@ public class TrapPressure : NetworkBehaviour
 {
     [Header("Stat&Mode")]
     [SerializeField] float pushForce = 50f;
-
     [Networked] public NetworkBool _isActive { get; set; }
-    [Networked] public NetworkBool _isRevers { get; set; }
+
+    [Networked, OnChangedRender(nameof(OnDirectionChanged))]
+    public NetworkBool _isRevers { get; set; }
 
     [SerializeField] Vector2 defaultDirection;
 
@@ -29,6 +30,8 @@ public class TrapPressure : NetworkBehaviour
         {
             _isActive = true;
         }
+
+        OnDirectionChanged();
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
@@ -132,7 +135,7 @@ public class TrapPressure : NetworkBehaviour
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
     private void RPC_ChangeDirection(NetworkBool isRevers) => _isRevers = isRevers;
 
-    public override void Render()
+    public void OnDirectionChanged()
     {
         if (anim != null)
         {
