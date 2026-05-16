@@ -47,6 +47,8 @@ public class BreakableRock : NetworkBehaviour, Interactable
     {
         if (itemToDrop != null && canDrop)
         {
+            animator.SetTrigger("Trigger");
+
             for (int i = 0; i < dropAmount; i++)
             {
                 SpawnItem();

@@ -108,10 +108,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BreakableRock
   spriteRenderer: {fileID: 7287256958114173626}
   coll: {fileID: 661784451826234151}
+  _isBroken:
+    _value: 0
   selfNet: {fileID: 8435920208396272353}
   itemToDrop: {fileID: 5283567399167749245, guid: f6ee7c8d2993a114cbcc32c8f96ce6a2, type: 3}
   dropAmount: 1
   canDrop: 1
+  isPlayerSpecific: 0
   alreadyBreakRock: {fileID: 0}
   animator: {fileID: -5427681617278280416}
 --- !u!114 &8435920208396272353
@@ -198,7 +201,7 @@ Animator:
   m_GameObject: {fileID: 7501679775272779697}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 86468c57623508348b8049db50881ca9, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0

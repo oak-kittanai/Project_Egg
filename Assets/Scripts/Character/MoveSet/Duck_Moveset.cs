@@ -64,20 +64,20 @@ public class Duck_Moveset : MovementCharacter
 
         if (GetInput(out NetworkInputData input))
         {
-            isJumpPressed = input.jump && !_wasJumpPressed;
+            isJumpPressed = input.KeybindJump && !_wasJumpPressed;
 
             HandleDuckInteraction(input);
             HandleWaterLogic(input);
 
             if (isJumpAble)
             {
-                if (input.jump) isJumpingUp = true;
+                if (input.KeybindJump) isJumpingUp = true;
                 else isJumpingUp = false;
             }
 
-            _wasEPressed = input.Keyboard_E;
+            _wasEPressed = input.KeybindInteract;
             _wasFPressed = input.Keyboard_F;
-            _wasJumpPressed = input.jump;
+            _wasJumpPressed = input.KeybindJump;
         }
 
         if (isWaterSurface && !onDiving)
@@ -130,7 +130,7 @@ public class Duck_Moveset : MovementCharacter
 
     private void HandleDuckInteraction(NetworkInputData input)
     {
-        bool isEPressed = input.Keyboard_E && !_wasEPressed;
+        bool isEPressed = input.KeybindInteract && !_wasEPressed;
 
         if (isEPressed)
         {

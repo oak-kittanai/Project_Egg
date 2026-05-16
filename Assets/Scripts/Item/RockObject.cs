@@ -1,34 +1,60 @@
 using Fusion;
 using UnityEngine;
 
-public class ThrowAble : NetworkBehaviour, ThrowAbleItem
+public class RockObject : NetworkBehaviour, ThrowAbleItem
 {
-    [Header("Setting")]
-    public string itemName;
-    [SerializeField] Vector3 selfPos;
+    [Header("Ref")]
     [SerializeField] NetworkObject selfNet;
     [SerializeField] Rigidbody2D rb2D;
+    [SerializeField] SpriteRenderer spriteRenderer;
 
-    [SerializeField] bool isLethal;
+    [Header("Skin")]
+    [Networked] int randomSkinRange { get; set; }
+    [SerializeField] Sprite rock1;
+    [SerializeField] Sprite rock2;
+    [SerializeField] Sprite rock3;
+
+    [Header("Setting")]
+    [SerializeField] Vector3 selfPos;
+    
+
+    [SerializeField] bool isLethal = true;
     [Networked] public bool AlreadyThrow { get; set; }
 
     private void Awake()
     {
         if (selfNet == null) selfNet = GetComponent<NetworkObject>();
         if (rb2D == null) rb2D = GetComponent<Rigidbody2D>();
+        if (spriteRenderer == null) spriteRenderer = GetComponent<SpriteRenderer>();
     }
 
     public override void Spawned()
     {
         if (selfNet == null) selfNet = GetComponent<NetworkObject>();
-        OnCheckItemCollider();
+
+        if (HasStateAuthority)
+        {
+            randomSkinRange = Random.Range(0, 3);
+            UpdateSkin();
+        }
     }
 
-    public void OnCheckItemCollider()
+    private void UpdateSkin()
     {
-        if (itemName == "")
+        switch (randomSkinRange)
         {
-            isLethal = true;
+            case 0:
+                spriteRenderer.sprite = rock1;
+                break;
+            case 1:
+                spriteRenderer.sprite = rock2;
+                break;
+            case 2:
+                spriteRenderer.sprite = rock3;
+                break;
+            default:
+                spriteRenderer.sprite = rock1;
+                break;
         }
     }
 
@@ -90,10 +116,10 @@ public class ThrowAble : NetworkBehaviour, ThrowAbleItem
 
         if (Object != null && Object.IsValid)
         {
-            player.HeldItemName = itemName;
+            player.HeldItemName = "Rock";
 
             GameManager.Instance.RequestDespawn(selfNet);
-            Debug.Log($"{player.name} pick {itemName}");
+            Debug.Log($"{player.name} pick Rock");
         }
     }
 

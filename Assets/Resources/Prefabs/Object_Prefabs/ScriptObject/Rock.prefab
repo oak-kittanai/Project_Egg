@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 7195261213060599039}
   - component: {fileID: 730459230013243872}
   - component: {fileID: 1813607886745613677}
-  - component: {fileID: 887807057277161536}
+  - component: {fileID: -8567076235103846375}
   - component: {fileID: 5283567399167749245}
   - component: {fileID: 4387529456267015526}
   - component: {fileID: -3531586359357191426}
@@ -141,7 +141,7 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 1, y: 1}
   m_EdgeRadius: 0
---- !u!114 &887807057277161536
+--- !u!114 &-8567076235103846375
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -150,14 +150,17 @@ MonoBehaviour:
   m_GameObject: {fileID: 9165229000565015290}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f66fd981300140b46b90b8aba7d7ecf8, type: 3}
+  m_Script: {fileID: 11500000, guid: 988c2d12e2081af4590fc9dd445d4554, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ThrowAble
-  itemName: Rock
-  selfPos: {x: 0, y: 0, z: 0}
+  m_EditorClassIdentifier: Assembly-CSharp::RockObject
   selfNet: {fileID: 5283567399167749245}
-  rb2D: {fileID: 0}
-  isLethal: 0
+  rb2D: {fileID: 4387529456267015526}
+  spriteRenderer: {fileID: 730459230013243872}
+  rock1: {fileID: 3452003437791708593, guid: bbe18f2924e24bb42b856824ee6fd5ca, type: 3}
+  rock2: {fileID: -5937200866895562579, guid: e17e9a7d3d6345940b92bf3b6630dab3, type: 3}
+  rock3: {fileID: 1806762593315652507, guid: 6b0cf5a14c3fee04396d54876896eaa5, type: 3}
+  selfPos: {x: 0, y: 0, z: 0}
+  isLethal: 1
   _AlreadyThrow: 0
 --- !u!114 &5283567399167749245
 MonoBehaviour:
@@ -176,7 +179,7 @@ MonoBehaviour:
   Flags: 262145
   NestedObjects: []
   NetworkedBehaviours:
-  - {fileID: 887807057277161536}
+  - {fileID: -8567076235103846375}
   - {fileID: -3531586359357191426}
   ForceRemoteRenderTimeframe: 0
 --- !u!50 &4387529456267015526
