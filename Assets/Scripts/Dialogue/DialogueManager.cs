@@ -13,7 +13,11 @@ public class DialogueManager : MonoBehaviour
 
     private int currentLineIndex = 0;
 
-    private void Awake() => Instance = this;
+    private void Awake()
+    {
+        Instance = this;
+        DontDestroyOnLoad(this);
+    }
 
     public void StartDialogueSequence(DialogueConfig[] sequence)
     {

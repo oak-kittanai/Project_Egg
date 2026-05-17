@@ -16,6 +16,7 @@ public class TutorialUIManager : MonoBehaviour
     {
         Instance = this;
         tutorialPanel.SetActive(false);
+        DontDestroyOnLoad(this);
     }
 
     public void ShowTutorial(Sprite spriteToShow, Vector2 customSize, float duration = 5f)

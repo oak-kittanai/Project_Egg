@@ -450,6 +450,13 @@ public class GameManager : SingletonNetwork<GameManager>
 
     #region Scene
 
+    public void CheckPlayerLoading()
+    {
+        
+
+        HideGlobalLoadingScreen();
+    }
+
     // Reset Loading State For Next Level
     public void ResetLoadingStateForNextLevel()
     {
