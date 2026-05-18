@@ -1,7 +1,6 @@
 using Fusion;
 using UnityEngine;
 
-[RequireComponent(typeof(Rigidbody2D))]
 public class MovingPlateform : NetworkBehaviour
 {
     [Header("Movement State")]
@@ -40,6 +39,25 @@ public class MovingPlateform : NetworkBehaviour
         }
 
         rb.MovePosition(newPosition);
+    }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.CompareTag("Player"))
+        {
+            if (collision.transform.position.y > transform.position.y)
+            {
+                collision.transform.SetParent(transform);
+            }
+        }
+    }
+
+    private void OnCollisionExit2D(Collision2D collision)
+    {
+        if (collision.gameObject.CompareTag("Player"))
+        {
+            collision.transform.SetParent(null);
+        }
     }
 
     private void OnDrawGizmosSelected()
