@@ -3,7 +3,6 @@ using UnityEngine;
 
 public class MoveSome : NetworkBehaviour
 {
-    [Header("Move State")]
     [SerializeField] float speed = 1.5f;
     [SerializeField] float distance = 4f;
     [SerializeField] bool isVertical;
@@ -23,8 +22,6 @@ public class MoveSome : NetworkBehaviour
 
     public override void FixedUpdateNetwork()
     {
-        if (!HasStateAuthority) return;
-
         float sineValue = (Mathf.Sin((float)Runner.SimulationTime * speed) + 1f) / 2f;
         float directionMultiplier = isReverse ? -1f : 1f;
         float movementOffset = sineValue * distance * directionMultiplier;
