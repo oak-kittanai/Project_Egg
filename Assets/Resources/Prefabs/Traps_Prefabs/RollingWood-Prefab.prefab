@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 1382661445115167223}
   - component: {fileID: -4857429134693194334}
   - component: {fileID: 6563399267824536813}
+  - component: {fileID: 2846861288183144504}
   m_Layer: 0
   m_Name: RollingWood-Prefab
   m_TagString: Trap
@@ -165,7 +166,7 @@ CircleCollider2D:
   m_CompositeOperation: 0
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
-  m_Radius: 1
+  m_Radius: 1.2
 --- !u!50 &-4857429134693194334
 Rigidbody2D:
   serializedVersion: 5
@@ -174,7 +175,7 @@ Rigidbody2D:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 770049539051043441}
-  m_BodyType: 1
+  m_BodyType: 0
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
@@ -209,5 +210,22 @@ MonoBehaviour:
   ObjectInterest: 1
   Flags: 262145
   NestedObjects: []
-  NetworkedBehaviours: []
+  NetworkedBehaviours:
+  - {fileID: 2846861288183144504}
   ForceRemoteRenderTimeframe: 0
+--- !u!114 &2846861288183144504
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 770049539051043441}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a5a4ce48cc298e945b8c730758926ff2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DoDamgeClear
+  damageAmount: 3
+  knockbackForce: 20
+  delayBeforeDes: 0.25
+  maxLifetime: 5

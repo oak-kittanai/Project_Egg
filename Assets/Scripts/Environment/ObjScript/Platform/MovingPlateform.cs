@@ -3,20 +3,21 @@ using UnityEngine;
 
 public class MovingPlateform : NetworkBehaviour
 {
-    [Header("Movement State")]
     [SerializeField] float speed = 1.5f;
     [SerializeField] float distance = 4f;
     [SerializeField] bool isVertical;
 
+    [Header("Player Detect")]
+    [SerializeField] private Vector2 boxSize = new Vector2(2f, 0.5f);
+    [SerializeField] private Vector2 boxOffset = new Vector2(0f, 0.5f);
+
     private Vector3 startPosition;
     private Rigidbody2D rb;
-    private BoxCollider2D boxCol;
 
     public override void Spawned()
     {
         startPosition = transform.position;
         rb = GetComponent<Rigidbody2D>();
-        boxCol = GetComponent<BoxCollider2D>();
 
         rb.bodyType = RigidbodyType2D.Kinematic;
         rb.useFullKinematicContacts = true;
@@ -27,31 +28,40 @@ public class MovingPlateform : NetworkBehaviour
         float sineValue = (Mathf.Sin((float)Runner.SimulationTime * speed) + 1f) / 2f;
         float movementOffset = sineValue * distance;
 
-        Vector2 targetPosition = startPosition;
-        if (isVertical) targetPosition.y += movementOffset;
-        else targetPosition.x += movementOffset;
+        Vector3 newPosition = startPosition;
 
-        Vector2 deltaMovement = targetPosition - rb.position;
-
-        rb.position = targetPosition;
-
-        if (boxCol != null)
+        if (isVertical)
         {
-            Vector2 checkPos = rb.position + boxCol.offset + new Vector2(0, (boxCol.size.y / 2f) + 0.1f);
+            newPosition.y += movementOffset;
+        }
+        else
+        {
+            newPosition.x += movementOffset;
+        }
 
-            Vector2 checkSize = new Vector2(boxCol.size.x * 0.95f, 0.2f);
+        Vector3 deltaMovement = newPosition - transform.position;
 
-            Collider2D[] hitResults = new Collider2D[10];
-            int hitCount = Runner.GetPhysicsScene2D().OverlapBox(checkPos, checkSize, 0, hitResults, LayerMask.GetMask("Player"));
+        rb.MovePosition(newPosition);
 
-            for (int i = 0; i < hitCount; i++)
+        Collider2D[] hitResults = new Collider2D[10];
+        Vector2 checkPos = (Vector2)transform.position + boxOffset;
+
+        int hitCount = Runner.GetPhysicsScene2D().OverlapBox(
+            checkPos,
+            boxSize,
+            0,
+            hitResults,
+            LayerMask.GetMask("Player")
+        );
+
+        for (int i = 0; i < hitCount; i++)
+        {
+            var hit = hitResults[i];
+            if (hit != null && hit.TryGetComponent<MovementCharacter>(out var player))
             {
-                if (hitResults[i] != null && hitResults[i].TryGetComponent<MovementCharacter>(out var player))
+                if (player.rb2D != null)
                 {
-                    if (player.rb2D != null)
-                    {
-                        player.rb2D.position += deltaMovement;
-                    }
+                    player.rb2D.position += (Vector2)deltaMovement;
                 }
             }
         }
@@ -67,15 +77,11 @@ public class MovingPlateform : NetworkBehaviour
 
         Gizmos.color = Color.red;
         Gizmos.DrawLine(currentStart, endPosition);
+        Gizmos.DrawSphere(currentStart, 0.1f);
+        Gizmos.DrawSphere(endPosition, 0.1f);
 
-        BoxCollider2D col = GetComponent<BoxCollider2D>();
-        if (col != null)
-        {
-            Gizmos.color = new Color(0f, 1f, 0f, 0.4f);
-            Vector2 pos = Application.isPlaying ? rb.position : (Vector2)transform.position;
-            Vector2 checkPos = pos + col.offset + new Vector2(0, (col.size.y / 2f) + 0.1f);
-            Vector2 checkSize = new Vector2(col.size.x * 0.95f, 0.2f);
-            Gizmos.DrawCube(checkPos, checkSize);
-        }
+        Gizmos.color = new Color(0f, 1f, 0f, 0.4f);
+        Vector3 gizmoPos = Application.isPlaying ? transform.position + (Vector3)boxOffset : currentStart + (Vector3)boxOffset;
+        Gizmos.DrawCube(gizmoPos, boxSize);
     }
 }
