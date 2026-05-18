@@ -3,6 +3,13 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+[System.Serializable]
+public class ItemMapping
+{
+    public string itemName;
+    public NetworkObject itemPrefab;
+}
+
 public class GameManager : SingletonNetwork<GameManager>
 {
     [SerializeField] NetworkRunner NetworkRunner;
@@ -31,6 +38,7 @@ public class GameManager : SingletonNetwork<GameManager>
     [Networked] public int TeamBlueKeys { get; set; }
     [Networked] public int TeamOrangeKeys { get; set; }
 
+
     public override void Spawned()
     {
         base.Spawned();
@@ -54,6 +62,8 @@ public class GameManager : SingletonNetwork<GameManager>
                 IsGameReady = true;
                 LoadingSceneTimer = TickTimer.None;
                 Debug.Log("Game Start!");
+
+                ResetAllPlayersToSpawn();
             }
         }
     }
@@ -146,6 +156,8 @@ public class GameManager : SingletonNetwork<GameManager>
             isLoadMapDone = true;
             Debug.Log("Map Ready");
             CheckGameStart();
+
+            CheckMapLoading();
         }
     }
 
@@ -331,6 +343,41 @@ public class GameManager : SingletonNetwork<GameManager>
         else TeamHasBlueStone = true;
     }
 
+    [Header("Item Database Settings")]
+    [SerializeField] public List<ItemMapping> itemDatabase = new List<ItemMapping>();
+
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    public void RPC_DropItemByName(string itemName, Vector2 dropPosition, MovementCharacter player)
+    {
+        if (string.IsNullOrEmpty(itemName) || player == null) return;
+
+        NetworkObject prefabToSpawn = null;
+
+        foreach (var mapping in itemDatabase)
+        {
+            if (mapping.itemName == itemName)
+            {
+                prefabToSpawn = mapping.itemPrefab;
+                break;
+            }
+        }
+
+        if (prefabToSpawn != null)
+        {
+            SpawnDropItem(prefabToSpawn, dropPosition);
+            Debug.Log($"[GameManager] Successfully spawned dropped item: {itemName}");
+        }
+        else
+        {
+            Debug.LogError($"[GameManager] Cannot find prefab for item name: {itemName} in Database!");
+        }
+
+        if (player.Object != null && player.Object.IsValid)
+        {
+            player.HeldItemName = "";
+        }
+    }
+
     #endregion
 
     #region Quest
@@ -419,6 +466,8 @@ public class GameManager : SingletonNetwork<GameManager>
             IsGameReady = false;
             LoadingSceneTimer = TickTimer.None;
         }
+
+        currentLoadingUI = null;
     }
 
     // Loading Screen Zone

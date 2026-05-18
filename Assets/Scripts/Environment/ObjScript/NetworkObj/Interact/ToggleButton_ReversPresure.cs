@@ -9,11 +9,10 @@ public class ToggleButton_ReversPresure : NetworkBehaviour, Interactable
         OneTimeUse
     }
 
-    [Header("Settings")]
+    [Header("Setting")]
     [SerializeField] private TrapPressure[] targetTraps;
     [SerializeField] private PressureMode mode = PressureMode.Reusable;
 
-    [Tooltip("ถ้า True = กดแล้ว Reverse, ถ้า False = กดแล้วกลับเป็นปกติ")]
     [SerializeField] private bool reverseOnPress = true;
 
     [Networked] public NetworkBool IsPressed { get; set; }
@@ -26,13 +25,14 @@ public class ToggleButton_ReversPresure : NetworkBehaviour, Interactable
 
     public void Interact(MovementCharacter player)
     {
-        RPC_TogglePressure();
+        if (HasStateAuthority)
+        {
+            TogglePressure();
+        }
     }
 
-    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    private void RPC_TogglePressure()
+    private void TogglePressure()
     {
-
         if (IsPermanentlyActivated) return;
 
         IsPressed = !IsPressed;
@@ -56,6 +56,11 @@ public class ToggleButton_ReversPresure : NetworkBehaviour, Interactable
                 trap.ChangeDirection(isReversed);
             }
         }
+    }
+
+    public bool CanInteract(MovementCharacter player)
+    {
+        return true;
     }
 
     public override void Render()

@@ -9,8 +9,8 @@ using static UnityEngine.CullingGroup;
 
 public enum SessionState
 {
-    Lobby,
     MainMenu,
+    Lobby,
     Setting,
     SessionSelect,
     Join,
@@ -38,6 +38,8 @@ public class SessionManager : SingletonNetwork<SessionManager>
     public NetworkRunner networkRunner;
     [NetworkPrefab] public NetworkObject CenterHostObject;
     [NetworkPrefab] public NetworkObject PlayerPrefabs;
+
+    [SerializeField] string SceneToPlay;
 
     [Header("StoreToSpawn")]
     public List<PlayersData> Players = new List<PlayersData>();
@@ -176,6 +178,21 @@ public class SessionManager : SingletonNetwork<SessionManager>
         }
     }
 
+    public void LoadToMainMenu()
+    {
+        ChangeState(SessionState.MainMenu);
+    }
+
+    public void LoadToLobbyMenu()
+    {
+        ChangeState(SessionState.Lobby);
+    }
+
+    public void LoadToSettingMenu()
+    {
+        ChangeState(SessionState.Setting);
+    }
+
     public bool JoinSession(string key)
     {
         JoinRoom(key);
@@ -300,7 +317,7 @@ public class SessionManager : SingletonNetwork<SessionManager>
 
     #region Core Game Loop
     public async Task LoadStartGame(string sceneName)
-    {
+    {   
         await networkRunner.LoadScene(sceneName, LoadSceneMode.Single);
     }
 
@@ -314,14 +331,14 @@ public class SessionManager : SingletonNetwork<SessionManager>
 
         if (networkRunner.IsServer)
         {
+            await LoadStartGame(SceneToPlay);
+            _isAlreadyInRoom = false;
+
             INetworkStructure networkStructure = networkRunner.GetComponent<INetworkStructure>();
 
             NetworkObject CHObject = networkRunner.Spawn(CenterHostObject);
             CenterHost CH = CHObject.GetComponent<CenterHost>();
             CH.AddComponent(networkRunner, networkStructure, PlayerPrefabs);
-
-            await LoadStartGame("Stage1-S1");
-            _isAlreadyInRoom = false;
 
             GM = networkRunner.Spawn(GameManagerPrefabs);
             gameManager = GM.GetComponent<GameManager>();

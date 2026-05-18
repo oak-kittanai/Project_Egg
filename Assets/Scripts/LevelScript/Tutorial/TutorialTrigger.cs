@@ -26,14 +26,14 @@ public class TutorialTrigger : MonoBehaviour
         triggerCollider.isTrigger = true;
 
         contactFilter = new ContactFilter2D();
-        contactFilter.NoFilter();
+        contactFilter = ContactFilter2D.noFilter;
     }
 
     private void Update()
     {
         if (showOnlyOnce && hasShown && !isPlayerCurrentlyInside) return;
 
-        int colliderCount = triggerCollider.OverlapCollider(contactFilter, overlappedColliders);
+        int colliderCount = triggerCollider.Overlap(contactFilter, overlappedColliders);
 
         bool foundLocalPlayer = false;
         MovementCharacter localPlayerMC = null;

@@ -1,5 +1,6 @@
 ﻿using Fusion;
 using UnityEngine;
+using Fusion.Addons.Physics;
 
 public class MovementCharacter : NetworkBehaviour, IDamageable
 {
@@ -11,13 +12,26 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [SerializeField] public PlayerGUI localGUI;
     [SerializeField] public SpriteRenderer spriteRenderer;
 
+    //SOUND
+    [Header("Audio System")]
+    [SerializeField] public AudioSource playerAudioSource;
+    [SerializeField] public AudioClip jumpSoundClip;
+    [SerializeField] public AudioClip landingSoundClip;
+    [SerializeField] public AudioClip dmgSoundClip;
+    [SerializeField] public AudioClip dieSoundClip;
+    [SerializeField] public AudioClip respawnSoundClip;
+
+    [Header("Movement Audio")]
+    [SerializeField] public AudioSource movementAudioSource;
+    [SerializeField] public AudioClip walkSoundClip;
+    [SerializeField] public AudioClip swimSoundClip;
+
+
     [Networked, OnChangedRender(nameof(OnCharacterTypeChanged))]
     public bool isBird { get; set; }
 
-    [Header("Visual Smoothing")]
+    [Header("Visual")]
     [SerializeField] public Transform visualTransform;
-    [SerializeField] private float visualSmoothTime = 0.03f;
-    private Vector3 visualVelocity = Vector3.zero;
     private int originalSortingOrder;
 
     [Header("Movement Settings")]
@@ -97,6 +111,21 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [SerializeField] public Color duck_Color;
     [SerializeField] public Color bird_Color;
 
+    [Header("Inventory System (1 Slot)")]
+    [Networked, OnChangedRender(nameof(OnHeldItemChanged))]
+    public NetworkString<_32> HeldItemName { get; set; }
+    private bool _wasDropPressed;
+
+    public void OnHeldItemChanged()
+    {
+        if (HasInputAuthority && PlayerInterface.Instance != null)
+        {
+            Debug.Log($"UI Update : {HeldItemName}");
+        }
+
+        if (HeldItemName == "Rock") _canThrowItem = true; else _canThrowItem = false;
+    }
+
     // Throw System
     [Networked] public bool _canThrowItem { get; set; }
 
@@ -120,6 +149,11 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         if (visualTransform == null && transform.Find("Player_Animation") != null)
         {
             visualTransform = transform.Find("Player_Animation");
+        }
+
+        if (TryGetComponent<Fusion.Addons.Physics.NetworkRigidbody2D>(out var netRb))
+        {
+            netRb.InterpolationTarget = transform;
         }
     }
 
@@ -160,12 +194,13 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
         if (GameManager.Instance != null) GameManager.Instance.RegisterPlayer(this);
         if (localGUI != null) localGUI.SetCharacterType(isThisCharacterBird);
-        if (visualTransform != null) visualTransform.SetParent(null);
 
         if (HasInputAuthority)
         {
             Invoke(nameof(ForceUpdateUI), 0.5f);
         }
+
+        isMoveAble = true;
     }
 
     private void ForceUpdateUI()
@@ -176,21 +211,30 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     public override void FixedUpdateNetwork()
     {
-        if (GameManager.Instance == null || GameManager.Instance.Object == null || !GameManager.Instance.Object.IsValid || !GameManager.Instance.isLoadMapDone)
+        if (GameManager.Instance == null || GameManager.Instance.Object == null || !GameManager.Instance.Object.IsValid)
         {
+            rb2D.linearVelocity = Vector2.zero;
+            return;
+        }
+        if (!GameManager.Instance.isLoadMapDone)
+        {
+            hasSetInitialPosition = false;
             rb2D.linearVelocity = Vector2.zero;
             return;
         }
 
         if (!hasSetInitialPosition)
         {
-            transform.position = GameManager.Instance.GetRespawnPosition();
-            if (visualTransform != null) visualTransform.position = transform.position;
             hasSetInitialPosition = true;
-            if (HasStateAuthority) GameManager.Instance.PlayerFinishedLoading();
+
+            if (HasStateAuthority)
+            {
+                GameManager.Instance.PlayerFinishedLoading();
+            }
         }
 
         if (!GameManager.Instance.IsGameReady) { rb2D.linearVelocity = Vector2.zero; return; }
+
         if (isDead) { if (HasStateAuthority && canbeRespawn && respawnTimer.Expired(Runner)) Respawn(); return; }
 
         bool effectivelyCarried = IsBeingCarried || localIsBeingCarriedPredict;
@@ -210,8 +254,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             if (rb2D.bodyType == RigidbodyType2D.Kinematic) rb2D.bodyType = RigidbodyType2D.Dynamic;
 
             if (coll2D != null && coll2D.isTrigger) coll2D.isTrigger = false;
-
-            isMoveAble = true;
         }
 
         if (HasStateAuthority && effectivelyCarried)
@@ -231,16 +273,16 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                 HandleMovement(input);
                 HandleJump(input);
             }
-            HandleInteraction(input);
+
+            if (!IsInteractBusy)
+            {
+                HandleInteraction(input);
+            }
             HandleEtcInput(input);
+            HandleDrop(input);
         }
 
         OnFixedUpdateSpecific();
-    }
-
-    public override void Despawned(NetworkRunner runner, bool hasState)
-    {
-        if (visualTransform != null) Destroy(visualTransform.gameObject);
     }
 
     #endregion
@@ -286,9 +328,17 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     protected virtual void HandleJump(NetworkInputData input)
     {
-        if (input.jump && IsGrounded && JumpCooldown.ExpiredOrNotRunning(Runner))
+        if (input.KeybindJump && IsGrounded && JumpCooldown.ExpiredOrNotRunning(Runner))
         {
             isJumping = true;
+
+            if (HasInputAuthority)
+            {
+                if (playerAudioSource != null && jumpSoundClip != null)
+                {
+                    playerAudioSource.PlayOneShot(jumpSoundClip);
+                }
+            }
             rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, 0f);
             rb2D.AddForce(Vector2.up * stats.s_jumpForce, ForceMode2D.Impulse);
             IsGrounded = false;
@@ -300,7 +350,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     private void HandleInteraction(NetworkInputData input)
     {
-        bool isEPressed = input.Keyboard_E && !_isEPressed;
+        bool isEPressed = input.KeybindInteract && !_isEPressed;
         if (isEPressed)
         {
             Collider2D[] hitsItem = Physics2D.OverlapCircleAll(transform.position, interactRadius);
@@ -312,24 +362,25 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                 {
                     cAnimation.InteractAnimation();
                     interactable.Interact(this);
+                    Debug.Log($"Try to Interact with {hit.name}");
                     break;
                 }
                 else if (hit.TryGetComponent<ThrowAbleItem>(out var throwableItem))
                 {
                     if (isBird)
                     {
+                        if (throwableItem.AlreadyThrow) continue;
+
                         cAnimation.InteractAnimation();
 
-                        if (throwableItem.PickupItem())
-                        {
-                            _canThrowItem = true;
-                        }
+                        throwableItem.PickupItem_RPC(this);
+                        Debug.Log($"Try to pickup the item : {hit.name}");
                         break;
                     }
                 }
             }
         }
-        _isEPressed = input.Keyboard_E;
+        _isEPressed = input.KeybindInteract;
     }
 
     public void TakeDamage(int dmg, float knockbackForce, Vector2 vec)
@@ -342,6 +393,13 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     public void RPC_TakeDamage(int dmg, float knockbackForce, Vector2 vec)
     {
         currentHealth -= dmg;
+        if (HasInputAuthority)
+        {
+            if (playerAudioSource != null && dmgSoundClip != null)
+            {
+                playerAudioSource.PlayOneShot(dmgSoundClip);
+            }
+        }
         rb2D.linearVelocity = Vector2.zero;
         rb2D.AddForce(vec * knockbackForce, ForceMode2D.Impulse);
         if (_damageFlash != null) _damageFlash.CallDamageFlash_RPC();
@@ -373,7 +431,10 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     {
         if (isDead) return;
         isDead = true;
-
+        if (HasStateAuthority)
+        {
+            RPC_PlayDieSound();
+        }
         if (IsBeingCarried)
         {
             if (Runner.TryFindObject(CarrierId, out var carrierObj) && carrierObj.TryGetComponent<Duck_Moveset>(out var duck))
@@ -411,28 +472,90 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     public virtual void Respawn()
     {
-        isDead = false;
-        isMoveAble = true;
-        if (HasStateAuthority) currentHealth = characterMaxHealth;
-
-        stilldrowning = false;
-        IsHeadUnderwater = false;
-        isWaterSurface = false;
-        IsFalling = false;
-        FallingBusy = false;
-
-        rb2D.simulated = true;
-        rb2D.linearVelocity = Vector2.zero;
-        rb2D.angularVelocity = 0f;
-        rb2D.gravityScale = normalGravity;
-
-        if (GameManager.Instance != null)
+        if (HasStateAuthority)
         {
-            transform.position = GameManager.Instance.GetRespawnPosition();
-            if (visualTransform != null) visualTransform.position = transform.position;
+            isDead = false;
+            currentHealth = characterMaxHealth;
+            stilldrowning = false;
+            IsHeadUnderwater = false;
+            isWaterSurface = false;
+            IsFalling = false;
+            FallingBusy = false;
+
+            if (GameManager.Instance != null)
+            {
+                Vector3 newPos = GameManager.Instance.GetRespawnPosition();
+
+                if (TryGetComponent<NetworkRigidbody2D>(out var netRb))
+                {
+                    netRb.Teleport(newPos, transform.rotation);
+                }
+                else
+                {
+                    transform.position = newPos;
+                    if (rb2D != null) rb2D.position = newPos;
+                }
+            }
+
+            RPC_OnRespawned();
+        }
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    public void RPC_OnRespawned()
+    {
+        isMoveAble = true;
+
+        if (rb2D != null)
+        {
+            rb2D.simulated = true;
+            rb2D.bodyType = RigidbodyType2D.Dynamic;
+            rb2D.gravityScale = normalGravity;
+            rb2D.linearVelocity = Vector2.zero;
+            rb2D.angularVelocity = 0f;
         }
 
         if (cAnimation != null) cAnimation.ReturnToBlendAnimation();
+
+        if (playerAudioSource != null && respawnSoundClip != null)
+        {
+            playerAudioSource.PlayOneShot(respawnSoundClip);
+        }
+
+        if (visualTransform != null)
+        {
+            visualTransform.localPosition = Vector3.zero;
+        }
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    public void RPC_ForceClientTeleport(Vector3 newPos)
+    {
+        isMoveAble = true;
+        isOptional = false;
+        isSpeedoptional = false;
+
+        transform.position = newPos;
+
+        if (rb2D != null)
+        {
+            rb2D.simulated = true;
+            rb2D.gravityScale = normalGravity;
+            rb2D.position = newPos;
+            rb2D.linearVelocity = Vector2.zero;
+            rb2D.angularVelocity = 0f;
+        }
+
+        if (TryGetComponent<NetworkRigidbody2D>(out var netRb))
+        {
+            netRb.Teleport(newPos, transform.rotation);
+        }
+
+        if (visualTransform != null)
+        {
+            visualTransform.position = newPos;
+            visualTransform.localPosition = Vector3.zero;
+        }
     }
 
     #endregion
@@ -490,7 +613,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     public virtual void OnDroppedEvent()
     {
-
+        isMoveAble = true;
     }
 
     #endregion
@@ -580,6 +703,13 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         {
             isJumping = false;
             resetAnimation = true;
+            if (HasInputAuthority)
+            {
+                if (playerAudioSource != null && landingSoundClip != null)
+                {
+                    playerAudioSource.PlayOneShot(landingSoundClip);
+                }
+            }
         }
 
         if (IsGrounded)
@@ -632,16 +762,56 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             if (visualTransform != null && duckMC.visualTransform != null)
             {
                 visualTransform.position = duckMC.visualTransform.position + new Vector3(0, betweenCarryPosition, 0);
-                visualVelocity = Vector3.zero;
             }
             if (cAnimation != null) cAnimation.FlipX = duckMC.cAnimation.FlipX;
         }
         else
         {
             if (spriteRenderer != null) spriteRenderer.sortingOrder = originalSortingOrder;
+
             if (visualTransform != null)
             {
-                visualTransform.position = Vector3.SmoothDamp(visualTransform.position, transform.position, ref visualVelocity, visualSmoothTime);
+                visualTransform.localPosition = Vector3.zero;
+            }
+        }
+        ManageMovementSounds();
+    }
+
+    private void ManageMovementSounds()
+    {
+        if (movementAudioSource == null) return;
+
+        AudioClip targetClip = null;
+
+        bool isMovingOnGround = IsGrounded && Mathf.Abs(rb2D.linearVelocity.x) > 0.1f;
+        bool isMovingInWater = (isWaterSurface || IsHeadUnderwater) && (Mathf.Abs(rb2D.linearVelocity.x) > 0.1f || Mathf.Abs(rb2D.linearVelocity.y) > 0.1f);
+
+        if (isMovingOnGround && !isJumping)
+        {
+            targetClip = walkSoundClip;
+        }
+        else if (isMovingInWater)
+        {
+            targetClip = swimSoundClip;
+        }
+
+        if (targetClip != null)
+        {
+            if (movementAudioSource.clip != targetClip)
+            {
+                movementAudioSource.clip = targetClip;
+                movementAudioSource.Play();
+            }
+            else if (!movementAudioSource.isPlaying)
+            {
+                movementAudioSource.Play();
+            }
+        }
+        else
+        {
+            if (movementAudioSource.isPlaying)
+            {
+                movementAudioSource.Stop();
             }
         }
     }
@@ -655,8 +825,11 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         foreach (var hit in hitsItem)
         {
             if (hit.gameObject == gameObject) continue;
+
             if (hit.TryGetComponent<Interactable>(out var interactable))
             {
+                if (!interactable.CanInteract(this)) continue;
+
                 float dist = Vector2.Distance(transform.position, hit.transform.position);
                 if (dist < minDistance)
                 {
@@ -668,6 +841,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             {
                 if (isBird)
                 {
+                    if (throwableItem.AlreadyThrow || HeldItemName.ToString() != "") continue;
+
                     float dist = Vector2.Distance(transform.position, hit.transform.position);
                     if (dist < minDistance)
                     {
@@ -688,6 +863,41 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     #endregion
 
+    #region DropItem
+
+    private void HandleDrop(NetworkInputData input)
+    {
+        bool isDropPressed = input.KeybindDropItem && !_wasDropPressed;
+
+        if (isDropPressed && HeldItemName.ToString() != "")
+        {
+            if (this is Bird_Moveset bird && bird._prepareToThrow) return;
+
+            float offsetDir = cAnimation.FlipX ? 0.6f : -0.6f;
+            Vector2 dropPosition = (Vector2)transform.position + new Vector2(offsetDir, 0.5f);
+
+            GameManager.Instance.RPC_DropItemByName(HeldItemName.ToString(), dropPosition, this);
+        }
+
+        _wasDropPressed = input.KeybindDropItem;
+    }
+    #endregion
+
+    [Rpc(RpcSources.All, RpcTargets.All)]
+    public void RPC_PlayRespawnSound()
+    {
+        if (playerAudioSource != null && respawnSoundClip != null)
+        {
+            playerAudioSource.PlayOneShot(respawnSoundClip);
+        }
+    }
+    public void RPC_PlayDieSound()
+    {
+        if (playerAudioSource != null && dieSoundClip != null)
+        {
+            playerAudioSource.PlayOneShot(dieSoundClip);
+        }
+    }
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.blue; Gizmos.DrawRay(transform.position, Vector2.down * rayDistance);

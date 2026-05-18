@@ -1,8 +1,11 @@
 ﻿using UnityEngine;
 using Fusion;
+using UnityEngine.SceneManagement;
 
 public class CameraCharacter : NetworkBehaviour
 {
+    public static Camera LocalCamera { get; private set; }
+
     public delegate void ParallaxCameraDelegate(float deltaMovement);
     public ParallaxCameraDelegate onCameraTranslate;
 
@@ -19,10 +22,21 @@ public class CameraCharacter : NetworkBehaviour
     {
         if (HasInputAuthority)
         {
+            LocalCamera = GetComponentInChildren<Camera>();
+
             oldPosition = transform.position.x;
             offset = transform.localPosition;
 
             target = transform.parent;
+
+            DontDestroyOnLoad(gameObject);
+
+            SceneManager.activeSceneChanged += OnSceneChanged;
+
+            if (ParallaxBackground.Instance != null)
+            {
+                ParallaxBackground.Instance.SetCamera(this);
+            }
 
             transform.SetParent(null);
 
@@ -41,10 +55,17 @@ public class CameraCharacter : NetworkBehaviour
         }
     }
 
+    private void OnSceneChanged(Scene current, Scene next)
+    {
+        onCameraTranslate = null;
+        Debug.Log("[Camera] Scene changed, cleared Parallax delegate.");
+    }
+
     public override void Despawned(NetworkRunner runner, bool hasState)
     {
         if (HasInputAuthority && gameObject != null)
         {
+            SceneManager.activeSceneChanged -= OnSceneChanged;
             Destroy(gameObject);
         }
     }
@@ -58,7 +79,7 @@ public class CameraCharacter : NetworkBehaviour
 
         if (transform.position.x != oldPosition)
         {
-            if (onCameraTranslate != null)
+            if (onCameraTranslate != null && ParallaxBackground.Instance != null)
             {
                 float delta = oldPosition - transform.position.x;
                 onCameraTranslate(delta);

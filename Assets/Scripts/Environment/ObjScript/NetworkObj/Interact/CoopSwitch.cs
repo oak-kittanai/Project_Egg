@@ -27,6 +27,11 @@ public class CoopSwitch : NetworkBehaviour, Interactable
         IsOn = !IsOn;
     }
 
+    public bool CanInteract(MovementCharacter player)
+    {
+        return true;
+    }
+
     public override void Render()
     {
         if (sr != null)

@@ -69,57 +69,23 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
                 moveY = -1;
             }
 
+            // Keybinds
+
             bool jump = false;
-            if (Keyboard.current.spaceKey.isPressed || Keyboard.current.upArrowKey.isPressed)
-            {
-                jump = true;
-            }
-            else
-            {
-                jump = false;
-            }
+            if (Keyboard.current.spaceKey.isPressed || Keyboard.current.upArrowKey.isPressed) jump = true;
+            else jump = false;
 
             bool press_F;
-            if (Keyboard.current.fKey.isPressed)
-            {
-                press_F = true;
-            }
-            else
-            {
-                press_F = false;
-            }
+            if (Keyboard.current.fKey.isPressed) press_F = true;
+            else press_F = false;
 
             bool press_E;
-            if (Keyboard.current.eKey.isPressed)
-            {
-                press_E = true;
-            }
-            else
-            {
-                press_E = false;
-            }
-
-            //Test Input
-
-            bool press_T;
-            if (Keyboard.current.tKey.isPressed)
-            {
-                press_T = true;
-            }
-            else
-            {
-                press_T = false;
-            }
+            if (Keyboard.current.eKey.isPressed) press_E = true;
+            else press_E = false;
 
             bool press_ESC;
-            if (Keyboard.current.escapeKey.isPressed)
-            {
-                press_ESC = true;
-            }
-            else
-            {
-                press_ESC = false;
-            }
+            if (Keyboard.current.escapeKey.isPressed) press_ESC = true;
+            else press_ESC = false;
 
             // ---
 
@@ -135,17 +101,16 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
             if (Keyboard.current.zKey.isPressed) press_Z = true;
             else press_Z = false;
 
-            data.Keyboard_Z = press_Z;
-            data.Keyboard_X = press_X;
+            data.KeybindThrowItem = press_Z;
+            data.KeybindPrepareThrowItem = press_X;
 
             // Data Input
             data.mousePos = mousePosition;
             data.horizontal = moveX;
             data.vertical = moveY;
-            data.jump = jump;
+            data.KeybindJump = jump;
             data.Keyboard_F = press_F;
-            data.Keyboard_E = press_E;
-            data.Keyboard_T = press_T;
+            data.KeybindInteract = press_E;
             data.Keyboard_ESC = press_ESC;
 
         }
@@ -181,20 +146,6 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
                 SessionHub.Instance.SetupButtonOnline(false);
             }
         }
-
-        // for test
-        /*if (SpawnPlayer.Instance != null)
-        {
-            if (runner.IsServer)
-            {
-                SpawnPlayer.Instance.SpawnPlayerToPosition(player, runner);
-            }
-            Debug.Log("Try spawn");
-        }
-        else
-        {
-            Debug.LogWarning("Can't find CenterHost");
-        }*/
 
         Debug.Log($"Player has {player.PlayerId} Joined the session");
     }
@@ -282,13 +233,13 @@ public struct NetworkInputData : INetworkInput
     public Vector2 mousePos;
     public float horizontal;
     public float vertical;
-    public bool jump;
+    public bool KeybindJump;
     public bool Keyboard_F;
-    public bool Keyboard_E;
-    public bool Keyboard_T;
+
     public bool Keyboard_ESC;
 
-    // For Test
-    public bool Keyboard_X;
-    public bool Keyboard_Z;
+    public bool KeybindInteract;
+    public bool KeybindDropItem;
+    public bool KeybindPrepareThrowItem;
+    public bool KeybindThrowItem;
 }

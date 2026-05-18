@@ -204,7 +204,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d6c2ea7cb747ffa44af7abd235d40365, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DoDamage
-  cooldownTime: 1.5
   damageAmount: 1
   knockbackForce: 5
 --- !u!1 &7982048727846197004
@@ -216,13 +215,13 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4647419164970126514}
-  - component: {fileID: 4836723233815337151}
   - component: {fileID: 225394393010166091}
   - component: {fileID: 2444014362476851839}
   - component: {fileID: 1756195056505730648}
+  - component: {fileID: 502953181593214582}
   m_Layer: 0
   m_Name: Kinght_Jay
-  m_TagString: Untagged
+  m_TagString: Monster
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -244,67 +243,6 @@ Transform:
   - {fileID: 7491196410213256110}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &4836723233815337151
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7982048727846197004}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 864bbd2fa1974344a93b828c36f20238, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Enemy_KnightJay
-  rb2D: {fileID: 225394393010166091}
-  animator: {fileID: 7125880080165953558}
-  spriteRenderer: {fileID: 0}
-  _currentAttackDirectionState: 0
-  _currentState: 0
-  spawnPos: {x: 0, y: 0, z: 0}
-  maxReachDistance: 8
-  _isStun:
-    _value: 0
-  stunTimeAmount: 3
-  _isStunAble:
-    _value: 0
-  stunAbleCooldown: 3
-  damage: 1
-  knockbackForce: 12
-  targetLayer:
-    serializedVersion: 2
-    m_Bits: 128
-  detectionRadius: 3.6
-  defaultDashDirection: {x: 1, y: 0}
-  attackRadius: 1.3
-  _isReturningToSpawn:
-    _value: 0
-  returnSpeed: 8
-  playerLayer:
-    serializedVersion: 2
-    m_Bits: 128
-  _targetPosition: {x: 0, y: 0}
-  _hasSpottedPlayer:
-    _value: 0
-  _isPreparing:
-    _value: 0
-  _currentDashCount: 0
-  _setDashCount: 0
-  nextState: 0
-  _isDelayBetweenActionOption:
-    _value: 0
-  delayBetweenActionOption: 0
-  delayBetweenAction: 1
-  hitBoxPivot: {fileID: 7491196410213256110}
-  hitBox: {fileID: 7092022087361915699}
-  attackPatterns:
-  - attackNumber: 0
-    delayBetweenActionOption: 1
-    attackPerPhase: 3
-  _currentPatternIndex: 0
-  _currentAttacksLeftInPhase: 0
-  restTimeAfterPhase: 2
-  walkSpeed: 1.5
 --- !u!50 &225394393010166091
 Rigidbody2D:
   serializedVersion: 5
@@ -349,7 +287,7 @@ MonoBehaviour:
   Flags: 262145
   NestedObjects: []
   NetworkedBehaviours:
-  - {fileID: 4836723233815337151}
+  - {fileID: 502953181593214582}
   - {fileID: 6373511826757010972}
   ForceRemoteRenderTimeframe: 0
 --- !u!61 &1756195056505730648
@@ -382,7 +320,7 @@ BoxCollider2D:
   m_CallbackLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_IsTrigger: 1
+  m_IsTrigger: 0
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
@@ -398,6 +336,41 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 1.3237276, y: 1.2555742}
   m_EdgeRadius: 0
+--- !u!114 &502953181593214582
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7982048727846197004}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 864bbd2fa1974344a93b828c36f20238, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Enemy_KnightJay
+  rb2D: {fileID: 225394393010166091}
+  animator: {fileID: 7125880080165953558}
+  spriteRenderer: {fileID: 0}
+  col: {fileID: 0}
+  _currentAttackDirectionState: 0
+  _currentState: 0
+  damage: 1
+  knockbackForce: 12
+  playerLayer:
+    serializedVersion: 2
+    m_Bits: 128
+  detectionRadius: 4
+  attackRadius: 3
+  _targetPosition: {x: 0, y: 0}
+  _hasSpotPlayer:
+    _value: 0
+  hitBoxPivot: {fileID: 7491196410213256110}
+  hitBox: {fileID: 7092022087361915699}
+  prepareDelay: 0.6
+  dashSpeed: 4
+  despawnDelay: 0.3
+  canRespawn: 1
+  respawnTime: 5
 --- !u!1 &8005734353801774666
 GameObject:
   m_ObjectHideFlags: 0

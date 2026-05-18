@@ -17,7 +17,7 @@ GameObject:
   - component: {fileID: 441982317292356946}
   m_Layer: 0
   m_Name: JellyTrap
-  m_TagString: Untagged
+  m_TagString: Trap
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -49,14 +49,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 30c2a04d89b02e948af89081f375a5e2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::JellyfishTrap
-  explosionRadius: 1.73
+  explosionRadius: 2
   chargeTime: 1.5
   respawnTime: 3
   damageAmount: 1
-  knockbackForce: 5
-  scaleUpSize: {x: 1.5, y: 1.5, z: 1}
+  knockbackForce: 15
+  scaleUpSize: {x: 1, y: 1, z: 1}
   circleSegments: 50
-  explosionAnimDuration: 1
+  explosionAnimDuration: 2
   targetLayer:
     serializedVersion: 2
     m_Bits: 128

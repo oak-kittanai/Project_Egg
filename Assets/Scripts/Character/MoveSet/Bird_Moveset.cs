@@ -1,4 +1,5 @@
 ﻿using Fusion;
+using System;
 using UnityEngine;
 
 public class Bird_Moveset : MovementCharacter
@@ -7,6 +8,11 @@ public class Bird_Moveset : MovementCharacter
     [SerializeField] float normalFlyTime = 5f;
     [SerializeField] float carryFlyTime = 3f;
     [SerializeField] float floatingGravity = 0.1f;
+
+    //SOUND
+    [SerializeField] public AudioClip flySoundClip;
+    [SerializeField] public AudioClip stopFlySoundClip;
+    [SerializeField] public AudioClip throwSoundClip;
 
     [Header("Physics Materials")]
     [SerializeField] PhysicsMaterial2D zeroFrictionMaterial;
@@ -27,7 +33,7 @@ public class Bird_Moveset : MovementCharacter
     // Drowning
     [Networked] private TickTimer DrownTimer { get; set; }
     [SerializeField] float drowningTime = 3f;
-    [SerializeField] bool startTimer;
+    [Networked] public bool startTimer { get; set; }
 
     [Header("ThrowSystem")]
     [SerializeField] public NetworkObject throwAblePrefab;
@@ -193,7 +199,7 @@ public class Bird_Moveset : MovementCharacter
     #region FlyLogic
     private void HandleFlightLogic(NetworkInputData input)
     {
-        bool isPressed = input.jump && !_wasJumpPressed;
+        bool isPressed = input.KeybindJump && !_wasJumpPressed;
 
         if (!IsBeingCarried)
         {
@@ -265,7 +271,7 @@ public class Bird_Moveset : MovementCharacter
             }
         }
 
-        _wasJumpPressed = input.jump;
+        _wasJumpPressed = input.KeybindJump;
     }
     private void StartFloating()
     {
@@ -294,6 +300,13 @@ public class Bird_Moveset : MovementCharacter
     {
         IsFlying = true;
         isJumping = false;
+        if (HasInputAuthority)
+        {
+            if (playerAudioSource != null && flySoundClip != null)
+            {
+                playerAudioSource.PlayOneShot(flySoundClip);
+            }
+        }
 
         float duration = IsBeingCarried ? carryFlyTime : normalFlyTime;
         FlightTimer = TickTimer.CreateFromSeconds(Runner, duration);
@@ -319,6 +332,13 @@ public class Bird_Moveset : MovementCharacter
     private void StopFlying()
     {
         IsFlying = false;
+        if (HasInputAuthority)
+        {
+            if (playerAudioSource != null && stopFlySoundClip != null)
+            {
+                playerAudioSource.PlayOneShot(stopFlySoundClip);
+            }
+        }
         FlightTimer = TickTimer.None;
 
         if (HasInputAuthority)
@@ -334,29 +354,48 @@ public class Bird_Moveset : MovementCharacter
             rb2D.sharedMaterial = defaultMaterial;
         }
     }
+
+    public void ForceCancelFlight()
+    {
+        if (IsFlying) StopFlying();
+        if (AlreadyFloating) StopFloating();
+        IsAlreadyFly = false;
+    }
     #endregion
 
     #region ThrowLogic
 
     public void HandleThrowLogic(NetworkInputData input)
     {
-        bool isXPressed = input.Keyboard_X && !_wasXPressed;
-        bool isZPressed = input.Keyboard_Z && !_wasZPressed;
+        bool isXPressed = input.KeybindPrepareThrowItem && !_wasXPressed;
+        bool isZPressed = input.KeybindThrowItem && !_wasZPressed;
 
         if (isXPressed)
         {
-            if (_canThrowItem)
+            if (_canThrowItem && !(isWaterSurface || stilldrowning))
             {
                 _prepareToThrow = !_prepareToThrow;
+
+                if (!_prepareToThrow)
+                {
+                    CancelThrow();
+                }
             }
             else
             {
-                _prepareToThrow = false;
+                if (_prepareToThrow)
+                {
+                    CancelThrow();
+                }
             }
         }
 
+        float inputAD = input.horizontal;
+
         if (_prepareToThrow)
         {
+            isMoveAble = false;
+            cAnimation.FaceTo(inputAD);
             UpdateOscillatingAim();
             IsInteractBusy = true;
 
@@ -366,8 +405,8 @@ public class Bird_Moveset : MovementCharacter
             }
         }
 
-        _wasXPressed = input.Keyboard_X;
-        _wasZPressed = input.Keyboard_Z;
+        _wasXPressed = input.KeybindPrepareThrowItem;
+        _wasZPressed = input.KeybindThrowItem;
     }
 
     private void ExecuteThrow()
@@ -376,14 +415,23 @@ public class Bird_Moveset : MovementCharacter
         Vector2 direction = throwPoint.right;
 
         GameManager.Instance.ProjectileSpawn(throwAblePrefab, throwPos, direction, throwPoint.rotation, projectileSpeed);
+        if (HasInputAuthority)
+        {
+            if (playerAudioSource != null && throwSoundClip != null)
+            {
+                playerAudioSource.PlayOneShot(throwSoundClip);
+            }
+        }
 
         _canThrowItem = false;
+        HeldItemName = "";
 
         CancelThrow();
     }
 
     private void CancelThrow()
     {
+        isMoveAble = true;
         _prepareToThrow = false;
         IsInteractBusy = false;
 
@@ -395,10 +443,11 @@ public class Bird_Moveset : MovementCharacter
         float time = (float)Runner.SimulationTime;
 
         float currentAngle = Mathf.Sin(time * aimSweepSpeed) * maxAimAngle;
+        float currentFaceTo = cAnimation.FlipX ? 0f : 180f;
 
         currentAimX = currentAngle;
 
-        throwPoint.localRotation = Quaternion.Euler(0, 0, currentAngle);
+        throwPoint.localRotation = Quaternion.Euler(0, currentFaceTo, currentAngle);
     }
 
     public void DrawLine()

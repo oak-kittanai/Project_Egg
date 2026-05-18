@@ -16,6 +16,10 @@ public class Turret_Shooter : NetworkBehaviour
 
     public Transform firePoint;
 
+    [Header("Audio Setting")]
+    public AudioSource shootAudioSource;
+    public AudioClip shootSoundClip;
+
     [Networked] private TickTimer FireTimer { get; set; }
 
     public override void FixedUpdateNetwork()
@@ -63,6 +67,17 @@ public class Turret_Shooter : NetworkBehaviour
         if (GameManager.Instance != null && bulletPrefab != null)
         {
             GameManager.Instance.ProjectileSpawn(bulletPrefab, spawnPos, direction, bulletRotation, projectileSpeed);
+
+            RPC_PlayShootSound();
+        }
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_PlayShootSound()
+    {
+        if (shootAudioSource != null && shootSoundClip != null)
+        {
+            shootAudioSource.PlayOneShot(shootSoundClip);
         }
     }
 

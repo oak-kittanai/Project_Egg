@@ -1,9 +1,5 @@
 using UnityEngine;
 using Fusion;
-
-[RequireComponent(typeof(SpriteRenderer))]
-[RequireComponent(typeof(Animator))]
-[RequireComponent(typeof(LineRenderer))]
 public class JellyfishTrap : NetworkBehaviour
 {
     public enum JellyState
@@ -14,7 +10,7 @@ public class JellyfishTrap : NetworkBehaviour
         Hidden
     }
 
-    [Header("Settings")]
+    [Header("Setting")]
     [SerializeField] float explosionRadius = 2.5f;
     [SerializeField] float chargeTime = 1.5f;
     [SerializeField] float respawnTime = 3.0f;
@@ -65,11 +61,14 @@ public class JellyfishTrap : NetworkBehaviour
         if (HasStateAuthority)
         {
             CurrentState = JellyState.Idle;
+            StateTimer = TickTimer.None;
         }
+
         _prevState = CurrentState;
+        UpdateVisualsForce();
     }
 
-    private void OnTriggerEnter2D(Collider2D collision)
+    private void OnTriggerStay2D(Collider2D collision)
     {
         if (!HasStateAuthority) return;
 
@@ -117,20 +116,7 @@ public class JellyfishTrap : NetworkBehaviour
     {
         if (_prevState != CurrentState)
         {
-            if (CurrentState == JellyState.Charging) anim.SetTrigger("Charge");
-            if (CurrentState == JellyState.Exploding) anim.SetTrigger("Explode");
-            if (CurrentState == JellyState.Idle) anim.SetTrigger("Reset");
-
-            bool isVisible = CurrentState != JellyState.Hidden;
-            sr.enabled = isVisible;
-            col.enabled = isVisible;
-
-            if (CurrentState != JellyState.Charging)
-            {
-                ClearCircle();
-                transform.localScale = (CurrentState == JellyState.Idle) ? originalScale : targetScale;
-            }
-
+            UpdateVisualsForce();
             _prevState = CurrentState;
         }
 
@@ -147,6 +133,23 @@ public class JellyfishTrap : NetworkBehaviour
         }
     }
 
+    private void UpdateVisualsForce()
+    {
+        if (CurrentState == JellyState.Charging) anim.SetTrigger("Charge");
+        if (CurrentState == JellyState.Exploding) anim.SetTrigger("Explode");
+        if (CurrentState == JellyState.Idle) anim.SetTrigger("Reset");
+
+        bool isVisible = CurrentState != JellyState.Hidden;
+        if (sr != null) sr.enabled = isVisible;
+        if (col != null) col.enabled = isVisible;
+
+        if (CurrentState != JellyState.Charging)
+        {
+            ClearCircle();
+            transform.localScale = (CurrentState == JellyState.Idle) ? originalScale : targetScale;
+        }
+    }
+
     void CheckDamage()
     {
         Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, explosionRadius, targetLayer);
@@ -160,7 +163,8 @@ public class JellyfishTrap : NetworkBehaviour
                 if (character.enabled)
                 {
                     float pushDirectionX = Mathf.Sign(hit.transform.position.x - transform.position.x);
-                    Vector2 knockbackDirection = new Vector2(pushDirectionX, 1f).normalized;
+
+                    Vector2 knockbackDirection = new Vector2(pushDirectionX, 0.5f).normalized;
 
                     character.TakeDamage(damageAmount, knockbackForce, knockbackDirection);
 
@@ -169,7 +173,6 @@ public class JellyfishTrap : NetworkBehaviour
             }
         }
     }
-
 
     bool IsTarget(Collider2D collision)
     {
@@ -199,7 +202,7 @@ public class JellyfishTrap : NetworkBehaviour
 
     void ClearCircle()
     {
-        lineRenderer.positionCount = 0;
+        if (lineRenderer != null) lineRenderer.positionCount = 0;
     }
 
     private void OnDrawGizmos()

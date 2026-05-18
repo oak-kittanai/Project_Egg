@@ -21,4 +21,9 @@ public class StoneItem : NetworkBehaviour, Interactable
     {
         Collect();
     }
+
+    public bool CanInteract(MovementCharacter player)
+    {
+        return true;
+    }
 }

@@ -49,6 +49,11 @@ public class B_Interact_Door : NetworkBehaviour, Interactable
         UpdateStatus();
     }
 
+    public bool CanInteract(MovementCharacter player)
+    {
+        return true;
+    }
+
     private void UpdateStatus()
     {
         if (spriteRenderer != null)

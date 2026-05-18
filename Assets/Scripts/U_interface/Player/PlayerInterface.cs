@@ -36,7 +36,15 @@ public class PlayerInterface : MonoBehaviour
 
     private void Awake()
     {
-        Instance = this;
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject.transform.root.gameObject);
+        }
+        else
+        {
+            Destroy(gameObject.transform.root.gameObject);
+        }
     }
 
     private void Start()
