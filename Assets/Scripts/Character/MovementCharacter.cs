@@ -768,12 +768,14 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         else
         {
             if (spriteRenderer != null) spriteRenderer.sortingOrder = originalSortingOrder;
+            if (visualTransform != null) visualTransform.localPosition = Vector3.zero;
         }
         ManageMovementSounds();
     }
 
     private void ManageMovementSounds()
     {
+        if (!HasInputAuthority) return;
         if (movementAudioSource == null) return;
 
         AudioClip targetClip = null;
@@ -886,12 +888,11 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             playerAudioSource.PlayOneShot(respawnSoundClip);
         }
     }
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
     public void RPC_PlayDieSound()
     {
         if (playerAudioSource != null && dieSoundClip != null)
-        {
             playerAudioSource.PlayOneShot(dieSoundClip);
-        }
     }
     private void OnDrawGizmosSelected()
     {

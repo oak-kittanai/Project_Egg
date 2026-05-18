@@ -1,6 +1,7 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using System.Collections;
 
 public class TutorialUIManager : MonoBehaviour
 {
@@ -24,6 +25,39 @@ public class TutorialUIManager : MonoBehaviour
         else
         {
             Destroy(gameObject.transform.root.gameObject);
+        }
+    }
+
+    private void OnEnable()
+    {
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    private void OnDisable()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        FindTutorialUI();
+    }
+
+    private void FindTutorialUI()
+    {
+        GameObject tutorialCanvas = GameObject.Find("TutorialCanvas");
+
+        if (tutorialCanvas != null)
+        {
+            tutorialPanel = tutorialCanvas.transform.Find("TutorialPanel").gameObject;
+
+            tutorialImageSlot = tutorialPanel.transform.Find("TutorialImageSlot").GetComponent<Image>();
+
+            Debug.Log($"TutorialManager Success Load UI");
+        }
+        else
+        {
+            Debug.LogWarning($"TutorialManager Fail To Load TutorialCanvas");
         }
     }
 
