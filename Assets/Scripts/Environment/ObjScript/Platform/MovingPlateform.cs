@@ -10,11 +10,13 @@ public class MovingPlateform : NetworkBehaviour
 
     private Vector3 startPosition;
     private Rigidbody2D rb;
+    private BoxCollider2D boxCol;
 
     public override void Spawned()
     {
         startPosition = transform.position;
         rb = GetComponent<Rigidbody2D>();
+        boxCol = GetComponent<BoxCollider2D>();
 
         rb.bodyType = RigidbodyType2D.Kinematic;
         rb.useFullKinematicContacts = true;
@@ -22,41 +24,36 @@ public class MovingPlateform : NetworkBehaviour
 
     public override void FixedUpdateNetwork()
     {
-        if (!HasStateAuthority) return;
-
         float sineValue = (Mathf.Sin((float)Runner.SimulationTime * speed) + 1f) / 2f;
         float movementOffset = sineValue * distance;
 
-        Vector3 newPosition = startPosition;
+        Vector2 targetPosition = startPosition;
+        if (isVertical) targetPosition.y += movementOffset;
+        else targetPosition.x += movementOffset;
 
-        if (isVertical)
-        {
-            newPosition.y += movementOffset;
-        }
-        else
-        {
-            newPosition.x += movementOffset;
-        }
+        Vector2 deltaMovement = targetPosition - rb.position;
 
-        rb.MovePosition(newPosition);
-    }
+        rb.position = targetPosition;
 
-    private void OnCollisionEnter2D(Collision2D collision)
-    {
-        if (collision.gameObject.CompareTag("Player"))
+        if (boxCol != null)
         {
-            if (collision.transform.position.y > transform.position.y)
+            Vector2 checkPos = rb.position + boxCol.offset + new Vector2(0, (boxCol.size.y / 2f) + 0.1f);
+
+            Vector2 checkSize = new Vector2(boxCol.size.x * 0.95f, 0.2f);
+
+            Collider2D[] hitResults = new Collider2D[10];
+            int hitCount = Runner.GetPhysicsScene2D().OverlapBox(checkPos, checkSize, 0, hitResults, LayerMask.GetMask("Player"));
+
+            for (int i = 0; i < hitCount; i++)
             {
-                collision.transform.SetParent(transform);
+                if (hitResults[i] != null && hitResults[i].TryGetComponent<MovementCharacter>(out var player))
+                {
+                    if (player.rb2D != null)
+                    {
+                        player.rb2D.position += deltaMovement;
+                    }
+                }
             }
-        }
-    }
-
-    private void OnCollisionExit2D(Collision2D collision)
-    {
-        if (collision.gameObject.CompareTag("Player"))
-        {
-            collision.transform.SetParent(null);
         }
     }
 
@@ -65,17 +62,20 @@ public class MovingPlateform : NetworkBehaviour
         Vector3 currentStart = Application.isPlaying ? startPosition : transform.position;
         Vector3 endPosition = currentStart;
 
-        if (isVertical)
-        {
-            endPosition.y += distance;
-        }
-        else
-        {
-            endPosition.x += distance;
-        }
+        if (isVertical) endPosition.y += distance;
+        else endPosition.x += distance;
+
         Gizmos.color = Color.red;
         Gizmos.DrawLine(currentStart, endPosition);
-        Gizmos.DrawSphere(currentStart, 0.1f);
-        Gizmos.DrawSphere(endPosition, 0.1f);
+
+        BoxCollider2D col = GetComponent<BoxCollider2D>();
+        if (col != null)
+        {
+            Gizmos.color = new Color(0f, 1f, 0f, 0.4f);
+            Vector2 pos = Application.isPlaying ? rb.position : (Vector2)transform.position;
+            Vector2 checkPos = pos + col.offset + new Vector2(0, (col.size.y / 2f) + 0.1f);
+            Vector2 checkSize = new Vector2(col.size.x * 0.95f, 0.2f);
+            Gizmos.DrawCube(checkPos, checkSize);
+        }
     }
 }
