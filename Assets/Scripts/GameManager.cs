@@ -42,7 +42,6 @@ public class GameManager : SingletonNetwork<GameManager>
     public override void Spawned()
     {
         base.Spawned();
-        DontDestroyOnLoad(gameObject);
     }
 
     #region Network

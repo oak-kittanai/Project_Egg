@@ -153,7 +153,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
         if (TryGetComponent<Fusion.Addons.Physics.NetworkRigidbody2D>(out var netRb))
         {
-            if (netRb.InterpolationTarget == null) netRb.InterpolationTarget = transform;
+            netRb.InterpolationTarget = transform;
         }
     }
 
@@ -167,8 +167,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         if (!isThisCharacterBird && this.GetType().Name == "Bird_Moveset") { this.enabled = false; return; }
 
         if (cAnimation != null) cAnimation.InitializeMovement(this);
-
-        DontDestroyOnLoad(gameObject);
 
         if (HasStateAuthority)
         {
@@ -474,46 +472,90 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     public virtual void Respawn()
     {
-        isDead = false;
-        isMoveAble = true;
         if (HasStateAuthority)
         {
-            RPC_PlayRespawnSound();
+            isDead = false;
             currentHealth = characterMaxHealth;
+            stilldrowning = false;
+            IsHeadUnderwater = false;
+            isWaterSurface = false;
+            IsFalling = false;
+            FallingBusy = false;
+
+            if (GameManager.Instance != null)
+            {
+                Vector3 newPos = GameManager.Instance.GetRespawnPosition();
+
+                if (TryGetComponent<NetworkRigidbody2D>(out var netRb))
+                {
+                    netRb.Teleport(newPos, transform.rotation);
+                }
+                else
+                {
+                    transform.position = newPos;
+                    if (rb2D != null) rb2D.position = newPos;
+                }
+            }
+
+            RPC_OnRespawned();
         }
+    }
 
-        stilldrowning = false;
-        IsHeadUnderwater = false;
-        isWaterSurface = false;
-        IsFalling = false;
-        FallingBusy = false;
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    public void RPC_OnRespawned()
+    {
+        isMoveAble = true;
 
-        rb2D.simulated = true;
-        rb2D.linearVelocity = Vector2.zero;
-        rb2D.angularVelocity = 0f;
-        rb2D.gravityScale = normalGravity;
-
-        if (GameManager.Instance != null)
+        if (rb2D != null)
         {
-            Vector3 newPos = GameManager.Instance.GetRespawnPosition();
-
-            if (TryGetComponent<NetworkRigidbody2D>(out var netRb))
-            {
-                netRb.Teleport(newPos, transform.rotation);
-            }
-            else
-            {
-                transform.position = newPos;
-                rb2D.position = newPos;
-            }
-
-            if (visualTransform != null)
-            {
-                visualTransform.position = newPos;
-            }
+            rb2D.simulated = true;
+            rb2D.bodyType = RigidbodyType2D.Dynamic;
+            rb2D.gravityScale = normalGravity;
+            rb2D.linearVelocity = Vector2.zero;
+            rb2D.angularVelocity = 0f;
         }
 
         if (cAnimation != null) cAnimation.ReturnToBlendAnimation();
+
+        if (playerAudioSource != null && respawnSoundClip != null)
+        {
+            playerAudioSource.PlayOneShot(respawnSoundClip);
+        }
+
+        if (visualTransform != null)
+        {
+            visualTransform.localPosition = Vector3.zero;
+        }
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    public void RPC_ForceClientTeleport(Vector3 newPos)
+    {
+        isMoveAble = true;
+        isOptional = false;
+        isSpeedoptional = false;
+
+        transform.position = newPos;
+
+        if (rb2D != null)
+        {
+            rb2D.simulated = true;
+            rb2D.gravityScale = normalGravity;
+            rb2D.position = newPos;
+            rb2D.linearVelocity = Vector2.zero;
+            rb2D.angularVelocity = 0f;
+        }
+
+        if (TryGetComponent<NetworkRigidbody2D>(out var netRb))
+        {
+            netRb.Teleport(newPos, transform.rotation);
+        }
+
+        if (visualTransform != null)
+        {
+            visualTransform.position = newPos;
+            visualTransform.localPosition = Vector3.zero;
+        }
     }
 
     #endregion

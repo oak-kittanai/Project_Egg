@@ -40,8 +40,6 @@ public class CenterHost : SingletonNetwork<CenterHost>
         {
             Debug.Log("Host runner ready");
         }
-
-        DontDestroyOnLoad(gameObject);
     }
 
     public override void FixedUpdateNetwork()

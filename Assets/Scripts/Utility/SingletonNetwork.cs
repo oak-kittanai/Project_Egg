@@ -34,12 +34,6 @@ public class SingletonNetwork<T> : NetworkBehaviour where T : NetworkBehaviour
             Destroy(gameObject);
         }
 
-        if (Instance is PlayerSpawn)
-        {
-            PlayerSpawn.Instance.Setup();
-        }
-
-
         if (Instance is CenterHost)
         {
             CenterHost.instance.GetRunner();
