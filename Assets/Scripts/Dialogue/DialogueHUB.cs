@@ -15,7 +15,12 @@ public class DialogueHUB : MonoBehaviour
     [SerializeField] Button nextButton;
     [SerializeField] Button prevButton;
 
-    private void Awake() => Instance = this;
+    private void Awake()
+    {
+        Instance = this;
+        DontDestroyOnLoad(gameObject.transform.root.gameObject);
+    }
+ 
 
     private void Start()
     {

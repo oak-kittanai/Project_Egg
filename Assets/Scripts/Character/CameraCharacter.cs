@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using Fusion;
+using UnityEngine.SceneManagement;
 
 public class CameraCharacter : NetworkBehaviour
 {
@@ -28,6 +29,15 @@ public class CameraCharacter : NetworkBehaviour
 
             target = transform.parent;
 
+            DontDestroyOnLoad(gameObject);
+
+            SceneManager.activeSceneChanged += OnSceneChanged;
+
+            if (ParallaxBackground.Instance != null)
+            {
+                ParallaxBackground.Instance.SetCamera(this);
+            }
+
             transform.SetParent(null);
 
             if (ParallaxBackground.Instance != null)
@@ -45,10 +55,17 @@ public class CameraCharacter : NetworkBehaviour
         }
     }
 
+    private void OnSceneChanged(Scene current, Scene next)
+    {
+        onCameraTranslate = null;
+        Debug.Log("[Camera] Scene changed, cleared Parallax delegate.");
+    }
+
     public override void Despawned(NetworkRunner runner, bool hasState)
     {
         if (HasInputAuthority && gameObject != null)
         {
+            SceneManager.activeSceneChanged -= OnSceneChanged;
             Destroy(gameObject);
         }
     }
@@ -62,7 +79,7 @@ public class CameraCharacter : NetworkBehaviour
 
         if (transform.position.x != oldPosition)
         {
-            if (onCameraTranslate != null)
+            if (onCameraTranslate != null && ParallaxBackground.Instance != null)
             {
                 float delta = oldPosition - transform.position.x;
                 onCameraTranslate(delta);

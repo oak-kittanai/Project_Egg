@@ -16,7 +16,7 @@ public class DialogueManager : MonoBehaviour
     private void Awake()
     {
         Instance = this;
-        DontDestroyOnLoad(this);
+        DontDestroyOnLoad(gameObject.transform.root.gameObject);
     }
 
     public void StartDialogueSequence(DialogueConfig[] sequence)

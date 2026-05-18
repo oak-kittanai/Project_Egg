@@ -42,6 +42,7 @@ public class GameManager : SingletonNetwork<GameManager>
     public override void Spawned()
     {
         base.Spawned();
+        DontDestroyOnLoad(gameObject);
     }
 
     #region Network
@@ -62,6 +63,8 @@ public class GameManager : SingletonNetwork<GameManager>
                 IsGameReady = true;
                 LoadingSceneTimer = TickTimer.None;
                 Debug.Log("Game Start!");
+
+                ResetAllPlayersToSpawn();
             }
         }
     }
@@ -154,6 +157,8 @@ public class GameManager : SingletonNetwork<GameManager>
             isLoadMapDone = true;
             Debug.Log("Map Ready");
             CheckGameStart();
+
+            CheckMapLoading();
         }
     }
 
@@ -450,13 +455,6 @@ public class GameManager : SingletonNetwork<GameManager>
 
     #region Scene
 
-    public void CheckPlayerLoading()
-    {
-        
-
-        HideGlobalLoadingScreen();
-    }
-
     // Reset Loading State For Next Level
     public void ResetLoadingStateForNextLevel()
     {
@@ -469,6 +467,8 @@ public class GameManager : SingletonNetwork<GameManager>
             IsGameReady = false;
             LoadingSceneTimer = TickTimer.None;
         }
+
+        currentLoadingUI = null;
     }
 
     // Loading Screen Zone

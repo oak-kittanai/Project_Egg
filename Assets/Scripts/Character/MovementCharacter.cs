@@ -1,5 +1,6 @@
 ﻿using Fusion;
 using UnityEngine;
+using Fusion.Addons.Physics;
 
 public class MovementCharacter : NetworkBehaviour, IDamageable
 {
@@ -21,18 +22,16 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [SerializeField] public AudioClip respawnSoundClip;
 
     [Header("Movement Audio")]
-    [SerializeField] public AudioSource movementAudioSource; // ลำโพง 2 
-    [SerializeField] public AudioClip walkSoundClip;   
-    [SerializeField] public AudioClip swimSoundClip;   
+    [SerializeField] public AudioSource movementAudioSource;
+    [SerializeField] public AudioClip walkSoundClip;
+    [SerializeField] public AudioClip swimSoundClip;
 
 
     [Networked, OnChangedRender(nameof(OnCharacterTypeChanged))]
     public bool isBird { get; set; }
 
-    [Header("Visual Smoothing")]
+    [Header("Visual")]
     [SerializeField] public Transform visualTransform;
-    [SerializeField] private float visualSmoothTime = 0.03f;
-    private Vector3 visualVelocity = Vector3.zero;
     private int originalSortingOrder;
 
     [Header("Movement Settings")]
@@ -151,6 +150,11 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         {
             visualTransform = transform.Find("Player_Animation");
         }
+
+        if (TryGetComponent<Fusion.Addons.Physics.NetworkRigidbody2D>(out var netRb))
+        {
+            if (netRb.InterpolationTarget == null) netRb.InterpolationTarget = transform;
+        }
     }
 
     #region CoreNetwork
@@ -163,6 +167,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         if (!isThisCharacterBird && this.GetType().Name == "Bird_Moveset") { this.enabled = false; return; }
 
         if (cAnimation != null) cAnimation.InitializeMovement(this);
+
+        DontDestroyOnLoad(gameObject);
 
         if (HasStateAuthority)
         {
@@ -190,7 +196,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
         if (GameManager.Instance != null) GameManager.Instance.RegisterPlayer(this);
         if (localGUI != null) localGUI.SetCharacterType(isThisCharacterBird);
-        if (visualTransform != null) visualTransform.SetParent(null);
 
         if (HasInputAuthority)
         {
@@ -208,21 +213,30 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     public override void FixedUpdateNetwork()
     {
-        if (GameManager.Instance == null || GameManager.Instance.Object == null || !GameManager.Instance.Object.IsValid || !GameManager.Instance.isLoadMapDone)
+        if (GameManager.Instance == null || GameManager.Instance.Object == null || !GameManager.Instance.Object.IsValid)
         {
+            rb2D.linearVelocity = Vector2.zero;
+            return;
+        }
+        if (!GameManager.Instance.isLoadMapDone)
+        {
+            hasSetInitialPosition = false;
             rb2D.linearVelocity = Vector2.zero;
             return;
         }
 
         if (!hasSetInitialPosition)
         {
-            transform.position = GameManager.Instance.GetRespawnPosition();
-            if (visualTransform != null) visualTransform.position = transform.position;
             hasSetInitialPosition = true;
-            if (HasStateAuthority) GameManager.Instance.PlayerFinishedLoading();
+
+            if (HasStateAuthority)
+            {
+                GameManager.Instance.PlayerFinishedLoading();
+            }
         }
 
         if (!GameManager.Instance.IsGameReady) { rb2D.linearVelocity = Vector2.zero; return; }
+
         if (isDead) { if (HasStateAuthority && canbeRespawn && respawnTimer.Expired(Runner)) Respawn(); return; }
 
         bool effectivelyCarried = IsBeingCarried || localIsBeingCarriedPredict;
@@ -271,11 +285,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         }
 
         OnFixedUpdateSpecific();
-    }
-
-    public override void Despawned(NetworkRunner runner, bool hasState)
-    {
-        if (visualTransform != null) Destroy(visualTransform.gameObject);
     }
 
     #endregion
@@ -364,7 +373,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                     {
                         if (throwableItem.AlreadyThrow) continue;
 
-                        cAnimation.InteractAnimation(); 
+                        cAnimation.InteractAnimation();
 
                         throwableItem.PickupItem_RPC(this);
                         Debug.Log($"Try to pickup the item : {hit.name}");
@@ -470,8 +479,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         if (HasStateAuthority)
         {
             RPC_PlayRespawnSound();
+            currentHealth = characterMaxHealth;
         }
-        if (HasStateAuthority) currentHealth = characterMaxHealth;
 
         stilldrowning = false;
         IsHeadUnderwater = false;
@@ -486,8 +495,22 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
         if (GameManager.Instance != null)
         {
-            transform.position = GameManager.Instance.GetRespawnPosition();
-            if (visualTransform != null) visualTransform.position = transform.position;
+            Vector3 newPos = GameManager.Instance.GetRespawnPosition();
+
+            if (TryGetComponent<NetworkRigidbody2D>(out var netRb))
+            {
+                netRb.Teleport(newPos, transform.rotation);
+            }
+            else
+            {
+                transform.position = newPos;
+                rb2D.position = newPos;
+            }
+
+            if (visualTransform != null)
+            {
+                visualTransform.position = newPos;
+            }
         }
 
         if (cAnimation != null) cAnimation.ReturnToBlendAnimation();
@@ -697,21 +720,21 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             if (visualTransform != null && duckMC.visualTransform != null)
             {
                 visualTransform.position = duckMC.visualTransform.position + new Vector3(0, betweenCarryPosition, 0);
-                visualVelocity = Vector3.zero;
             }
             if (cAnimation != null) cAnimation.FlipX = duckMC.cAnimation.FlipX;
         }
         else
         {
             if (spriteRenderer != null) spriteRenderer.sortingOrder = originalSortingOrder;
+
             if (visualTransform != null)
             {
-                visualTransform.position = Vector3.SmoothDamp(visualTransform.position, transform.position, ref visualVelocity, visualSmoothTime);
+                visualTransform.localPosition = Vector3.zero;
             }
         }
         ManageMovementSounds();
-
     }
+
     private void ManageMovementSounds()
     {
         if (movementAudioSource == null) return;
@@ -723,11 +746,11 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
         if (isMovingOnGround && !isJumping)
         {
-            targetClip = walkSoundClip; //เสียงเดิน
+            targetClip = walkSoundClip;
         }
         else if (isMovingInWater)
         {
-            targetClip = swimSoundClip; //เดินในน้ำ
+            targetClip = swimSoundClip;
         }
 
         if (targetClip != null)

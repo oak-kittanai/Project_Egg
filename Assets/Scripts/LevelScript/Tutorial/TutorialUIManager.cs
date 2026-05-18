@@ -14,14 +14,22 @@ public class TutorialUIManager : MonoBehaviour
 
     private void Awake()
     {
-        Instance = this;
-        tutorialPanel.SetActive(false);
-        DontDestroyOnLoad(this);
+        if (Instance == null)
+        {
+            Instance = this;
+            if (tutorialPanel != null) tutorialPanel.SetActive(false);
+
+            DontDestroyOnLoad(gameObject.transform.root.gameObject);
+        }
+        else
+        {
+            Destroy(gameObject.transform.root.gameObject);
+        }
     }
 
     public void ShowTutorial(Sprite spriteToShow, Vector2 customSize, float duration = 5f)
     {
-        if (spriteToShow != null)
+        if (spriteToShow != null && tutorialPanel != null)
         {
             if (hideCoroutine != null) StopCoroutine(hideCoroutine);
 
@@ -42,13 +50,19 @@ public class TutorialUIManager : MonoBehaviour
     public void HideTutorial()
     {
         if (hideCoroutine != null) StopCoroutine(hideCoroutine);
-        tutorialPanel.SetActive(false);
+
+        if (tutorialPanel != null) tutorialPanel.SetActive(false);
     }
 
     private IEnumerator HideAfterDelay(float delay)
     {
         yield return new WaitForSeconds(delay);
-        tutorialPanel.SetActive(false);
+
+        if (tutorialPanel != null)
+        {
+            tutorialPanel.SetActive(false);
+        }
+
         hideCoroutine = null;
     }
 }
