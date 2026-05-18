@@ -3,15 +3,15 @@ using UnityEngine;
 
 public class SnowBallProjectile : NetworkBehaviour
 {
-    [Header("Movement Settings")]
+    [Header("Moveset")]
     [SerializeField] private float speed = 15f;
 
-    [Header("Snowball Settings")]
+    [Header("Snowball Setting")]
     [SerializeField] private float minBounceForce = 2f;
 
-    [Header("Damage Settings")]
+    [Header("Damage Setting")]
     [SerializeField] private int damageAmount = 1;
-    [SerializeField] private float knockbackForce = 4f;
+    [SerializeField] private float knockbackForce = 15f;
     [Networked] private TickTimer LifeTimer { get; set; }
 
     public override void Spawned()
@@ -38,13 +38,13 @@ public class SnowBallProjectile : NetworkBehaviour
         }
     }
 
-    private void OnTriggerEnter2D(Collider2D collision)
+    private void OnCollisionEnter2D(Collision2D collision)
     {
         if (!HasStateAuthority) return;
 
         if (collision.gameObject.CompareTag("Player"))
         {
-            MovementCharacter[] allCharacterMovement = collision.GetComponents<MovementCharacter>();
+            MovementCharacter[] allCharacterMovement = collision.gameObject.GetComponents<MovementCharacter>();
 
             foreach (var character in allCharacterMovement)
             {
@@ -56,14 +56,10 @@ public class SnowBallProjectile : NetworkBehaviour
                     character.TakeDamage(damageAmount, knockbackForce, knockbackDir.normalized);
 
                     DespawnSnowball();
+                    return;
                 }
-            } 
+            }
         }
-    }
-
-    private void OnCollisionEnter2D(Collision2D collision)
-    {
-        if (!HasStateAuthority) return;
 
         int layer = collision.gameObject.layer;
         if (layer == LayerMask.NameToLayer("Ground") || layer == LayerMask.NameToLayer("Platform"))
