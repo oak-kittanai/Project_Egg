@@ -3,10 +3,12 @@ using UnityEngine;
 
 public class MoveSome : NetworkBehaviour
 {
+    [Header("Move State")]
     [SerializeField] float speed = 1.5f;
     [SerializeField] float distance = 4f;
     [SerializeField] bool isVertical;
     [SerializeField] bool isReverse;
+    [Networked] private Vector3 CurrentPosition { get; set; }
 
     private Vector3 startPosition;
     private Rigidbody2D rb;
@@ -16,28 +18,49 @@ public class MoveSome : NetworkBehaviour
         startPosition = transform.position;
         rb = GetComponent<Rigidbody2D>();
 
-        rb.bodyType = RigidbodyType2D.Kinematic;
-        rb.useFullKinematicContacts = true;
+        if (rb != null)
+        {
+            rb.bodyType = RigidbodyType2D.Kinematic;
+            rb.useFullKinematicContacts = true;
+        }
+
+        if (HasStateAuthority)
+        {
+            CurrentPosition = startPosition;
+        }
     }
 
     public override void FixedUpdateNetwork()
     {
-        float sineValue = (Mathf.Sin((float)Runner.SimulationTime * speed) + 1f) / 2f;
-        float directionMultiplier = isReverse ? -1f : 1f;
-        float movementOffset = sineValue * distance * directionMultiplier;
-
-        Vector3 newPosition = startPosition;
-
-        if (isVertical)
+        if (HasStateAuthority)
         {
-            newPosition.y += movementOffset;
-        }
-        else
-        {
-            newPosition.x += movementOffset;
+            float sineValue = (Mathf.Sin((float)Runner.SimulationTime * speed) + 1f) / 2f;
+            float directionMultiplier = isReverse ? -1f : 1f;
+            float movementOffset = sineValue * distance * directionMultiplier;
+
+            Vector3 newPosition = startPosition;
+
+            if (isVertical)
+            {
+                newPosition.y += movementOffset;
+            }
+            else
+            {
+                newPosition.x += movementOffset;
+            }
+
+            CurrentPosition = newPosition;
         }
 
-        rb.MovePosition(newPosition);
+        if (rb != null)
+        {
+            rb.MovePosition(CurrentPosition);
+        }
+    }
+
+    public override void Render()
+    {
+        transform.position = Vector3.Lerp(transform.position, CurrentPosition, Runner.DeltaTime * 15f);
     }
 
     private void OnDrawGizmosSelected()
