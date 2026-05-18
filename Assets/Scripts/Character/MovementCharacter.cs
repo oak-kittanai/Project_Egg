@@ -153,7 +153,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
         if (TryGetComponent<Fusion.Addons.Physics.NetworkRigidbody2D>(out var netRb))
         {
-            netRb.InterpolationTarget = transform;
+            netRb.InterpolationTarget = visualTransform;
         }
     }
 
@@ -768,11 +768,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         else
         {
             if (spriteRenderer != null) spriteRenderer.sortingOrder = originalSortingOrder;
-
-            if (visualTransform != null)
-            {
-                visualTransform.localPosition = Vector3.zero;
-            }
         }
         ManageMovementSounds();
     }
