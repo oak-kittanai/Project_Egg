@@ -20,8 +20,8 @@ public class CharacterAnimation : NetworkBehaviour
     private string _lastLocalState = "";
 
     [SerializeField] public bool Carrying => movement != null && movement.isCarrying;
-    [SerializeField] public bool BeingCarried => movement.IsBeingCarried;
-    [SerializeField] public bool isBird => movement is MovementCharacter move && move.isBird;
+    [SerializeField] public bool BeingCarried => movement != null && movement.IsBeingCarried;
+    [SerializeField] public bool isBird => movement != null && movement.isBird;
 
     [Networked] public TickTimer AnimationTimer { get; set; }
 

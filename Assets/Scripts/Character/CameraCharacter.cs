@@ -72,7 +72,7 @@ public class CameraCharacter : NetworkBehaviour
 
     private void LateUpdate()
     {
-        if (!HasInputAuthority || target == null) return;
+        if (!HasInputAuthority || target == null || !target.gameObject.activeInHierarchy) return;
 
         Vector3 desiredPosition = target.position + offset;
         transform.position = Vector3.SmoothDamp(transform.position, desiredPosition, ref velocity, smoothTime);

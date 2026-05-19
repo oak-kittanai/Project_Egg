@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using System.Threading.Tasks;
 
 [System.Serializable]
 public class ItemMapping
@@ -39,9 +40,31 @@ public class GameManager : SingletonNetwork<GameManager>
     [Networked] public int TeamOrangeKeys { get; set; }
 
 
-    public override void Spawned()
+    private void OnEnable()
     {
-        base.Spawned();
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    private void OnDisable()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        LevelData levelDataInScene = FindFirstObjectByType<LevelData>();
+
+        if (levelDataInScene != null)
+        {
+            SetupLevelData(levelDataInScene);
+            Debug.Log($"GameManager Succes Load LevelData");
+        }
+        else
+        {
+            Debug.Log($"GameManager Fail To Load LevelData");
+        }
+
+
     }
 
     #region Network
@@ -465,6 +488,8 @@ public class GameManager : SingletonNetwork<GameManager>
             isLoadMapDone = false;
             IsGameReady = false;
             LoadingSceneTimer = TickTimer.None;
+
+            activePlayers.Clear();
         }
 
         currentLoadingUI = null;
@@ -486,6 +511,40 @@ public class GameManager : SingletonNetwork<GameManager>
             GlobalLoadingManager.Instance.HideLoading();
         }
     }
+
+    #region Scene Transition (Level Hop)
+
+    public async Task LoadNextLevel(string nextSceneName)
+    {
+        if (!HasStateAuthority) return;
+
+        ShowGlobalLoadingScreen();
+
+        ResetLoadingStateForNextLevel();
+
+        Debug.Log($"[GameManager] Host is loading next level: {nextSceneName}");
+
+        await Runner.LoadScene(nextSceneName, UnityEngine.SceneManagement.LoadSceneMode.Single);
+
+        await Task.Delay(500);
+
+        if (CenterHost.Instance != null && SessionManager.Instance != null)
+        {
+            foreach (var player in SessionManager.Instance.Players)
+            {
+                if (player.playerRef == Runner.LocalPlayer)
+                {
+                    CenterHost.Instance.SpawnPlayer(player.playerRef, CharacterTypeShip.Instance.currentHost, true);
+                }
+                else
+                {
+                    CenterHost.Instance.SpawnPlayer(player.playerRef, CharacterTypeShip.Instance.currentClient, false);
+                }
+            }
+        }
+    }
+
+    #endregion
 
     #endregion
 
