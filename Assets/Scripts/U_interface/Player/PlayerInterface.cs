@@ -71,12 +71,13 @@ public class PlayerInterface : MonoBehaviour
             return;
         }
 
-        TryFindFromScene();
+        TryFindFromScene(persistentRoot);
     }
 
     private bool TryFindFromRoot(Transform root)
     {
         bool foundAny = false;
+        GameObject uiCanvas = GameObject.Find("Canvas");
 
         Transform charStats = root.Find("Character_Stats_Obj");
         if (charStats != null)
@@ -109,21 +110,16 @@ public class PlayerInterface : MonoBehaviour
                 questItemIcon = questObj.Find("QuestItemIcon")?.GetComponent<Image>();
                 foundAny = true;
             }
-
-            Transform promptT = questDialog.Find("InteractPrompt");
-            if (promptT != null)
-            {
-                interactPromptObj = promptT.gameObject;
-                foundAny = true;
-            }
         }
+        Transform promptObj = uiCanvas.transform.Find("InteractPrompt");
+        if (promptObj != null) interactPromptObj = promptObj.gameObject;
 
         return foundAny;
     }
 
-    private void TryFindFromScene()
+    private void TryFindFromScene(Transform root)
     {
-        GameObject uiCanvas = GameObject.Find("PlayerInterfaceCanvas");
+        GameObject uiCanvas = GameObject.Find("Canvas");
 
         if (uiCanvas == null)
         {
@@ -131,20 +127,28 @@ public class PlayerInterface : MonoBehaviour
             return;
         }
 
-        Transform profileRef = uiCanvas.transform.Find("CharacterProfile");
-        if (profileRef != null) characterProfile_Ref = profileRef.GetComponent<Image>();
-
-        Transform healthRef = uiCanvas.transform.Find("HealthBar");
-        if (healthRef != null) HealthBar_Ref = healthRef.GetComponent<Image>();
-
-        Transform questObj = uiCanvas.transform.Find("QuestContainer");
-        if (questObj != null)
+        Transform charStats = uiCanvas.transform.Find("Character_Stats_Obj");
+        if (charStats != null)
         {
-            questContainer = questObj.gameObject;
-            questText = questObj.Find("QuestText")?.GetComponent<TextMeshProUGUI>();
-            questProgressBar = questObj.Find("QuestProgressBar")?.GetComponent<Slider>();
-            questItemAmountText = questObj.Find("QuestItemAmountText")?.GetComponent<TextMeshProUGUI>();
-            questItemIcon = questObj.Find("QuestItemIcon")?.GetComponent<Image>();
+            Transform profileRef = charStats.Find("CharacterProfile");
+            if (profileRef != null) characterProfile_Ref = profileRef.GetComponent<Image>();
+
+            Transform healthRef = charStats.Find("HealthBar");
+            if (healthRef != null) HealthBar_Ref = healthRef.GetComponent<Image>();
+        }
+
+        Transform questDialog = uiCanvas.transform.Find("QuestDialog_Obj");
+        if (questDialog != null)
+        {
+            Transform questObj = questDialog.Find("QuestContainer");
+            if (questObj != null)
+            {
+                questContainer = questObj.gameObject;
+                questText = questObj.Find("QuestText")?.GetComponent<TextMeshProUGUI>();
+                questProgressBar = questObj.Find("QuestProgressBar")?.GetComponent<Slider>();
+                questItemAmountText = questObj.Find("QuestItemAmountText")?.GetComponent<TextMeshProUGUI>();
+                questItemIcon = questObj.Find("QuestItemIcon")?.GetComponent<Image>();
+            }
         }
 
         Transform promptObj = uiCanvas.transform.Find("InteractPrompt");

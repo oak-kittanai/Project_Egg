@@ -13,6 +13,9 @@ public class ItemMapping
 
 public class GameManager : SingletonNetwork<GameManager>
 {
+    [SerializeField] GameObject canvasObject;
+    [SerializeField] GameObject coreManagerObject;
+
     [SerializeField] NetworkRunner NetworkRunner;
 
     [SerializeField] GameObject playerHost;
@@ -39,6 +42,10 @@ public class GameManager : SingletonNetwork<GameManager>
     [Networked] public int TeamBlueKeys { get; set; }
     [Networked] public int TeamOrangeKeys { get; set; }
 
+    public async Task SetUpScene()
+    {
+        //await Instantiate(canvasObject, vec);
+    }
 
     private void OnEnable()
     {

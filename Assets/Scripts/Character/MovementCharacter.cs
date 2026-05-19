@@ -155,7 +155,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
         if (TryGetComponent<Fusion.Addons.Physics.NetworkRigidbody2D>(out var netRb))
         {
-            netRb.InterpolationTarget = visualTransform;
+            netRb.InterpolationTarget = transform;
         }
     }
 
@@ -258,9 +258,10 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             if (coll2D != null && coll2D.isTrigger) coll2D.isTrigger = false;
         }
 
-        if (HasStateAuthority && effectivelyCarried)
+        if (effectivelyCarried)
         {
-            if (Runner.TryFindObject(effectiveCarrierId, out var duckObj) && duckObj.TryGetComponent<Rigidbody2D>(out var duckRb))
+            if (Runner.TryFindObject(effectiveCarrierId, out var duckObj)
+                && duckObj.TryGetComponent<Rigidbody2D>(out var duckRb))
             {
                 rb2D.MovePosition(duckRb.position + Vector2.up * betweenCarryPosition);
             }
@@ -761,15 +762,12 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         if (effectivelyCarried && Runner.TryFindObject(effectiveCarrierId, out var duckObj) && duckObj.TryGetComponent<MovementCharacter>(out var duckMC))
         {
             if (spriteRenderer != null) spriteRenderer.sortingOrder = originalSortingOrder - 1;
-            if (visualTransform != null && duckMC.visualTransform != null)
-            {
-                visualTransform.position = duckMC.visualTransform.position + new Vector3(0, betweenCarryPosition, 0);
-            }
             if (cAnimation != null) cAnimation.FlipX = duckMC.cAnimation.FlipX;
         }
         else
         {
             if (spriteRenderer != null) spriteRenderer.sortingOrder = originalSortingOrder;
+            if (visualTransform != null) visualTransform.localPosition = Vector3.zero; // reset หลังถูกวาง
         }
         ManageMovementSounds();
     }
