@@ -250,6 +250,11 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             if (coll2D != null && !coll2D.isTrigger) coll2D.isTrigger = true;
 
             isMoveAble = false;
+
+            if (Runner.TryFindObject(effectiveCarrierId, out var duckObj) && duckObj.TryGetComponent<Rigidbody2D>(out var duckRb))
+            {
+                rb2D.position = duckRb.position + Vector2.up * betweenCarryPosition;
+            }
         }
         else
         {
@@ -260,10 +265,18 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
         if (effectivelyCarried)
         {
-            if (Runner.TryFindObject(effectiveCarrierId, out var duckObj)
-                && duckObj.TryGetComponent<Rigidbody2D>(out var duckRb))
+            if (rb2D.bodyType != RigidbodyType2D.Kinematic) rb2D.bodyType = RigidbodyType2D.Kinematic;
+            rb2D.linearVelocity = Vector2.zero;
+
+            if (coll2D != null && !coll2D.isTrigger) coll2D.isTrigger = true;
+
+            isMoveAble = false;
+
+            if (Runner.TryFindObject(effectiveCarrierId, out var duckObj) && duckObj.TryGetComponent<Rigidbody2D>(out var duckRb))
             {
-                rb2D.MovePosition(duckRb.position + Vector2.up * betweenCarryPosition);
+                Vector2 targetPos = duckRb.position + Vector2.up * betweenCarryPosition;
+                rb2D.position = targetPos;
+                transform.position = targetPos;
             }
         }
 
@@ -610,6 +623,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                 cAnimation.FallingAndFloatAnimation(true, false);
             }
 
+            if (visualTransform != null) visualTransform.localPosition = Vector3.zero;
+
             OnDroppedEvent();
         }
     }
@@ -752,26 +767,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, cappedY);
     }
 
-    public override void Render()
-    {
-        if (HasInputAuthority) CheckInteractable();
-
-        bool effectivelyCarried = IsBeingCarried || localIsBeingCarriedPredict;
-        NetworkId effectiveCarrierId = IsBeingCarried ? CarrierId : localCarrierIdPredict;
-
-        if (effectivelyCarried && Runner.TryFindObject(effectiveCarrierId, out var duckObj) && duckObj.TryGetComponent<MovementCharacter>(out var duckMC))
-        {
-            if (spriteRenderer != null) spriteRenderer.sortingOrder = originalSortingOrder - 1;
-            if (cAnimation != null) cAnimation.FlipX = duckMC.cAnimation.FlipX;
-        }
-        else
-        {
-            if (spriteRenderer != null) spriteRenderer.sortingOrder = originalSortingOrder;
-            if (visualTransform != null) visualTransform.localPosition = Vector3.zero; // reset หลังถูกวาง
-        }
-        ManageMovementSounds();
-    }
-
     private void ManageMovementSounds()
     {
         if (!HasInputAuthority) return;
@@ -878,6 +873,44 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         _wasDropPressed = input.KeybindDropItem;
     }
     #endregion
+
+    public override void Render()
+    {
+        if (HasInputAuthority) CheckInteractable();
+
+        bool effectivelyCarried = IsBeingCarried || localIsBeingCarriedPredict;
+        NetworkId effectiveCarrierId = IsBeingCarried ? CarrierId : localCarrierIdPredict;
+
+        if (effectivelyCarried && Runner.TryFindObject(effectiveCarrierId, out var duckObj) && duckObj.TryGetComponent<MovementCharacter>(out var duckMC))
+        {
+            if (spriteRenderer != null) spriteRenderer.sortingOrder = originalSortingOrder - 1;
+            if (cAnimation != null) cAnimation.FlipX = duckMC.cAnimation.FlipX;
+        }
+        else
+        {
+            if (spriteRenderer != null) spriteRenderer.sortingOrder = originalSortingOrder;
+        }
+        ManageMovementSounds();
+    }
+
+    private void LateUpdate()
+    {
+        if (Runner == null || !Runner.IsRunning) return;
+
+        bool effectivelyCarried = IsBeingCarried || localIsBeingCarriedPredict;
+        NetworkId effectiveCarrierId = IsBeingCarried ? CarrierId : localCarrierIdPredict;
+
+        if (effectivelyCarried && Runner.TryFindObject(effectiveCarrierId, out var duckObj) && duckObj.TryGetComponent<MovementCharacter>(out var duckMC))
+        {
+            transform.position = duckMC.transform.position + new Vector3(0, betweenCarryPosition, 0);
+
+            if (visualTransform != null) visualTransform.localPosition = Vector3.zero;
+        }
+        else
+        {
+            if (visualTransform != null) visualTransform.localPosition = Vector3.zero;
+        }
+    }
 
     [Rpc(RpcSources.All, RpcTargets.All)]
     public void RPC_PlayRespawnSound()

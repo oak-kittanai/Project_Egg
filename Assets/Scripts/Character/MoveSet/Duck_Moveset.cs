@@ -169,12 +169,13 @@ public class Duck_Moveset : MovementCharacter
         friend.localIsBeingCarriedPredict = true;
         friend.localCarrierIdPredict = Object.Id;
 
-        friend.RPC_UpdateCarry(true, Object.Id);
+        if (friend.rb2D != null) friend.rb2D.bodyType = RigidbodyType2D.Kinematic;
+        if (friend.coll2D != null) friend.coll2D.isTrigger = true;
 
         if (normalCollider != null) normalCollider.enabled = false;
         if (carryCollider != null) carryCollider.enabled = true;
 
-        resetAnimation = true;
+        friend.RPC_UpdateCarry(true, Object.Id);
     }
 
     public void DropFriend(bool throwFriend = true)
@@ -187,7 +188,10 @@ public class Duck_Moveset : MovementCharacter
                 if (friend.enabled)
                 {
                     float throwDir = cAnimation.FlipX ? 1f : -1f;
+
                     friend.localIsBeingCarriedPredict = false;
+                    if (friend.rb2D != null) friend.rb2D.bodyType = RigidbodyType2D.Dynamic;
+                    if (friend.coll2D != null) friend.coll2D.isTrigger = false;
 
                     if (throwFriend && friend.visualTransform != null)
                     {

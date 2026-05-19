@@ -77,10 +77,7 @@ public class Bird_Moveset : MovementCharacter
         {
             IsAlreadyFly = false;
 
-            if (AlreadyFloating)
-            {
-                StopFloating();
-            }
+            if (AlreadyFloating) StopFloating();
 
             if (!IsFlying && rb2D != null && rb2D.sharedMaterial != defaultMaterial)
             {
@@ -88,16 +85,16 @@ public class Bird_Moveset : MovementCharacter
             }
         }
 
-        if (IsBeingCarried)
-        {
-            if (AlreadyFloating)
-            {
-                StopFloating();
-            }
+        bool effectivelyCarried = IsBeingCarried || localIsBeingCarriedPredict;
+        NetworkId effectiveCarrierId = IsBeingCarried ? CarrierId : localCarrierIdPredict;
 
-            if (Runner.TryFindObject(CarrierId, out var duckObj) && duckObj.TryGetComponent<MovementCharacter>(out var duck))
+        if (effectivelyCarried)
+        {
+            if (AlreadyFloating) StopFloating();
+
+            if (Runner.TryFindObject(effectiveCarrierId, out var duckObj) && duckObj.TryGetComponent<MovementCharacter>(out var duck))
             {
-                if (duck.IsGrounded || duck.isWaterSurface && !IsFlying)
+                if (!IsFlying && (duck.IsGrounded || duck.isWaterSurface))
                 {
                     IsAlreadyFly = false;
                     resetAnimation = true;
@@ -116,25 +113,40 @@ public class Bird_Moveset : MovementCharacter
 
     private void HandleDrowning()
     {
-        if (!IsBeingCarried && (isWaterSurface || stilldrowning))
+        bool effectivelyCarried = IsBeingCarried || localIsBeingCarriedPredict;
+
+        if (!effectivelyCarried && (isWaterSurface || stilldrowning))
         {
             isMoveAble = false;
             isOptional = true;
             optionalGravity = 0f;
 
-            rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, -1.5f);
+            if (IsBeingCarried)
+            {
+
+            }
+            else
+            {
+                rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, -1.5f);
+            }
 
             if (!startTimer)
             {
-                StartDrowningTimer();
+                if (HasStateAuthority)
+                {
+                    StartDrowningTimer();
+                }
             }
 
             if (startTimer)
             {
                 if (DrownTimer.Expired(Runner))
                 {
-                    startTimer = false;
-                    DeathMechanic_RPC();
+                    if (HasStateAuthority)
+                    {
+                        startTimer = false;
+                        DeathMechanic_RPC();
+                    }
                 }
                 else
                 {
@@ -144,8 +156,11 @@ public class Bird_Moveset : MovementCharacter
         }
         else if (startTimer)
         {
-            DrownTimer = TickTimer.None;
-            startTimer = false;
+            if (HasStateAuthority)
+            {
+                DrownTimer = TickTimer.None;
+                startTimer = false;
+            }
         }
     }
 
@@ -221,29 +236,15 @@ public class Bird_Moveset : MovementCharacter
                 }
             }
         }
-
-        if (IsBeingCarried)
+        else
         {
             isMoveAble = false;
+
             if (isPressed)
             {
                 if (!IsFlying && !IsAlreadyFly)
                 {
                     StartFlying();
-                }
-            }
-        }
-
-        if (IsBeingCarried && IsAlreadyFly && !IsFlying)
-        {
-            if (Runner.TryFindObject(CarrierId, out var carrierObj))
-            {
-                if (carrierObj.TryGetComponent<MovementCharacter>(out var duck))
-                {
-                    if (duck.IsGrounded)
-                    {
-                        resetAnimation = true;
-                    }
                 }
             }
         }
@@ -340,6 +341,14 @@ public class Bird_Moveset : MovementCharacter
             rb2D.sharedMaterial = zeroFrictionMaterial;
         }
 
+        if (IsBeingCarried && Runner.TryFindObject(CarrierId, out var carrierObj))
+        {
+            if (carrierObj.TryGetComponent<Duck_Moveset>(out var duck))
+            {
+                if (duck.carryCollider != null) duck.carryCollider.sharedMaterial = zeroFrictionMaterial;
+            }
+        }
+
         Debug.Log($"Bird Flying! Duration: {duration}s");
     }
 
@@ -351,6 +360,14 @@ public class Bird_Moveset : MovementCharacter
         if (rb2D != null)
         {
             rb2D.sharedMaterial = defaultMaterial;
+        }
+
+        if (IsBeingCarried && Runner.TryFindObject(CarrierId, out var carrierObj))
+        {
+            if (carrierObj.TryGetComponent<Duck_Moveset>(out var duck))
+            {
+                if (duck.carryCollider != null) duck.carryCollider.sharedMaterial = null;
+            }
         }
     }
 
