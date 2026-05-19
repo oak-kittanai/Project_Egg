@@ -636,6 +636,7 @@ MonoBehaviour:
   betweenCarryPosition: 0.7
   normalCollider: {fileID: 1019386123444590845}
   carryCollider: {fileID: 2326915062844445405}
+  zeroFiction: {fileID: 0}
   localIsBeingCarriedPredict: 0
   localCarrierIdPredict:
     Raw: 0
@@ -747,6 +748,7 @@ MonoBehaviour:
   betweenCarryPosition: 0.7
   normalCollider: {fileID: 1019386123444590845}
   carryCollider: {fileID: 2326915062844445405}
+  zeroFiction: {fileID: 0}
   localIsBeingCarriedPredict: 0
   localCarrierIdPredict:
     Raw: 0
@@ -771,13 +773,16 @@ MonoBehaviour:
   stopFlySoundClip: {fileID: 8300000, guid: 0e94c813a806dfc4f8f0520d09774b40, type: 3}
   throwSoundClip: {fileID: 0}
   zeroFrictionMaterial: {fileID: 6200000, guid: b71115bdd90209b478eff619dce9253a, type: 2}
+  _IsFlying:
+    _value: 0
   _IsAlreadyFly: 0
   _AlreadyFloating: 0
   __wasJumpPressed: 0
   __wasXPressed: 0
   __wasZPressed: 0
   drowningTime: 6
-  _startTimer: 0
+  _startTimer:
+    _value: 0
   throwAblePrefab: {fileID: 5283567399167749245, guid: f6ee7c8d2993a114cbcc32c8f96ce6a2, type: 3}
   __prepareToThrow: 0
   projectileSpeed: 16
@@ -901,7 +906,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Fusion.Addons.Physics::Fusion.Addons.Physics.NetworkRigidbody2D
   _stateAuthorityChangeErrorCorrectionDelta: 0
   SyncScale: 0
-  SyncParent: 1
+  SyncParent: 0
   _interpolationTarget: {fileID: 0}
   UsePreciseRotation: 0
   UseRenderSleepThresholds: 1
@@ -1941,6 +1946,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraCharacter
   smoothTime: 0.1
+  outOfBoundLayer:
+    serializedVersion: 2
+    m_Bits: 32768
+  littleBitOfBoundLayer:
+    serializedVersion: 2
+    m_Bits: 65536
+  littleBitOffset: 2
 --- !u!114 &8631318365322448296
 MonoBehaviour:
   m_ObjectHideFlags: 0

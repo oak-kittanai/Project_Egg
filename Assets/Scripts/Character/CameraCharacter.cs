@@ -18,6 +18,16 @@ public class CameraCharacter : NetworkBehaviour
     private Transform target;
     private Vector3 offset;
 
+    [Header("Boundary System")]
+    [SerializeField, Tooltip("Layer กั้นแบบเด็ดขาด ห้ามกล้องทะลุ")]
+    private LayerMask outOfBoundLayer;
+
+    [SerializeField, Tooltip("Layer กั้นแบบยอมให้ทะลุขอบได้นิดหน่อย")]
+    private LayerMask littleBitOfBoundLayer;
+
+    [SerializeField, Tooltip("ระยะที่ยอมให้ทะลุได้สำหรับ LittleBitOfBound (ยิ่งมากยิ่งทะลุได้เยอะ)")]
+    private float littleBitOffset = 2f;
+
     public override void Spawned()
     {
         if (HasInputAuthority)
@@ -29,16 +39,12 @@ public class CameraCharacter : NetworkBehaviour
 
             target = transform.parent;
 
-            DontDestroyOnLoad(gameObject);
-
             SceneManager.activeSceneChanged += OnSceneChanged;
 
             if (ParallaxBackground.Instance != null)
             {
                 ParallaxBackground.Instance.SetCamera(this);
             }
-
-            transform.SetParent(null);
 
             if (ParallaxBackground.Instance != null)
             {
@@ -75,6 +81,23 @@ public class CameraCharacter : NetworkBehaviour
         if (!HasInputAuthority || target == null || !target.gameObject.activeInHierarchy) return;
 
         Vector3 desiredPosition = target.position + offset;
+
+        if (LocalCamera != null)
+        {
+            float camHeight = LocalCamera.orthographicSize;
+            float camWidth = camHeight * LocalCamera.aspect;
+
+            desiredPosition = ApplyBoundary(desiredPosition, Vector2.left, camWidth, camHeight, littleBitOfBoundLayer, littleBitOffset);
+            desiredPosition = ApplyBoundary(desiredPosition, Vector2.right, camWidth, camHeight, littleBitOfBoundLayer, littleBitOffset);
+            desiredPosition = ApplyBoundary(desiredPosition, Vector2.up, camWidth, camHeight, littleBitOfBoundLayer, littleBitOffset);
+            desiredPosition = ApplyBoundary(desiredPosition, Vector2.down, camWidth, camHeight, littleBitOfBoundLayer, littleBitOffset);
+
+            desiredPosition = ApplyBoundary(desiredPosition, Vector2.left, camWidth, camHeight, outOfBoundLayer, 0f);
+            desiredPosition = ApplyBoundary(desiredPosition, Vector2.right, camWidth, camHeight, outOfBoundLayer, 0f);
+            desiredPosition = ApplyBoundary(desiredPosition, Vector2.up, camWidth, camHeight, outOfBoundLayer, 0f);
+            desiredPosition = ApplyBoundary(desiredPosition, Vector2.down, camWidth, camHeight, outOfBoundLayer, 0f);
+        }
+
         transform.position = Vector3.SmoothDamp(transform.position, desiredPosition, ref velocity, smoothTime);
 
         if (transform.position.x != oldPosition)
@@ -87,5 +110,29 @@ public class CameraCharacter : NetworkBehaviour
 
             oldPosition = transform.position.x;
         }
+    }
+
+    private Vector3 ApplyBoundary(Vector3 pos, Vector2 direction, float halfWidth, float halfHeight, LayerMask layerMask, float allowedOffset)
+    {
+        if (layerMask == 0) return pos;
+
+        float checkDistance = (direction.x != 0) ? halfWidth : halfHeight;
+        float lookAhead = 100f;
+
+        RaycastHit2D hit = Physics2D.Raycast(pos, direction, checkDistance + lookAhead, layerMask);
+
+        if (hit.collider != null)
+        {
+            float distanceToWall = hit.distance;
+            float requiredDistance = checkDistance - allowedOffset;
+
+            if (distanceToWall < requiredDistance)
+            {
+                // ถ้ากล้องล้ำเส้นที่กำหนด ให้คำนวณระยะแล้วดันถอยหลังกลับ
+                float pushBackDistance = requiredDistance - distanceToWall;
+                pos -= (Vector3)(direction * pushBackDistance);
+            }
+        }
+        return pos;
     }
 }
