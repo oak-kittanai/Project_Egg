@@ -69,7 +69,7 @@ public class DialogueHUB : MonoBehaviour
             SetButton();
             return;
         }
-        TryFindFromScene();
+        TryFindFromScene(root);
     }
 
     private bool TryFindFromRoot(Transform root)
@@ -97,7 +97,7 @@ public class DialogueHUB : MonoBehaviour
         return dialogueObject != null;
     }
 
-    private void TryFindFromScene()
+    private void TryFindFromScene(Transform root)
     {
         GameObject uiCanvas = GameObject.Find("Canvas");
 

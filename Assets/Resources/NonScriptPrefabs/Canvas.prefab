@@ -753,6 +753,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8913972848136087842, guid: f795edf2d6ce2b144b40baf1ce771cd5, type: 3}
+      propertyPath: m_Name
+      value: QuestText
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -773,7 +777,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 260004740726648383, guid: eb44313be64da0c4199578ef1cc57eef, type: 3}
       propertyPath: m_Name
-      value: Button_canvas
+      value: InteractPrompt
       objectReference: {fileID: 0}
     - target: {fileID: 260004740726648383, guid: eb44313be64da0c4199578ef1cc57eef, type: 3}
       propertyPath: m_IsActive
