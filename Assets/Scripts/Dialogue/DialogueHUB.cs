@@ -74,10 +74,10 @@ public class DialogueHUB : MonoBehaviour
 
     private bool TryFindFromRoot(Transform root)
     {
-        Transform dialogueParent = root.Find("Dialogue");
+        Transform dialogueParent = root.Find("Canvas");
         if (dialogueParent == null) return false;
 
-        Transform dialogueObj = dialogueParent.Find("DialogueObject");
+        Transform dialogueObj = dialogueParent.Find("Dialogue");
         if (dialogueObj == null)
         {
             dialogueObj = dialogueParent;
@@ -88,8 +88,8 @@ public class DialogueHUB : MonoBehaviour
         miraBox = dialogueObj.Find("MiraBox")?.gameObject;
         kaelBox = dialogueObj.Find("KaelBox")?.gameObject;
 
-        if (miraBox != null) miraAnimator = miraBox.GetComponent<CustomTextGen>();
-        if (kaelBox != null) kaelAnimator = kaelBox.GetComponent<CustomTextGen>();
+        if (miraBox != null) miraAnimator = miraBox.GetComponentInChildren<CustomTextGen>();
+        if (kaelBox != null) kaelAnimator = kaelBox.GetComponentInChildren<CustomTextGen>();
 
         nextButton = dialogueObj.Find("NextButton")?.GetComponent<Button>();
         prevButton = dialogueObj.Find("PrevButton")?.GetComponent<Button>();
@@ -99,7 +99,7 @@ public class DialogueHUB : MonoBehaviour
 
     private void TryFindFromScene()
     {
-        GameObject uiCanvas = GameObject.Find("Dialogue");
+        GameObject uiCanvas = GameObject.Find("Canvas");
 
         if (uiCanvas == null)
         {
@@ -107,14 +107,14 @@ public class DialogueHUB : MonoBehaviour
             return;
         }
 
-        dialogueObject = uiCanvas.transform.Find("DialogueObject")?.gameObject;
+        dialogueObject = uiCanvas.transform.Find("Dialogue")?.gameObject;
         if (dialogueObject == null) return;
 
         miraBox = dialogueObject.transform.Find("MiraBox")?.gameObject;
         kaelBox = dialogueObject.transform.Find("KaelBox")?.gameObject;
 
-        if (miraBox != null) miraAnimator = miraBox.GetComponent<CustomTextGen>();
-        if (kaelBox != null) kaelAnimator = kaelBox.GetComponent<CustomTextGen>();
+        if (miraBox != null) miraAnimator = miraBox.GetComponentInChildren<CustomTextGen>();
+        if (kaelBox != null) kaelAnimator = kaelBox.GetComponentInChildren<CustomTextGen>();
 
         nextButton = dialogueObject.transform.Find("NextButton")?.GetComponent<Button>();
         prevButton = dialogueObject.transform.Find("PrevButton")?.GetComponent<Button>();
