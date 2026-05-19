@@ -18,6 +18,8 @@ public class TrapPressure : NetworkBehaviour
     [Header("Visuals")]
     [SerializeField] Animator anim;
 
+    private Collider2D[] hitResults = new Collider2D[10];
+
     private List<MovementCharacter> playersInTrap = new List<MovementCharacter>();
 
     public void Awake()
@@ -75,8 +77,6 @@ public class TrapPressure : NetworkBehaviour
     public override void FixedUpdateNetwork()
     {
         if (!_isActive) return;
-
-        Collider2D[] hitResults = new Collider2D[10];
 
         int hitCount = Runner.GetPhysicsScene2D().OverlapBox(
             transform.position,
