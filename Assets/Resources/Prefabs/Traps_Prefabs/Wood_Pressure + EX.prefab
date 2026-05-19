@@ -105,9 +105,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71270f08b3576ed4f80ddeda09d75a45, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TrapPressure
-  pushForce: 50
+  pushForce: 2
   __isActive:
     _value: 0
+  fluctuationSpeed: 5
+  fluctuationAmount: 0.44
+  maxWindDistance: 2.162273
   __isRevers:
     _value: 0
   defaultDirection: {x: 0, y: 1}
@@ -281,17 +284,20 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7916760504737229899}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 71270f08b3576ed4f80ddeda09d75a45, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TrapPressure
-  pushForce: 50
+  pushForce: 2
   __isActive:
     _value: 0
+  fluctuationSpeed: 0
+  fluctuationAmount: 0
+  maxWindDistance: 5
   __isRevers:
     _value: 0
-  defaultDirection: {x: 0, y: 0}
+  defaultDirection: {x: 0, y: 1}
   anim: {fileID: 3983152368999223818}
 --- !u!114 &1739476084548787981
 MonoBehaviour:
