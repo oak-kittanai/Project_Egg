@@ -20,7 +20,8 @@ public class Bird_Moveset : MovementCharacter
 
     [Header("Bird State")]
     [Networked] private TickTimer FlightTimer { get; set; }
-    [Networked] private bool IsFlying { get; set; }
+    [Networked, OnChangedRender(nameof(OnFlyingStateChanged))]
+    public NetworkBool IsFlying { get; set; }
     [Networked] public bool IsAlreadyFly { get; set; }
     [Networked] public bool AlreadyFloating { get; set; }
     
@@ -33,7 +34,8 @@ public class Bird_Moveset : MovementCharacter
     // Drowning
     [Networked] private TickTimer DrownTimer { get; set; }
     [SerializeField] float drowningTime = 3f;
-    [Networked] public bool startTimer { get; set; }
+    [Networked, OnChangedRender(nameof(OnDrownTimerStateChanged))]
+    public NetworkBool startTimer { get; set; }
 
     [Header("ThrowSystem")]
     [SerializeField] public NetworkObject throwAblePrefab;
@@ -144,11 +146,6 @@ public class Bird_Moveset : MovementCharacter
         {
             DrownTimer = TickTimer.None;
             startTimer = false;
-
-            if (Runner.IsForward && localGUI != null)
-            {
-                localGUI.StopOxygenTracking();
-            }
         }
     }
 
@@ -156,10 +153,20 @@ public class Bird_Moveset : MovementCharacter
     {
         startTimer = true;
         DrownTimer = TickTimer.CreateFromSeconds(Runner, drowningTime);
+    }
 
-        if (localGUI != null)
+    public void OnDrownTimerStateChanged()
+    {
+        if (Object.InputAuthority == Runner.LocalPlayer && localGUI != null)
         {
-            localGUI.StartOxygenTracking(DrownTimer, Runner, Mathf.CeilToInt(drowningTime));
+            if (startTimer)
+            {
+                localGUI.StartOxygenTracking(DrownTimer, Runner, Mathf.CeilToInt(drowningTime));
+            }
+            else
+            {
+                localGUI.StopOxygenTracking();
+            }
         }
     }
 
@@ -194,6 +201,9 @@ public class Bird_Moveset : MovementCharacter
         {
             cAnimation.FallingAndFloatAnimation(true, false);
         }
+
+        startTimer = false;
+        DrownTimer = TickTimer.None;
     }
 
     #region FlyLogic
@@ -273,6 +283,25 @@ public class Bird_Moveset : MovementCharacter
 
         _wasJumpPressed = input.KeybindJump;
     }
+
+    public void OnFlyingStateChanged()
+    {
+        if (Object.InputAuthority == Runner.LocalPlayer)
+        {
+            if (IsFlying)
+            {
+                float duration = IsBeingCarried ? carryFlyTime : normalFlyTime;
+                if (playerAudioSource != null && flySoundClip != null) playerAudioSource.PlayOneShot(flySoundClip);
+                if (localGUI != null) localGUI.StartFlightBar(FlightTimer, Runner, duration);
+            }
+            else
+            {
+                if (playerAudioSource != null && stopFlySoundClip != null) playerAudioSource.PlayOneShot(stopFlySoundClip);
+                if (localGUI != null) localGUI.StopFlightBar();
+            }
+        }
+    }
+
     private void StartFloating()
     {
         FallingBusy = true;
@@ -300,54 +329,24 @@ public class Bird_Moveset : MovementCharacter
     {
         IsFlying = true;
         isJumping = false;
-        if (HasInputAuthority)
-        {
-            if (playerAudioSource != null && flySoundClip != null)
-            {
-                playerAudioSource.PlayOneShot(flySoundClip);
-            }
-        }
 
         float duration = IsBeingCarried ? carryFlyTime : normalFlyTime;
         FlightTimer = TickTimer.CreateFromSeconds(Runner, duration);
 
-        cAnimation.FlyUpAnimation();
-
-        if (HasInputAuthority)
-        {
-            if (localGUI != null)
-            {
-                localGUI.StartFlightBar(FlightTimer, Runner, duration);
-            }
-        }
+        if (cAnimation != null) cAnimation.FlyUpAnimation();
 
         if (rb2D != null && zeroFrictionMaterial != null)
         {
             rb2D.sharedMaterial = zeroFrictionMaterial;
         }
 
-        Debug.Log($"Bird Flying! Duration: {duration}s (Being Carried: {IsBeingCarried})");
+        Debug.Log($"Bird Flying! Duration: {duration}s");
     }
 
     private void StopFlying()
     {
         IsFlying = false;
-        if (HasInputAuthority)
-        {
-            if (playerAudioSource != null && stopFlySoundClip != null)
-            {
-                playerAudioSource.PlayOneShot(stopFlySoundClip);
-            }
-        }
         FlightTimer = TickTimer.None;
-
-        if (HasInputAuthority)
-        {
-            if (localGUI != null)
-            {
-                localGUI.StopFlightBar();
-            }
-        }
 
         if (rb2D != null)
         {
@@ -357,7 +356,6 @@ public class Bird_Moveset : MovementCharacter
 
     public void ForceCancelFlight()
     {
-        if (IsFlying) StopFlying();
         if (AlreadyFloating) StopFloating();
         IsAlreadyFly = false;
     }

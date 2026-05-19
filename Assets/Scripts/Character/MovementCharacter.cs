@@ -94,6 +94,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     public Collider2D normalCollider;
     public Collider2D carryCollider;
 
+    [SerializeField] PhysicsMaterial2D zeroFiction;
+
     // Local Predict Variables
     public bool localIsBeingCarriedPredict;
     public NetworkId localCarrierIdPredict;
@@ -768,7 +770,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         else
         {
             if (spriteRenderer != null) spriteRenderer.sortingOrder = originalSortingOrder;
-            if (visualTransform != null) visualTransform.localPosition = Vector3.zero;
         }
         ManageMovementSounds();
     }

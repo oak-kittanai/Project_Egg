@@ -99,7 +99,7 @@ public class PlayerInterface : MonoBehaviour
         Transform questDialog = root.Find("QuestDialog_Obj");
         if (questDialog != null)
         {
-            Transform questObj = questDialog.Find("QuestContainer");
+            Transform questObj = questDialog.Find("QuestBckground");
             if (questObj != null)
             {
                 questContainer = questObj.gameObject;
