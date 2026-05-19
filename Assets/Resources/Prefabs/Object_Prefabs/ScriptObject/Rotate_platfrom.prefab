@@ -31,8 +31,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -23.02, y: -0.03, z: 0}
-  m_LocalScale: {x: 0.6695906, y: 0.6695906, z: 0.6695906}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -83,8 +83,8 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 1
-  m_Sprite: {fileID: -3737921313160742142, guid: a31f036d2c74f8343b97c32f24c33caa, type: 3}
-  m_Color: {r: 0, g: 1, b: 0.007529974, a: 1}
+  m_Sprite: {fileID: -1601767141709627744, guid: 943a77d2cd1d55e4cb3a9fedafeda288, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -106,7 +106,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eea83f042e4866b4f8701327fbb261f9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RotatingPlatform
-  rotationDuration: 1.5
+  rotateDuration: 1.5
   pauseDuration: 0.25
   rotateClockwise: 1
 --- !u!61 &6002359089061469990
@@ -143,17 +143,17 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
+  m_Offset: {x: -0.045412064, y: 0.028383255}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 2.7708333, y: 0.8958333}
+    oldSize: {x: 1.9791666, y: 0.6458333}
     newSize: {x: 2.6770833, y: 0.6770833}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 2.6770833, y: 0.6770833}
+  m_Size: {x: 1.791542, y: 0.34784317}
   m_EdgeRadius: 0
 --- !u!114 &815460421446963908
 MonoBehaviour:
