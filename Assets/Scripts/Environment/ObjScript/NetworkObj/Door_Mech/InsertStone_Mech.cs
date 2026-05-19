@@ -4,31 +4,29 @@ using UnityEngine;
 public class InsertStone_Mech : NetworkBehaviour
 {
     [Header("Required Pads")]
-    public StonePad[] requiredPads; //ช่องใส่หิน
+    public StonePad[] requiredPads; // ช่องใส่หิน
 
-    [Header("Door Visual")]
-    public Sprite lockSprite;
-    public Sprite openSprite;
-    private SpriteRenderer sr;
+    [Header("Components")]
+    private Animator anim;
+    private Collider2D col;
 
-    [Header("Door Movement")]
-    [SerializeField] float openHeight = 3f;
-    [SerializeField] float openSpeed = 2f;
-
-    [Networked] public NetworkBool IsOpen { get; set; }
-
-    private Vector3 closedPos;
-    private Vector3 openPos;
+    [Networked, OnChangedRender(nameof(OnDoorStateChanged))]
+    public NetworkBool IsOpen { get; set; }
 
     private void Awake()
     {
-        sr = GetComponent<SpriteRenderer>();
+        anim = GetComponent<Animator>();
+        col = GetComponent<Collider2D>();
     }
 
     public override void Spawned()
     {
-        closedPos = transform.position;
-        openPos = closedPos + Vector3.up * openHeight;
+        if (HasStateAuthority)
+        {
+            IsOpen = false;
+        }
+
+        UpdateVisuals();
     }
 
     public override void FixedUpdateNetwork()
@@ -46,20 +44,36 @@ public class InsertStone_Mech : NetworkBehaviour
             }
         }
 
+        // หินครบ
         if (allFilled && requiredPads.Length > 0)
         {
             IsOpen = true;
         }
     }
 
-    public override void Render()
+    public void OnDoorStateChanged()
     {
-        if (sr != null)
+        UpdateVisuals();
+    }
+
+    private void UpdateVisuals()
+    {
+        if (col != null)
         {
-            sr.sprite = IsOpen ? openSprite : lockSprite;
+            col.enabled = IsOpen;
         }
 
-        Vector3 targetPos = IsOpen ? openPos : closedPos;
-        transform.position = Vector3.MoveTowards(transform.position, targetPos, openSpeed * Time.deltaTime);
+        // Anim
+        if (anim != null)
+        {
+            if (IsOpen)
+            {
+                anim.Play("Dimensions_Door_Open");
+            }
+            else
+            {
+                anim.Play("Dimensions_Door_Close");
+            }
+        }
     }
 }

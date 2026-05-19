@@ -40,6 +40,7 @@ public class JellyfishTrap : NetworkBehaviour
     private Vector3 targetScale;
 
     private JellyState _prevState;
+    private MoveSome moveScript;
 
     private void Awake()
     {
@@ -47,6 +48,7 @@ public class JellyfishTrap : NetworkBehaviour
         sr = GetComponent<SpriteRenderer>();
         col = GetComponent<Collider2D>();
         lineRenderer = GetComponent<LineRenderer>();
+        moveScript = GetComponent<MoveSome>();
 
         originalScale = transform.localScale;
         targetScale = Vector3.Scale(originalScale, scaleUpSize);
@@ -58,6 +60,7 @@ public class JellyfishTrap : NetworkBehaviour
         lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
         lineRenderer.startColor = Color.red;
         lineRenderer.endColor = Color.red;
+
     }
 
     public override void Spawned()
@@ -162,6 +165,7 @@ public class JellyfishTrap : NetworkBehaviour
         bool isVisible = CurrentState != JellyState.Hidden;
         if (sr != null) sr.enabled = isVisible;
         if (col != null) col.enabled = isVisible;
+        if (moveScript != null) moveScript.enabled = (CurrentState == JellyState.Idle);
 
         if (CurrentState != JellyState.Charging)
         {
