@@ -99,7 +99,7 @@ public class DialogueHUB : MonoBehaviour
 
     private void TryFindFromScene()
     {
-        GameObject uiCanvas = GameObject.Find("DialogueCanvas");
+        GameObject uiCanvas = GameObject.Find("Dialogue");
 
         if (uiCanvas == null)
         {
