@@ -51,7 +51,7 @@ public class TutorialUIManager : MonoBehaviour
         {
             tutorialPanel = tutorialCanvas.transform.Find("TutorialPanel").gameObject;
 
-            tutorialImageSlot = tutorialPanel.transform.Find("TutorialImageSlot").GetComponent<Image>();
+            tutorialImageSlot = tutorialPanel.transform.Find("TutorialSlot").GetComponent<Image>();
 
             Debug.Log($"TutorialManager Success Load UI");
         }
