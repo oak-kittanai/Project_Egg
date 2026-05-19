@@ -33,7 +33,8 @@ public class Duck_Moveset : MovementCharacter
 
     [SerializeField] float emergencyAcceleration = 1f;
 
-    [Networked] public bool onDiving { get; set; }
+    [Networked, OnChangedRender(nameof(OnDivingStateChanged))]
+    public NetworkBool onDiving { get; set; }
     [Networked] bool onDivingControl { get; set; }
     [Networked] bool justDive { get; set; }
 
@@ -56,7 +57,8 @@ public class Duck_Moveset : MovementCharacter
 
     [Header("Carry System (Duck Only)")]
     [Networked] public NetworkId CarriedFriendId { get; set; }
-    [Networked] public bool IsCarry { get; set; }
+    [Networked, OnChangedRender(nameof(OnCarryStateChanged))]
+    public NetworkBool IsCarry { get; set; }
 
     protected override void OnFixedUpdateSpecific()
     {
@@ -162,13 +164,6 @@ public class Duck_Moveset : MovementCharacter
     public void PickupFriend(MovementCharacter friend)
     {
         IsCarry = true;
-        if (HasInputAuthority)
-        {
-            if (playerAudioSource != null && pickupSoundClip != null)
-            {
-                playerAudioSource.PlayOneShot(pickupSoundClip);
-            }
-        }
         CarriedFriendId = friend.Object.Id;
 
         friend.localIsBeingCarriedPredict = true;
@@ -197,13 +192,6 @@ public class Duck_Moveset : MovementCharacter
                     if (throwFriend && friend.visualTransform != null)
                     {
                         friend.visualTransform.position = transform.position + new Vector3(throwDir * 1f, 1f, 0);
-                        if (HasInputAuthority)
-                        {
-                            if (playerAudioSource != null && dropSoundClip != null)
-                            {
-                                playerAudioSource.PlayOneShot(dropSoundClip);
-                            }
-                        }
                     }
 
                     friend.RPC_UpdateCarry(false, Object.Id, throwFriend, throwDir, throwForceX, throwForceY);
@@ -219,6 +207,21 @@ public class Duck_Moveset : MovementCharacter
         CarriedFriendId = default;
 
         resetAnimation = true;
+    }
+
+    public void OnCarryStateChanged()
+    {
+        if (Object.InputAuthority == Runner.LocalPlayer)
+        {
+            if (IsCarry)
+            {
+                if (playerAudioSource != null && pickupSoundClip != null) playerAudioSource.PlayOneShot(pickupSoundClip);
+            }
+            else
+            {
+                if (playerAudioSource != null && dropSoundClip != null) playerAudioSource.PlayOneShot(dropSoundClip);
+            }
+        }
     }
 
     public void HandleWaterLogic(NetworkInputData input)
@@ -298,13 +301,6 @@ public class Duck_Moveset : MovementCharacter
     {
         if (currentWater == null) return;
         if (IsCarry) return;
-        if (HasInputAuthority)
-        {
-            if (playerAudioSource != null && drivingSoundClip != null)
-            {
-                playerAudioSource.PlayOneShot(drivingSoundClip);
-            }
-        }
 
         isMoveAble = false;
         ReadyToDive = false;
@@ -320,10 +316,22 @@ public class Duck_Moveset : MovementCharacter
 
         DiveTimer = TickTimer.CreateFromSeconds(Runner, divingTime);
         Debug.Log($"Duck Diving! Duration: {divingTime}s");
+    }
 
-        if (localGUI != null)
+    public void OnDivingStateChanged()
+    {
+        if (Object.InputAuthority == Runner.LocalPlayer)
         {
-            localGUI.StartOxygenTracking(DiveTimer, Runner, Mathf.CeilToInt(divingTime));
+            if (onDiving)
+            {
+                if (playerAudioSource != null && drivingSoundClip != null) playerAudioSource.PlayOneShot(drivingSoundClip);
+                if (localGUI != null) localGUI.StartOxygenTracking(DiveTimer, Runner, Mathf.CeilToInt(divingTime));
+            }
+            else
+            {
+                if (playerAudioSource != null && stopDrivingSoundClip != null) playerAudioSource.PlayOneShot(stopDrivingSoundClip);
+                if (localGUI != null) localGUI.StopOxygenTracking();
+            }
         }
     }
 
@@ -363,11 +371,6 @@ public class Duck_Moveset : MovementCharacter
         ReadyToDive = true;
         EmergencyTimer = TickTimer.None;
         DiveTimer = TickTimer.None;
-
-        if (localGUI != null)
-        {
-            localGUI.StopOxygenTracking();
-        }
     }
 
     public void EmergencySwimup()
@@ -401,13 +404,6 @@ public class Duck_Moveset : MovementCharacter
                 {
                     float exitForce = rb2D.mass * rb2D.linearVelocity.y;
                     currentWater.Splash(transform.position, exitForce);
-                    if (HasInputAuthority)
-                    {
-                        if (playerAudioSource != null && stopDrivingSoundClip != null)
-                        {
-                            playerAudioSource.PlayOneShot(stopDrivingSoundClip);
-                        }
-                    }
                 }
 
                 EndDiveLogic();

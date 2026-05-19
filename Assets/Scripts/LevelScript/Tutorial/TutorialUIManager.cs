@@ -45,7 +45,7 @@ public class TutorialUIManager : MonoBehaviour
 
     private void FindTutorialUI()
     {
-        GameObject tutorialCanvas = GameObject.Find("TutorialCanvas");
+        GameObject tutorialCanvas = GameObject.Find("Canvas");
 
         if (tutorialCanvas != null)
         {
