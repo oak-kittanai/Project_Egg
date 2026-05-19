@@ -93,16 +93,16 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
 
             // For Test
 
-            bool press_X;
-            if (Keyboard.current.xKey.isPressed) press_X = true;
-            else press_X = false;
+            bool press_C;
+            if (Keyboard.current.xKey.isPressed) press_C = true;
+            else press_C = false;
 
-            bool press_Z;
-            if (Keyboard.current.zKey.isPressed) press_Z = true;
-            else press_Z = false;
+            bool press_Q;
+            if (Keyboard.current.zKey.isPressed) press_Q = true;
+            else press_Q = false;
 
-            data.KeybindThrowItem = press_Z;
-            data.KeybindPrepareThrowItem = press_X;
+            data.KeybindThrowItem = press_Q;
+            data.KeybindPrepareThrowItem = press_C;
 
             // Data Input
             data.mousePos = mousePosition;
