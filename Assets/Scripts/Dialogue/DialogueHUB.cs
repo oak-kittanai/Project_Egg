@@ -123,21 +123,6 @@ public class DialogueHUB : MonoBehaviour
         Debug.Log("[DialogueHUB] Found UI in Scene Canvas");
     }
 
-    public void SetButton()
-    {
-        if (nextButton == null || prevButton == null)
-        {
-            Debug.LogWarning("[DialogueHUB] Button not ready Skip SetButton");
-            return;
-        }
-
-        nextButton.onClick.RemoveAllListeners();
-        prevButton.onClick.RemoveAllListeners();
-
-        nextButton.onClick.AddListener(DialogueManager.Instance.NextLine);
-        prevButton.onClick.AddListener(DialogueManager.Instance.PreviousLine);
-    }
-
     public void DisplayLine(string speaker, string message, TextEffectType effect)
     {
         if (dialogueObject == null) { Debug.LogWarning("[DialogueHUB] dialogueObject is null"); return; }
