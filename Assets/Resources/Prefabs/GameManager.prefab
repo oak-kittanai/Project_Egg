@@ -45,7 +45,39 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0f4ef4b33a08217478c72e24ff4e5a02, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
+  canvasObject: {fileID: 8707019487019327968, guid: 295c8402bdc86c54b9d8e9489b2b686f, type: 3}
+  coreManagerObject: {fileID: 6220470830134951863, guid: d1f11188d278f98459741540fcff5596, type: 3}
   NetworkRunner: {fileID: 0}
+  playerHost: {fileID: 0}
+  playerClient: {fileID: 0}
+  _respawnPos: {x: 0, y: 0, z: 0}
+  _MapsLoadedCount: 0
+  _isPlayerReady:
+    _value: 0
+  _isLoadMapDone:
+    _value: 0
+  _IsGameReady:
+    _value: 0
+  _PlayersReadyCount: 0
+  loadingSceneCooldown: 4
+  _gameOver: 0
+  _TeamBlueKeys: 0
+  _TeamOrangeKeys: 0
+  activePlayers: []
+  checkPoints: []
+  _TeamHasOrangeStone:
+    _value: 0
+  _TeamHasBlueStone:
+    _value: 0
+  itemDatabase: []
+  _IsQuestActive:
+    _value: 0
+  _QuestCurrentProgress: 0
+  _QuestMaxProgress: 0
+  _QuestDescription:
+    _length: 0
+    _data:
+      Data: 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 --- !u!114 &861224361725939580
 MonoBehaviour:
   m_ObjectHideFlags: 0
