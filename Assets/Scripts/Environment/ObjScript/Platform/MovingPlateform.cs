@@ -1,5 +1,6 @@
 using Fusion;
 using UnityEngine;
+using System.Collections.Generic;
 
 public class MovingPlateform : NetworkBehaviour
 {
@@ -13,6 +14,8 @@ public class MovingPlateform : NetworkBehaviour
 
     private Vector3 startPosition;
     private Rigidbody2D rb;
+
+    private Collider2D[] hitResults = new Collider2D[10];
 
     public override void Spawned()
     {
@@ -30,38 +33,43 @@ public class MovingPlateform : NetworkBehaviour
 
         Vector3 newPosition = startPosition;
 
-        if (isVertical)
-        {
-            newPosition.y += movementOffset;
-        }
-        else
-        {
-            newPosition.x += movementOffset;
-        }
+        if (isVertical) newPosition.y += movementOffset;
+        else newPosition.x += movementOffset;
 
         Vector3 deltaMovement = newPosition - transform.position;
 
         rb.MovePosition(newPosition);
 
-        Collider2D[] hitResults = new Collider2D[10];
         Vector2 checkPos = (Vector2)transform.position + boxOffset;
 
         int hitCount = Runner.GetPhysicsScene2D().OverlapBox(
             checkPos,
             boxSize,
-            0,
+            0, 
             hitResults,
             LayerMask.GetMask("Player")
         );
+
+        List<MovementCharacter> processedPlayers = new List<MovementCharacter>();
 
         for (int i = 0; i < hitCount; i++)
         {
             var hit = hitResults[i];
             if (hit != null && hit.TryGetComponent<MovementCharacter>(out var player))
             {
+                if (processedPlayers.Contains(player)) continue;
+                processedPlayers.Add(player);
+
                 if (player.rb2D != null)
                 {
                     player.rb2D.position += (Vector2)deltaMovement;
+
+                    if (isVertical && deltaMovement.y < 0)
+                    {
+                        Vector2 vel = player.rb2D.linearVelocity;
+                        if (vel.y > 0) vel.y = 0;
+                        player.rb2D.linearVelocity = vel;
+                    }
                 }
             }
         }
