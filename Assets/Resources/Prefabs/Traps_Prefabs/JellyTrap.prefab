@@ -10,7 +10,9 @@ GameObject:
   m_Component:
   - component: {fileID: 5111233697646250585}
   - component: {fileID: 2783318998050826349}
+  - component: {fileID: 3330423498173189735}
   - component: {fileID: 8991550388870893170}
+  - component: {fileID: 6866463226542109021}
   - component: {fileID: 6343200620378497334}
   - component: {fileID: 8898757959291188084}
   - component: {fileID: 415150659783381964}
@@ -61,6 +63,22 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 128
   _CurrentState: 0
+--- !u!114 &3330423498173189735
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5551655724824992466}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eaa02870718487b47bb39852727c912e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MoveSome
+  speed: 1.5
+  distance: 4
+  isVertical: 0
+  isReverse: 0
 --- !u!61 &8991550388870893170
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -107,6 +125,33 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 1.3242073, y: 1.3242095}
   m_EdgeRadius: 0
+--- !u!50 &6866463226542109021
+Rigidbody2D:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5551655724824992466}
+  m_BodyType: 1
+  m_Simulated: 0
+  m_UseFullKinematicContacts: 0
+  m_UseAutoMass: 0
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_GravityScale: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_Interpolate: 0
+  m_SleepingMode: 1
+  m_CollisionDetection: 0
+  m_Constraints: 0
 --- !u!95 &6343200620378497334
 Animator:
   serializedVersion: 7
@@ -315,4 +360,5 @@ MonoBehaviour:
   NestedObjects: []
   NetworkedBehaviours:
   - {fileID: 2783318998050826349}
+  - {fileID: 3330423498173189735}
   ForceRemoteRenderTimeframe: 0

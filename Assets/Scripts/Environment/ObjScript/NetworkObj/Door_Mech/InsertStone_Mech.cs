@@ -1,7 +1,6 @@
 using Fusion;
 using UnityEngine;
 
-[RequireComponent(typeof(SpriteRenderer))]
 public class InsertStone_Mech : NetworkBehaviour
 {
     [Header("Required Pads")]
