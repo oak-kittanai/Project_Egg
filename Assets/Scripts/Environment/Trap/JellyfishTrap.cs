@@ -25,6 +25,10 @@ public class JellyfishTrap : NetworkBehaviour
     [Header("Layer Mask")]
     [SerializeField] LayerMask targetLayer;
 
+    [Header("Detect")]
+    [SerializeField] float triggerRadius = 1f;
+    private Collider2D[] hitResults = new Collider2D[5];
+
     [Networked] public JellyState CurrentState { get; set; }
     [Networked] public TickTimer StateTimer { get; set; }
 
@@ -68,16 +72,16 @@ public class JellyfishTrap : NetworkBehaviour
         UpdateVisualsForce();
     }
 
-    private void OnTriggerStay2D(Collider2D collision)
-    {
-        if (!HasStateAuthority) return;
+    //private void OnTriggerStay2D(Collider2D collision)
+    //{
+    //    if (!HasStateAuthority) return;
 
-        if (CurrentState == JellyState.Idle && IsTarget(collision))
-        {
-            CurrentState = JellyState.Charging;
-            StateTimer = TickTimer.CreateFromSeconds(Runner, chargeTime);
-        }
-    }
+    //    if (CurrentState == JellyState.Idle && IsTarget(collision))
+    //    {
+    //        CurrentState = JellyState.Charging;
+    //        StateTimer = TickTimer.CreateFromSeconds(Runner, chargeTime);
+    //    }
+    //}
 
     public override void FixedUpdateNetwork()
     {
@@ -85,6 +89,22 @@ public class JellyfishTrap : NetworkBehaviour
 
         switch (CurrentState)
         {
+            case JellyState.Idle:
+                int hitCount = Runner.GetPhysicsScene2D().OverlapCircle(
+                    transform.position,
+                    triggerRadius,
+                    hitResults,
+                    targetLayer.value
+                );
+
+                for (int i = 0; i < hitCount; i++)
+                {
+                    CurrentState = JellyState.Charging;
+                    StateTimer = TickTimer.CreateFromSeconds(Runner, chargeTime);
+                    break;
+                }
+                break;
+
             case JellyState.Charging:
                 if (StateTimer.Expired(Runner))
                 {
@@ -209,5 +229,8 @@ public class JellyfishTrap : NetworkBehaviour
     {
         Gizmos.color = new Color(1, 0, 0, 0.3f);
         Gizmos.DrawWireSphere(transform.position, explosionRadius);
+
+        Gizmos.color = new Color(1, 0.92f, 0.016f, 0.5f);
+        Gizmos.DrawWireSphere(transform.position, triggerRadius);
     }
 }
