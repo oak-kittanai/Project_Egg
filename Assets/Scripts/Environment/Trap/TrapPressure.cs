@@ -7,12 +7,14 @@ public class TrapPressure : NetworkBehaviour
     [Header("Stat&Mode")]
     [SerializeField] float pushForce = 50f;
     [Networked] public NetworkBool _isActive { get; set; }
-
+    [Header("Wind Fluctuation")]
+    [SerializeField] float fluctuationSpeed = 5f; // ลมกระเพื่อม
+    [SerializeField] float fluctuationAmount = 0.2f; // ขนาดการกระเพื่อม
+    [Header("Wind Falloff")]
+    [SerializeField] float maxWindDistance = 5f; // 2.162273
     [Networked, OnChangedRender(nameof(OnDirectionChanged))]
     public NetworkBool _isRevers { get; set; }
-
     [SerializeField] Vector2 defaultDirection;
-
     [Header("Visuals")]
     [SerializeField] Animator anim;
 
@@ -21,7 +23,7 @@ public class TrapPressure : NetworkBehaviour
     public void Awake()
     {
         if (anim == null) anim = GetComponent<Animator>();
-        defaultDirection = transform.up;
+        //defaultDirection = transform.up; เอาทิศ transform.up ของ Obj
     }
 
     public override void Spawned()
@@ -69,7 +71,7 @@ public class TrapPressure : NetworkBehaviour
             }
         }
     }
-
+    #region FixedUpdateNetwork 
     public override void FixedUpdateNetwork()
     {
         if (!_isActive) return;
@@ -84,11 +86,16 @@ public class TrapPressure : NetworkBehaviour
             LayerMask.GetMask("Player")
         );
 
+        List<MovementCharacter> processedPlayers = new List<MovementCharacter>();
+
         for (int i = 0; i < hitCount; i++)
         {
             var hit = hitResults[i];
             if (hit != null && hit.TryGetComponent<MovementCharacter>(out var player))
             {
+                if (processedPlayers.Contains(player)) continue;
+                processedPlayers.Add(player);
+
                 if (HasStateAuthority || player.HasInputAuthority)
                 {
                     ApplyTrapForce(player);
@@ -100,22 +107,26 @@ public class TrapPressure : NetworkBehaviour
     private void ApplyTrapForce(MovementCharacter player)
     {
         if (player.rb2D == null) return;
-
         if (player.rb2D.IsSleeping()) player.rb2D.WakeUp();
 
         Vector2 currentDirection = _isRevers ? -defaultDirection : defaultDirection;
         float currentSpeedInDir = Vector2.Dot(player.rb2D.linearVelocity, currentDirection.normalized);
-        float targetPushSpeed = 4f;
+        Vector2 offset = (Vector2)player.transform.position - (Vector2)transform.position;
+        float distanceInWindDir = Vector2.Dot(offset, currentDirection.normalized);
+        float distanceMultiplier = 1f - Mathf.Clamp01(distanceInWindDir / maxWindDistance);
+        float baseTargetSpeed = 15f;
+        float sineWave = Mathf.Sin(Runner.SimulationTime * fluctuationSpeed);
+        float fluctuatedTargetSpeed = baseTargetSpeed * (1f + (sineWave * fluctuationAmount));
 
-        if (player.rb2D.linearVelocity.magnitude < 0.1f)
+        if (currentSpeedInDir < fluctuatedTargetSpeed)
         {
-            player.rb2D.AddForce(currentDirection.normalized * (pushForce * 0.5f), ForceMode2D.Impulse);
-        }
-        else if (currentSpeedInDir < targetPushSpeed)
-        {
-            player.rb2D.AddForce(currentDirection.normalized * pushForce, ForceMode2D.Force);
+            float speedDifference = fluctuatedTargetSpeed - currentSpeedInDir;
+            float appliedForce = pushForce * speedDifference * distanceMultiplier;
+
+            player.rb2D.AddForce(currentDirection.normalized * appliedForce, ForceMode2D.Force);
         }
     }
+    #endregion
 
     public void SetTrapActive(bool active)
     {
