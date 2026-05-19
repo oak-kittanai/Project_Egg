@@ -63,8 +63,6 @@ public class GameManager : SingletonNetwork<GameManager>
         {
             Debug.Log($"GameManager Fail To Load LevelData");
         }
-
-
     }
 
     #region Network
