@@ -652,6 +652,7 @@ MonoBehaviour:
     _length: 0
     _data:
       Data: 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+  isNearBreakableRock: 0
   __canThrowItem: 0
   __wasEscPressed: 0
   drivingSoundClip: {fileID: 0}
@@ -669,7 +670,8 @@ MonoBehaviour:
   divingTime: 8
   divePhase: 0.5
   emergencyAcceleration: 1.1
-  _onDiving: 0
+  _onDiving:
+    _value: 0
   _emergencySwimBool: 0
   _emergencyToggle: 0
   emergencySwimTimer: 2
@@ -679,7 +681,12 @@ MonoBehaviour:
   floatOffset: 0.11
   _CarriedFriendId:
     Raw: 0
-  _IsCarry: 0
+  _IsCarry:
+    _value: 0
+  _isDiveUnlocked:
+    _value: 0
+  _isSmashUnlocked:
+    _value: 0
 --- !u!114 &6373651154092321298
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -764,6 +771,7 @@ MonoBehaviour:
     _length: 0
     _data:
       Data: 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+  isNearBreakableRock: 0
   __canThrowItem: 0
   __wasEscPressed: 0
   normalFlyTime: 0.9
@@ -778,8 +786,8 @@ MonoBehaviour:
   _IsAlreadyFly: 0
   _AlreadyFloating: 0
   __wasJumpPressed: 0
-  __wasXPressed: 0
-  __wasZPressed: 0
+  __wasPrepareThrowPressed: 0
+  __wasisThrowItemPressed: 0
   drowningTime: 6
   _startTimer:
     _value: 0
@@ -793,6 +801,10 @@ MonoBehaviour:
   currentAimX: 0
   aimSweepSpeed: 3
   maxAimAngle: 30
+  _isFlyUnlocked:
+    _value: 0
+  _isThrowUnlocked:
+    _value: 0
 --- !u!114 &843996908277204990
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -907,7 +919,7 @@ MonoBehaviour:
   _stateAuthorityChangeErrorCorrectionDelta: 0
   SyncScale: 0
   SyncParent: 0
-  _interpolationTarget: {fileID: 0}
+  _interpolationTarget: {fileID: 7004718672557545774}
   UsePreciseRotation: 0
   UseRenderSleepThresholds: 1
   RenderThresholds:

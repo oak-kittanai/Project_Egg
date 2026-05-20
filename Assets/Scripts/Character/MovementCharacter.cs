@@ -162,7 +162,10 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
         if (TryGetComponent<Fusion.Addons.Physics.NetworkRigidbody2D>(out var netRb))
         {
-            netRb.InterpolationTarget = transform;
+            if (visualTransform != null)
+                netRb.InterpolationTarget = visualTransform;
+            else
+                netRb.InterpolationTarget = transform;
         }
     }
 
@@ -262,7 +265,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             {
                 Vector2 targetPos = duckRb.position + Vector2.up * betweenCarryPosition;
                 rb2D.position = targetPos;
-                transform.position = targetPos;
             }
         }
 
@@ -946,10 +948,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         {
             transform.position = duckMC.transform.position + new Vector3(0, betweenCarryPosition, 0);
 
-            if (visualTransform != null) visualTransform.localPosition = Vector3.zero;
-        }
-        else
-        {
             if (visualTransform != null) visualTransform.localPosition = Vector3.zero;
         }
     }
