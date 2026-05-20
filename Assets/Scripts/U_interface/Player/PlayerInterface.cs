@@ -68,7 +68,6 @@ public class PlayerInterface : MonoBehaviour
     public TMP_Text noteWriterText;
     public TMP_Text noteHeadText;
     public TMP_Text noteDescText;
-    public Button noteCloseButton;
 
 
     private void Awake()
@@ -189,13 +188,10 @@ public class PlayerInterface : MonoBehaviour
         if (noteObjT != null)
         {
             noteObj = noteObjT.gameObject;
-            noteWriterText = noteObjT.Find("WriterText")?.GetComponent<TMPro.TextMeshProUGUI>();
-            noteHeadText = noteObjT.Find("HeadText")?.GetComponent<TMPro.TextMeshProUGUI>();
-            noteDescText = noteObjT.Find("DescText")?.GetComponent<TMPro.TextMeshProUGUI>();
-            noteCloseButton = noteObjT.Find("CloseButton")?.GetComponent<UnityEngine.UI.Button>();
+            noteWriterText = noteObjT.Find("WriterText")?.GetComponent<TMP_Text>();
+            noteHeadText = noteObjT.Find("HeadText")?.GetComponent<TMP_Text>();
+            noteDescText = noteObjT.Find("DescText")?.GetComponent<TMP_Text>();
 
-            if (noteCloseButton != null)
-                noteCloseButton.onClick.AddListener(HideNote);
             foundAny = true;
             noteObj.SetActive(false);
         }
@@ -272,13 +268,9 @@ public class PlayerInterface : MonoBehaviour
         if (noteObjT != null)
         {
             noteObj = noteObjT.gameObject;
-            noteWriterText = noteObjT.Find("WriterText")?.GetComponent<TMPro.TextMeshProUGUI>();
-            noteHeadText = noteObjT.Find("HeadText")?.GetComponent<TMPro.TextMeshProUGUI>();
-            noteDescText = noteObjT.Find("DescText")?.GetComponent<TMPro.TextMeshProUGUI>();
-            noteCloseButton = noteObjT.Find("CloseButton")?.GetComponent<UnityEngine.UI.Button>();
-
-            if (noteCloseButton != null)
-                noteCloseButton.onClick.AddListener(HideNote);
+            noteWriterText = noteObjT.Find("WriterText")?.GetComponent<TMP_Text>();
+            noteHeadText = noteObjT.Find("HeadText")?.GetComponent<TMP_Text>();
+            noteDescText = noteObjT.Find("DescText")?.GetComponent<TMP_Text>();
 
             noteObj.SetActive(false);
         }

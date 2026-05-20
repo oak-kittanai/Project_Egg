@@ -101,6 +101,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     public NetworkId localCarrierIdPredict;
     [SerializeField] public bool _isEPressed;
 
+    private bool _wasTabPressed;
+
     [Header("Interaction & Physics")]
     public float rayDistance = 1.2f;
     public float interactRadius = 1.5f;
@@ -307,19 +309,25 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     private void HandleEtcInput(NetworkInputData input)
     {
         bool isEscPressed = input.Keyboard_ESC && !_wasEscPressed;
-
         if (isEscPressed)
         {
-            if (MenuController.Instance != null && MenuController.Instance.Object != null && MenuController.Instance.Object.IsValid)
+            if (MenuController.Instance != null &&
+                MenuController.Instance.Object != null &&
+                MenuController.Instance.Object.IsValid)
             {
                 if (Runner.IsForward)
-                {
                     MenuController.Instance.ToggleMenu();
-                }
             }
         }
-
         _wasEscPressed = input.Keyboard_ESC;
+
+        bool isTabPressed = input.KeybindTab && !_wasTabPressed;
+        if (isTabPressed)
+        {
+            if (HasInputAuthority && PlayerInterface.Instance != null)
+                PlayerInterface.Instance.HideNote();
+        }
+        _wasTabPressed = input.KeybindTab;
     }
 
     private void HandleMovement(NetworkInputData input)
