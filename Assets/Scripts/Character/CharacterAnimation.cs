@@ -193,6 +193,10 @@ public class CharacterAnimation : NetworkBehaviour
 
     public void InteractAnimation() => PlayAnimationNetworked("Interact");
 
+    public void DeathAnimation() => PlayAnimationNetworked("Death");
+
+    public void PrepareToRespawnAnimation() => PlayAnimationNetworked("PrepareToRespawn");
+
     public void BirdPrepareFallingAnimaion()
     {
 

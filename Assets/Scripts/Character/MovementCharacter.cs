@@ -423,7 +423,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         if (currentHealth <= 0)
         {
             isMoveAble = false;
-            DeathMechanic_RPC();
+            DeathMechanic_RPC(true);
         }
         else
         {
@@ -432,7 +432,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     }
 
     [Rpc(RpcSources.All, RpcTargets.All)]
-    public virtual void DeathMechanic_RPC()
+    public virtual void DeathMechanic_RPC(bool isPrimaryDeath)
     {
         if (localGUI != null)
         {
@@ -440,17 +440,19 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             localGUI.StopFlightBar();
         }
 
-        CharacterDie();
+        CharacterDie(isPrimaryDeath);
     }
 
-    public virtual void CharacterDie()
+    public virtual void CharacterDie(bool isPrimaryDeath)
     {
         if (isDead) return;
         isDead = true;
+
         if (HasStateAuthority)
         {
             RPC_PlayDieSound();
         }
+
         if (IsBeingCarried)
         {
             if (Runner.TryFindObject(CarrierId, out var carrierObj) && carrierObj.TryGetComponent<Duck_Moveset>(out var duck))
@@ -467,12 +469,24 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         rb2D.linearVelocity = Vector2.zero;
         rb2D.simulated = false;
 
+        if (cAnimation != null)
+        {
+            if (isPrimaryDeath)
+            {
+                cAnimation.DeathAnimation();
+            }
+            else
+            {
+                cAnimation.PrepareToRespawnAnimation();
+            }
+        }
+
         if (HasStateAuthority && canbeRespawn)
         {
             respawnTimer = TickTimer.CreateFromSeconds(Runner, respawnCooldown);
         }
 
-        if (HasStateAuthority)
+        if (HasStateAuthority && isPrimaryDeath)
         {
             MovementCharacter[] allPlayers = FindObjectsByType<MovementCharacter>(FindObjectsSortMode.None);
 
@@ -480,7 +494,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             {
                 if (partner != this && !partner.isDead)
                 {
-                    partner.DeathMechanic_RPC();
+                    partner.DeathMechanic_RPC(false);
                 }
             }
         }

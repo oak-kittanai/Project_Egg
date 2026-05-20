@@ -155,7 +155,7 @@ public class Bird_Moveset : MovementCharacter
                 if (DrownTimer.Expired(Runner) && HasStateAuthority)
                 {
                     startTimer = false;
-                    DeathMechanic_RPC();
+                    DeathMechanic_RPC(true);
                 }
             }
         }
