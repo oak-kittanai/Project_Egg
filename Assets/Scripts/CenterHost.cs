@@ -56,15 +56,19 @@ public class CenterHost : SingletonNetwork<CenterHost>
         {
             GameObject canvasObj = Instantiate(canvasPrefab);
             canvasObj.name = canvasPrefab.name;
+            DontDestroyOnLoad(canvasObj);
 
-            if (PlayerInterface.Instance != null)
-                PlayerInterface.Instance.RegisterCanvas(canvasObj);
-
-            if (TutorialUIManager.Instance != null)
-                TutorialUIManager.Instance.RegisterCanvas(canvasObj);
-
-            if (LevelData.Instance != null)
-                LevelData.Instance.RegisterCanvas(canvasObj);
+            PlayerInterface.Instance?.RegisterCanvas(canvasObj);
+            TutorialUIManager.Instance?.RegisterCanvas(canvasObj);
+            LevelData.Instance?.RegisterCanvas(canvasObj);
+        }
+        else
+        {
+            GameObject existingCanvas = GameObject.Find(canvasPrefab.name);
+            if (existingCanvas != null)
+            {
+                LevelData.Instance?.RegisterCanvas(existingCanvas);
+            }
         }
 
         if (GameObject.Find("CoreManagerSceneHop") == null && coreManagerPrefab != null)

@@ -75,6 +75,12 @@ public class PlayerInterface : MonoBehaviour
         if (Instance == null) Instance = this;
     }
 
+    private void Start()
+    {
+        GameObject canvas = GameObject.Find("Canvas");
+        if (canvas != null) RegisterCanvas(canvas);
+    }
+
     private void OnEnable()
     {
         SceneManager.sceneLoaded += OnSceneLoaded;
@@ -85,197 +91,14 @@ public class PlayerInterface : MonoBehaviour
         SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 
-    private void Start()
-    {
-        FindAllUIReferences(SceneManager.GetActiveScene());
-        HideQuestUI();
-    }
-
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        FindAllUIReferences(scene);
-    }
-
-    private void FindAllUIReferences(Scene scene)
-    {
-        Transform persistentRoot = transform.root;
-        bool foundFromPersistent = TryFindFromRoot(persistentRoot);
-
-        if (foundFromPersistent)
+        GameObject canvas = GameObject.Find("Canvas");
+        if (canvas != null)
         {
-            Debug.Log($"[PlayerInterface] found UI in Persistent Canvas");
-            return;
+            RegisterCanvas(canvas);
+            Debug.Log($"[PlayerInterface] Re-registered Canvas on scene: {scene.name}");
         }
-
-        TryFindFromScene(persistentRoot);
-    }
-
-    private bool TryFindFromRoot(Transform root)
-    {
-        bool foundAny = false;
-        GameObject uiCanvas = GameObject.Find("Canvas");
-
-        // Stats
-        Transform charStats = root.Find("Character_Stats_Obj");
-        if (charStats != null)
-        {
-            Transform profileT = charStats.Find("CharacterProfile");
-            if (profileT != null)
-            {
-                characterProfile_Ref = profileT.GetComponent<Image>();
-                foundAny = true;
-            }
-
-            Transform healthT = charStats.Find("HealthBar");
-            if (healthT != null)
-            {
-                HealthBar_Ref = healthT.GetComponent<Image>();
-                foundAny = true;
-            }
-        }
-
-        // Skill
-        Transform skillObjT = root.Find("SkillObj");
-        if (skillObjT != null)
-        {
-            Transform skillContainerTransform = skillObjT.Find("SkillContainer");
-            if (skillContainerTransform != null)
-            {
-                skillContainer = skillContainerTransform;
-                foundAny = true;
-            }
-        }
-
-        // Quest
-        Transform questDialog = root.Find("QuestDialog_Obj");
-        if (questDialog != null)
-        {
-            Transform questObj = questDialog.Find("QuestContainer");
-            if (questObj != null)
-            {
-                questContainer = questObj.gameObject;
-                questText = questObj.Find("QuestText")?.GetComponent<TMP_Text>();
-                questProgressBar = questObj.Find("QuestProgressBar")?.GetComponent<Slider>();
-                questItemAmountText = questObj.Find("QuestItemAmountText")?.GetComponent<TMP_Text>();
-                questItemIcon = questObj.Find("QuestItemIcon")?.GetComponent<Image>();
-                foundAny = true;
-            }
-        }
-        if (uiCanvas != null)
-        {
-            // Interact Prompt
-            Transform promptObj = uiCanvas.transform.Find("InteractPrompt");
-            if (promptObj != null) interactPromptObj = promptObj.gameObject;
-        }
-
-        // Setting
-        Transform settingObj = uiCanvas.transform.Find("PauseMenu");
-        if (settingObj != null)
-        {
-            resumeButton = settingObj.Find("Resume").GetComponent<Button>();
-            resumePlayerCheckText = resumeButton.GetComponentInChildren<TMP_Text>();
-
-            settingButton = settingObj.Find("Setting").GetComponent<Button>();
-            quitButton = settingObj.Find("Quit").GetComponent<Button>();
-
-            resetButton = settingObj.Find("Reset").GetComponent<Button>();
-            resetPlayerCheckText = resetButton.GetComponentInChildren<TMP_Text>();
-            foundAny = true;
-        }
-
-        // Note
-        Transform noteObjT = uiCanvas.transform.Find("NoteObj");
-        if (noteObjT != null)
-        {
-            noteObj = noteObjT.gameObject;
-            noteWriterText = noteObjT.Find("WriterText")?.GetComponent<TMP_Text>();
-            noteHeadText = noteObjT.Find("HeadText")?.GetComponent<TMP_Text>();
-            noteDescText = noteObjT.Find("DescText")?.GetComponent<TMP_Text>();
-
-            foundAny = true;
-            noteObj.SetActive(false);
-        }
-
-
-        return foundAny;
-    }
-
-    private void TryFindFromScene(Transform root)
-    {
-        GameObject uiCanvas = GameObject.Find("Canvas");
-
-        if (uiCanvas == null)
-        {
-            Debug.LogWarning($"[PlayerInterface] can't find Canvas in current scene");
-            return;
-        }
-
-        // Stats
-        Transform charStats = uiCanvas.transform.Find("Character_Stats_Obj");
-        if (charStats != null)
-        {
-            Transform profileRef = charStats.Find("CharacterProfile");
-            if (profileRef != null) characterProfile_Ref = profileRef.GetComponent<Image>();
-
-            Transform healthRef = charStats.Find("HealthBar");
-            if (healthRef != null) HealthBar_Ref = healthRef.GetComponent<Image>();
-        }
-
-        // Skill
-        Transform skillObjT = uiCanvas.transform.Find("SkillObj");
-        if (skillObjT != null)
-        {
-            Transform skillContainerTransform = skillObjT.Find("SkillContainer");
-            if (skillContainerTransform != null) skillContainer = skillContainerTransform;
-        }
-
-        // Quest
-        Transform questDialog = uiCanvas.transform.Find("QuestDialog_Obj");
-        if (questDialog != null)
-        {
-            Transform questObj = questDialog.Find("QuestContainer");
-            if (questObj != null)
-            {
-                questContainer = questObj.gameObject;
-                questText = questObj.Find("QuestText")?.GetComponent<TMP_Text>();
-                questProgressBar = questObj.Find("QuestProgressBar")?.GetComponent<Slider>();
-                questItemAmountText = questObj.Find("QuestItemAmountText")?.GetComponent<TMP_Text>();
-                questItemIcon = questObj.Find("QuestItemIcon")?.GetComponent<Image>();
-            }
-        }
-
-        // InteractPrompt
-        Transform promptObj = uiCanvas.transform.Find("InteractPrompt");
-        if (promptObj != null) interactPromptObj = promptObj.gameObject;
-
-        // Setting
-        Transform settingObj = uiCanvas.transform.Find("PauseMenu");
-        if (settingObj != null)
-        {
-            resumeButton = settingObj.Find("Resume").GetComponent<Button>();
-            resumePlayerCheckText = resumeButton.GetComponentInChildren<TMP_Text>();
-
-            settingButton = settingObj.Find("Setting").GetComponent<Button>();
-            quitButton = settingObj.Find("Quit").GetComponent<Button>();
-
-            resetButton = settingObj.Find("Reset").GetComponent<Button>();
-            resetPlayerCheckText = resetButton.GetComponentInChildren<TMP_Text>();
-        }
-
-        // Note
-
-        Transform noteObjT = uiCanvas.transform.Find("NoteObj");
-        if (noteObjT != null)
-        {
-            noteObj = noteObjT.gameObject;
-            noteWriterText = noteObjT.Find("WriterText")?.GetComponent<TMP_Text>();
-            noteHeadText = noteObjT.Find("HeadText")?.GetComponent<TMP_Text>();
-            noteDescText = noteObjT.Find("DescText")?.GetComponent<TMP_Text>();
-
-            noteObj.SetActive(false);
-        }
-
-        Debug.Log($"[PlayerInterface] found UI in Scene Canvas");
     }
 
     public void RegisterCanvas(GameObject canvas)
