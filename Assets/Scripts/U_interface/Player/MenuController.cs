@@ -67,13 +67,15 @@ public class MenuController : NetworkBehaviour
     {
         IsMenuOpen = !IsMenuOpen;
 
-        if (IsMenuOpen)
-        {
-            HostResumeReady = false;
-            ClientResumeReady = false;
-            HostResetReady = false;
-            ClientResetReady = false;
-        }
+        ClearAllVotes();
+    }
+
+    private void ClearAllVotes()
+    {
+        HostResumeReady = false;
+        ClientResumeReady = false;
+        HostResetReady = false;
+        ClientResetReady = false;
     }
 
     public void OnMenuStateChanged()
@@ -87,8 +89,9 @@ public class MenuController : NetworkBehaviour
                 if (PlayerInterface.Instance.resumeButton) PlayerInterface.Instance.resumeButton.interactable = true;
                 if (PlayerInterface.Instance.resetButton) PlayerInterface.Instance.resetButton.interactable = true;
 
-                if (PlayerInterface.Instance.resumePlayerCheckText) PlayerInterface.Instance.resumePlayerCheckText.text = "0/2";
-                if (PlayerInterface.Instance.resetPlayerCheckText) PlayerInterface.Instance.resetPlayerCheckText.text = "0/2";
+                int activePlayers = Runner.ActivePlayers.Count();
+                if (PlayerInterface.Instance.resumePlayerCheckText) PlayerInterface.Instance.resumePlayerCheckText.text = $"0/{activePlayers}";
+                if (PlayerInterface.Instance.resetPlayerCheckText) PlayerInterface.Instance.resetPlayerCheckText.text = $"0/{activePlayers}";
             }
         }
     }
@@ -124,10 +127,13 @@ public class MenuController : NetworkBehaviour
         if (resumeCount >= activePlayers)
         {
             IsMenuOpen = false;
+            ClearAllVotes();
         }
         else if (resetCount >= activePlayers)
         {
             IsMenuOpen = false;
+            ClearAllVotes();
+
             MovementCharacter[] allPlayers = FindObjectsByType<MovementCharacter>(FindObjectsSortMode.None);
             foreach (var p in allPlayers)
             {
@@ -144,11 +150,11 @@ public class MenuController : NetworkBehaviour
         int resumeCount = (HostResumeReady ? 1 : 0) + (ClientResumeReady ? 1 : 0);
         int resetCount = (HostResetReady ? 1 : 0) + (ClientResetReady ? 1 : 0);
 
-        if (resumeCount > 0 && PlayerInterface.Instance.resumePlayerCheckText)
-            PlayerInterface.Instance.resumePlayerCheckText.text = $"({resumeCount}/{activePlayers})";
+        if (PlayerInterface.Instance.resumePlayerCheckText)
+            PlayerInterface.Instance.resumePlayerCheckText.text = $"{resumeCount}/{activePlayers}";
 
-        if (resetCount > 0 && PlayerInterface.Instance.resetPlayerCheckText)
-            PlayerInterface.Instance.resetPlayerCheckText.text = $"({resetCount}/{activePlayers})";
+        if (PlayerInterface.Instance.resetPlayerCheckText)
+            PlayerInterface.Instance.resetPlayerCheckText.text = $"{resetCount}/{activePlayers}";
     }
 
     private void OnClickSetting()
