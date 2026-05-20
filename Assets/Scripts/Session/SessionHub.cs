@@ -238,7 +238,6 @@ public class SessionHub : SingletonNetwork<SessionHub>
         }
 
         if (_leaveButton != null) { _leaveButton.gameObject.SetActive(true); _leaveButton.interactable = true; }
-        if (_leaveButtonJoinRoom != null) { _leaveButtonJoinRoom.gameObject.SetActive(true); _leaveButtonJoinRoom.interactable = true; }
     }
     #endregion
 
