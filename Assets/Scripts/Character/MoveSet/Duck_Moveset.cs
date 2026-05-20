@@ -398,6 +398,12 @@ public class Duck_Moveset : MovementCharacter
         }
         else
         {
+            if (!stilldrowning)
+            {
+                EndDiveLogic();
+                return;
+            }
+
             if (stilldrowning)
             {
                 Vector2 inputDir = new Vector2(0f, 1f);
@@ -460,12 +466,13 @@ public class Duck_Moveset : MovementCharacter
             isBeingLiftedByBird = bird.IsFlying;
         }
 
-        if (IsBodyOnWater && currentWater != null && !onDiving && !isJumpingUp && !isBeingLiftedByBird)
+        bool canApplyBuoyancy = IsBodyOnWater && currentWater != null && !onDiving && !isJumpingUp && !isBeingLiftedByBird && !stilldrowning;
+
+        if (canApplyBuoyancy)
         {
             isOptional = true;
             optionalGravity = 0f;
             rb2D.gravityScale = 0f;
-
             isSpeedoptional = true;
 
             float surfaceY = currentWater.transform.position.y;
@@ -474,7 +481,7 @@ public class Duck_Moveset : MovementCharacter
 
             rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, difference * 10f);
         }
-        else if (currentWater == null || isJumpingUp || (!IsBodyOnWater && onDiving) || isBeingLiftedByBird)
+        else if (currentWater == null || isJumpingUp || (!IsBodyOnWater && onDiving) || isBeingLiftedByBird || stilldrowning)
         {
             if (!onDiving)
             {
