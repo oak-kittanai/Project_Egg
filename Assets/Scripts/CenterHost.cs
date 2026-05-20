@@ -52,17 +52,11 @@ public class CenterHost : SingletonNetwork<CenterHost>
 
     private void SetupGameCore()
     {
-        if (GameObject.Find(canvasPrefab.name) == null && canvasPrefab != null)
-        {
-            GameObject canvasObj = Instantiate(canvasPrefab);
-            canvasObj.name = canvasPrefab.name;
-            Debug.Log("Spawned Local Canvas: " + canvasObj.name);
-        }
-
         if (canvasPrefab != null && GameObject.Find(canvasPrefab.name) == null)
         {
             GameObject canvasObj = Instantiate(canvasPrefab);
             canvasObj.name = canvasPrefab.name;
+            Debug.Log("Spawned Local Canvas: " + canvasObj.name);
 
             if (TutorialUIManager.Instance != null)
                 TutorialUIManager.Instance.RegisterCanvas(canvasObj);
@@ -86,6 +80,7 @@ public class CenterHost : SingletonNetwork<CenterHost>
             }
         }
     }
+
 
     public override void FixedUpdateNetwork()
     {

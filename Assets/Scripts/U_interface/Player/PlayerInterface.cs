@@ -24,9 +24,9 @@ public class PlayerInterface : MonoBehaviour
 
     [Header("Quest Setting")]
     public GameObject questContainer;
-    public TextMeshProUGUI questText;
+    public TMP_Text questText;
     public Slider questProgressBar;
-    public TextMeshProUGUI questItemAmountText;
+    public TMP_Text questItemAmountText;
     public Image questItemIcon;
 
     [Header("Interact Prompt")]
@@ -237,9 +237,9 @@ public class PlayerInterface : MonoBehaviour
             if (questObj != null)
             {
                 questContainer = questObj.gameObject;
-                questText = questObj.Find("QuestText")?.GetComponent<TextMeshProUGUI>();
+                questText = questObj.Find("QuestText")?.GetComponent<TMP_Text>();
                 questProgressBar = questObj.Find("QuestProgressBar")?.GetComponent<Slider>();
-                questItemAmountText = questObj.Find("QuestItemAmountText")?.GetComponent<TextMeshProUGUI>();
+                questItemAmountText = questObj.Find("QuestItemAmountText")?.GetComponent<TMP_Text>();
                 questItemIcon = questObj.Find("QuestItemIcon")?.GetComponent<Image>();
             }
         }

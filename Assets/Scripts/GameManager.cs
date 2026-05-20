@@ -42,6 +42,10 @@ public class GameManager : SingletonNetwork<GameManager>
     [Networked] public int TeamBlueKeys { get; set; }
     [Networked] public int TeamOrangeKeys { get; set; }
 
+    [SerializeField] float playerReadyTimeout = 15f; // รอ Client นานสุด 15 วิ
+    [Networked] TickTimer PlayerReadyTimeoutTimer { get; set; }
+
+
     public async Task SetUpScene()
     {
         //await Instantiate(canvasObject, vec);
@@ -83,18 +87,30 @@ public class GameManager : SingletonNetwork<GameManager>
     {
         if (!HasStateAuthority) return;
 
-        if (!IsGameReady && isPlayerReady && isLoadMapDone)
+        if (!IsGameReady && isLoadMapDone)
         {
+            bool allReady = isPlayerReady;
+            bool timedOut = PlayerReadyTimeoutTimer.Expired(Runner);
+
+            if ((allReady || timedOut) && !LoadingSceneTimer.IsRunning)
+            {
+                if (timedOut && !allReady)
+                    Debug.LogWarning("[GameManager] Player ready timeout! Starting game anyway.");
+
+                LoadingSceneTimer = TickTimer.CreateFromSeconds(Runner, loadingSceneCooldown);
+                PlayerReadyTimeoutTimer = TickTimer.None;
+            }
+
             if (LoadingSceneTimer.Expired(Runner))
             {
                 IsGameReady = true;
                 LoadingSceneTimer = TickTimer.None;
-                Debug.Log("Game Start!");
-
+                Debug.Log("[GameManager] Game Start!");
                 ResetAllPlayersToSpawn();
             }
         }
     }
+
 
     #region PlayerData
 
@@ -115,21 +131,30 @@ public class GameManager : SingletonNetwork<GameManager>
     public void SetupLevelData(LevelData data)
     {
         currentLoadingUI = data.loadingScreenUI;
+
         if (currentLoadingUI != null) currentLoadingUI.SetActive(true);
+
+        if (data.introClip == null && data.videoLoadingPlayer != null)
+        {
+            data.videoLoadingPlayer.Play();
+        }
 
         allowCloseUI = false;
 
         if (data.SpawnPosition != null)
-        {
             UpdateRespawnPos(data.SpawnPosition.position);
-        }
+
         checkPoints = data.levelCheckPoints;
 
         if (HasStateAuthority)
         {
             loadingSceneCooldown = data.introClip != null ? 1f : 4f;
+
+            PlayerReadyTimeoutTimer = TickTimer.CreateFromSeconds(Runner, playerReadyTimeout);
+            Debug.Log($"[GameManager] Loading Timeout set: {playerReadyTimeout}s");
         }
     }
+
 
     #endregion
     #endregion
@@ -182,8 +207,6 @@ public class GameManager : SingletonNetwork<GameManager>
             isLoadMapDone = true;
             Debug.Log("Map Ready");
             CheckGameStart();
-
-            CheckMapLoading();
         }
     }
 
@@ -498,12 +521,14 @@ public class GameManager : SingletonNetwork<GameManager>
             isLoadMapDone = false;
             IsGameReady = false;
             LoadingSceneTimer = TickTimer.None;
+            PlayerReadyTimeoutTimer = TickTimer.None;
 
             activePlayers.Clear();
         }
 
         currentLoadingUI = null;
     }
+
 
     // Loading Screen Zone
     public void ShowGlobalLoadingScreen()
