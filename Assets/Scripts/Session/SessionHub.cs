@@ -27,26 +27,29 @@ public class SessionHub : SingletonNetwork<SessionHub>
     [SerializeField] bool isReady;
     [SerializeField] Canvas _canvas;
 
+    [Header("Shared UI")]
+    [SerializeField] GameObject backgroundShared;
+
     [Header("Lobby")]
     [SerializeField] Button _CreateSessionButton;
     [SerializeField] Button _joinSessionButton;
 
-    [Header("JoinSession")]
-    [SerializeField] GameObject JoinSession;
+    [Header("JoinSession (UI Elements)")]
+    [SerializeField] GameObject[] joinSessionElements;
     [SerializeField] TMP_InputField _sessionNumberInsertField;
     [SerializeField] Button _JoinRoomButton;
 
-    [Header("InLobby")]
-    [SerializeField] GameObject GameMainMenu;
+    [Header("InLobby (Main Menu UI Elements)")]
+    [SerializeField] GameObject[] mainMenuElements;
     [SerializeField] Button playButton;
     [SerializeField] Button settingButton;
     [SerializeField] Button exitButton;
 
     // Lobby
-    [SerializeField] GameObject LobbyGameObject;
-    
+    [SerializeField] GameObject[] lobbyElements;
+
     // Session
-    [SerializeField] GameObject SessionGameObject;
+    [SerializeField] GameObject[] sessionElements;
     [SerializeField] GameObject _playerHost;
     [SerializeField] TMP_Text playerHostName;
     [SerializeField] GameObject _playerClient;
@@ -85,7 +88,7 @@ public class SessionHub : SingletonNetwork<SessionHub>
     [SerializeField] Sprite _isready;
     [SerializeField] Sprite _notReady;
 
-    [SerializeField] bool _gameReadyToStart => RuntimeUpdate.Instance.isHostReady && RuntimeUpdate.Instance.isClientReady;
+    [SerializeField] bool _gameReadyToStart => RuntimeUpdate.Instance != null && RuntimeUpdate.Instance.isHostReady && RuntimeUpdate.Instance.isClientReady;
 
     [Header("Support_Text")]
     [SerializeField] GameObject DebugTextObj;
@@ -177,12 +180,22 @@ public class SessionHub : SingletonNetwork<SessionHub>
     #endregion
 
     #region UI Panel Management
+    private void ToggleUIElements(GameObject[] elements, bool isActive)
+    {
+        if (elements == null || elements.Length == 0) return;
+        foreach (var element in elements)
+        {
+            if (element != null) element.SetActive(isActive);
+        }
+    }
+
     private void HideAllPanels()
     {
-        if (GameMainMenu != null) GameMainMenu.SetActive(false);
-        if (JoinSession != null) JoinSession.SetActive(false);
-        if (SessionGameObject != null) SessionGameObject.SetActive(false);
-        if (LobbyGameObject != null) LobbyGameObject.SetActive(false);
+        ToggleUIElements(mainMenuElements, false);
+        ToggleUIElements(joinSessionElements, false);
+        ToggleUIElements(sessionElements, false);
+        ToggleUIElements(lobbyElements, false);
+
         SetMainButtonOff(false);
         if (_startButton != null) _startButton.gameObject.SetActive(false);
     }
@@ -190,29 +203,34 @@ public class SessionHub : SingletonNetwork<SessionHub>
     public void OpenLobbyUI()
     {
         HideAllPanels();
+        if (backgroundShared != null) backgroundShared.SetActive(true);
+
         SetMainButtonOff(true);
-        if (LobbyGameObject != null) LobbyGameObject.SetActive(true);
+        ToggleUIElements(lobbyElements, true);
     }
 
     public void OpenMainMenuUI()
     {
         HideAllPanels();
+        if (backgroundShared != null) backgroundShared.SetActive(false);
         ResetMenuButtons();
-
-        if (GameMainMenu != null) GameMainMenu.SetActive(true);
+        ToggleUIElements(mainMenuElements, true);
     }
 
     public void OpenJoinUI()
     {
         HideAllPanels();
-        if (JoinSession != null) JoinSession.SetActive(true);
+
+        if (backgroundShared != null) backgroundShared.SetActive(true);
+        ToggleUIElements(joinSessionElements, true);
         if (_JoinRoomButton != null) _JoinRoomButton.interactable = true;
     }
 
     public void OpenSessionUI()
     {
         HideAllPanels();
-        if (SessionGameObject != null) SessionGameObject.SetActive(true);   
+        if (backgroundShared != null) backgroundShared.SetActive(false);
+        ToggleUIElements(sessionElements, true);
 
         if (networkRunner != null && networkRunner.IsServer)
         {
