@@ -29,17 +29,22 @@ public class Turret_Shooter : NetworkBehaviour
     {
         if (!HasStateAuthority) return;
 
-        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, detectionRadius, playerLayer);
+        Vector2 originPos = firePoint != null ? (Vector2)firePoint.position : (Vector2)transform.position;
+        Collider2D[] hits = Physics2D.OverlapCircleAll(originPos, detectionRadius, playerLayer);
 
-        Transform targetToShoot = null;
+        Vector2? targetPosToShoot = null;
         float minDistance = float.MaxValue;
 
         foreach (var hit in hits)
         {
-            if (!hit.TryGetComponent<MovementCharacter>(out _)) continue;
+            MovementCharacter character = hit.GetComponentInParent<MovementCharacter>();
+            if (character == null) character = hit.GetComponentInChildren<MovementCharacter>();
 
-            Vector2 dirToTarget = (hit.transform.position - transform.position).normalized;
-            float distance = Vector2.Distance(transform.position, hit.transform.position);
+            if (character == null || character.isDead) continue;
+
+            Vector2 targetPos = hit.bounds.center;
+            Vector2 dirToTarget = (targetPos - originPos).normalized;
+            float distance = Vector2.Distance(originPos, targetPos);
 
             if (Vector2.Angle(transform.right, dirToTarget) <= viewAngle)
             {
@@ -47,34 +52,32 @@ public class Turret_Shooter : NetworkBehaviour
 
                 if (checkLineOfSight)
                 {
-                    RaycastHit2D hitObstacle = Physics2D.Raycast(transform.position, dirToTarget, distance, obstacleLayer);
+                    RaycastHit2D hitObstacle = Physics2D.Raycast(originPos, dirToTarget, distance, obstacleLayer);
                     if (hitObstacle.collider != null)
                     {
-                        canSeePlayer = false; 
+                        canSeePlayer = false;
                     }
                 }
 
                 if (canSeePlayer && distance < minDistance)
                 {
                     minDistance = distance;
-                    targetToShoot = hit.transform;
+                    targetPosToShoot = targetPos; 
                 }
             }
         }
 
-        if (targetToShoot != null && FireTimer.ExpiredOrNotRunning(Runner))
+        if (targetPosToShoot != null && FireTimer.ExpiredOrNotRunning(Runner))
         {
-            ShootAt(targetToShoot);
+            ShootAt(targetPosToShoot.Value);
             FireTimer = TickTimer.CreateFromSeconds(Runner, fireRate);
         }
     }
 
-    private void ShootAt(Transform target)
+    private void ShootAt(Vector2 targetPos)
     {
         Vector2 spawnPos = firePoint != null ? (Vector2)firePoint.position : (Vector2)transform.position;
-
-        Vector2 direction = ((Vector2)target.position - spawnPos).normalized;
-
+        Vector2 direction = (targetPos - spawnPos).normalized;
         float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
         Quaternion bulletRotation = Quaternion.Euler(0, 0, angle);
 
@@ -97,11 +100,13 @@ public class Turret_Shooter : NetworkBehaviour
 
     private void OnDrawGizmosSelected()
     {
+        Vector2 originPos = firePoint != null ? (Vector2)firePoint.position : (Vector2)transform.position;
+
         Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, detectionRadius);
+        Gizmos.DrawWireSphere(originPos, detectionRadius);
         Vector3 upLimit = Quaternion.Euler(0, 0, viewAngle) * transform.right * detectionRadius;
         Vector3 downLimit = Quaternion.Euler(0, 0, -viewAngle) * transform.right * detectionRadius;
-        Gizmos.DrawLine(transform.position, transform.position + upLimit);
-        Gizmos.DrawLine(transform.position, transform.position + downLimit);
+        Gizmos.DrawLine(originPos, new Vector3(originPos.x, originPos.y, 0) + upLimit);
+        Gizmos.DrawLine(originPos, new Vector3(originPos.x, originPos.y, 0) + downLimit);
     }
 }
