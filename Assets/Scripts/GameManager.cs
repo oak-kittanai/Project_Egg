@@ -107,7 +107,7 @@ public class GameManager : SingletonNetwork<GameManager>
     public void RegisterPlayer(MovementCharacter player)
     {
         if (!activePlayers.Contains(player))
-        {
+        {   
             activePlayers.Add(player);
             Debug.Log($"[GameManager] Player {player.Object.Id} Has Joined");
         }
