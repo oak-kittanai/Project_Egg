@@ -533,6 +533,24 @@ public class Bird_Moveset : MovementCharacter
         {
             if (lineRenderer.enabled) lineRenderer.enabled = false;
         }
+
+        if (!HasInputAuthority || PlayerInterface.Instance == null) return;
+
+        if (isFlyUnlocked && PlayerInterface.Instance.spawnedBirdFly != null)
+        {
+            PlayerInterface.Instance.spawnedBirdFly.SetPressed(IsFlying);
+
+            PlayerInterface.Instance.spawnedBirdFly.UpdateCooldown(FlightTimer, Runner);
+
+            PlayerInterface.Instance.spawnedBirdFly.SetUsable(!IsAlreadyFly && !stilldrowning);
+        }
+
+        if (isThrowUnlocked && PlayerInterface.Instance.spawnedBirdThrow != null)
+        {
+            PlayerInterface.Instance.spawnedBirdThrow.SetPressed(_prepareToThrow);
+
+            PlayerInterface.Instance.spawnedBirdThrow.SetUsable(_canThrowItem);
+        }
     }
 }
 

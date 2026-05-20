@@ -505,5 +505,21 @@ public class Duck_Moveset : MovementCharacter
     public override void Render()
     {
         base.Render();
+
+        if (!HasInputAuthority || PlayerInterface.Instance == null) return;
+
+        if (isDiveUnlocked && PlayerInterface.Instance.spawnedDuckDive != null)
+        {
+            PlayerInterface.Instance.spawnedDuckDive.SetPressed(onDiving);
+
+            PlayerInterface.Instance.spawnedDuckDive.SetUsable(isWaterSurface);
+        }
+
+        if (isSmashUnlocked && PlayerInterface.Instance.spawnedDuckSmash != null)
+        {
+            PlayerInterface.Instance.spawnedDuckSmash.SetPressed(_isEPressed);
+
+            PlayerInterface.Instance.spawnedDuckSmash.SetUsable(isNearBreakableRock);
+        }
     }
 }

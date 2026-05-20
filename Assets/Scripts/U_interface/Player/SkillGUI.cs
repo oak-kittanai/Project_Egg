@@ -65,6 +65,15 @@ public class SkillGUI : MonoBehaviour
         skillCooldownText.enabled = false;
     }
 
+    public void SetUsable(bool isUsable)
+    {
+        Color targetColor = isUsable ? Color.white : new Color(0.4f, 0.4f, 0.4f, 0.8f);
+
+        if (skillProfile != null) skillProfile.color = targetColor;
+        if (longSkillKey != null) longSkillKey.color = targetColor;
+        if (shortSkillKey != null) shortSkillKey.color = targetColor;
+    }
+
     public void UnlockSkill()
     {
         if (isSkillDiscover) return;

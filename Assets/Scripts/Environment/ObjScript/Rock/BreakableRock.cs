@@ -50,7 +50,7 @@ public class BreakableRock : NetworkBehaviour, Interactable
         }
     }
 
-    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    [Rpc(RpcSources.All, RpcTargets.All)]
     public void RPC_BreakRock()
     {
         if (itemToDrop != null && canDrop)
@@ -79,6 +79,7 @@ public class BreakableRock : NetworkBehaviour, Interactable
 
     public void SpawnItem()
     {
+        if (!HasStateAuthority) return;
         GameManager.Instance.SpawnDropItem(itemToDrop, transform.position);
     }
 }

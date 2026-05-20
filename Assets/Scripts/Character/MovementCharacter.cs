@@ -121,7 +121,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     public NetworkString<_32> HeldItemName { get; set; }
     private bool _wasDropPressed;
 
-
+    [HideInInspector] public bool isNearBreakableRock;
 
     public void OnHeldItemChanged()
     {
@@ -834,12 +834,16 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         Transform closestItem = null;
         float minDistance = float.MaxValue;
 
+        isNearBreakableRock = false;
+
         foreach (var hit in hitsItem)
         {
             if (hit.gameObject == gameObject) continue;
 
             if (hit.TryGetComponent<Interactable>(out var interactable))
             {
+                if (hit.GetComponent<BreakableRock>() != null) isNearBreakableRock = true;
+
                 if (!interactable.CanInteract(this)) continue;
 
                 float dist = Vector2.Distance(transform.position, hit.transform.position);
