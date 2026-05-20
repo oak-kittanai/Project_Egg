@@ -44,14 +44,24 @@ public class PlayerInterface : MonoBehaviour
     public GameObject skillDuck_Smash;
 
     [Header("Spawned Skills (Auto-Assigned)")]
-    [HideInInspector] public SkillGUI spawnedBirdFly;
-    [HideInInspector] public SkillGUI spawnedBirdThrow;
-    [HideInInspector] public SkillGUI spawnedDuckDive;
-    [HideInInspector] public SkillGUI spawnedDuckSmash;
+    private SkillGUI spawnedBirdFly;
+    private SkillGUI spawnedBirdThrow;
+    private SkillGUI spawnedDuckDive;
+    private SkillGUI spawnedDuckSmash;
 
     // ตัวแปรเก็บสถานะเพื่อป้องกันการ Spawn ซ้ำถ้าไม่ได้เปลี่ยนตัวละคร
     private bool isCurrentBirdSetup;
     private bool hasSetupSkills = false;
+
+    [Header("Setting")]
+    public Button resumeButton;
+    public TMP_Text resumePlayerCheckText;
+
+    public Button settingButton;
+    public Button quitButton;
+
+    public Button resetButton;
+    public TMP_Text resetPlayerCheckText;
 
     private void Awake()
     {
@@ -152,6 +162,18 @@ public class PlayerInterface : MonoBehaviour
         }
 
         // Setting
+        Transform settingObj = uiCanvas.transform.Find("PauseMenu");
+        if (settingObj != null)
+        {
+            resumeButton = settingObj.Find("Resume").GetComponent<Button>();
+            resumePlayerCheckText = resumeButton.GetComponentInChildren<TMP_Text>();
+
+            settingButton = settingObj.Find("Setting").GetComponent<Button>();
+            quitButton = settingObj.Find("Quit").GetComponent<Button>();
+
+            resetButton = settingObj.Find("Reset").GetComponent<Button>();
+            resetPlayerCheckText = resetButton.GetComponentInChildren<TMP_Text>();
+        }
 
         return foundAny;
     }
@@ -205,6 +227,18 @@ public class PlayerInterface : MonoBehaviour
         if (promptObj != null) interactPromptObj = promptObj.gameObject;
 
         // Setting
+        Transform settingObj = uiCanvas.transform.Find("PauseMenu");
+        if (settingObj != null)
+        {
+            resumeButton = settingObj.Find("Resume").GetComponent<Button>();
+            resumePlayerCheckText = resumeButton.GetComponentInChildren<TMP_Text>();
+
+            settingButton = settingObj.Find("Setting").GetComponent<Button>();
+            quitButton = settingObj.Find("Quit").GetComponent<Button>();
+
+            resetButton = settingObj.Find("Reset").GetComponent<Button>();
+            resetPlayerCheckText = resetButton.GetComponentInChildren<TMP_Text>();
+        }
 
         Debug.Log($"[PlayerInterface] found UI in Scene Canvas");
     }
