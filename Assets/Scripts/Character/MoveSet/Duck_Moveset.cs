@@ -172,6 +172,9 @@ public class Duck_Moveset : MovementCharacter
         if (friend.rb2D != null) friend.rb2D.bodyType = RigidbodyType2D.Kinematic;
         if (friend.coll2D != null) friend.coll2D.isTrigger = true;
 
+        if (carryCollider != null && friend.coll2D != null) Physics2D.IgnoreCollision(carryCollider, friend.coll2D, true);
+        if (normalCollider != null && friend.coll2D != null) Physics2D.IgnoreCollision(normalCollider, friend.coll2D, true);
+
         if (normalCollider != null) normalCollider.enabled = false;
         if (carryCollider != null) carryCollider.enabled = true;
 
@@ -192,6 +195,9 @@ public class Duck_Moveset : MovementCharacter
                     friend.localIsBeingCarriedPredict = false;
                     if (friend.rb2D != null) friend.rb2D.bodyType = RigidbodyType2D.Dynamic;
                     if (friend.coll2D != null) friend.coll2D.isTrigger = false;
+
+                    if (carryCollider != null && friend.coll2D != null) Physics2D.IgnoreCollision(carryCollider, friend.coll2D, false);
+                    if (normalCollider != null && friend.coll2D != null) Physics2D.IgnoreCollision(normalCollider, friend.coll2D, false);
 
                     if (throwFriend && friend.visualTransform != null)
                     {
@@ -275,6 +281,7 @@ public class Duck_Moveset : MovementCharacter
                     optionalGravity = 0f;
                     isOptional = true;
                     isSpeedoptional = true;
+                    rb2D.gravityScale = 0f;
 
                     Vector2 inputDir = new Vector2(input.horizontal, input.vertical);
 
@@ -441,7 +448,11 @@ public class Duck_Moveset : MovementCharacter
 
     public void HandleBuoyancy()
     {
-        bool isBeingLiftedByBird = IsCarry && rb2D.linearVelocity.y > 1.5f;
+        bool isBeingLiftedByBird = false;
+        if (IsCarry && Runner.TryFindObject(CarriedFriendId, out var friendObj) && friendObj.TryGetComponent<Bird_Moveset>(out var bird))
+        {
+            isBeingLiftedByBird = bird.IsFlying;
+        }
 
         if (IsBodyOnWater && currentWater != null && !onDiving && !isJumpingUp && !isBeingLiftedByBird)
         {
@@ -459,10 +470,12 @@ public class Duck_Moveset : MovementCharacter
         }
         else if (currentWater == null || isJumpingUp || (!IsBodyOnWater && onDiving) || isBeingLiftedByBird)
         {
-            isOptional = false;
-            isSpeedoptional = false;
-
-            rb2D.gravityScale = normalGravity;
+            if (!onDiving)
+            {
+                isOptional = false;
+                isSpeedoptional = false;
+                rb2D.gravityScale = normalGravity;
+            }
         }
     }
 

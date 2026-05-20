@@ -114,49 +114,54 @@ public class Bird_Moveset : MovementCharacter
     private void HandleDrowning()
     {
         bool effectivelyCarried = IsBeingCarried || localIsBeingCarriedPredict;
+        NetworkId effectiveCarrierId = IsBeingCarried ? CarrierId : localCarrierIdPredict;
 
-        if (!effectivelyCarried && (isWaterSurface || stilldrowning))
+        bool isBirdDrowning = false;
+
+        if (effectivelyCarried)
         {
-            isMoveAble = false;
-            isOptional = true;
-            optionalGravity = 0f;
-
-            if (IsBeingCarried)
+            if (Runner.TryFindObject(effectiveCarrierId, out var duckObj) && duckObj.TryGetComponent<Duck_Moveset>(out var duck))
             {
-
+                if (duck.onDiving || duck.IsHeadUnderwater)
+                {
+                    isBirdDrowning = true;
+                }
             }
-            else
+        }
+        else
+        {
+            if (isWaterSurface || stilldrowning)
             {
+                isBirdDrowning = true;
+            }
+        }
+
+        if (isBirdDrowning)
+        {
+            if (!effectivelyCarried)
+            {
+                isMoveAble = false;
+                isOptional = true;
+                optionalGravity = 0f;
                 rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, -1.5f);
             }
 
             if (!startTimer)
             {
-                if (HasStateAuthority)
-                {
-                    StartDrowningTimer();
-                }
+                if (HasStateAuthority) StartDrowningTimer();
             }
-
-            if (startTimer)
+            else
             {
-                if (DrownTimer.Expired(Runner))
+                if (DrownTimer.Expired(Runner) && HasStateAuthority)
                 {
-                    if (HasStateAuthority)
-                    {
-                        startTimer = false;
-                        DeathMechanic_RPC();
-                    }
-                }
-                else
-                {
-                    // drowning animation
+                    startTimer = false;
+                    DeathMechanic_RPC();
                 }
             }
         }
-        else if (startTimer)
+        else
         {
-            if (HasStateAuthority)
+            if (startTimer && HasStateAuthority)
             {
                 DrownTimer = TickTimer.None;
                 startTimer = false;
@@ -172,7 +177,7 @@ public class Bird_Moveset : MovementCharacter
 
     public void OnDrownTimerStateChanged()
     {
-        if (Object.InputAuthority == Runner.LocalPlayer && localGUI != null)
+        if (HasInputAuthority && localGUI != null)
         {
             if (startTimer)
             {
@@ -230,7 +235,7 @@ public class Bird_Moveset : MovementCharacter
         {
             if (isPressed && IsInAir)
             {
-                if (!IsFlying && !IsAlreadyFly)
+                if (!IsFlying && !IsAlreadyFly && !stilldrowning)
                 {
                     StartFlying();
                 }
@@ -242,7 +247,13 @@ public class Bird_Moveset : MovementCharacter
 
             if (isPressed)
             {
-                if (!IsFlying && !IsAlreadyFly)
+                bool isDuckDiving = false;
+                if (Runner.TryFindObject(CarrierId, out var duckObj) && duckObj.TryGetComponent<Duck_Moveset>(out var duck))
+                {
+                    isDuckDiving = duck.onDiving || duck.IsHeadUnderwater;
+                }
+
+                if (!IsFlying && !IsAlreadyFly && !isDuckDiving)
                 {
                     StartFlying();
                 }
@@ -271,12 +282,9 @@ public class Bird_Moveset : MovementCharacter
                 }
                 else
                 {
-                    if (Runner.TryFindObject(CarrierId, out var carrierObj))
+                    if (Runner.TryFindObject(CarrierId, out var carrierObj) && carrierObj.TryGetComponent<MovementCharacter>(out var duck))
                     {
-                        if (carrierObj.TryGetComponent<MovementCharacter>(out var duck))
-                        {
-                            duck.rb2D.linearVelocity = new Vector2(duck.rb2D.linearVelocity.x, stats.s_flySpeed);
-                        }
+                        duck.rb2D.linearVelocity = new Vector2(duck.rb2D.linearVelocity.x, stats.s_flySpeed);
                     }
                 }
             }
