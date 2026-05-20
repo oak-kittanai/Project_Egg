@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class SnowBallProjectile : NetworkBehaviour
 {
-    [Header("Moveset")]
+    [Header("Movement Setting")]
     [SerializeField] private float speed = 15f;
 
     [Header("Snowball Setting")]
@@ -11,7 +11,7 @@ public class SnowBallProjectile : NetworkBehaviour
 
     [Header("Damage Setting")]
     [SerializeField] private int damageAmount = 1;
-    [SerializeField] private float knockbackForce = 15f;
+    [SerializeField] private float knockbackForce = 4f;
     [Networked] private TickTimer LifeTimer { get; set; }
 
     public override void Spawned()
