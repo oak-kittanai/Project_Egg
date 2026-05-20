@@ -347,13 +347,18 @@ public class GameManager : SingletonNetwork<GameManager>
         Vector3 spawnPos = new Vector3(posToSpawn.x, posToSpawn.y, 0f);
         NetworkObject objIte = NetworkRunner.Spawn(objToSpawn, posToSpawn);
 
-        float dropForce = Random.Range(0.5f, 1.5f);
+        //float dropForce = Random.Range(0.5f, 1.5f);
 
         Rigidbody2D rb = objIte.GetComponent<Rigidbody2D>();
         if (rb != null)
         {
-            Vector2 randomDir = new Vector2(Random.Range(-1f, 1f), Random.Range(0.5f, 1f)).normalized;
-            rb.AddForce(randomDir * dropForce, ForceMode2D.Impulse);
+            float dropForce = 0.5f;
+            Vector2 dropDir = Vector2.up;
+
+            rb.AddForce(dropDir * dropForce, ForceMode2D.Impulse);
+
+            //Vector2 randomDir = new Vector2(Random.Range(-1f, 1f), Random.Range(0.5f, 1f)).normalized;
+            //rb.AddForce(randomDir * dropForce, ForceMode2D.Impulse);
         }
     }
 
