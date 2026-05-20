@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 4079266439928875870}
   - component: {fileID: 2454081965710229205}
   - component: {fileID: 8982228105302627566}
+  - component: {fileID: 8474484187149804661}
   m_Layer: 0
   m_Name: Item_Note
   m_TagString: Untagged
@@ -28,7 +29,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6443333235894001509}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 48.53, y: -17.068, z: 0}
   m_LocalScale: {x: 0.44702396, y: 0.4095356, z: 0.5562075}
   m_ConstrainProportionsScale: 0
@@ -127,6 +128,7 @@ MonoBehaviour:
   NestedObjects: []
   NetworkedBehaviours:
   - {fileID: 7319449668518200913}
+  - {fileID: 8474484187149804661}
   ForceRemoteRenderTimeframe: 0
 --- !u!58 &8982228105302627566
 CircleCollider2D:
@@ -164,3 +166,17 @@ CircleCollider2D:
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
   m_Radius: 0.7395833
+--- !u!114 &8474484187149804661
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6443333235894001509}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1bf0b9a1ca939cb4dad2341f58248a9a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Note
+  noteJson: {fileID: 0}
+  useThai: 1

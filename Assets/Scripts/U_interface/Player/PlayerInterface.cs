@@ -63,6 +63,14 @@ public class PlayerInterface : MonoBehaviour
     public Button resetButton;
     public TMP_Text resetPlayerCheckText;
 
+    [Header("Note Setting")]
+    public GameObject noteObj;
+    public TMP_Text noteWriterText;
+    public TMP_Text noteHeadText;
+    public TMP_Text noteDescText;
+    public Button noteCloseButton;
+
+
     private void Awake()
     {
         if (Instance == null) Instance = this;
@@ -173,7 +181,25 @@ public class PlayerInterface : MonoBehaviour
 
             resetButton = settingObj.Find("Reset").GetComponent<Button>();
             resetPlayerCheckText = resetButton.GetComponentInChildren<TMP_Text>();
+            foundAny = true;
         }
+
+        // Note
+        Transform noteObjT = uiCanvas.transform.Find("NoteObj");
+        if (noteObjT != null)
+        {
+            noteObj = noteObjT.gameObject;
+            noteWriterText = noteObjT.Find("WriterText")?.GetComponent<TMPro.TextMeshProUGUI>();
+            noteHeadText = noteObjT.Find("HeadText")?.GetComponent<TMPro.TextMeshProUGUI>();
+            noteDescText = noteObjT.Find("DescText")?.GetComponent<TMPro.TextMeshProUGUI>();
+            noteCloseButton = noteObjT.Find("CloseButton")?.GetComponent<UnityEngine.UI.Button>();
+
+            if (noteCloseButton != null)
+                noteCloseButton.onClick.AddListener(HideNote);
+            foundAny = true;
+            noteObj.SetActive(false);
+        }
+
 
         return foundAny;
     }
@@ -240,8 +266,27 @@ public class PlayerInterface : MonoBehaviour
             resetPlayerCheckText = resetButton.GetComponentInChildren<TMP_Text>();
         }
 
+        // Note
+
+        Transform noteObjT = uiCanvas.transform.Find("NoteObj");
+        if (noteObjT != null)
+        {
+            noteObj = noteObjT.gameObject;
+            noteWriterText = noteObjT.Find("WriterText")?.GetComponent<TMPro.TextMeshProUGUI>();
+            noteHeadText = noteObjT.Find("HeadText")?.GetComponent<TMPro.TextMeshProUGUI>();
+            noteDescText = noteObjT.Find("DescText")?.GetComponent<TMPro.TextMeshProUGUI>();
+            noteCloseButton = noteObjT.Find("CloseButton")?.GetComponent<UnityEngine.UI.Button>();
+
+            if (noteCloseButton != null)
+                noteCloseButton.onClick.AddListener(HideNote);
+
+            noteObj.SetActive(false);
+        }
+
         Debug.Log($"[PlayerInterface] found UI in Scene Canvas");
     }
+
+    #region Health&Skill
 
     public void SetupSkills(bool isBird)
     {
@@ -287,6 +332,9 @@ public class PlayerInterface : MonoBehaviour
         SetupSkills(isBird);
     }
 
+    #endregion
+
+    #region Quest
     public void UpdateQuestUI(string detail, int currentProgress, int maxProgress)
     {
         if (questContainer != null) questContainer.SetActive(true);
@@ -303,6 +351,29 @@ public class PlayerInterface : MonoBehaviour
     {
         if (questContainer != null) questContainer.SetActive(false);
     }
+
+    #endregion
+
+    #region Note
+
+    public void ShowNote(NoteContent content, bool useThai = true)
+    {
+        if (noteObj == null) return;
+
+        if (noteWriterText != null) noteWriterText.text = content.NameWhoWrite;
+        if (noteHeadText != null) noteHeadText.text = useThai ? content.Head.thai : content.Head.eng;
+        if (noteDescText != null) noteDescText.text = useThai ? content.Desc.thai : content.Desc.eng;
+
+        noteObj.SetActive(true);
+    }
+
+    public void HideNote()
+    {
+        if (noteObj != null) noteObj.SetActive(false);
+    }
+
+
+    #endregion
 
     private void LateUpdate()
     {
