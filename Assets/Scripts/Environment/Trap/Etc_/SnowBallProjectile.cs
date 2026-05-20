@@ -12,17 +12,26 @@ public class SnowBallProjectile : NetworkBehaviour
     [Header("Damage Setting")]
     [SerializeField] private int damageAmount = 1;
     [SerializeField] private float knockbackForce = 4f;
+
+    [SerializeField] private LayerMask playerLayer;
+    [SerializeField] private float hitRadius = 0.5f;
+
     [Networked] private TickTimer LifeTimer { get; set; }
+    private bool hasHitPlayer = false;
 
     public override void Spawned()
     {
+        Runner.SetIsSimulated(Object, true);
+
         if (HasStateAuthority)
         {
             LifeTimer = TickTimer.CreateFromSeconds(Runner, 7f);
+            hasHitPlayer = false;
 
             Rigidbody2D rb = GetComponent<Rigidbody2D>();
             if (rb != null)
             {
+                rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
                 rb.linearVelocity = transform.right * speed;
             }
         }
@@ -35,52 +44,43 @@ public class SnowBallProjectile : NetworkBehaviour
         if (LifeTimer.Expired(Runner))
         {
             DespawnSnowball();
-        }
-    }
-
-    private void OnCollisionEnter2D(Collision2D collision)
-    {
-        if (!HasStateAuthority) return;
-
-        MovementCharacter[] characters = collision.gameObject.GetComponentsInParent<MovementCharacter>();
-
-        if (characters == null || characters.Length == 0)
-        {
-            characters = collision.gameObject.GetComponentsInChildren<MovementCharacter>();
+            return;
         }
 
-        bool hitPlayer = false;
-
-        if (characters != null && characters.Length > 0)
+        if (!hasHitPlayer)
         {
-            foreach (var character in characters)
+            Collider2D hit = Physics2D.OverlapCircle(transform.position, hitRadius, playerLayer);
+            if (hit != null)
             {
+                MovementCharacter character = hit.GetComponentInParent<MovementCharacter>();
+                if (character == null) character = hit.GetComponentInChildren<MovementCharacter>();
 
-                if (character.enabled)
+                if (character != null && character.enabled && !character.isDead)
                 {
-                    Vector2 knockbackDir = (collision.transform.position - transform.position).normalized;
+                    hasHitPlayer = true;
+                    Vector2 knockbackDir = (hit.transform.position - transform.position).normalized;
                     knockbackDir.y = 1f;
 
                     character.TakeDamage(damageAmount, knockbackForce, knockbackDir.normalized);
 
                     DespawnSnowball();
-                    hitPlayer = true;
-                    return; 
                 }
             }
         }
+    }
 
-        if (!hitPlayer)
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (!HasStateAuthority || hasHitPlayer) return;
+
+        int layer = collision.gameObject.layer;
+        if (layer == LayerMask.NameToLayer("Ground") || layer == LayerMask.NameToLayer("Platform"))
         {
-            int layer = collision.gameObject.layer;
-            if (layer == LayerMask.NameToLayer("Ground") || layer == LayerMask.NameToLayer("Platform"))
-            {
-                float impactY = Mathf.Abs(collision.relativeVelocity.y);
+            float impactY = Mathf.Abs(collision.relativeVelocity.y);
 
-                if (impactY < minBounceForce)
-                {
-                    DespawnSnowball();
-                }
+            if (impactY < minBounceForce)
+            {
+                DespawnSnowball();
             }
         }
     }
@@ -91,5 +91,11 @@ public class SnowBallProjectile : NetworkBehaviour
         {
             GameManager.Instance.RequestDespawn(this.Object);
         }
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.green;
+        Gizmos.DrawWireSphere(transform.position, hitRadius);
     }
 }

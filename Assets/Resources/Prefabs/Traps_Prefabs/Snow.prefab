@@ -15,7 +15,6 @@ GameObject:
   - component: {fileID: 1282285148022154684}
   - component: {fileID: 1309256803320509252}
   - component: {fileID: -1757607871258236568}
-  - component: {fileID: 4964792180227270437}
   m_Layer: 11
   m_Name: Snow
   m_TagString: Untagged
@@ -175,6 +174,10 @@ MonoBehaviour:
   minBounceForce: 2
   damageAmount: 1
   knockbackForce: 4
+  playerLayer:
+    serializedVersion: 2
+    m_Bits: 128
+  hitRadius: 0.5
 --- !u!114 &1309256803320509252
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -194,7 +197,6 @@ MonoBehaviour:
   NetworkedBehaviours:
   - {fileID: 1282285148022154684}
   - {fileID: -1757607871258236568}
-  - {fileID: 4964792180227270437}
   ForceRemoteRenderTimeframe: 0
 --- !u!114 &-1757607871258236568
 MonoBehaviour:
@@ -219,17 +221,3 @@ MonoBehaviour:
     Position: 0.01
     Rotation: 0.01
     Scale: 0.01
---- !u!114 &4964792180227270437
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6773280089982168135}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d6c2ea7cb747ffa44af7abd235d40365, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DoDamage
-  damageAmount: 1
-  knockbackForce: 5
