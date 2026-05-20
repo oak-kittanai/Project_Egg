@@ -3,20 +3,23 @@ using UnityEngine;
 
 public class Turret_Shooter : NetworkBehaviour
 {
-    [Header("Detection Settings")]
+    [Header("Detect")]
     public float detectionRadius = 6f;
     public float viewAngle = 22.5f;
     public LayerMask playerLayer;
 
-    [Header("Shooting Settings")]
+    [Header("กันยิงทะลุ")]
+    public bool checkLineOfSight = true;
+    public LayerMask obstacleLayer;
+
+    [Header("Shooting Setting")]
     public NetworkObject bulletPrefab;
     [SerializeField] float projectileSpeed = 10f;
 
     public float fireRate = 1.5f;
-
     public Transform firePoint;
 
-    [Header("Audio Setting")]
+    [Header("Audio")]
     public AudioSource shootAudioSource;
     public AudioClip shootSoundClip;
 
@@ -40,7 +43,18 @@ public class Turret_Shooter : NetworkBehaviour
 
             if (Vector2.Angle(transform.right, dirToTarget) <= viewAngle)
             {
-                if (distance < minDistance)
+                bool canSeePlayer = true;
+
+                if (checkLineOfSight)
+                {
+                    RaycastHit2D hitObstacle = Physics2D.Raycast(transform.position, dirToTarget, distance, obstacleLayer);
+                    if (hitObstacle.collider != null)
+                    {
+                        canSeePlayer = false; 
+                    }
+                }
+
+                if (canSeePlayer && distance < minDistance)
                 {
                     minDistance = distance;
                     targetToShoot = hit.transform;
