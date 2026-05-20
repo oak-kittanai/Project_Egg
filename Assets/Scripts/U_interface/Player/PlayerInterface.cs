@@ -154,9 +154,9 @@ public class PlayerInterface : MonoBehaviour
             if (questObj != null)
             {
                 questContainer = questObj.gameObject;
-                questText = questObj.Find("QuestText")?.GetComponent<TextMeshProUGUI>();
+                questText = questObj.Find("QuestText")?.GetComponent<TMP_Text>();
                 questProgressBar = questObj.Find("QuestProgressBar")?.GetComponent<Slider>();
-                questItemAmountText = questObj.Find("QuestItemAmountText")?.GetComponent<TextMeshProUGUI>();
+                questItemAmountText = questObj.Find("QuestItemAmountText")?.GetComponent<TMP_Text>();
                 questItemIcon = questObj.Find("QuestItemIcon")?.GetComponent<Image>();
                 foundAny = true;
             }
@@ -276,6 +276,67 @@ public class PlayerInterface : MonoBehaviour
         }
 
         Debug.Log($"[PlayerInterface] found UI in Scene Canvas");
+    }
+
+    public void RegisterCanvas(GameObject canvas)
+    {
+        // Stats
+        Transform charStats = canvas.transform.Find("Character_Stats_Obj");
+        if (charStats != null)
+        {
+            characterProfile_Ref = charStats.Find("CharacterProfile")?.GetComponent<Image>();
+            HealthBar_Ref = charStats.Find("HealthBar")?.GetComponent<Image>();
+        }
+
+        // Skill
+        Transform skillObjT = canvas.transform.Find("SkillObj");
+        if (skillObjT != null)
+            skillContainer = skillObjT.Find("SkillContainer");
+
+        // Quest
+        Transform questDialog = canvas.transform.Find("QuestDialog_Obj");
+        if (questDialog != null)
+        {
+            Transform questObj = questDialog.Find("QuestContainer");
+            if (questObj != null)
+            {
+                questContainer = questObj.gameObject;
+                questText = questObj.Find("QuestText")?.GetComponent<TMP_Text>();
+                questProgressBar = questObj.Find("QuestProgressBar")?.GetComponent<Slider>();
+                questItemAmountText = questObj.Find("QuestItemAmountText")?.GetComponent<TMP_Text>();
+                questItemIcon = questObj.Find("QuestItemIcon")?.GetComponent<Image>();
+            }
+        }
+
+        // Interact Prompt
+        Transform promptObj = canvas.transform.Find("InteractPrompt");
+        if (promptObj != null) interactPromptObj = promptObj.gameObject;
+
+        // PauseMenu
+        Transform settingObj = canvas.transform.Find("PauseMenu");
+        if (settingObj != null)
+        {
+            resumeButton = settingObj.Find("Resume")?.GetComponent<Button>();
+            resumePlayerCheckText = resumeButton?.GetComponentInChildren<TMP_Text>();
+            settingButton = settingObj.Find("Setting")?.GetComponent<Button>();
+            quitButton = settingObj.Find("Quit")?.GetComponent<Button>();
+            resetButton = settingObj.Find("Reset")?.GetComponent<Button>();
+            resetPlayerCheckText = resetButton?.GetComponentInChildren<TMP_Text>();
+        }
+
+        // Note
+        Transform noteObjT = canvas.transform.Find("NoteObj");
+        if (noteObjT != null)
+        {
+            noteObj = noteObjT.gameObject;
+            noteWriterText = noteObjT.Find("WriterText")?.GetComponent<TMP_Text>();
+            noteHeadText = noteObjT.Find("HeadText")?.GetComponent<TMP_Text>();
+            noteDescText = noteObjT.Find("DescText")?.GetComponent<TMP_Text>();
+            noteObj.SetActive(false);
+        }
+
+        HideQuestUI();
+        Debug.Log("[PlayerInterface] RegisterCanvas success");
     }
 
     #region Health&Skill

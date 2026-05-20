@@ -56,7 +56,9 @@ public class CenterHost : SingletonNetwork<CenterHost>
         {
             GameObject canvasObj = Instantiate(canvasPrefab);
             canvasObj.name = canvasPrefab.name;
-            Debug.Log("Spawned Local Canvas: " + canvasObj.name);
+
+            if (PlayerInterface.Instance != null)
+                PlayerInterface.Instance.RegisterCanvas(canvasObj);
 
             if (TutorialUIManager.Instance != null)
                 TutorialUIManager.Instance.RegisterCanvas(canvasObj);
