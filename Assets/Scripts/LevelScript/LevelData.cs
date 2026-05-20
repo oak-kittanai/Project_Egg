@@ -18,7 +18,7 @@ public class LevelData : MonoBehaviour
     [Header("Cutscene Settings (Intro)")]
     public VideoClip introClip;
     public VideoPlayer introVideoPlayer;
-    public GameObject videoUIPanel;
+    public VideoPlayer videoLoadingPlayer;
 
     [Header("SpawnPoints")]
     public GameObject[] spawnPointsInMap;
@@ -56,6 +56,17 @@ public class LevelData : MonoBehaviour
     private void Awake()
     {
         Instance = this;
+
+        GameObject canvas = GameObject.Find("Canvas");
+        if (canvas != null)
+        {
+            RegisterCanvas(canvas);
+            Debug.Log("LevelData: Found existing Canvas");
+        }
+        else
+        {
+            Debug.LogWarning("LevelData: Canvas not found yet");
+        }
     }
 
     private IEnumerator Start()
@@ -67,7 +78,7 @@ public class LevelData : MonoBehaviour
 
         if (introClip != null && introVideoPlayer != null)
         {
-            if (videoUIPanel != null) videoUIPanel.SetActive(true);
+            if (loadingScreenUI != null) loadingScreenUI.SetActive(true);
 
             introVideoPlayer.clip = introClip;
             introVideoPlayer.Play();
@@ -80,13 +91,34 @@ public class LevelData : MonoBehaviour
         }
     }
 
+    public void RegisterCanvas(GameObject canvas)
+    {
+        Transform loadingScene = canvas.transform.Find("LoadingScene");
+        if (loadingScene != null)
+        {
+            loadingScreenUI = loadingScene.gameObject;
+
+            Transform vp = loadingScene.Find("videoPlayer");
+            if (vp != null) introVideoPlayer = vp.GetComponent<VideoPlayer>();
+
+            Transform lv = loadingScene.Find("LoadingVideo");
+            if (lv != null) videoLoadingPlayer = lv.GetComponent<VideoPlayer>();
+
+            Debug.Log("LevelData: Canvas UI registered successfully");
+        }
+        else
+        {
+            Debug.LogWarning("LevelData: LoadingScene not found in Canvas");
+        }
+    }
+
     #region Video
 
     private void OnVideoEnd(VideoPlayer vp)
     {
         introVideoPlayer.loopPointReached -= OnVideoEnd;
 
-        if (videoUIPanel != null) videoUIPanel.SetActive(false);
+        if (loadingScreenUI != null) loadingScreenUI.SetActive(false);
 
         GameManager.Instance.MapFinishedLoading();
     }

@@ -52,10 +52,23 @@ public class CenterHost : SingletonNetwork<CenterHost>
 
     private void SetupGameCore()
     {
-        if (FindAnyObjectByType<PlayerInterface>() == null && canvasPrefab != null)
+        if (GameObject.Find(canvasPrefab.name) == null && canvasPrefab != null)
         {
-            Instantiate(canvasPrefab);
-            Debug.Log("Spawned Local Canvas");
+            GameObject canvasObj = Instantiate(canvasPrefab);
+            canvasObj.name = canvasPrefab.name;
+            Debug.Log("Spawned Local Canvas: " + canvasObj.name);
+        }
+
+        if (canvasPrefab != null && GameObject.Find(canvasPrefab.name) == null)
+        {
+            GameObject canvasObj = Instantiate(canvasPrefab);
+            canvasObj.name = canvasPrefab.name;
+
+            if (TutorialUIManager.Instance != null)
+                TutorialUIManager.Instance.RegisterCanvas(canvasObj);
+
+            if (LevelData.Instance != null)
+                LevelData.Instance.RegisterCanvas(canvasObj);
         }
 
         if (GameObject.Find("CoreManagerSceneHop") == null && coreManagerPrefab != null)

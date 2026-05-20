@@ -13,6 +13,8 @@ public class MenuController : NetworkBehaviour
     [Networked, OnChangedRender(nameof(OnMenuStateChanged))]
     public NetworkBool IsMenuOpen { get; set; }
 
+    public bool IsMenuOpenSafe => Object != null && Object.IsValid && IsMenuOpen;
+
     [Networked, OnChangedRender(nameof(OnQueueUpdated))]
     public NetworkBool HostResumeReady { get; set; }
     [Networked, OnChangedRender(nameof(OnQueueUpdated))]

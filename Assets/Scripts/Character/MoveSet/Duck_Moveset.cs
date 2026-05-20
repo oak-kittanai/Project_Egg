@@ -68,7 +68,7 @@ public class Duck_Moveset : MovementCharacter
     {
         bool isJumpPressed = false;
 
-        bool isMenuOpen = MenuController.Instance != null && MenuController.Instance.IsMenuOpen;
+        bool isMenuOpen = MenuController.Instance != null && MenuController.Instance.Object != null && MenuController.Instance.Object.IsValid && MenuController.Instance.IsMenuOpen;
 
         if (GetInput(out NetworkInputData input))
         {

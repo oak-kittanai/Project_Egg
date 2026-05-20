@@ -258,34 +258,13 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
             if (Runner.TryFindObject(effectiveCarrierId, out var duckObj) && duckObj.TryGetComponent<Rigidbody2D>(out var duckRb))
             {
-                rb2D.position = duckRb.position + Vector2.up * betweenCarryPosition;
-            }
-        }
-        else
-        {
-            if (rb2D.bodyType == RigidbodyType2D.Kinematic) rb2D.bodyType = RigidbodyType2D.Dynamic;
-
-            if (coll2D != null && coll2D.isTrigger) coll2D.isTrigger = false;
-        }
-
-        if (effectivelyCarried)
-        {
-            if (rb2D.bodyType != RigidbodyType2D.Kinematic) rb2D.bodyType = RigidbodyType2D.Kinematic;
-            rb2D.linearVelocity = Vector2.zero;
-
-            if (coll2D != null && !coll2D.isTrigger) coll2D.isTrigger = true;
-
-            isMoveAble = false;
-
-            if (Runner.TryFindObject(effectiveCarrierId, out var duckObj) && duckObj.TryGetComponent<Rigidbody2D>(out var duckRb))
-            {
                 Vector2 targetPos = duckRb.position + Vector2.up * betweenCarryPosition;
                 rb2D.position = targetPos;
                 transform.position = targetPos;
             }
         }
 
-        bool isMenuOpen = MenuController.Instance != null && MenuController.Instance.IsMenuOpen;
+        bool isMenuOpen = MenuController.Instance != null && MenuController.Instance.Object != null && MenuController.Instance.Object.IsValid && MenuController.Instance.IsMenuOpen;
 
         if (HasStateAuthority || HasInputAuthority) CheckGround();
 
@@ -331,7 +310,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
         if (isEscPressed)
         {
-            if (MenuController.Instance != null)
+            if (MenuController.Instance != null && MenuController.Instance.Object != null && MenuController.Instance.Object.IsValid)
             {
                 if (Runner.IsForward)
                 {

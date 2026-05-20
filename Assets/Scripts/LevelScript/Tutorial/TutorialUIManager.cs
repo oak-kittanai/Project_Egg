@@ -18,9 +18,13 @@ public class TutorialUIManager : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
-            if (tutorialPanel != null) tutorialPanel.SetActive(false);
-
             DontDestroyOnLoad(gameObject.transform.root.gameObject);
+
+            GameObject canvas = GameObject.Find("Canvas");
+            if (canvas != null)
+            {
+                RegisterCanvas(canvas);
+            }
         }
         else
         {
@@ -28,37 +32,14 @@ public class TutorialUIManager : MonoBehaviour
         }
     }
 
-    private void OnEnable()
+    public void RegisterCanvas(GameObject canvas)
     {
-        SceneManager.sceneLoaded += OnSceneLoaded;
-    }
+        var panel = canvas.transform.Find("TutorialPanel");
+        if (panel == null) { Debug.LogWarning("TutorialPanel not found"); return; }
 
-    private void OnDisable()
-    {
-        SceneManager.sceneLoaded -= OnSceneLoaded;
-    }
-
-    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
-    {
-        FindTutorialUI();
-    }
-
-    private void FindTutorialUI()
-    {
-        GameObject tutorialCanvas = GameObject.Find("Canvas");
-
-        if (tutorialCanvas != null)
-        {
-            tutorialPanel = tutorialCanvas.transform.Find("TutorialPanel").gameObject;
-
-            tutorialImageSlot = tutorialPanel.transform.Find("TutorialSlot").GetComponent<Image>();
-
-            Debug.Log($"TutorialManager Success Load UI");
-        }
-        else
-        {
-            Debug.LogWarning($"TutorialManager Fail To Load TutorialCanvas");
-        }
+        tutorialPanel = panel.gameObject;
+        tutorialImageSlot = tutorialPanel.transform.Find("TutorialSlot").GetComponent<Image>();
+        Debug.Log("TutorialManager Success Load UI");
     }
 
     public void ShowTutorial(Sprite spriteToShow, Vector2 customSize, float duration = 5f)
