@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &1570018463978248828
+--- !u!1 &6287277083120408395
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,71 +8,73 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 7479233231607966100}
-  - component: {fileID: 127063686194669633}
-  - component: {fileID: 7825853430673868469}
-  m_Layer: 0
-  m_Name: CenterHost
+  - component: {fileID: 5502861000872511735}
+  - component: {fileID: 3038894804350277024}
+  - component: {fileID: 5228571391162681140}
+  m_Layer: 5
+  m_Name: Network_MenuController
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &7479233231607966100
-Transform:
+--- !u!224 &5502861000872511735
+RectTransform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1570018463978248828}
-  serializedVersion: 2
+  m_GameObject: {fileID: 6287277083120408395}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.33472, y: 0.71923, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &127063686194669633
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &3038894804350277024
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1570018463978248828}
+  m_GameObject: {fileID: 6287277083120408395}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 65ebbde90cf588f4cadb9da57094b82d, type: 3}
+  m_Script: {fileID: 11500000, guid: 6b6d80b4da30b6b459582ebe2a81219c, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CenterHost
-  HostSpawnPos: {x: -22, y: -12}
-  ClientSpawnPos: {x: -22, y: -13}
-  PlayerPrefab: {fileID: 0}
-  hostRunner: {fileID: 0}
-  netStructure: {fileID: 0}
-  hostStats: {fileID: 0}
-  clientRunner: {fileID: 0}
-  clientStats: {fileID: 0}
-  _RemoveOldObj: 0
-  canvasPrefab: {fileID: 8707019487019327968, guid: 295c8402bdc86c54b9d8e9489b2b686f, type: 3}
-  coreManagerPrefab: {fileID: 6220470830134951863, guid: d1f11188d278f98459741540fcff5596, type: 3}
-  networkMenuControllerPrefab: {fileID: 5228571391162681140, guid: 94ec73eb37818bf4d9b395a040ad16ba, type: 3}
---- !u!114 &7825853430673868469
+  m_EditorClassIdentifier: Assembly-CSharp::MenuController
+  _IsMenuOpen:
+    _value: 0
+  _HostResumeReady:
+    _value: 0
+  _ClientResumeReady:
+    _value: 0
+  _HostResetReady:
+    _value: 0
+  _ClientResetReady:
+    _value: 0
+--- !u!114 &5228571391162681140
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1570018463978248828}
+  m_GameObject: {fileID: 6287277083120408395}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
-  SortKey: 2179351403
+  SortKey: 3341271428
   ObjectInterest: 1
   Flags: 262145
   NestedObjects: []
   NetworkedBehaviours:
-  - {fileID: 127063686194669633}
+  - {fileID: 3038894804350277024}
   ForceRemoteRenderTimeframe: 0

@@ -68,17 +68,22 @@ public class Duck_Moveset : MovementCharacter
     {
         bool isJumpPressed = false;
 
+        bool isMenuOpen = MenuController.Instance != null && MenuController.Instance.IsMenuOpen;
+
         if (GetInput(out NetworkInputData input))
         {
-            isJumpPressed = input.KeybindJump && !_wasJumpPressed;
-
-            HandleDuckInteraction(input);
-            HandleWaterLogic(input);
-
-            if (isJumpAble)
+            if (!isMenuOpen)
             {
-                if (input.KeybindJump) isJumpingUp = true;
-                else isJumpingUp = false;
+                isJumpPressed = input.KeybindJump && !_wasJumpPressed;
+
+                HandleDuckInteraction(input);
+                HandleWaterLogic(input);
+
+                if (isJumpAble)
+                {
+                    if (input.KeybindJump) isJumpingUp = true;
+                    else isJumpingUp = false;
+                }
             }
 
             _wasEPressed = input.KeybindInteract;

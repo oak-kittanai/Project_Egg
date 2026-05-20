@@ -71,10 +71,23 @@ public class Bird_Moveset : MovementCharacter
 
     protected override void OnFixedUpdateSpecific()
     {
+        bool isMenuOpen = MenuController.Instance != null && MenuController.Instance.IsMenuOpen;
+
         if (GetInput(out NetworkInputData input))
         {
-            HandleFlightLogic(input);
-            HandleThrowLogic(input);
+            if (!isMenuOpen)
+            {
+                HandleFlightLogic(input);
+                HandleThrowLogic(input);
+            }
+            else
+            {
+                if (_prepareToThrow) CancelThrow();
+
+                _wasJumpPressed = input.KeybindJump;
+                _wasPrepareThrowPressed = input.KeybindPrepareThrowItem;
+                _wasisThrowItemPressed = input.KeybindThrowItem;
+            }
         }
 
         if (IsGrounded)

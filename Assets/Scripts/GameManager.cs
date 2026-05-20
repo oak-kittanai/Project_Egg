@@ -124,6 +124,11 @@ public class GameManager : SingletonNetwork<GameManager>
             UpdateRespawnPos(data.SpawnPosition.position);
         }
         checkPoints = data.levelCheckPoints;
+
+        if (HasStateAuthority)
+        {
+            loadingSceneCooldown = data.introClip != null ? 1f : 4f;
+        }
     }
 
     #endregion

@@ -24,6 +24,13 @@ public class CenterHost : SingletonNetwork<CenterHost>
 
     [Networked] characterType currentHost { get; set; }
     [Networked] characterType currentClient { get; set; }
+
+    [Header("Core Systems (Local Prefabs)")]
+    [SerializeField] private GameObject canvasPrefab;
+    [SerializeField] private GameObject coreManagerPrefab;
+
+    [Header("Core Systems (Network Prefabs)")]
+    [SerializeField] private NetworkObject networkMenuControllerPrefab;
     public void GetRunner()
     {
         if (hostRunner != null)
@@ -38,6 +45,32 @@ public class CenterHost : SingletonNetwork<CenterHost>
         if (hostRunner != null)
         {
             Debug.Log("Host runner ready");
+        }
+
+        SetupGameCore();
+    }
+
+    private void SetupGameCore()
+    {
+        if (FindAnyObjectByType<PlayerInterface>() == null && canvasPrefab != null)
+        {
+            Instantiate(canvasPrefab);
+            Debug.Log("Spawned Local Canvas");
+        }
+
+        if (GameObject.Find("CoreManagerSceneHop") == null && coreManagerPrefab != null)
+        {
+            Instantiate(coreManagerPrefab);
+            Debug.Log("Spawned Local CoreManagers");
+        }
+
+        if (HasStateAuthority)
+        {
+            if (FindAnyObjectByType<MenuController>() == null && networkMenuControllerPrefab != null)
+            {
+                Runner.Spawn(networkMenuControllerPrefab, Vector3.zero, Quaternion.identity);
+                Debug.Log("Spawned Networked MenuController");
+            }
         }
     }
 

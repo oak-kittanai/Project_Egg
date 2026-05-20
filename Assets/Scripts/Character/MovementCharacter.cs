@@ -285,22 +285,37 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             }
         }
 
+        bool isMenuOpen = MenuController.Instance != null && MenuController.Instance.IsMenuOpen;
+
         if (HasStateAuthority || HasInputAuthority) CheckGround();
 
         if (GetInput(out NetworkInputData input))
         {
-            if (isMoveAble)
+            if (isMenuOpen)
             {
-                HandleMovement(input);
-                HandleJump(input);
-            }
+                if (IsGrounded && !isJumping)
+                {
+                    rb2D.linearVelocity = new Vector2(0f, rb2D.linearVelocity.y);
+                }
+                cAnimation.UpdateAnimationController(Vector2.zero);
 
-            if (!IsInteractBusy)
-            {
-                HandleInteraction(input);
+                HandleEtcInput(input);
             }
-            HandleEtcInput(input);
-            HandleDrop(input);
+            else
+            {
+                if (isMoveAble)
+                {
+                    HandleMovement(input);
+                    HandleJump(input);
+                }
+
+                if (!IsInteractBusy)
+                {
+                    HandleInteraction(input);
+                }
+                HandleEtcInput(input);
+                HandleDrop(input);
+            }
         }
 
         OnFixedUpdateSpecific();

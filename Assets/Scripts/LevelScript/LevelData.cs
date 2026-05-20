@@ -1,7 +1,8 @@
-using UnityEngine;
-using System.Collections;
 using System;
+using System.Collections;
+using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Video;
 
 public class LevelData : MonoBehaviour
 {
@@ -13,6 +14,11 @@ public class LevelData : MonoBehaviour
 
     [Header("UI")]
     public GameObject loadingScreenUI;
+
+    [Header("Cutscene Settings (Intro)")]
+    public VideoClip introClip;
+    public VideoPlayer introVideoPlayer;
+    public GameObject videoUIPanel;
 
     [Header("SpawnPoints")]
     public GameObject[] spawnPointsInMap;
@@ -55,12 +61,37 @@ public class LevelData : MonoBehaviour
     private IEnumerator Start()
     {
         yield return new WaitUntil(() => GameManager.Instance != null);
-
         yield return new WaitUntil(() => GameManager.Instance.Object != null && GameManager.Instance.Object.IsValid);
 
         GameManager.Instance.SetupLevelData(this);
+
+        if (introClip != null && introVideoPlayer != null)
+        {
+            if (videoUIPanel != null) videoUIPanel.SetActive(true);
+
+            introVideoPlayer.clip = introClip;
+            introVideoPlayer.Play();
+
+            introVideoPlayer.loopPointReached += OnVideoEnd;
+        }
+        else
+        {
+            GameManager.Instance.MapFinishedLoading();
+        }
+    }
+
+    #region Video
+
+    private void OnVideoEnd(VideoPlayer vp)
+    {
+        introVideoPlayer.loopPointReached -= OnVideoEnd;
+
+        if (videoUIPanel != null) videoUIPanel.SetActive(false);
+
         GameManager.Instance.MapFinishedLoading();
     }
+
+    #endregion
 
     public void RequestTutorialShow(string requestedName)
     {
