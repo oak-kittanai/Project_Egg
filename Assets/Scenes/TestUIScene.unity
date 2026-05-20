@@ -381,6 +381,11 @@ MonoBehaviour:
   questItemIcon: {fileID: 0}
   interactPromptObj: {fileID: 260004740726648383, guid: eb44313be64da0c4199578ef1cc57eef, type: 3}
   promptOffset: {x: 0, y: 1.5, z: 0}
+  skillContainer: {fileID: 0}
+  skillBird_Fly: {fileID: 0}
+  skillBird_Throw: {fileID: 0}
+  skillDuck_Dive: {fileID: 0}
+  skillDuck_Smash: {fileID: 0}
 --- !u!4 &1064318252
 Transform:
   m_ObjectHideFlags: 0
@@ -407,14 +412,6 @@ PrefabInstance:
     - target: {fileID: 1578888549213028270, guid: 295c8402bdc86c54b9d8e9489b2b686f, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3107884220222409676, guid: 295c8402bdc86c54b9d8e9489b2b686f, type: 3}
-      propertyPath: SortKey
-      value: 1681009378
-      objectReference: {fileID: 0}
-    - target: {fileID: 4144807888930261434, guid: 295c8402bdc86c54b9d8e9489b2b686f, type: 3}
-      propertyPath: SortKey
-      value: 2672705081
       objectReference: {fileID: 0}
     - target: {fileID: 5339503688869227895, guid: 295c8402bdc86c54b9d8e9489b2b686f, type: 3}
       propertyPath: m_Pivot.x

@@ -60,6 +60,10 @@ public class Duck_Moveset : MovementCharacter
     [Networked, OnChangedRender(nameof(OnCarryStateChanged))]
     public NetworkBool IsCarry { get; set; }
 
+    [Header("Unlockable Skills")]
+    [Networked, OnChangedRender(nameof(OnSkillStateChanged))] public NetworkBool isDiveUnlocked { get; set; }
+    [Networked, OnChangedRender(nameof(OnSkillStateChanged))] public NetworkBool isSmashUnlocked { get; set; }
+
     protected override void OnFixedUpdateSpecific()
     {
         bool isJumpPressed = false;
@@ -236,6 +240,8 @@ public class Duck_Moveset : MovementCharacter
 
     public void HandleWaterLogic(NetworkInputData input)
     {
+        if (!isDiveUnlocked) return;
+
         if (IsBeingCarried)
         {
             if (onDiving) EndDiveLogic();
@@ -478,6 +484,23 @@ public class Duck_Moveset : MovementCharacter
             }
         }
     }
+
+    #region Skill
+
+    public void OnSkillStateChanged() { SyncSkillUI(); }
+
+    public override void SyncSkillUI()
+    {
+        if (!HasInputAuthority || PlayerInterface.Instance == null) return;
+
+        if (isDiveUnlocked && PlayerInterface.Instance.spawnedDuckDive != null)
+            PlayerInterface.Instance.spawnedDuckDive.UnlockSkill();
+
+        if (isSmashUnlocked && PlayerInterface.Instance.spawnedDuckSmash != null)
+            PlayerInterface.Instance.spawnedDuckSmash.UnlockSkill();
+    }
+
+    #endregion
 
     public override void Render()
     {

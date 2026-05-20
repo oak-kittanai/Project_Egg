@@ -113,10 +113,15 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [SerializeField] public Color duck_Color;
     [SerializeField] public Color bird_Color;
 
+    // UnlockableSkills
+    public enum SkillType { None, Duck_Dive, Duck_Smash, Bird_Fly, Bird_Throw }
+
     [Header("Inventory System (1 Slot)")]
     [Networked, OnChangedRender(nameof(OnHeldItemChanged))]
     public NetworkString<_32> HeldItemName { get; set; }
     private bool _wasDropPressed;
+
+
 
     public void OnHeldItemChanged()
     {
@@ -376,6 +381,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
                 if (hit.TryGetComponent<Interactable>(out var interactable))
                 {
+                    if (!interactable.CanInteract(this)) continue;
+
                     cAnimation.InteractAnimation();
                     interactable.Interact(this);
                     Debug.Log($"Try to Interact with {hit.name}");
@@ -385,7 +392,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                 {
                     if (isBird)
                     {
-                        if (throwableItem.AlreadyThrow) continue;
+                        if (throwableItem.AlreadyThrow || HeldItemName.ToString() != "") continue;
 
                         cAnimation.InteractAnimation();
 
@@ -886,6 +893,27 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
         _wasDropPressed = input.KeybindDropItem;
     }
+    #endregion
+
+    #region SkillUnlock
+
+    public virtual void SyncSkillUI() { }
+
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    public void RPC_UnlockSkill(SkillType skill)
+    {
+        if (this is Duck_Moveset duck)
+        {
+            if (skill == SkillType.Duck_Dive) duck.isDiveUnlocked = true;
+            if (skill == SkillType.Duck_Smash) duck.isSmashUnlocked = true;
+        }
+        else if (this is Bird_Moveset bird)
+        {
+            if (skill == SkillType.Bird_Fly) bird.isFlyUnlocked = true;
+            if (skill == SkillType.Bird_Throw) bird.isThrowUnlocked = true;
+        }
+    }
+
     #endregion
 
     public override void Render()

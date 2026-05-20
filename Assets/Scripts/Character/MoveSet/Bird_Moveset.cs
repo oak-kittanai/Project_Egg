@@ -28,8 +28,8 @@ public class Bird_Moveset : MovementCharacter
 
     [Header("Pressed")]
     [Networked] public bool _wasJumpPressed { get; set; }
-    [Networked] public bool _wasXPressed { get; set; }
-    [Networked] public bool _wasZPressed { get; set; }
+    [Networked] public bool _wasPrepareThrowPressed { get; set; }
+    [Networked] public bool _wasisThrowItemPressed { get; set; }
 
     // Drowning
     [Networked] private TickTimer DrownTimer { get; set; }
@@ -51,6 +51,10 @@ public class Bird_Moveset : MovementCharacter
     // Sweeping Aim
     [SerializeField] float aimSweepSpeed = 3f;
     [SerializeField] float maxAimAngle = 30f;
+
+    [Header("Unlockable Skills")]
+    [Networked, OnChangedRender(nameof(OnSkillStateChanged))] public NetworkBool isFlyUnlocked { get; set; }
+    [Networked, OnChangedRender(nameof(OnSkillStateChanged))] public NetworkBool isThrowUnlocked { get; set; }
 
     public override void Spawned()
     {
@@ -390,11 +394,13 @@ public class Bird_Moveset : MovementCharacter
 
     public void HandleThrowLogic(NetworkInputData input)
     {
-        bool isXPressed = input.KeybindPrepareThrowItem && !_wasXPressed;
-        bool isZPressed = input.KeybindThrowItem && !_wasZPressed;
+        bool isPrepareThrowPressed = input.KeybindPrepareThrowItem && !_wasPrepareThrowPressed;
+        bool isThrowItemPressed = input.KeybindThrowItem && !_wasisThrowItemPressed;
 
-        if (isXPressed)
+        if (isPrepareThrowPressed)
         {
+            if (!isThrowUnlocked) return;
+
             if (_canThrowItem && !(isWaterSurface || stilldrowning))
             {
                 _prepareToThrow = !_prepareToThrow;
@@ -422,14 +428,14 @@ public class Bird_Moveset : MovementCharacter
             UpdateOscillatingAim();
             IsInteractBusy = true;
 
-            if (isZPressed)
+            if (isThrowItemPressed)
             {
                 ExecuteThrow();
             }
         }
 
-        _wasXPressed = input.KeybindPrepareThrowItem;
-        _wasZPressed = input.KeybindThrowItem;
+        _wasPrepareThrowPressed = input.KeybindPrepareThrowItem;
+        _wasisThrowItemPressed = input.KeybindThrowItem;
     }
 
     private void ExecuteThrow()
@@ -493,6 +499,23 @@ public class Bird_Moveset : MovementCharacter
 
             time += timeIntervalinPoints;
         }
+    }
+
+    #endregion
+
+    #region Skill
+
+    public void OnSkillStateChanged() { SyncSkillUI(); }
+
+    public override void SyncSkillUI()
+    {
+        if (!HasInputAuthority || PlayerInterface.Instance == null) return;
+
+        if (isFlyUnlocked && PlayerInterface.Instance.spawnedBirdFly != null)
+            PlayerInterface.Instance.spawnedBirdFly.UnlockSkill();
+
+        if (isThrowUnlocked && PlayerInterface.Instance.spawnedBirdThrow != null)
+            PlayerInterface.Instance.spawnedBirdThrow.UnlockSkill();
     }
 
     #endregion

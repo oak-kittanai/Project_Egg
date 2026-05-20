@@ -34,6 +34,25 @@ public class PlayerInterface : MonoBehaviour
     public Vector3 promptOffset = new Vector3(0f, 1.5f, 0f);
     private Transform currentInteractTarget;
 
+    [Header("Skill Setting")]
+    public Transform skillContainer;
+
+    [Header("Skill Prefabs (Insert Here)")]
+    public GameObject skillBird_Fly;
+    public GameObject skillBird_Throw;
+    public GameObject skillDuck_Dive;
+    public GameObject skillDuck_Smash;
+
+    [Header("Spawned Skills (Auto-Assigned)")]
+    [HideInInspector] public SkillGUI spawnedBirdFly;
+    [HideInInspector] public SkillGUI spawnedBirdThrow;
+    [HideInInspector] public SkillGUI spawnedDuckDive;
+    [HideInInspector] public SkillGUI spawnedDuckSmash;
+
+    // ตัวแปรเก็บสถานะเพื่อป้องกันการ Spawn ซ้ำถ้าไม่ได้เปลี่ยนตัวละคร
+    private bool isCurrentBirdSetup;
+    private bool hasSetupSkills = false;
+
     private void Awake()
     {
         if (Instance == null) Instance = this;
@@ -97,6 +116,9 @@ public class PlayerInterface : MonoBehaviour
             }
         }
 
+        Transform skillObjT = root.Find("SkillContainer");
+        if (skillObjT != null) skillContainer = skillObjT;
+
         Transform questDialog = root.Find("QuestDialog_Obj");
         if (questDialog != null)
         {
@@ -111,8 +133,11 @@ public class PlayerInterface : MonoBehaviour
                 foundAny = true;
             }
         }
-        Transform promptObj = uiCanvas.transform.Find("InteractPrompt");
-        if (promptObj != null) interactPromptObj = promptObj.gameObject;
+        if (uiCanvas != null)
+        {
+            Transform promptObj = uiCanvas.transform.Find("InteractPrompt");
+            if (promptObj != null) interactPromptObj = promptObj.gameObject;
+        }
 
         return foundAny;
     }
@@ -137,6 +162,9 @@ public class PlayerInterface : MonoBehaviour
             if (healthRef != null) HealthBar_Ref = healthRef.GetComponent<Image>();
         }
 
+        Transform skillObjT = uiCanvas.transform.Find("SkillContainer");
+        if (skillObjT != null) skillContainer = skillObjT;
+
         Transform questDialog = uiCanvas.transform.Find("QuestDialog_Obj");
         if (questDialog != null)
         {
@@ -157,6 +185,28 @@ public class PlayerInterface : MonoBehaviour
         Debug.Log($"[PlayerInterface] found UI in Scene Canvas");
     }
 
+    public void SetupSkills(bool isBird)
+    {
+        if (skillContainer == null) return;
+        if (hasSetupSkills && isCurrentBirdSetup == isBird) return;
+
+        foreach (Transform child in skillContainer) Destroy(child.gameObject);
+
+        if (isBird)
+        {
+            if (skillBird_Fly != null) spawnedBirdFly = Instantiate(skillBird_Fly, skillContainer).GetComponent<SkillGUI>();
+            if (skillBird_Throw != null) spawnedBirdThrow = Instantiate(skillBird_Throw, skillContainer).GetComponent<SkillGUI>();
+        }
+        else
+        {
+            if (skillDuck_Dive != null) spawnedDuckDive = Instantiate(skillDuck_Dive, skillContainer).GetComponent<SkillGUI>();
+            if (skillDuck_Smash != null) spawnedDuckSmash = Instantiate(skillDuck_Smash, skillContainer).GetComponent<SkillGUI>();
+        }
+
+        isCurrentBirdSetup = isBird;
+        hasSetupSkills = true;
+    }
+
     public void UpdateHealthUI(int currentHp)
     {
         if (HealthBar_Ref == null) return;
@@ -175,6 +225,8 @@ public class PlayerInterface : MonoBehaviour
     {
         if (characterProfile_Ref != null)
             characterProfile_Ref.sprite = isBird ? character_Bird : character_Duck;
+
+        SetupSkills(isBird);
     }
 
     public void UpdateQuestUI(string detail, int currentProgress, int maxProgress)

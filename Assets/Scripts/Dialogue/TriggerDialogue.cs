@@ -22,10 +22,13 @@ public class TriggerDialogue : NetworkBehaviour
     [SerializeField] DialogueConfig[] duckDialogueSequence;
     private int duckIndex = 0;
 
+    [Header("Skill Unlock Settings")]
+    [SerializeField] MovementCharacter.SkillType skillToUnlock = MovementCharacter.SkillType.None;
+    [SerializeField] MovementCharacter.SkillType skillToUnlock2 = MovementCharacter.SkillType.None;
+
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (!HasStateAuthority) return;
-
         if (isOneTimeTrigger && hasTriggeredLocal) return;
 
         MovementCharacter[] allCharacterMovement = other.GetComponents<MovementCharacter>();
@@ -34,16 +37,20 @@ public class TriggerDialogue : NetworkBehaviour
         {
             if (character.enabled && other.CompareTag("Player"))
             {
+                if (skillToUnlock != MovementCharacter.SkillType.None)
+                {
+                    character.RPC_UnlockSkill(skillToUnlock);
+
+                    if (skillToUnlock2 != MovementCharacter.SkillType.None)
+                    {
+                        character.RPC_UnlockSkill(skillToUnlock2);
+                    }
+                }
+
                 if (differentCharacterDialogue)
                 {
-                    if (character.isBird)
-                    {
-                        RPC_TriggerDialogueNetwork(1, birdIndex);
-                    }
-                    else
-                    {
-                        RPC_TriggerDialogueNetwork(2, duckIndex);
-                    }
+                    if (character.isBird) RPC_TriggerDialogueNetwork(1, birdIndex);
+                    else RPC_TriggerDialogueNetwork(2, duckIndex);
                 }
                 else
                 {
