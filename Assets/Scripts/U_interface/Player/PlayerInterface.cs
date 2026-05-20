@@ -98,6 +98,7 @@ public class PlayerInterface : MonoBehaviour
         bool foundAny = false;
         GameObject uiCanvas = GameObject.Find("Canvas");
 
+        // Stats
         Transform charStats = root.Find("Character_Stats_Obj");
         if (charStats != null)
         {
@@ -116,6 +117,7 @@ public class PlayerInterface : MonoBehaviour
             }
         }
 
+        // Skill
         Transform skillObjT = root.Find("SkillObj");
         if (skillObjT != null)
         {
@@ -127,6 +129,7 @@ public class PlayerInterface : MonoBehaviour
             }
         }
 
+        // Quest
         Transform questDialog = root.Find("QuestDialog_Obj");
         if (questDialog != null)
         {
@@ -143,9 +146,12 @@ public class PlayerInterface : MonoBehaviour
         }
         if (uiCanvas != null)
         {
+            // Interact Prompt
             Transform promptObj = uiCanvas.transform.Find("InteractPrompt");
             if (promptObj != null) interactPromptObj = promptObj.gameObject;
         }
+
+        // Setting
 
         return foundAny;
     }
@@ -160,6 +166,7 @@ public class PlayerInterface : MonoBehaviour
             return;
         }
 
+        // Stats
         Transform charStats = uiCanvas.transform.Find("Character_Stats_Obj");
         if (charStats != null)
         {
@@ -170,6 +177,7 @@ public class PlayerInterface : MonoBehaviour
             if (healthRef != null) HealthBar_Ref = healthRef.GetComponent<Image>();
         }
 
+        // Skill
         Transform skillObjT = uiCanvas.transform.Find("SkillObj");
         if (skillObjT != null)
         {
@@ -177,6 +185,7 @@ public class PlayerInterface : MonoBehaviour
             if (skillContainerTransform != null) skillContainer = skillContainerTransform;
         }
 
+        // Quest
         Transform questDialog = uiCanvas.transform.Find("QuestDialog_Obj");
         if (questDialog != null)
         {
@@ -191,8 +200,11 @@ public class PlayerInterface : MonoBehaviour
             }
         }
 
+        // InteractPrompt
         Transform promptObj = uiCanvas.transform.Find("InteractPrompt");
         if (promptObj != null) interactPromptObj = promptObj.gameObject;
+
+        // Setting
 
         Debug.Log($"[PlayerInterface] found UI in Scene Canvas");
     }
