@@ -87,9 +87,9 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
             if (Keyboard.current.escapeKey.isPressed) press_ESC = true;
             else press_ESC = false;
 
-            bool press_TAB;
-            if (Keyboard.current.tabKey.isPressed) press_TAB = true;
-            else press_TAB = false;
+            bool press_X;
+            if (Keyboard.current.xKey.isPressed) press_X = true;
+            else press_X = false;
 
             Vector2 mousePosition = Mouse.current.position.ReadValue();
 
@@ -117,7 +117,7 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
             data.Keyboard_F = press_F;
             data.KeybindInteract = press_E;
             data.Keyboard_ESC = press_ESC;
-            data.KeybindTab = press_TAB;
+            data.Keyboard_X = press_X;
         }
 
         input.Set(data);
@@ -242,7 +242,7 @@ public struct NetworkInputData : INetworkInput
     public bool Keyboard_F;
 
     public bool Keyboard_ESC;
-    public bool KeybindTab;
+    public bool Keyboard_X;
 
     public bool KeybindInteract;
     public bool KeybindDropItem;

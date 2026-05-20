@@ -321,13 +321,13 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         }
         _wasEscPressed = input.Keyboard_ESC;
 
-        bool isTabPressed = input.KeybindTab && !_wasTabPressed;
+        bool isTabPressed = input.Keyboard_X && !_wasTabPressed;
         if (isTabPressed)
         {
             if (HasInputAuthority && PlayerInterface.Instance != null)
                 PlayerInterface.Instance.HideNote();
         }
-        _wasTabPressed = input.KeybindTab;
+        _wasTabPressed = input.Keyboard_X;
     }
 
     private void HandleMovement(NetworkInputData input)
