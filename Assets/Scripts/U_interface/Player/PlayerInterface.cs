@@ -116,8 +116,16 @@ public class PlayerInterface : MonoBehaviour
             }
         }
 
-        Transform skillObjT = root.Find("SkillContainer");
-        if (skillObjT != null) skillContainer = skillObjT;
+        Transform skillObjT = root.Find("SkillObj");
+        if (skillObjT != null)
+        {
+            Transform skillContainerTransform = skillObjT.Find("SkillContainer");
+            if (skillContainerTransform != null)
+            {
+                skillContainer = skillContainerTransform;
+                foundAny = true;
+            }
+        }
 
         Transform questDialog = root.Find("QuestDialog_Obj");
         if (questDialog != null)
@@ -162,8 +170,12 @@ public class PlayerInterface : MonoBehaviour
             if (healthRef != null) HealthBar_Ref = healthRef.GetComponent<Image>();
         }
 
-        Transform skillObjT = uiCanvas.transform.Find("SkillContainer");
-        if (skillObjT != null) skillContainer = skillObjT;
+        Transform skillObjT = uiCanvas.transform.Find("SkillObj");
+        if (skillObjT != null)
+        {
+            Transform skillContainerTransform = skillObjT.Find("SkillContainer");
+            if (skillContainerTransform != null) skillContainer = skillContainerTransform;
+        }
 
         Transform questDialog = uiCanvas.transform.Find("QuestDialog_Obj");
         if (questDialog != null)
