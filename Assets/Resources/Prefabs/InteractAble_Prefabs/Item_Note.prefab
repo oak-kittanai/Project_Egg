@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8394511178515213640}
   - component: {fileID: 3829660860417840513}
+  - component: {fileID: 7847017629832431339}
   - component: {fileID: 1569215675472829706}
   - component: {fileID: 6356631796453248106}
   - component: {fileID: -7943680987615551183}
@@ -51,6 +52,18 @@ MonoBehaviour:
   velocity: 1
   isRotate: 1
   rotationSpeed: {x: 0, y: 30, z: 0}
+--- !u!114 &7847017629832431339
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6797688548997911714}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1aad114364c71da4e9e793f4a9720caf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Item_Note
 --- !u!212 &1569215675472829706
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -127,6 +140,7 @@ MonoBehaviour:
   NestedObjects: []
   NetworkedBehaviours:
   - {fileID: 3829660860417840513}
+  - {fileID: 7847017629832431339}
   ForceRemoteRenderTimeframe: 0
 --- !u!58 &-7943680987615551183
 CircleCollider2D:
