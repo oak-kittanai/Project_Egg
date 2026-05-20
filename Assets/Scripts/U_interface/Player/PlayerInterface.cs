@@ -44,14 +44,14 @@ public class PlayerInterface : MonoBehaviour
     public GameObject skillDuck_Smash;
 
     [Header("Spawned Skills (Auto-Assigned)")]
-    private SkillGUI spawnedBirdFly;
-    private SkillGUI spawnedBirdThrow;
-    private SkillGUI spawnedDuckDive;
-    private SkillGUI spawnedDuckSmash;
+    [HideInInspector] public SkillGUI spawnedBirdFly;
+    [HideInInspector] public SkillGUI spawnedBirdThrow;
+    [HideInInspector] public SkillGUI spawnedDuckDive;
+    [HideInInspector] public SkillGUI spawnedDuckSmash;
 
     // ตัวแปรเก็บสถานะเพื่อป้องกันการ Spawn ซ้ำถ้าไม่ได้เปลี่ยนตัวละคร
-    private bool isCurrentBirdSetup;
-    private bool hasSetupSkills = false;
+    [HideInInspector] public bool isCurrentBirdSetup;
+    [HideInInspector] public bool hasSetupSkills = false;
 
     [Header("Setting")]
     public Button resumeButton;
