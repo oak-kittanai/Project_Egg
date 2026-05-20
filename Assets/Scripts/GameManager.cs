@@ -225,13 +225,15 @@ public class GameManager : SingletonNetwork<GameManager>
         }
     }
 
-    public void BackToSessionScene()
+    public async void BackToSessionScene()
     {
         if (Runner != null)
         {
-            Runner.Shutdown();
+            Debug.Log("GameManager: Shutting down NetworkRunner...");
+            await Runner.Shutdown();
         }
 
+        Debug.Log("GameManager: Loading SessionScene...");
         UnityEngine.SceneManagement.SceneManager.LoadScene("SessionScene");
     }
 

@@ -87,8 +87,8 @@ public class MenuController : NetworkBehaviour
                 if (PlayerInterface.Instance.resumeButton) PlayerInterface.Instance.resumeButton.interactable = true;
                 if (PlayerInterface.Instance.resetButton) PlayerInterface.Instance.resetButton.interactable = true;
 
-                if (PlayerInterface.Instance.resumePlayerCheckText) PlayerInterface.Instance.resumePlayerCheckText.text = "Resume";
-                if (PlayerInterface.Instance.resetPlayerCheckText) PlayerInterface.Instance.resetPlayerCheckText.text = "Reset";
+                if (PlayerInterface.Instance.resumePlayerCheckText) PlayerInterface.Instance.resumePlayerCheckText.text = "0/2";
+                if (PlayerInterface.Instance.resetPlayerCheckText) PlayerInterface.Instance.resetPlayerCheckText.text = "0/2";
             }
         }
     }
@@ -145,10 +145,10 @@ public class MenuController : NetworkBehaviour
         int resetCount = (HostResetReady ? 1 : 0) + (ClientResetReady ? 1 : 0);
 
         if (resumeCount > 0 && PlayerInterface.Instance.resumePlayerCheckText)
-            PlayerInterface.Instance.resumePlayerCheckText.text = $"Resume ({resumeCount}/{activePlayers})";
+            PlayerInterface.Instance.resumePlayerCheckText.text = $"({resumeCount}/{activePlayers})";
 
         if (resetCount > 0 && PlayerInterface.Instance.resetPlayerCheckText)
-            PlayerInterface.Instance.resetPlayerCheckText.text = $"Reset ({resetCount}/{activePlayers})";
+            PlayerInterface.Instance.resetPlayerCheckText.text = $"({resetCount}/{activePlayers})";
     }
 
     private void OnClickSetting()
@@ -167,18 +167,19 @@ public class MenuController : NetworkBehaviour
         ExecuteQuitGameAsync();
     }
 
-    private async void ExecuteQuitGameAsync()
+    private void ExecuteQuitGameAsync()
     {
         if (SessionManager.Instance != null)
         {
             SessionManager.Instance.ReStartNetworkRunner();
         }
+        else if (GameManager.Instance != null)
+        {
+            GameManager.Instance.BackToSessionScene();
+        }
         else
         {
-            if (Runner != null) await Runner.Shutdown();
-
-            if (GameManager.Instance != null) GameManager.Instance.BackToSessionScene();
-            else SceneManager.LoadScene("SessionScene");
+            UnityEngine.SceneManagement.SceneManager.LoadScene("SessionScene");
         }
     }
 }

@@ -318,7 +318,10 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         {
             if (MenuController.Instance != null)
             {
-                MenuController.Instance.ToggleMenu();
+                if (Runner.IsForward)
+                {
+                    MenuController.Instance.ToggleMenu();
+                }
             }
         }
 
