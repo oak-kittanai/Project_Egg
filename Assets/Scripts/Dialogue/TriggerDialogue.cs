@@ -26,6 +26,8 @@ public class TriggerDialogue : NetworkBehaviour
     [SerializeField] MovementCharacter.SkillType skillToUnlock = MovementCharacter.SkillType.None;
     [SerializeField] MovementCharacter.SkillType skillToUnlock2 = MovementCharacter.SkillType.None;
 
+    [SerializeField] bool doubleCharacterSkillUnlock;
+
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (!HasStateAuthority) return;
@@ -39,11 +41,13 @@ public class TriggerDialogue : NetworkBehaviour
             {
                 if (skillToUnlock != MovementCharacter.SkillType.None)
                 {
-                    character.RPC_UnlockSkill(skillToUnlock);
-
-                    if (skillToUnlock2 != MovementCharacter.SkillType.None)
+                    if (doubleCharacterSkillUnlock)
                     {
-                        character.RPC_UnlockSkill(skillToUnlock2);
+                        RPC_UnlockSkillsBoth(character);
+                    }
+                    else
+                    {
+                        character.RPC_UnlockSkill(skillToUnlock);
                     }
                 }
 
@@ -57,6 +61,20 @@ public class TriggerDialogue : NetworkBehaviour
                     RPC_TriggerDialogueNetwork(0, normalIndex);
                 }
                 break;
+            }
+        }
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    private void RPC_UnlockSkillsBoth(MovementCharacter triggerer)
+    {
+        MovementCharacter[] allPlayers = FindObjectsByType<MovementCharacter>(FindObjectsSortMode.None);
+        foreach (var p in allPlayers)
+        {
+            if (p.enabled)
+            {
+                p.RPC_UnlockSkill(skillToUnlock);
+                p.RPC_UnlockSkill(skillToUnlock2);
             }
         }
     }

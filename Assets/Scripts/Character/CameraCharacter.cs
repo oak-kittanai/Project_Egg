@@ -36,20 +36,15 @@ public class CameraCharacter : NetworkBehaviour
 
             oldPosition = transform.position.x;
             offset = transform.localPosition;
-
             target = transform.parent;
+
+            DontDestroyOnLoad(gameObject);
+            transform.SetParent(null);
 
             SceneManager.activeSceneChanged += OnSceneChanged;
 
             if (ParallaxBackground.Instance != null)
-            {
                 ParallaxBackground.Instance.SetCamera(this);
-            }
-
-            if (ParallaxBackground.Instance != null)
-            {
-                ParallaxBackground.Instance.SetCamera(this);
-            }
         }
         else
         {
