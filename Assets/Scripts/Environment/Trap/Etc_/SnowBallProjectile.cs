@@ -42,12 +42,20 @@ public class SnowBallProjectile : NetworkBehaviour
     {
         if (!HasStateAuthority) return;
 
-        if (collision.gameObject.CompareTag("Player"))
-        {
-            MovementCharacter[] allCharacterMovement = collision.gameObject.GetComponents<MovementCharacter>();
+        MovementCharacter[] characters = collision.gameObject.GetComponentsInParent<MovementCharacter>();
 
-            foreach (var character in allCharacterMovement)
+        if (characters == null || characters.Length == 0)
+        {
+            characters = collision.gameObject.GetComponentsInChildren<MovementCharacter>();
+        }
+
+        bool hitPlayer = false;
+
+        if (characters != null && characters.Length > 0)
+        {
+            foreach (var character in characters)
             {
+
                 if (character.enabled)
                 {
                     Vector2 knockbackDir = (collision.transform.position - transform.position).normalized;
@@ -56,19 +64,23 @@ public class SnowBallProjectile : NetworkBehaviour
                     character.TakeDamage(damageAmount, knockbackForce, knockbackDir.normalized);
 
                     DespawnSnowball();
-                    return;
+                    hitPlayer = true;
+                    return; 
                 }
             }
         }
 
-        int layer = collision.gameObject.layer;
-        if (layer == LayerMask.NameToLayer("Ground") || layer == LayerMask.NameToLayer("Platform"))
+        if (!hitPlayer)
         {
-            float impactY = Mathf.Abs(collision.relativeVelocity.y);
-
-            if (impactY < minBounceForce)
+            int layer = collision.gameObject.layer;
+            if (layer == LayerMask.NameToLayer("Ground") || layer == LayerMask.NameToLayer("Platform"))
             {
-                DespawnSnowball();
+                float impactY = Mathf.Abs(collision.relativeVelocity.y);
+
+                if (impactY < minBounceForce)
+                {
+                    DespawnSnowball();
+                }
             }
         }
     }
