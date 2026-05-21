@@ -21,23 +21,21 @@ public class AudioManager : MonoBehaviour
     {
         if (Instance == null) Instance = this;
 
-        if (uiSource == null)
-        {
-            uiSource = GetComponent<AudioSource>();
-        }
+        if (uiSource == null) uiSource = GetComponent<AudioSource>();
 
         if (gameSettings == null)
         {
             gameSettings = Resources.Load<GameSettingsSO>("GameSettings");
-
             if (gameSettings == null)
-            {
-                Debug.LogWarning("[AudioManager] GameSettings! not found in : Assets/Resources/GameSettings.asset");
-            }
+                Debug.LogWarning("[AudioManager] GameSettings not found");
         }
 
         if (gameSettings != null) gameSettings.LoadSettings();
+    }
 
+    private void Start()
+    {
+        FindAudioComponents(SceneManager.GetActiveScene());
         PlayBGM("FirstBGM");
     }
 
@@ -49,11 +47,6 @@ public class AudioManager : MonoBehaviour
     private void OnDisable()
     {
         SceneManager.sceneLoaded -= OnSceneLoaded;
-    }
-
-    private void Start()
-    {
-        FindAudioComponents(SceneManager.GetActiveScene());
     }
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
