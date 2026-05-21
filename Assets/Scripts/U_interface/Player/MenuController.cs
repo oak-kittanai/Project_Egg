@@ -173,6 +173,11 @@ public class MenuController : NetworkBehaviour
     private void RPC_QuitGame()
     {
         ExecuteQuitGameAsync();
+
+        PlayerInterface._birdFlyUnlocked = false;
+        PlayerInterface._birdThrowUnlocked = false;
+        PlayerInterface._duckDiveUnlocked = false;
+        PlayerInterface._duckSmashUnlocked = false;
     }
 
     private void ExecuteQuitGameAsync()

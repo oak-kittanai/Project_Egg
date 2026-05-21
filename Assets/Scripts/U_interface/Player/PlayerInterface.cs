@@ -49,6 +49,15 @@ public class PlayerInterface : MonoBehaviour
     [HideInInspector] public SkillGUI spawnedDuckDive;
     [HideInInspector] public SkillGUI spawnedDuckSmash;
 
+    public static bool _birdFlyUnlocked;
+    public static bool _birdThrowUnlocked;
+    public static bool _duckDiveUnlocked;
+    public static bool _duckSmashUnlocked;
+
+    private bool _lastIsBird;
+
+    private Transform _cachedSkillContainer;
+
     // ตัวแปรเก็บสถานะเพื่อป้องกันการ Spawn ซ้ำถ้าไม่ได้เปลี่ยนตัวละคร
     [HideInInspector] public bool isCurrentBirdSetup;
     [HideInInspector] public bool hasSetupSkills = false;
@@ -166,20 +175,36 @@ public class PlayerInterface : MonoBehaviour
 
     public void SetupSkills(bool isBird)
     {
-        if (skillContainer == null) return;
-        if (hasSetupSkills && isCurrentBirdSetup == isBird) return;
+        Transform container = _cachedSkillContainer ?? skillContainer;
+        if (container == null) return;
 
-        foreach (Transform child in skillContainer) Destroy(child.gameObject);
+        foreach (Transform child in container) Destroy(child.gameObject);
 
         if (isBird)
         {
-            if (skillBird_Fly != null) spawnedBirdFly = Instantiate(skillBird_Fly, skillContainer).GetComponent<SkillGUI>();
-            if (skillBird_Throw != null) spawnedBirdThrow = Instantiate(skillBird_Throw, skillContainer).GetComponent<SkillGUI>();
+            if (skillBird_Fly != null)
+            {
+                spawnedBirdFly = Instantiate(skillBird_Fly, container).GetComponent<SkillGUI>();
+                if (_birdFlyUnlocked) spawnedBirdFly.UnlockSkillImmediate();
+            }
+            if (skillBird_Throw != null)
+            {
+                spawnedBirdThrow = Instantiate(skillBird_Throw, container).GetComponent<SkillGUI>();
+                if (_birdThrowUnlocked) spawnedBirdThrow.UnlockSkillImmediate();
+            }
         }
         else
         {
-            if (skillDuck_Dive != null) spawnedDuckDive = Instantiate(skillDuck_Dive, skillContainer).GetComponent<SkillGUI>();
-            if (skillDuck_Smash != null) spawnedDuckSmash = Instantiate(skillDuck_Smash, skillContainer).GetComponent<SkillGUI>();
+            if (skillDuck_Dive != null)
+            {
+                spawnedDuckDive = Instantiate(skillDuck_Dive, container).GetComponent<SkillGUI>();
+                if (_duckDiveUnlocked) spawnedDuckDive.UnlockSkillImmediate();
+            }
+            if (skillDuck_Smash != null)
+            {
+                spawnedDuckSmash = Instantiate(skillDuck_Smash, container).GetComponent<SkillGUI>();
+                if (_duckSmashUnlocked) spawnedDuckSmash.UnlockSkillImmediate();
+            }
         }
 
         isCurrentBirdSetup = isBird;

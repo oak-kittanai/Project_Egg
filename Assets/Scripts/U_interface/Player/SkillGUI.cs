@@ -82,6 +82,13 @@ public class SkillGUI : MonoBehaviour
         PlayDoTween();
     }
 
+    public void UnlockSkillImmediate()
+    {
+        if (isSkillDiscover) return;
+        isSkillDiscover = true;
+        transform.localScale = Vector3.one;
+    }
+
     public void PlayDoTween()
     {
         transform.DOKill();
