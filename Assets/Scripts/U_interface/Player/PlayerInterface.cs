@@ -230,18 +230,13 @@ public class PlayerInterface : MonoBehaviour
         }
 
         // Skip Cutscene
-        Transform loadingScene = canvas.transform.Find("LoadingScene");
+        Transform skipButtoN = canvas.transform.Find("SkipButton");
 
-        if (loadingScene != null)
+        if (skipButtoN != null)
         {
-            Transform skipButtoN = loadingScene.Find("SkipButton");
+            skipButton = skipButtoN.GetComponent<Button>();
 
-            if (skipButtoN != null)
-            {
-                skipButton = skipButtoN.GetComponent<Button>();
-
-                skipPlayerCheckText = skipButtoN.GetComponentInChildren<TMP_Text>();
-            }
+            skipPlayerCheckText = skipButtoN.Find("SkipText")?.GetComponent<TMP_Text>();
         }
 
         HideQuestUI();

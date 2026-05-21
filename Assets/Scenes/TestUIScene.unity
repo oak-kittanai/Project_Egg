@@ -413,6 +413,7 @@ MonoBehaviour:
   soundSlider: {fileID: 0}
   settingLeaveButton: {fileID: 0}
   skipButton: {fileID: 0}
+  skipPlayerCheckText: {fileID: 0}
 --- !u!4 &1064318252
 Transform:
   m_ObjectHideFlags: 0
@@ -439,6 +440,10 @@ PrefabInstance:
     - target: {fileID: 1578888549213028270, guid: 295c8402bdc86c54b9d8e9489b2b686f, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2166689353727323848, guid: 295c8402bdc86c54b9d8e9489b2b686f, type: 3}
+      propertyPath: m_Name
+      value: SkipText
       objectReference: {fileID: 0}
     - target: {fileID: 5339503688869227895, guid: 295c8402bdc86c54b9d8e9489b2b686f, type: 3}
       propertyPath: m_Pivot.x
@@ -519,6 +524,10 @@ PrefabInstance:
     - target: {fileID: 5339503688869227895, guid: 295c8402bdc86c54b9d8e9489b2b686f, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8706269042138247819, guid: 295c8402bdc86c54b9d8e9489b2b686f, type: 3}
+      propertyPath: m_text
+      value: SKIP 0/2
       objectReference: {fileID: 0}
     - target: {fileID: 8707019487019327968, guid: 295c8402bdc86c54b9d8e9489b2b686f, type: 3}
       propertyPath: m_Name
