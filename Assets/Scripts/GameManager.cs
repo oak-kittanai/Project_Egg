@@ -52,24 +52,6 @@ public class GameManager : SingletonNetwork<GameManager>
     [SerializeField] float playerReadyTimeout = 15f; // รอ Client นานสุด 15 วิ
     [Networked] TickTimer PlayerReadyTimeoutTimer { get; set; }
 
-    [Header("Quest Icons")]
-    public List<IconMapping> questIconDatabase = new List<IconMapping>();
-
-    public Sprite GetQuestIcon(string iconName)
-    {
-        foreach (var mapping in questIconDatabase)
-        {
-            if (mapping.iconName == iconName) return mapping.iconSprite;
-        }
-        return null;
-    }
-
-
-    public async Task SetUpScene()
-    {
-        //await Instantiate(canvasObject, vec);
-    }
-
     private void OnEnable()
     {
         SceneManager.sceneLoaded += OnSceneLoaded;
@@ -242,9 +224,6 @@ public class GameManager : SingletonNetwork<GameManager>
             LoadingSceneTimer = TickTimer.CreateFromSeconds(Runner, loadingSceneCooldown);
             Debug.Log($"Both Ready! Starting Delay Timer {loadingSceneCooldown}");
         }
-
-        // Quest For Test
-        StartGlobalQuest("Find an exit", 1);
     }
 
     public void ResetAllPlayersToSpawn()
@@ -387,8 +366,6 @@ public class GameManager : SingletonNetwork<GameManager>
         Vector3 spawnPos = new Vector3(posToSpawn.x, posToSpawn.y, 0f);
         NetworkObject objIte = NetworkRunner.Spawn(objToSpawn, posToSpawn);
 
-        //float dropForce = Random.Range(0.5f, 1.5f);
-
         Rigidbody2D rb = objIte.GetComponent<Rigidbody2D>();
         if (rb != null)
         {
@@ -396,9 +373,6 @@ public class GameManager : SingletonNetwork<GameManager>
             Vector2 dropDir = Vector2.up;
 
             rb.AddForce(dropDir * dropForce, ForceMode2D.Impulse);
-
-            //Vector2 randomDir = new Vector2(Random.Range(-1f, 1f), Random.Range(0.5f, 1f)).normalized;
-            //rb.AddForce(randomDir * dropForce, ForceMode2D.Impulse);
         }
     }
 
@@ -415,7 +389,7 @@ public class GameManager : SingletonNetwork<GameManager>
         if (IsQuestActive) AddQuestProgress(1);
     }
 
-    [Header("Item Database Settings")]
+    [Header("Item Database")]
     [SerializeField] public List<ItemMapping> itemDatabase = new List<ItemMapping>();
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
@@ -454,6 +428,18 @@ public class GameManager : SingletonNetwork<GameManager>
 
     #region Quest
 
+    [Header("Quest Icons")]
+    public List<IconMapping> questIconDatabase = new List<IconMapping>();
+
+    public Sprite GetQuestIcon(string iconName)
+    {
+        foreach (var mapping in questIconDatabase)
+        {
+            if (mapping.iconName == iconName) return mapping.iconSprite;
+        }
+        return null;
+    }
+
     [Header("Global Quest System")]
     [Networked, OnChangedRender(nameof(OnQuestStateChanged))]
     public NetworkBool IsQuestActive { get; set; }
@@ -469,6 +455,9 @@ public class GameManager : SingletonNetwork<GameManager>
 
     [Networked, OnChangedRender(nameof(OnQuestStateChanged))]
     public int QuestMaxProgress { get; set; }
+
+    [Networked, OnChangedRender(nameof(OnQuestStateChanged))]
+    public NetworkString<_64> QuestDescription { get; set; }
 
     public void OnQuestStateChanged()
     {
