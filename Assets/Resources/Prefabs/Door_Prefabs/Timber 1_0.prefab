@@ -83,10 +83,10 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: -1
-  m_Sprite: {fileID: 4435017907825202631, guid: c8545e1768894a44ab4de75bf8d9f194, type: 3}
+  m_Sprite: {fileID: -7673794510994167428, guid: 0bd7cce8c10baed4b99c24114dbac52a, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_FlipX: 0
-  m_FlipY: 0
+  m_FlipX: 1
+  m_FlipY: 1
   m_DrawMode: 0
   m_Size: {x: 3.85, y: 0.8125}
   m_AdaptiveModeThreshold: 0.5
@@ -106,9 +106,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c08a9f75a992a794eb2f1cd26242e984, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HingeDoor
-  closedAngle: 33.5
+  closedAngle: 44.53
   openAngle: 0
-  swingSpeed: 150
+  swingSpeed: 80
   _IsOpen:
     _value: 0
 --- !u!61 &8568327477873401828
@@ -145,17 +145,17 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: -1.5960449, y: 0.0023540556}
+  m_Offset: {x: 1.6080983, y: 0.0023540556}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
-    pivot: {x: 0.99746853, y: 0.49652323}
-    oldSize: {x: 3.2083333, y: 0.6770833}
+    pivot: {x: 0.97595495, y: 0.5317966}
+    oldSize: {x: 3.4, y: 0.91818184}
     newSize: {x: 3.85, y: 0.8125}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 3.2083333, y: 0.6770833}
+  m_Size: {x: 3.154451, y: 0.6770833}
   m_EdgeRadius: 0
 --- !u!114 &1203494323462272809
 MonoBehaviour:
