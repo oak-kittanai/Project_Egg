@@ -12,9 +12,9 @@ GameObject:
   - component: {fileID: 2581751426275383981}
   - component: {fileID: 510698948192662396}
   - component: {fileID: 5778045537272660119}
-  - component: {fileID: 3776080216932051600}
   - component: {fileID: 5256107838132452362}
   - component: {fileID: 2290628059944899222}
+  - component: {fileID: -6668410760131653382}
   m_Layer: 14
   m_Name: Item_Arrow_0
   m_TagString: Untagged
@@ -128,24 +128,8 @@ MonoBehaviour:
   NestedObjects: []
   NetworkedBehaviours:
   - {fileID: 510698948192662396}
-  - {fileID: 3776080216932051600}
+  - {fileID: -6668410760131653382}
   ForceRemoteRenderTimeframe: 0
---- !u!114 &3776080216932051600
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 640053823067256316}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f36732034523be544910583b1720a954, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::FloatingItem
-  heightDis: 0.3
-  velocity: 0.5
-  isRotate: 0
-  rotationSpeed: {x: 0, y: 0, z: 50}
 --- !u!61 &5256107838132452362
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -219,3 +203,26 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 1
   m_Constraints: 0
+--- !u!114 &-6668410760131653382
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 640053823067256316}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c5e690b5fb1084f5ab1c86457af401d4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Addons.Physics::Fusion.Addons.Physics.NetworkRigidbody2D
+  _stateAuthorityChangeErrorCorrectionDelta: 0
+  SyncScale: 0
+  SyncParent: 1
+  _interpolationTarget: {fileID: 0}
+  UsePreciseRotation: 0
+  UseRenderSleepThresholds: 1
+  RenderThresholds:
+    UseEnergy: 1
+    Position: 0.01
+    Rotation: 0.01
+    Scale: 0.01

@@ -111,17 +111,13 @@ public class MenuController : NetworkBehaviour
         if (pauseMenuPanel != null) pauseMenuPanel.SetActive(false);
     }
 
-    public void ToggleMenu()
+    public void ToggleMenuState()
     {
-        RPC_ToggleMenu();
-    }
-
-    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    private void RPC_ToggleMenu()
-    {
-        IsMenuOpen = !IsMenuOpen;
-
-        ClearAllVotes();
+        if (HasStateAuthority)
+        {
+            IsMenuOpen = !IsMenuOpen;
+            ClearAllVotes();
+        }
     }
 
     private void ClearAllVotes()

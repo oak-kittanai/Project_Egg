@@ -11,10 +11,10 @@ GameObject:
   - component: {fileID: 2969154879262497029}
   - component: {fileID: 3959273947249924156}
   - component: {fileID: 542277291642517654}
-  - component: {fileID: 9051116197920057869}
   - component: {fileID: 1587735438816007911}
   - component: {fileID: 3917331739942253554}
   - component: {fileID: 4242906921448433288}
+  - component: {fileID: 3861217525652326464}
   m_Layer: 14
   m_Name: Item_Pinecone_0
   m_TagString: Untagged
@@ -110,22 +110,6 @@ MonoBehaviour:
   itemName: Item_Pinecone_0
   selfNet: {fileID: 1587735438816007911}
   spriteRenderer: {fileID: 3959273947249924156}
---- !u!114 &9051116197920057869
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3829406929415936175}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f36732034523be544910583b1720a954, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::FloatingItem
-  heightDis: 0.3
-  velocity: 0.5
-  isRotate: 0
-  rotationSpeed: {x: 0, y: 0, z: 50}
 --- !u!114 &1587735438816007911
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -144,7 +128,7 @@ MonoBehaviour:
   NestedObjects: []
   NetworkedBehaviours:
   - {fileID: 542277291642517654}
-  - {fileID: 9051116197920057869}
+  - {fileID: 3861217525652326464}
   ForceRemoteRenderTimeframe: 0
 --- !u!61 &3917331739942253554
 BoxCollider2D:
@@ -219,3 +203,26 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 1
   m_Constraints: 0
+--- !u!114 &3861217525652326464
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3829406929415936175}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c5e690b5fb1084f5ab1c86457af401d4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Addons.Physics::Fusion.Addons.Physics.NetworkRigidbody2D
+  _stateAuthorityChangeErrorCorrectionDelta: 0
+  SyncScale: 0
+  SyncParent: 1
+  _interpolationTarget: {fileID: 0}
+  UsePreciseRotation: 0
+  UseRenderSleepThresholds: 1
+  RenderThresholds:
+    UseEnergy: 1
+    Position: 0.01
+    Rotation: 0.01
+    Scale: 0.01

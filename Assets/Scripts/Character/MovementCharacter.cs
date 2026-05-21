@@ -324,17 +324,17 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         bool isEscPressed = input.Keyboard_ESC && !_wasEscPressed;
         if (isEscPressed)
         {
-            if (MenuController.Instance != null && MenuController.Instance.Object != null && MenuController.Instance.Object.IsValid)
+            if (GameManager.Instance != null && GameManager.Instance.Object != null && GameManager.Instance.Object.IsValid)
             {
                 if (Runner.IsForward)
                 {
-                    MenuController.Instance.ToggleMenu();
-                    Debug.Log($"Try to toggle menu from {(HasStateAuthority ? "Host" : "Client")}");
+                    GameManager.Instance.RequestToggleMenu();
+                    Debug.Log($"Try to toggle menu from {(HasStateAuthority ? "Host" : "Client")} via GameManager");
                 }
             }
             else
             {
-                Debug.LogWarning("MenuController is not ready or not valid on this client!");
+                Debug.LogWarning("GameManager is not ready or not valid on this client!");
             }
         }
         _wasEscPressed = input.Keyboard_ESC;
@@ -532,6 +532,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             isWaterSurface = false;
             IsFalling = false;
             FallingBusy = false;
+
+            InvincibleTimer = TickTimer.CreateFromSeconds(Runner, invincibleDuration + 0.5f);
 
             if (GameManager.Instance != null)
             {

@@ -702,6 +702,39 @@ public class GameManager : SingletonNetwork<GameManager>
 
     #endregion
 
+    #region Menu Control
+    public void RequestToggleMenu()
+    {
+        if (HasStateAuthority)
+        {
+            ExecuteMenuToggleOnHost();
+        }
+        else
+        {
+            RPC_RequestToggleMenu();
+        }
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    private void RPC_RequestToggleMenu()
+    {
+        ExecuteMenuToggleOnHost();
+    }
+
+    private void ExecuteMenuToggleOnHost()
+    {
+        if (MenuController.Instance != null && MenuController.Instance.Object != null && MenuController.Instance.Object.IsValid)
+        {
+            MenuController.Instance.ToggleMenuState();
+        }
+        else
+        {
+            Debug.LogWarning("[GameManager] MenuController Instance is missing on Host!");
+        }
+    }
+
+    #endregion
+
 }
 
 [System.Serializable]
