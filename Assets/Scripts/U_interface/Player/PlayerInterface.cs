@@ -3,6 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using DG.Tweening;
 
 public class PlayerInterface : MonoBehaviour
 {
@@ -25,6 +26,7 @@ public class PlayerInterface : MonoBehaviour
     [Header("Quest Setting")]
     // Quest Setting (With Bar)
     public GameObject questContainerWithBar;
+    public Image questBckgroundWithBar;
     public TMP_Text questTextWithBar;
     public Slider questProgressBar;
     public TMP_Text questItemAmountText;
@@ -32,7 +34,9 @@ public class PlayerInterface : MonoBehaviour
 
     // Quest Setting (No Bar)
     public GameObject questContainerNoBar;
-    public TMP_Text questTextNoBar;
+    public Image questBckgroundNoBar;
+    public TMP_Text questHeadTextNoBar;
+    public TMP_Text questSubTextNoBar;
     public Image questItemIconNoBar;
 
     [Header("Interact Prompt")]
@@ -139,18 +143,21 @@ public class PlayerInterface : MonoBehaviour
             if (questObjBar != null)
             {
                 questContainerWithBar = questObjBar.gameObject;
-                questTextWithBar = questObjBar.Find("QuestText")?.GetComponent<TMP_Text>();
+                questBckgroundWithBar = questObjBar.Find("QuestBckground")?.GetComponent<Image>();
+                questTextWithBar = questObjBar.Find("QuestDescText")?.GetComponent<TMP_Text>();
                 questProgressBar = questObjBar.Find("QuestProgressBar")?.GetComponent<Slider>();
                 questItemAmountText = questObjBar.Find("QuestItemAmountText")?.GetComponent<TMP_Text>();
-                questItemIconWithBar = questObjBar.Find("QuestItemIcon")?.GetComponent<Image>();
+                questItemIconWithBar = questObjBar.Find("QuestItemIcon/Item_Icon")?.GetComponent<Image>();
             }
 
             Transform questObjNoBar = questDialog.Find("QuestContainer_NoBar");
             if (questObjNoBar != null)
             {
                 questContainerNoBar = questObjNoBar.gameObject;
-                questTextNoBar = questObjNoBar.Find("QuestText")?.GetComponent<TMP_Text>();
-                questItemIconNoBar = questObjNoBar.Find("QuestItemIcon")?.GetComponent<Image>();
+                questBckgroundNoBar = questObjNoBar.Find("QuestBckground")?.GetComponent<Image>();
+                questHeadTextNoBar = questObjNoBar.Find("QuestHeadText")?.GetComponent<TMP_Text>();
+                questSubTextNoBar = questObjNoBar.Find("QuestSubText")?.GetComponent<TMP_Text>();
+                questItemIconNoBar = questObjNoBar.Find("QuestItemIcon/Item_Icon")?.GetComponent<Image>();
             }
         }
 
@@ -256,7 +263,12 @@ public class PlayerInterface : MonoBehaviour
 
         if (isBar)
         {
-            if (questContainerWithBar != null) questContainerWithBar.SetActive(true);
+            if (questContainerWithBar != null)
+            {
+                questContainerWithBar.SetActive(true);
+                AnimateQuestUI(questContainerWithBar);
+            }
+
             if (questTextWithBar != null) questTextWithBar.text = detail;
             if (questItemAmountText != null) questItemAmountText.text = $"{currentProgress}/{maxProgress}";
             if (questProgressBar != null)
@@ -271,13 +283,30 @@ public class PlayerInterface : MonoBehaviour
         }
         else
         {
-            if (questContainerNoBar != null) questContainerNoBar.SetActive(true);
-            if (questTextNoBar != null) questTextNoBar.text = detail;
+            if (questContainerNoBar != null)
+            {
+                questContainerNoBar.SetActive(true);
+                AnimateQuestUI(questContainerNoBar);
+            }
+
+            if (questSubTextNoBar != null) questSubTextNoBar.text = detail;
+
             if (questItemIconNoBar != null && icon != null)
             {
                 questItemIconNoBar.sprite = icon;
             }
         }
+    }
+
+    private void AnimateQuestUI(GameObject container)
+    {
+        if (container == null) return;
+
+        container.transform.DOKill(true);
+
+        container.transform.DOLocalMoveX(-570f, 0f)
+            .From()
+            .SetEase(Ease.InOutQuint);
     }
 
     public void HideQuestUI()
