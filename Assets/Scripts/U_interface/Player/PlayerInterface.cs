@@ -23,11 +23,17 @@ public class PlayerInterface : MonoBehaviour
     public Sprite FifthHealth;
 
     [Header("Quest Setting")]
-    public GameObject questContainer;
-    public TMP_Text questText;
+    // Quest Setting (With Bar)
+    public GameObject questContainerWithBar;
+    public TMP_Text questTextWithBar;
     public Slider questProgressBar;
     public TMP_Text questItemAmountText;
-    public Image questItemIcon;
+    public Image questItemIconWithBar;
+
+    // Quest Setting (No Bar)
+    public GameObject questContainerNoBar;
+    public TMP_Text questTextNoBar;
+    public Image questItemIconNoBar;
 
     [Header("Interact Prompt")]
     public GameObject interactPromptObj;
@@ -48,6 +54,15 @@ public class PlayerInterface : MonoBehaviour
     [HideInInspector] public SkillGUI spawnedBirdThrow;
     [HideInInspector] public SkillGUI spawnedDuckDive;
     [HideInInspector] public SkillGUI spawnedDuckSmash;
+
+    public static bool _birdFlyUnlocked;
+    public static bool _birdThrowUnlocked;
+    public static bool _duckDiveUnlocked;
+    public static bool _duckSmashUnlocked;
+
+    private bool _lastIsBird;
+
+    private Transform _cachedSkillContainer;
 
     // ตัวแปรเก็บสถานะเพื่อป้องกันการ Spawn ซ้ำถ้าไม่ได้เปลี่ยนตัวละคร
     [HideInInspector] public bool isCurrentBirdSetup;
@@ -120,14 +135,22 @@ public class PlayerInterface : MonoBehaviour
         Transform questDialog = canvas.transform.Find("QuestDialog_Obj");
         if (questDialog != null)
         {
-            Transform questObj = questDialog.Find("QuestContainer");
-            if (questObj != null)
+            Transform questObjBar = questDialog.Find("QuestContainer_Bar");
+            if (questObjBar != null)
             {
-                questContainer = questObj.gameObject;
-                questText = questObj.Find("QuestText")?.GetComponent<TMP_Text>();
-                questProgressBar = questObj.Find("QuestProgressBar")?.GetComponent<Slider>();
-                questItemAmountText = questObj.Find("QuestItemAmountText")?.GetComponent<TMP_Text>();
-                questItemIcon = questObj.Find("QuestItemIcon")?.GetComponent<Image>();
+                questContainerWithBar = questObjBar.gameObject;
+                questTextWithBar = questObjBar.Find("QuestText")?.GetComponent<TMP_Text>();
+                questProgressBar = questObjBar.Find("QuestProgressBar")?.GetComponent<Slider>();
+                questItemAmountText = questObjBar.Find("QuestItemAmountText")?.GetComponent<TMP_Text>();
+                questItemIconWithBar = questObjBar.Find("QuestItemIcon")?.GetComponent<Image>();
+            }
+
+            Transform questObjNoBar = questDialog.Find("QuestContainer_NoBar");
+            if (questObjNoBar != null)
+            {
+                questContainerNoBar = questObjNoBar.gameObject;
+                questTextNoBar = questObjNoBar.Find("QuestText")?.GetComponent<TMP_Text>();
+                questItemIconNoBar = questObjNoBar.Find("QuestItemIcon")?.GetComponent<Image>();
             }
         }
 
@@ -166,20 +189,36 @@ public class PlayerInterface : MonoBehaviour
 
     public void SetupSkills(bool isBird)
     {
-        if (skillContainer == null) return;
-        if (hasSetupSkills && isCurrentBirdSetup == isBird) return;
+        Transform container = _cachedSkillContainer ?? skillContainer;
+        if (container == null) return;
 
-        foreach (Transform child in skillContainer) Destroy(child.gameObject);
+        foreach (Transform child in container) Destroy(child.gameObject);
 
         if (isBird)
         {
-            if (skillBird_Fly != null) spawnedBirdFly = Instantiate(skillBird_Fly, skillContainer).GetComponent<SkillGUI>();
-            if (skillBird_Throw != null) spawnedBirdThrow = Instantiate(skillBird_Throw, skillContainer).GetComponent<SkillGUI>();
+            if (skillBird_Fly != null)
+            {
+                spawnedBirdFly = Instantiate(skillBird_Fly, container).GetComponent<SkillGUI>();
+                if (_birdFlyUnlocked) spawnedBirdFly.UnlockSkillImmediate();
+            }
+            if (skillBird_Throw != null)
+            {
+                spawnedBirdThrow = Instantiate(skillBird_Throw, container).GetComponent<SkillGUI>();
+                if (_birdThrowUnlocked) spawnedBirdThrow.UnlockSkillImmediate();
+            }
         }
         else
         {
-            if (skillDuck_Dive != null) spawnedDuckDive = Instantiate(skillDuck_Dive, skillContainer).GetComponent<SkillGUI>();
-            if (skillDuck_Smash != null) spawnedDuckSmash = Instantiate(skillDuck_Smash, skillContainer).GetComponent<SkillGUI>();
+            if (skillDuck_Dive != null)
+            {
+                spawnedDuckDive = Instantiate(skillDuck_Dive, container).GetComponent<SkillGUI>();
+                if (_duckDiveUnlocked) spawnedDuckDive.UnlockSkillImmediate();
+            }
+            if (skillDuck_Smash != null)
+            {
+                spawnedDuckSmash = Instantiate(skillDuck_Smash, container).GetComponent<SkillGUI>();
+                if (_duckSmashUnlocked) spawnedDuckSmash.UnlockSkillImmediate();
+            }
         }
 
         isCurrentBirdSetup = isBird;
@@ -211,21 +250,40 @@ public class PlayerInterface : MonoBehaviour
     #endregion
 
     #region Quest
-    public void UpdateQuestUI(string detail, int currentProgress, int maxProgress)
+    public void UpdateQuestUI(string detail, int currentProgress, int maxProgress, bool isBar, Sprite icon)
     {
-        if (questContainer != null) questContainer.SetActive(true);
-        if (questText != null) questText.text = detail;
-        if (questItemAmountText != null) questItemAmountText.text = $"{currentProgress}/{maxProgress}";
-        if (questProgressBar != null)
+        HideQuestUI();
+
+        if (isBar)
         {
-            questProgressBar.maxValue = maxProgress;
-            questProgressBar.value = currentProgress;
+            if (questContainerWithBar != null) questContainerWithBar.SetActive(true);
+            if (questTextWithBar != null) questTextWithBar.text = detail;
+            if (questItemAmountText != null) questItemAmountText.text = $"{currentProgress}/{maxProgress}";
+            if (questProgressBar != null)
+            {
+                questProgressBar.maxValue = maxProgress;
+                questProgressBar.value = currentProgress;
+            }
+            if (questItemIconWithBar != null && icon != null)
+            {
+                questItemIconWithBar.sprite = icon;
+            }
+        }
+        else
+        {
+            if (questContainerNoBar != null) questContainerNoBar.SetActive(true);
+            if (questTextNoBar != null) questTextNoBar.text = detail;
+            if (questItemIconNoBar != null && icon != null)
+            {
+                questItemIconNoBar.sprite = icon;
+            }
         }
     }
 
     public void HideQuestUI()
     {
-        if (questContainer != null) questContainer.SetActive(false);
+        if (questContainerWithBar != null) questContainerWithBar.SetActive(false);
+        if (questContainerNoBar != null) questContainerNoBar.SetActive(false);
     }
 
     #endregion

@@ -115,6 +115,8 @@ public class Bird_Moveset : MovementCharacter
                 {
                     IsAlreadyFly = false;
                     resetAnimation = true;
+
+                    if (cAnimation != null) cAnimation.ReturnToBlendAnimation();
                 }
                 else if (duck.IsHeadUnderwater) { /* do drowning but duck carry animation */ }
 
@@ -160,7 +162,9 @@ public class Bird_Moveset : MovementCharacter
                 isMoveAble = false;
                 isOptional = true;
                 optionalGravity = 0f;
-                rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, -1.5f);
+
+                rb2D.linearVelocity = new Vector2(0f, -1.5f);
+                rb2D.linearDamping = 3f;
             }
 
             if (!startTimer)
@@ -525,10 +529,16 @@ public class Bird_Moveset : MovementCharacter
         if (!HasInputAuthority || PlayerInterface.Instance == null) return;
 
         if (isFlyUnlocked && PlayerInterface.Instance.spawnedBirdFly != null)
+        {
             PlayerInterface.Instance.spawnedBirdFly.UnlockSkill();
+            PlayerInterface._birdFlyUnlocked = true;
+        }
 
         if (isThrowUnlocked && PlayerInterface.Instance.spawnedBirdThrow != null)
+        {
             PlayerInterface.Instance.spawnedBirdThrow.UnlockSkill();
+            PlayerInterface._birdThrowUnlocked = true;
+        }
     }
 
     #endregion
