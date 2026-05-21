@@ -541,7 +541,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             IsFalling = false;
             FallingBusy = false;
 
-            InvincibleTimer = TickTimer.CreateFromSeconds(Runner, invincibleDuration + 0.5f);
+            if (cAnimation != null) cAnimation.ClearAnimationLock();
 
             if (GameManager.Instance != null)
             {

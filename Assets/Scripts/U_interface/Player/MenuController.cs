@@ -130,21 +130,12 @@ public class MenuController : NetworkBehaviour
 
     public void OnMenuStateChanged()
     {
-        Debug.Log($"[MenuController] OnMenuStateChanged triggered! New State: {IsMenuOpen}");
-
-        if (pauseMenuPanel == null && PlayerInterface.Instance != null && PlayerInterface.Instance.resumeButton != null)
-        {
+        if (pauseMenuPanel == null && PlayerInterface.Instance?.resumeButton != null)
             pauseMenuPanel = PlayerInterface.Instance.resumeButton.transform.parent.gameObject;
-        }
 
-        if (pauseMenuPanel == null)
-        {
-            Debug.LogWarning($"[MenuController] UI Panel is NULL on {(Runner.IsServer ? "Host" : "Client")}! Can't open menu.");
-            return;
-        }
+        if (pauseMenuPanel == null) return;
 
         pauseMenuPanel.SetActive(IsMenuOpen);
-        Debug.Log($"[MenuController] UI Panel SetActive({IsMenuOpen}) Success!");
 
         if (IsMenuOpen && PlayerInterface.Instance != null)
         {
@@ -283,4 +274,22 @@ public class MenuController : NetworkBehaviour
             UnityEngine.SceneManagement.SceneManager.LoadScene("SessionScene");
         }
     }
+
+    #region Menu Control
+
+    public void RequestOpenMenu()
+    {
+        if (!HasStateAuthority) return;
+
+        if (MenuController.Instance != null && MenuController.Instance.Object != null && MenuController.Instance.Object.IsValid)
+        {
+            if (MenuController.Instance.IsMenuOpen)
+            {
+                return;
+            }
+            MenuController.Instance.OpenMenuState();
+        }
+    }
+
+    #endregion
 }

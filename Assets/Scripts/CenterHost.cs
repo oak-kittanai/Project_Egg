@@ -29,8 +29,6 @@ public class CenterHost : SingletonNetwork<CenterHost>
     [SerializeField] private GameObject canvasPrefab;
     [SerializeField] private GameObject coreManagerPrefab;
 
-    [Header("Core Systems (Network Prefabs)")]
-    [SerializeField] private NetworkObject networkMenuControllerPrefab;
     public void GetRunner()
     {
         if (hostRunner != null)
@@ -42,16 +40,12 @@ public class CenterHost : SingletonNetwork<CenterHost>
     public override void Spawned()
     {
         base.Spawned();
-        if (hostRunner != null)
-        {
-            Debug.Log("Host runner ready");
-        }
-
         SetupGameCore();
     }
 
     private void SetupGameCore()
     {
+        // 1. เสก Canvas
         if (canvasPrefab != null && GameObject.Find(canvasPrefab.name) == null)
         {
             GameObject canvasObj = Instantiate(canvasPrefab);
@@ -71,27 +65,13 @@ public class CenterHost : SingletonNetwork<CenterHost>
             }
         }
 
-        bool hadExistingMenuController = false;
-        MenuController[] oldMenus = FindObjectsByType<MenuController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-        foreach (var menu in oldMenus)
-        {
-            if (menu.Object != null && menu.Object.IsValid) Runner.Despawn(menu.Object);
-            else Destroy(menu.gameObject);
-        }
-
         if (GameObject.Find("CoreManagerSceneHop") == null && coreManagerPrefab != null)
         {
             Instantiate(coreManagerPrefab);
-            Debug.Log("Spawned Local CoreManagers");
-        }
-
-        if (HasStateAuthority && networkMenuControllerPrefab != null)
-        {
-            Runner.Spawn(networkMenuControllerPrefab, Vector3.zero, Quaternion.identity);
         }
     }
 
-    
+
     #region ComponentZone
 
     public void AddPlayerRef(NetworkRunner runner, PlayerRef player)

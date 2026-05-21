@@ -134,27 +134,35 @@ public class CharacterAnimation : NetworkBehaviour
         }
     }
 
+    public void SetActionAnimation(string stateName, float lockDuration)
+    {
+        PlayAnimationNetworked(stateName);
+        if (Runner != null) AnimationTimer = TickTimer.CreateFromSeconds(Runner, lockDuration);
+    }
+
+    public void ClearAnimationLock()
+    {
+        if (Runner != null) AnimationTimer = TickTimer.None;
+    }
+
     private void PlayAnimationSafeLocal(string stateName)
     {
         if (!HasState(stateName)) return;
 
-        AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
-
-        if (!stateInfo.IsName(stateName) && !animator.IsInTransition(0))
+        if (stateName == "BlendAnimation" || stateName == "NormalMovementTree" || stateName == "CarryMovementTree")
         {
-            if (stateName == "BlendAnimation" || stateName == "NormalMovementTree" || stateName == "CarryMovementTree")
-            {
-                animator.Play(stateName, 0, 0f);
-            }
-            else
-            {
-                animator.Play(stateName, 0);
-            }
+            animator.Play(stateName, 0, 0f);
+        }
+        else
+        {
+            animator.Play(stateName, 0);
         }
     }
 
     public void ReturnToBlendAnimation()
     {
+        if (Runner != null && !AnimationTimer.ExpiredOrNotRunning(Runner)) return;
+
         if (currentSkin == characterType.Duck && Carrying)
         {
             PlayAnimationNetworked("CarryMovementTree");
@@ -167,6 +175,8 @@ public class CharacterAnimation : NetworkBehaviour
 
     public void UpdateGroundTypeOnDuck(bool isWaterGround)
     {
+        if (Runner != null && !AnimationTimer.ExpiredOrNotRunning(Runner)) return;
+
         if (isWaterGround)
         {
             bool isMoving = Mathf.Abs(AnimX) > 0.01f;
@@ -190,12 +200,9 @@ public class CharacterAnimation : NetworkBehaviour
 
     // Overall
     public void JumpAnimation() => PlayAnimationNetworked("Jump");
-
-    public void InteractAnimation() => PlayAnimationNetworked("Interact");
-
-    public void DeathAnimation() => PlayAnimationNetworked("Death");
-
-    public void PrepareToRespawnAnimation() => PlayAnimationNetworked("PrepareToRespawn");
+    public void InteractAnimation() => SetActionAnimation("Interact", 0.5f);
+    public void DeathAnimation() => SetActionAnimation("Death", 999f);
+    public void PrepareToRespawnAnimation() => SetActionAnimation("PrepareToRespawn", 999f);
 
     public void BirdPrepareFallingAnimaion()
     {
@@ -244,13 +251,16 @@ public class CharacterAnimation : NetworkBehaviour
         if (HasStateAuthority || HasInputAuthority) FlipX = false;
     }
 
-    public void SmashAnimation() => PlayAnimationNetworked("Smash");
+
+
+
+    public void SmashAnimation() => SetActionAnimation("Smash", 1.27f);
     public void SwimAnimation() => PlayAnimationNetworked("Swim");
     //public void DiveAnimation() => PlayAnimationNetworked("Diving");
     public void ReturnToSurface() => PlayAnimationNetworked("Swim"); // need Animation
 
     // Bird
-    public void ThrowAnimation() => PlayAnimationNetworked("Throwing");
+    public void ThrowAnimation() => SetActionAnimation("Throwing", 1.43f);
 
     public void FlyUpAnimation() => PlayAnimationNetworked("Fly_Up");
     public void FlyFloatAnimation() => PlayAnimationNetworked("Fly");

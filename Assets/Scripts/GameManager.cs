@@ -598,32 +598,25 @@ public class GameManager : SingletonNetwork<GameManager>
         if (!HasStateAuthority) return;
 
         ShowGlobalLoadingScreen();
-
         ResetLoadingStateForNextLevel();
 
-        Debug.Log($"[GameManager] Host is loading next level: {nextSceneName}");
-
         await Runner.LoadScene(nextSceneName, UnityEngine.SceneManagement.LoadSceneMode.Single);
+    }
+    #endregion
+    #endregion
+    #region Menu Control
 
-        await Task.Delay(500);
+    public void RequestOpenMenu()
+    {
+        if (!HasStateAuthority) return;
 
-        if (CenterHost.Instance != null && SessionManager.Instance != null)
+        if (MenuController.Instance != null && MenuController.Instance.Object != null && MenuController.Instance.Object.IsValid)
         {
-            foreach (var player in SessionManager.Instance.Players)
-            {
-                if (player.playerRef == Runner.LocalPlayer)
-                {
-                    CenterHost.Instance.SpawnPlayer(player.playerRef, CharacterTypeShip.Instance.currentHost, true);
-                }
-                else
-                {
-                    CenterHost.Instance.SpawnPlayer(player.playerRef, CharacterTypeShip.Instance.currentClient, false);
-                }
-            }
+            if (MenuController.Instance.IsMenuOpen) return;
+
+            MenuController.Instance.OpenMenuState();
         }
     }
-
-    #endregion
 
     #endregion
 
@@ -698,26 +691,6 @@ public class GameManager : SingletonNetwork<GameManager>
         if (!HasStateAuthority) return;
         SkillBirdFlyUnlocked = SkillBirdThrowUnlocked = false;
         SkillDuckDiveUnlocked = SkillDuckSmashUnlocked = false;
-    }
-
-    #endregion
-
-    #region Menu Control
-    public void RequestOpenMenu()
-    {
-        if (!HasStateAuthority) return;
-
-        if (MenuController.Instance != null && MenuController.Instance.Object != null && MenuController.Instance.Object.IsValid)
-        {
-            if (MenuController.Instance.IsMenuOpen)
-            {
-                Debug.Log("[GameManager] Menu is already open. Esc key ignored.");
-                return;
-            }
-
-            Debug.Log("🟢 [GameManager] Opening Menu...");
-            MenuController.Instance.OpenMenuState();
-        }
     }
 
     #endregion
