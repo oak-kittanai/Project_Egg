@@ -11,9 +11,11 @@ public class WarpZone : NetworkBehaviour
     [Networked] bool playerBird { get; set; }
     [Networked] bool playerDuck { get; set; }
 
+    private bool isWarping = false;
+
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (!HasStateAuthority) return;
+        if (!HasStateAuthority || isWarping) return;
 
         MovementCharacter[] allCharacters = other.GetComponents<MovementCharacter>();
 
@@ -28,9 +30,9 @@ public class WarpZone : NetworkBehaviour
 
                 if (playerBird && playerDuck)
                 {
-                    ExecuteWarp();
+                    isWarping = true;
+                    _ = ExecuteWarp();
                 }
-
                 break;
             }
         }
@@ -38,7 +40,7 @@ public class WarpZone : NetworkBehaviour
 
     private void OnTriggerExit2D(Collider2D other)
     {
-        if (!HasStateAuthority) return;
+        if (!HasStateAuthority || isWarping) return;
 
         MovementCharacter[] allCharacters = other.GetComponents<MovementCharacter>();
 
@@ -60,8 +62,7 @@ public class WarpZone : NetworkBehaviour
         GameManager.Instance.ResetLoadingStateForNextLevel();
         GameManager.Instance.ShowGlobalLoadingScreen();
 
-        await GameManager.Instance.LoadNextLevel(nextSceneBuildString);
-
         Debug.Log($"Host is warping everyone to Scene: {nextSceneBuildString}");
+        await GameManager.Instance.LoadNextLevel(nextSceneBuildString);
     }
 }

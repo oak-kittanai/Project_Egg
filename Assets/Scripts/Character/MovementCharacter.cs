@@ -101,7 +101,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     public NetworkId localCarrierIdPredict;
     [SerializeField] public bool _isEPressed;
 
-    private bool _wasXPressed;
+    private bool _wasTabPressed;
 
     [Header("Interaction & Physics")]
     public float rayDistance = 1.2f;
@@ -324,28 +324,36 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         bool isEscPressed = input.Keyboard_ESC && !_wasEscPressed;
         if (isEscPressed)
         {
-            if (GameManager.Instance != null && GameManager.Instance.Object != null && GameManager.Instance.Object.IsValid)
+            if (Runner.IsForward)
             {
-                if (Runner.IsForward)
+                if (HasStateAuthority)
                 {
-                    GameManager.Instance.RequestToggleMenu();
-                    Debug.Log($"Try to toggle menu from {(HasStateAuthority ? "Host" : "Client")} via GameManager");
+                    if (GameManager.Instance != null) GameManager.Instance.RequestOpenMenu();
                 }
-            }
-            else
-            {
-                Debug.LogWarning("GameManager is not ready or not valid on this client!");
+                else if (HasInputAuthority)
+                {
+                    RPC_RequestOpenMenuFromClient();
+                }
             }
         }
         _wasEscPressed = input.Keyboard_ESC;
 
-        bool isTabPressed = input.Keyboard_X && !_wasXPressed;
+        bool isTabPressed = input.Keyboard_Tab && !_wasTabPressed;
         if (isTabPressed)
         {
             if (HasInputAuthority && PlayerInterface.Instance != null)
                 PlayerInterface.Instance.HideNote();
         }
-        _wasXPressed = input.Keyboard_X;
+        _wasTabPressed = input.Keyboard_Tab;
+    }
+
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+    public void RPC_RequestOpenMenuFromClient()
+    {
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.RequestOpenMenu();
+        }
     }
 
     private void HandleMovement(NetworkInputData input)

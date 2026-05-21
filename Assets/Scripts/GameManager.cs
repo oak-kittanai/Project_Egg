@@ -703,33 +703,20 @@ public class GameManager : SingletonNetwork<GameManager>
     #endregion
 
     #region Menu Control
-    public void RequestToggleMenu()
+    public void RequestOpenMenu()
     {
-        if (HasStateAuthority)
-        {
-            ExecuteMenuToggleOnHost();
-        }
-        else
-        {
-            RPC_RequestToggleMenu();
-        }
-    }
+        if (!HasStateAuthority) return;
 
-    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    private void RPC_RequestToggleMenu()
-    {
-        ExecuteMenuToggleOnHost();
-    }
-
-    private void ExecuteMenuToggleOnHost()
-    {
         if (MenuController.Instance != null && MenuController.Instance.Object != null && MenuController.Instance.Object.IsValid)
         {
-            MenuController.Instance.ToggleMenuState();
-        }
-        else
-        {
-            Debug.LogWarning("[GameManager] MenuController Instance is missing on Host!");
+            if (MenuController.Instance.IsMenuOpen)
+            {
+                Debug.Log("[GameManager] Menu is already open. Esc key ignored.");
+                return;
+            }
+
+            Debug.Log("🟢 [GameManager] Opening Menu...");
+            MenuController.Instance.OpenMenuState();
         }
     }
 

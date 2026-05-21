@@ -1,4 +1,4 @@
-using Fusion;
+﻿using Fusion;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -111,11 +111,11 @@ public class MenuController : NetworkBehaviour
         if (pauseMenuPanel != null) pauseMenuPanel.SetActive(false);
     }
 
-    public void ToggleMenuState()
+    public void OpenMenuState()
     {
         if (HasStateAuthority)
         {
-            IsMenuOpen = !IsMenuOpen;
+            IsMenuOpen = true;
             ClearAllVotes();
         }
     }
@@ -130,12 +130,21 @@ public class MenuController : NetworkBehaviour
 
     public void OnMenuStateChanged()
     {
-        if (pauseMenuPanel == null && PlayerInterface.Instance?.resumeButton != null)
-            pauseMenuPanel = PlayerInterface.Instance.resumeButton.transform.parent.gameObject;
+        Debug.Log($"[MenuController] OnMenuStateChanged triggered! New State: {IsMenuOpen}");
 
-        if (pauseMenuPanel == null) return;
+        if (pauseMenuPanel == null && PlayerInterface.Instance != null && PlayerInterface.Instance.resumeButton != null)
+        {
+            pauseMenuPanel = PlayerInterface.Instance.resumeButton.transform.parent.gameObject;
+        }
+
+        if (pauseMenuPanel == null)
+        {
+            Debug.LogWarning($"[MenuController] UI Panel is NULL on {(Runner.IsServer ? "Host" : "Client")}! Can't open menu.");
+            return;
+        }
 
         pauseMenuPanel.SetActive(IsMenuOpen);
+        Debug.Log($"[MenuController] UI Panel SetActive({IsMenuOpen}) Success!");
 
         if (IsMenuOpen && PlayerInterface.Instance != null)
         {

@@ -451,6 +451,7 @@ public class Duck_Moveset : MovementCharacter
         if (cAnimation != null)
         {
             cAnimation.SmashAnimation();
+            Debug.Log("Try Smash Animation");
         }
     }
 

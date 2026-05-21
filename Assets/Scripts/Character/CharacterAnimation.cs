@@ -244,7 +244,7 @@ public class CharacterAnimation : NetworkBehaviour
         if (HasStateAuthority || HasInputAuthority) FlipX = false;
     }
 
-    public void SmashAnimation() => PlayAnimationNetworked("Hit");
+    public void SmashAnimation() => PlayAnimationNetworked("Smash");
     public void SwimAnimation() => PlayAnimationNetworked("Swim");
     //public void DiveAnimation() => PlayAnimationNetworked("Diving");
     public void ReturnToSurface() => PlayAnimationNetworked("Swim"); // need Animation

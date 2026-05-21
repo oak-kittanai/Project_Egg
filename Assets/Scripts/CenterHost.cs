@@ -71,14 +71,13 @@ public class CenterHost : SingletonNetwork<CenterHost>
             }
         }
 
-        /*bool hadExistingMenuController = false;
+        bool hadExistingMenuController = false;
         MenuController[] oldMenus = FindObjectsByType<MenuController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         foreach (var menu in oldMenus)
         {
-            hadExistingMenuController = true;
-            if (menu.Object != null) Runner.Despawn(menu.Object);
+            if (menu.Object != null && menu.Object.IsValid) Runner.Despawn(menu.Object);
             else Destroy(menu.gameObject);
-        }*/
+        }
 
         if (GameObject.Find("CoreManagerSceneHop") == null && coreManagerPrefab != null)
         {
@@ -86,13 +85,10 @@ public class CenterHost : SingletonNetwork<CenterHost>
             Debug.Log("Spawned Local CoreManagers");
         }
 
-        /*if (HasStateAuthority && networkMenuControllerPrefab != null)
+        if (HasStateAuthority && networkMenuControllerPrefab != null)
         {
-            if (hadExistingMenuController || FindFirstObjectByType<MenuController>() == null)
-            {
-                Runner.Spawn(networkMenuControllerPrefab, Vector3.zero, Quaternion.identity);
-            }
-        }*/
+            Runner.Spawn(networkMenuControllerPrefab, Vector3.zero, Quaternion.identity);
+        }
     }
 
     
