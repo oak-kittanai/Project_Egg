@@ -29,14 +29,12 @@ public class MenuController : NetworkBehaviour
 
     private void Awake()
     {
-        if (Instance == null)
+        if (Instance != null && Instance != this)
         {
-            Instance = this;
+            Destroy(Instance.gameObject);
         }
-        else if (Instance != this)
-        {
-            Destroy(gameObject);
-        }
+
+        Instance = this;
     }
 
     public override void Spawned()

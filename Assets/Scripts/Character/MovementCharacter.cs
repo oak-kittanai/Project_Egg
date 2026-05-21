@@ -324,21 +324,17 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         bool isEscPressed = input.Keyboard_ESC && !_wasEscPressed;
         if (isEscPressed)
         {
-            // 🟢 1. เช็คว่าปุ่ม ESC ส่งค่าเข้ามาใน NetworkInputData จริงหรือไม่
-            Debug.Log("✅ ESC Input Registered! (ระบบรับรู้การกดปุ่มแล้ว)");
-
-            if (MenuController.Instance == null)
+            if (MenuController.Instance != null && MenuController.Instance.Object != null && MenuController.Instance.Object.IsValid)
             {
-                Debug.LogError("❌ MenuController.Instance is NULL! (หาไม่เจอในฉาก)");
-            }
-            else if (MenuController.Instance.Object == null || !MenuController.Instance.Object.IsValid)
-            {
-                Debug.LogError("❌ MenuController ไม่ใช่ Network Object! (คุณอาจจะลืมลบตัวเก่าออกจาก Canvas หรือมันไม่ได้ถูกเสกจาก CenterHost)");
+                if (Runner.IsForward)
+                {
+                    MenuController.Instance.ToggleMenu();
+                    Debug.Log($"Try to toggle menu from {(HasStateAuthority ? "Host" : "Client")}");
+                }
             }
             else
             {
-                if (Runner.IsForward) MenuController.Instance.ToggleMenu();
-                Debug.Log("✅ Try to open Menu (ส่งคำสั่งเปิดสำเร็จ)");
+                Debug.LogWarning("MenuController is not ready or not valid on this client!");
             }
         }
         _wasEscPressed = input.Keyboard_ESC;

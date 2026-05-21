@@ -165,11 +165,17 @@ MonoBehaviour:
   ThirdHealth: {fileID: -2332281105220987125, guid: 1516e8c00402b89479ea733605a60ee8, type: 3}
   FourthHealth: {fileID: 1233435622656422362, guid: 86b527d6bfa0f5d4988ad1e970adaf41, type: 3}
   FifthHealth: {fileID: 5217536917871699861, guid: 5bc06055b53daa340a2f67068add5f16, type: 3}
-  questContainer: {fileID: 0}
-  questText: {fileID: 0}
+  questContainerWithBar: {fileID: 0}
+  questBckgroundWithBar: {fileID: 0}
+  questTextWithBar: {fileID: 0}
   questProgressBar: {fileID: 0}
   questItemAmountText: {fileID: 0}
-  questItemIcon: {fileID: 0}
+  questItemIconWithBar: {fileID: 0}
+  questContainerNoBar: {fileID: 0}
+  questBckgroundNoBar: {fileID: 0}
+  questHeadTextNoBar: {fileID: 0}
+  questSubTextNoBar: {fileID: 0}
+  questItemIconNoBar: {fileID: 0}
   interactPromptObj: {fileID: 0}
   promptOffset: {x: 0, y: 1.5, z: 0}
   skillContainer: {fileID: 0}
@@ -189,84 +195,10 @@ MonoBehaviour:
   quitButton: {fileID: 0}
   resetButton: {fileID: 0}
   resetPlayerCheckText: {fileID: 0}
---- !u!1 &2526278722135220977
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 7103755302931702799}
-  - component: {fileID: 5834228082961600386}
-  - component: {fileID: 652317570635401389}
-  m_Layer: 5
-  m_Name: Network_MenuController
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &7103755302931702799
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2526278722135220977}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.43958333, y: 0.43958333, z: 0.43958333}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 4001961093503242255}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 957.091, y: 557.5121}
-  m_SizeDelta: {x: 100, y: 100}
-  m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &5834228082961600386
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2526278722135220977}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6b6d80b4da30b6b459582ebe2a81219c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MenuController
-  _IsMenuOpen:
-    _value: 0
-  _HostResumeReady:
-    _value: 0
-  _ClientResumeReady:
-    _value: 0
-  _HostResetReady:
-    _value: 0
-  _ClientResetReady:
-    _value: 0
---- !u!114 &652317570635401389
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2526278722135220977}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
-  SortKey: 1083270885
-  ObjectInterest: 1
-  Flags: 262145
-  NestedObjects: []
-  NetworkedBehaviours:
-  - {fileID: 5834228082961600386}
-  ForceRemoteRenderTimeframe: 0
+  noteObj: {fileID: 0}
+  noteWriterText: {fileID: 0}
+  noteHeadText: {fileID: 0}
+  noteDescText: {fileID: 0}
 --- !u!1 &3741164884455418819
 GameObject:
   m_ObjectHideFlags: 0
@@ -553,7 +485,6 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 7103755302931702799}
   - {fileID: 4201023244191733391}
   - {fileID: 9046711236161065078}
   - {fileID: 6125466112139819949}
