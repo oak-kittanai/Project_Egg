@@ -55,21 +55,19 @@ public class ThrowButton : NetworkBehaviour
         }
     }
 
+    #region Collision2D
     private void OnCollisionEnter2D(Collision2D collision)
     {
         if (!HasStateAuthority) return;
         if (isSingleUse && IsPressed) return;
 
-        if (collision.gameObject.TryGetComponent<ThrowAble>(out var throwable))
+        if (collision.gameObject.CompareTag("Rock"))
         {
-            if (throwable.itemName == "Rock")
-            {
-                float impactSpeed = collision.relativeVelocity.magnitude;
+            float impactSpeed = collision.relativeVelocity.magnitude;
 
-                if (impactSpeed > 2f)
-                {
-                    ActivateButton();
-                }
+            if (impactSpeed > 2f) 
+            {
+                ActivateButton();
             }
         }
     }
@@ -79,18 +77,22 @@ public class ThrowButton : NetworkBehaviour
         if (!HasStateAuthority) return;
         if (isSingleUse && IsPressed) return;
 
-        if (collision.gameObject.TryGetComponent<ThrowAble>(out var throwable))
+        if (collision.gameObject.CompareTag("Rock"))
         {
-            if (throwable.itemName == "Rock")
+            Rigidbody2D rockRb = collision.GetComponent<Rigidbody2D>();
+
+            if (rockRb != null)
             {
-                Rigidbody2D rockRb = throwable.GetComponent<Rigidbody2D>();
-                if (rockRb != null && rockRb.linearVelocity.magnitude > 2f)
+                float speed = rockRb.linearVelocity.magnitude;
+
+                if (speed > 2f)
                 {
                     ActivateButton();
                 }
             }
         }
     }
+    #endregion
 
     private void ActivateButton()
     {

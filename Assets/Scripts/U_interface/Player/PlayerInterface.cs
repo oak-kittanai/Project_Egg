@@ -1,7 +1,9 @@
-﻿using UnityEngine;
-using UnityEngine.UI;
+﻿using Fusion;
 using TMPro;
-using Fusion;
+using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.SceneManagement;
+using DG.Tweening;
 
 public class PlayerInterface : MonoBehaviour
 {
@@ -21,35 +23,213 @@ public class PlayerInterface : MonoBehaviour
     public Sprite FourthHealth;
     public Sprite FifthHealth;
 
-
     [Header("Quest Setting")]
-    public GameObject questContainer;
-    public TextMeshProUGUI questText;
+    // Quest Setting (With Bar)
+    public GameObject questContainerWithBar;
+    public Image questBckgroundWithBar;
+    public TMP_Text questTextWithBar;
     public Slider questProgressBar;
-    public TextMeshProUGUI questItemAmountText;
-    public Image questItemIcon;
+    public TMP_Text questItemAmountText;
+    public Image questItemIconWithBar;
+
+    // Quest Setting (No Bar)
+    public GameObject questContainerNoBar;
+    public Image questBckgroundNoBar;
+    public TMP_Text questHeadTextNoBar;
+    public TMP_Text questSubTextNoBar;
+    public Image questItemIconNoBar;
 
     [Header("Interact Prompt")]
     public GameObject interactPromptObj;
     public Vector3 promptOffset = new Vector3(0f, 1.5f, 0f);
     private Transform currentInteractTarget;
 
+    [Header("Skill Setting")]
+    public Transform skillContainer;
+
+    [Header("Skill Prefabs (Insert Here)")]
+    public GameObject skillBird_Fly;
+    public GameObject skillBird_Throw;
+    public GameObject skillDuck_Dive;
+    public GameObject skillDuck_Smash;
+
+    [Header("Spawned Skills (Auto-Assigned)")]
+    [HideInInspector] public SkillGUI spawnedBirdFly;
+    [HideInInspector] public SkillGUI spawnedBirdThrow;
+    [HideInInspector] public SkillGUI spawnedDuckDive;
+    [HideInInspector] public SkillGUI spawnedDuckSmash;
+
+    public static bool _birdFlyUnlocked;
+    public static bool _birdThrowUnlocked;
+    public static bool _duckDiveUnlocked;
+    public static bool _duckSmashUnlocked;
+
+    private bool _lastIsBird;
+
+    private Transform _cachedSkillContainer;
+
+    // ตัวแปรเก็บสถานะเพื่อป้องกันการ Spawn ซ้ำถ้าไม่ได้เปลี่ยนตัวละคร
+    [HideInInspector] public bool isCurrentBirdSetup;
+    [HideInInspector] public bool hasSetupSkills = false;
+
+    [Header("Setting")]
+    public Button resumeButton;
+    public TMP_Text resumePlayerCheckText;
+
+    public Button settingButton;
+    public Button quitButton;
+
+    public Button resetButton;
+    public TMP_Text resetPlayerCheckText;
+
+    [Header("Note Setting")]
+    public GameObject noteObj;
+    public TMP_Text noteWriterText;
+    public TMP_Text noteHeadText;
+    public TMP_Text noteDescText;
+
+
     private void Awake()
     {
-        if (Instance == null)
-        {
-            Instance = this;
-            DontDestroyOnLoad(gameObject.transform.root.gameObject);
-        }
-        else
-        {
-            Destroy(gameObject.transform.root.gameObject);
-        }
+        if (Instance == null) Instance = this;
     }
 
     private void Start()
     {
+        GameObject canvas = GameObject.Find("Canvas");
+        if (canvas != null) RegisterCanvas(canvas);
+    }
+
+    private void OnEnable()
+    {
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    private void OnDisable()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        GameObject canvas = GameObject.Find("Canvas");
+        if (canvas != null)
+        {
+            RegisterCanvas(canvas);
+            Debug.Log($"[PlayerInterface] Re-registered Canvas on scene: {scene.name}");
+        }
+    }
+
+    public void RegisterCanvas(GameObject canvas)
+    {
+        // Stats
+        Transform charStats = canvas.transform.Find("Character_Stats_Obj");
+        if (charStats != null)
+        {
+            characterProfile_Ref = charStats.Find("CharacterProfile")?.GetComponent<Image>();
+            HealthBar_Ref = charStats.Find("HealthBar")?.GetComponent<Image>();
+        }
+
+        // Skill
+        Transform skillObjT = canvas.transform.Find("SkillObj");
+        if (skillObjT != null)
+            skillContainer = skillObjT.Find("SkillContainer");
+
+        // Quest
+        Transform questDialog = canvas.transform.Find("QuestDialog_Obj");
+        if (questDialog != null)
+        {
+            Transform questObjBar = questDialog.Find("QuestContainer_Bar");
+            if (questObjBar != null)
+            {
+                questContainerWithBar = questObjBar.gameObject;
+                questBckgroundWithBar = questObjBar.Find("QuestBckground")?.GetComponent<Image>();
+                questTextWithBar = questObjBar.Find("QuestDescText")?.GetComponent<TMP_Text>();
+                questProgressBar = questObjBar.Find("QuestProgressBar")?.GetComponent<Slider>();
+                questItemAmountText = questObjBar.Find("QuestItemAmountText")?.GetComponent<TMP_Text>();
+                questItemIconWithBar = questObjBar.Find("QuestItemIcon/Item_Icon")?.GetComponent<Image>();
+            }
+
+            Transform questObjNoBar = questDialog.Find("QuestContainer_NoBar");
+            if (questObjNoBar != null)
+            {
+                questContainerNoBar = questObjNoBar.gameObject;
+                questBckgroundNoBar = questObjNoBar.Find("QuestBckground")?.GetComponent<Image>();
+                questHeadTextNoBar = questObjNoBar.Find("QuestHeadText")?.GetComponent<TMP_Text>();
+                questSubTextNoBar = questObjNoBar.Find("QuestSubText")?.GetComponent<TMP_Text>();
+                questItemIconNoBar = questObjNoBar.Find("QuestItemIcon/Item_Icon")?.GetComponent<Image>();
+            }
+        }
+
+        // Interact Prompt
+        Transform promptObj = canvas.transform.Find("InteractPrompt");
+        if (promptObj != null) interactPromptObj = promptObj.gameObject;
+
+        // PauseMenu
+        Transform settingObj = canvas.transform.Find("PauseMenu");
+        if (settingObj != null)
+        {
+            resumeButton = settingObj.Find("Resume")?.GetComponent<Button>();
+            resumePlayerCheckText = resumeButton?.GetComponentInChildren<TMP_Text>();
+            settingButton = settingObj.Find("Setting")?.GetComponent<Button>();
+            quitButton = settingObj.Find("Quit")?.GetComponent<Button>();
+            resetButton = settingObj.Find("Reset")?.GetComponent<Button>();
+            resetPlayerCheckText = resetButton?.GetComponentInChildren<TMP_Text>();
+        }
+
+        // Note
+        Transform noteObjT = canvas.transform.Find("NoteObj");
+        if (noteObjT != null)
+        {
+            noteObj = noteObjT.gameObject;
+            noteWriterText = noteObjT.Find("WriterText")?.GetComponent<TMP_Text>();
+            noteHeadText = noteObjT.Find("HeadText")?.GetComponent<TMP_Text>();
+            noteDescText = noteObjT.Find("DescText")?.GetComponent<TMP_Text>();
+            noteObj.SetActive(false);
+        }
+
         HideQuestUI();
+        Debug.Log("[PlayerInterface] RegisterCanvas success");
+    }
+
+    #region Health&Skill
+
+    public void SetupSkills(bool isBird)
+    {
+        Transform container = _cachedSkillContainer ?? skillContainer;
+        if (container == null) return;
+
+        foreach (Transform child in container) Destroy(child.gameObject);
+
+        if (isBird)
+        {
+            if (skillBird_Fly != null)
+            {
+                spawnedBirdFly = Instantiate(skillBird_Fly, container).GetComponent<SkillGUI>();
+                if (_birdFlyUnlocked) spawnedBirdFly.UnlockSkillImmediate();
+            }
+            if (skillBird_Throw != null)
+            {
+                spawnedBirdThrow = Instantiate(skillBird_Throw, container).GetComponent<SkillGUI>();
+                if (_birdThrowUnlocked) spawnedBirdThrow.UnlockSkillImmediate();
+            }
+        }
+        else
+        {
+            if (skillDuck_Dive != null)
+            {
+                spawnedDuckDive = Instantiate(skillDuck_Dive, container).GetComponent<SkillGUI>();
+                if (_duckDiveUnlocked) spawnedDuckDive.UnlockSkillImmediate();
+            }
+            if (skillDuck_Smash != null)
+            {
+                spawnedDuckSmash = Instantiate(skillDuck_Smash, container).GetComponent<SkillGUI>();
+                if (_duckSmashUnlocked) spawnedDuckSmash.UnlockSkillImmediate();
+            }
+        }
+
+        isCurrentBirdSetup = isBird;
+        hasSetupSkills = true;
     }
 
     public void UpdateHealthUI(int currentHp)
@@ -69,28 +249,94 @@ public class PlayerInterface : MonoBehaviour
     public void UpdateProfileUI(bool isBird)
     {
         if (characterProfile_Ref != null)
-        {
             characterProfile_Ref.sprite = isBird ? character_Bird : character_Duck;
-        }
+
+        SetupSkills(isBird);
     }
 
-    public void UpdateQuestUI(string detail, int currentProgress, int maxProgress)
+    #endregion
+
+    #region Quest
+    public void UpdateQuestUI(string detail, int currentProgress, int maxProgress, bool isBar, Sprite icon)
     {
-        if (questContainer != null) questContainer.SetActive(true);
+        HideQuestUI();
 
-        if (questText != null) questText.text = detail;
-        if (questItemAmountText != null) questItemAmountText.text = $"{currentProgress}/{maxProgress}";
-
-        if (questProgressBar != null)
+        if (isBar)
         {
-            questProgressBar.maxValue = maxProgress;
-            questProgressBar.value = currentProgress;
+            if (questContainerWithBar != null)
+            {
+                questContainerWithBar.SetActive(true);
+                AnimateQuestUI(questContainerWithBar);
+            }
+
+            if (questTextWithBar != null) questTextWithBar.text = detail;
+            if (questItemAmountText != null) questItemAmountText.text = $"{currentProgress}/{maxProgress}";
+            if (questProgressBar != null)
+            {
+                questProgressBar.maxValue = maxProgress;
+                questProgressBar.value = currentProgress;
+            }
+            if (questItemIconWithBar != null && icon != null)
+            {
+                questItemIconWithBar.sprite = icon;
+            }
+        }
+        else
+        {
+            if (questContainerNoBar != null)
+            {
+                questContainerNoBar.SetActive(true);
+                AnimateQuestUI(questContainerNoBar);
+            }
+
+            if (questSubTextNoBar != null) questSubTextNoBar.text = detail;
+
+            if (questItemIconNoBar != null && icon != null)
+            {
+                questItemIconNoBar.sprite = icon;
+            }
         }
     }
+
+    private void AnimateQuestUI(GameObject container)
+    {
+        if (container == null) return;
+
+        container.transform.DOKill(true);
+
+        container.transform.DOLocalMoveX(-570f, 0f)
+            .From()
+            .SetEase(Ease.InOutQuint);
+    }
+
     public void HideQuestUI()
     {
-        if (questContainer != null) questContainer.SetActive(false);
+        if (questContainerWithBar != null) questContainerWithBar.SetActive(false);
+        if (questContainerNoBar != null) questContainerNoBar.SetActive(false);
     }
+
+    #endregion
+
+    #region Note
+
+    public void ShowNote(NoteContent content, bool useThai = true)
+    {
+        if (noteObj == null) return;
+
+        if (noteWriterText != null) noteWriterText.text = content.NameWhoWrite;
+        if (noteHeadText != null) noteHeadText.text = useThai ? content.Head.thai : content.Head.eng;
+        if (noteDescText != null) noteDescText.text = useThai ? content.Desc.thai : content.Desc.eng;
+
+        noteObj.SetActive(true);
+    }
+
+    public void HideNote()
+    {
+        if (noteObj != null) noteObj.SetActive(false);
+    }
+
+
+    #endregion
 
     private void LateUpdate()
     {
@@ -104,17 +350,13 @@ public class PlayerInterface : MonoBehaviour
     {
         currentInteractTarget = targetItem;
         if (interactPromptObj != null && !interactPromptObj.activeSelf)
-        {
             interactPromptObj.SetActive(true);
-        }
     }
 
     public void HideInteract()
     {
         currentInteractTarget = null;
         if (interactPromptObj != null && interactPromptObj.activeSelf)
-        {
             interactPromptObj.SetActive(false);
-        }
     }
 }

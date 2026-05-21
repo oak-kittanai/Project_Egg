@@ -174,6 +174,10 @@ public class Enemy_PuffyJay : BaseMonster
     protected override void OnDrawGizmos()
     {
         base.OnDrawGizmos();
+        if (!Application.isPlaying || Object == null || !Object.IsValid)
+        {
+            return;
+        }
 
         if (isChasing)
         {

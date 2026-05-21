@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using System.Threading.Tasks;
 
 [System.Serializable]
 public class ItemMapping
@@ -10,8 +11,18 @@ public class ItemMapping
     public NetworkObject itemPrefab;
 }
 
+[System.Serializable]
+public class IconMapping
+{
+    public string iconName;
+    public Sprite iconSprite;
+}
+
 public class GameManager : SingletonNetwork<GameManager>
 {
+    [SerializeField] GameObject canvasObject;
+    [SerializeField] GameObject coreManagerObject;
+
     [SerializeField] NetworkRunner NetworkRunner;
 
     [SerializeField] GameObject playerHost;
@@ -38,10 +49,32 @@ public class GameManager : SingletonNetwork<GameManager>
     [Networked] public int TeamBlueKeys { get; set; }
     [Networked] public int TeamOrangeKeys { get; set; }
 
+    [SerializeField] float playerReadyTimeout = 15f; // รอ Client นานสุด 15 วิ
+    [Networked] TickTimer PlayerReadyTimeoutTimer { get; set; }
 
-    public override void Spawned()
+    private void OnEnable()
     {
-        base.Spawned();
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    private void OnDisable()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        LevelData levelDataInScene = FindFirstObjectByType<LevelData>();
+
+        if (levelDataInScene != null)
+        {
+            SetupLevelData(levelDataInScene);
+            Debug.Log($"GameManager Succes Load LevelData");
+        }
+        else
+        {
+            Debug.Log($"GameManager Fail To Load LevelData");
+        }
     }
 
     #region Network
@@ -55,18 +88,30 @@ public class GameManager : SingletonNetwork<GameManager>
     {
         if (!HasStateAuthority) return;
 
-        if (!IsGameReady && isPlayerReady && isLoadMapDone)
+        if (!IsGameReady && isLoadMapDone)
         {
+            bool allReady = isPlayerReady;
+            bool timedOut = PlayerReadyTimeoutTimer.Expired(Runner);
+
+            if ((allReady || timedOut) && !LoadingSceneTimer.IsRunning)
+            {
+                if (timedOut && !allReady)
+                    Debug.LogWarning("[GameManager] Player ready timeout! Starting game anyway.");
+
+                LoadingSceneTimer = TickTimer.CreateFromSeconds(Runner, loadingSceneCooldown);
+                PlayerReadyTimeoutTimer = TickTimer.None;
+            }
+
             if (LoadingSceneTimer.Expired(Runner))
             {
                 IsGameReady = true;
                 LoadingSceneTimer = TickTimer.None;
-                Debug.Log("Game Start!");
-
+                Debug.Log("[GameManager] Game Start!");
                 ResetAllPlayersToSpawn();
             }
         }
     }
+
 
     #region PlayerData
 
@@ -79,7 +124,7 @@ public class GameManager : SingletonNetwork<GameManager>
     public void RegisterPlayer(MovementCharacter player)
     {
         if (!activePlayers.Contains(player))
-        {
+        {   
             activePlayers.Add(player);
             Debug.Log($"[GameManager] Player {player.Object.Id} Has Joined");
         }
@@ -87,16 +132,30 @@ public class GameManager : SingletonNetwork<GameManager>
     public void SetupLevelData(LevelData data)
     {
         currentLoadingUI = data.loadingScreenUI;
+
         if (currentLoadingUI != null) currentLoadingUI.SetActive(true);
+
+        if (data.introClip == null && data.videoLoadingPlayer != null)
+        {
+            data.videoLoadingPlayer.Play();
+        }
 
         allowCloseUI = false;
 
         if (data.SpawnPosition != null)
-        {
             UpdateRespawnPos(data.SpawnPosition.position);
-        }
+
         checkPoints = data.levelCheckPoints;
+
+        if (HasStateAuthority)
+        {
+            loadingSceneCooldown = data.introClip != null ? 1f : 4f;
+
+            PlayerReadyTimeoutTimer = TickTimer.CreateFromSeconds(Runner, playerReadyTimeout);
+            Debug.Log($"[GameManager] Loading Timeout set: {playerReadyTimeout}s");
+        }
     }
+
 
     #endregion
     #endregion
@@ -144,20 +203,11 @@ public class GameManager : SingletonNetwork<GameManager>
 
     private void CheckMapLoading()
     {
-        // --- TEST CODE --- for sample scene
-        /*if (SceneManager.GetActiveScene().name == "SampleScene" && !isLoadMapDone && !isPlayerReady)
-        {
-            if (!isLoadMapDone) isLoadMapDone = true;
-            if (!isPlayerReady) isPlayerReady = true;
-        }*/
-
         if (MapsLoadedCount >= 2 && !isLoadMapDone)
         {
             isLoadMapDone = true;
             Debug.Log("Map Ready");
             CheckGameStart();
-
-            CheckMapLoading();
         }
     }
 
@@ -174,9 +224,6 @@ public class GameManager : SingletonNetwork<GameManager>
             LoadingSceneTimer = TickTimer.CreateFromSeconds(Runner, loadingSceneCooldown);
             Debug.Log($"Both Ready! Starting Delay Timer {loadingSceneCooldown}");
         }
-
-        // Quest For Test
-        StartGlobalQuest("Find an exit", 1);
     }
 
     public void ResetAllPlayersToSpawn()
@@ -197,13 +244,15 @@ public class GameManager : SingletonNetwork<GameManager>
         }
     }
 
-    public void BackToSessionScene()
+    public async void BackToSessionScene()
     {
         if (Runner != null)
         {
-            Runner.Shutdown();
+            Debug.Log("GameManager: Shutting down NetworkRunner...");
+            await Runner.Shutdown();
         }
 
+        Debug.Log("GameManager: Loading SessionScene...");
         UnityEngine.SceneManagement.SceneManager.LoadScene("SessionScene");
     }
 
@@ -244,12 +293,10 @@ public class GameManager : SingletonNetwork<GameManager>
     {
         if (HasStateAuthority)
         {
-            if (OrangeKeys)
-            {
-                TeamOrangeKeys++;
-            }
-            else
-                TeamBlueKeys++;
+            if (OrangeKeys) TeamOrangeKeys++;
+            else TeamBlueKeys++;
+
+            if (IsQuestActive && QuestIsBar) AddQuestProgress(1);
         }
         else RPC_RequestAddKey(OrangeKeys);
     }
@@ -258,18 +305,18 @@ public class GameManager : SingletonNetwork<GameManager>
     {
         if (HasStateAuthority)
         {
-            if (OrangeKeys)
-            {
-                TeamOrangeKeys--;
-            }
-            else
-                TeamBlueKeys--;
+            if (OrangeKeys) TeamOrangeKeys--;
+            else TeamBlueKeys--;
         }
         else RPC_RequestUseKey(OrangeKeys);
     }
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    private void RPC_RequestAddKey(bool OrangeKeys) { if (OrangeKeys) TeamOrangeKeys++; else TeamBlueKeys++; }
+    private void RPC_RequestAddKey(bool OrangeKeys)
+    {
+        if (OrangeKeys) TeamOrangeKeys++; else TeamBlueKeys++;
+        if (IsQuestActive && QuestIsBar) AddQuestProgress(1);
+    }
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
     private void RPC_RequestUseKey(bool OrangeKeys) { if (OrangeKeys) TeamOrangeKeys--; else TeamBlueKeys--; }
@@ -319,13 +366,13 @@ public class GameManager : SingletonNetwork<GameManager>
         Vector3 spawnPos = new Vector3(posToSpawn.x, posToSpawn.y, 0f);
         NetworkObject objIte = NetworkRunner.Spawn(objToSpawn, posToSpawn);
 
-        float dropForce = Random.Range(0.5f, 1.5f);
-
         Rigidbody2D rb = objIte.GetComponent<Rigidbody2D>();
         if (rb != null)
         {
-            Vector2 randomDir = new Vector2(Random.Range(-1f, 1f), Random.Range(0.5f, 1f)).normalized;
-            rb.AddForce(randomDir * dropForce, ForceMode2D.Impulse);
+            float dropForce = 0.5f;
+            Vector2 dropDir = Vector2.up;
+
+            rb.AddForce(dropDir * dropForce, ForceMode2D.Impulse);
         }
     }
 
@@ -336,14 +383,13 @@ public class GameManager : SingletonNetwork<GameManager>
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
     public void RPC_RequestAddStone(bool isOrange)
     {
-        if (isOrange)
-        {
-            TeamHasOrangeStone = true;
-        }
+        if (isOrange) TeamHasOrangeStone = true;
         else TeamHasBlueStone = true;
+
+        if (IsQuestActive) AddQuestProgress(1);
     }
 
-    [Header("Item Database Settings")]
+    [Header("Item Database")]
     [SerializeField] public List<ItemMapping> itemDatabase = new List<ItemMapping>();
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
@@ -382,9 +428,27 @@ public class GameManager : SingletonNetwork<GameManager>
 
     #region Quest
 
+    [Header("Quest Icons")]
+    public List<IconMapping> questIconDatabase = new List<IconMapping>();
+
+    public Sprite GetQuestIcon(string iconName)
+    {
+        foreach (var mapping in questIconDatabase)
+        {
+            if (mapping.iconName == iconName) return mapping.iconSprite;
+        }
+        return null;
+    }
+
     [Header("Global Quest System")]
     [Networked, OnChangedRender(nameof(OnQuestStateChanged))]
     public NetworkBool IsQuestActive { get; set; }
+
+    [Networked, OnChangedRender(nameof(OnQuestStateChanged))]
+    public NetworkBool QuestIsBar { get; set; }
+
+    [Networked, OnChangedRender(nameof(OnQuestStateChanged))]
+    public NetworkString<_32> QuestIconName { get; set; }
 
     [Networked, OnChangedRender(nameof(OnQuestStateChanged))]
     public int QuestCurrentProgress { get; set; }
@@ -394,13 +458,22 @@ public class GameManager : SingletonNetwork<GameManager>
 
     [Networked, OnChangedRender(nameof(OnQuestStateChanged))]
     public NetworkString<_64> QuestDescription { get; set; }
+
     public void OnQuestStateChanged()
     {
         if (PlayerInterface.Instance != null)
         {
             if (IsQuestActive)
             {
-                PlayerInterface.Instance.UpdateQuestUI(QuestDescription.ToString(), QuestCurrentProgress, QuestMaxProgress);
+                Sprite icon = GetQuestIcon(QuestIconName.ToString());
+
+                PlayerInterface.Instance.UpdateQuestUI(
+                    QuestDescription.ToString(),
+                    QuestCurrentProgress,
+                    QuestMaxProgress,
+                    QuestIsBar,
+                    icon
+                );
             }
             else
             {
@@ -409,22 +482,24 @@ public class GameManager : SingletonNetwork<GameManager>
         }
     }
 
-    public void StartGlobalQuest(string desc, int maxProgress)
+    public void StartGlobalQuest(string iconName, string desc, bool isbar, int maxProgress = 0)
     {
         if (HasStateAuthority)
         {
+            QuestIconName = iconName;
             QuestDescription = desc;
-            QuestMaxProgress = maxProgress;
+            QuestIsBar = isbar;
+            QuestMaxProgress = isbar ? maxProgress : 0;
             QuestCurrentProgress = 0;
             IsQuestActive = true;
         }
-        else RPC_StartGlobalQuest(desc, maxProgress);
+        else RPC_StartGlobalQuest(iconName, desc, isbar, maxProgress);
     }
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    private void RPC_StartGlobalQuest(NetworkString<_64> desc, int maxProgress)
+    private void RPC_StartGlobalQuest(NetworkString<_32> iconName, NetworkString<_64> desc, NetworkBool isbar, int maxProgress)
     {
-        StartGlobalQuest(desc.ToString(), maxProgress);
+        StartGlobalQuest(iconName.ToString(), desc.ToString(), isbar, maxProgress);
     }
 
     public void AddQuestProgress(int amount = 1)
@@ -435,7 +510,7 @@ public class GameManager : SingletonNetwork<GameManager>
 
             QuestCurrentProgress += amount;
 
-            if (QuestCurrentProgress >= QuestMaxProgress)
+            if (QuestIsBar && QuestCurrentProgress >= QuestMaxProgress)
             {
                 IsQuestActive = false;
                 Debug.Log("Quest Completed!");
@@ -448,6 +523,31 @@ public class GameManager : SingletonNetwork<GameManager>
     private void RPC_AddQuestProgress(int amount)
     {
         AddQuestProgress(amount);
+    }
+
+    public void ResetQuest()
+    {
+        if (HasStateAuthority)
+        {
+            IsQuestActive = false;
+            QuestIconName = "";
+            QuestDescription = "";
+            QuestIsBar = false;
+            QuestMaxProgress = 0;
+            QuestCurrentProgress = 0;
+
+            Debug.Log("Quest has been reset!");
+        }
+        else
+        {
+            RPC_ResetQuest();
+        }
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    private void RPC_ResetQuest()
+    {
+        ResetQuest();
     }
 
     #endregion
@@ -465,10 +565,14 @@ public class GameManager : SingletonNetwork<GameManager>
             isLoadMapDone = false;
             IsGameReady = false;
             LoadingSceneTimer = TickTimer.None;
+            PlayerReadyTimeoutTimer = TickTimer.None;
+
+            activePlayers.Clear();
         }
 
         currentLoadingUI = null;
     }
+
 
     // Loading Screen Zone
     public void ShowGlobalLoadingScreen()
@@ -486,6 +590,40 @@ public class GameManager : SingletonNetwork<GameManager>
             GlobalLoadingManager.Instance.HideLoading();
         }
     }
+
+    #region Scene Transition (Level Hop)
+
+    public async Task LoadNextLevel(string nextSceneName)
+    {
+        if (!HasStateAuthority) return;
+
+        ShowGlobalLoadingScreen();
+
+        ResetLoadingStateForNextLevel();
+
+        Debug.Log($"[GameManager] Host is loading next level: {nextSceneName}");
+
+        await Runner.LoadScene(nextSceneName, UnityEngine.SceneManagement.LoadSceneMode.Single);
+
+        await Task.Delay(500);
+
+        if (CenterHost.Instance != null && SessionManager.Instance != null)
+        {
+            foreach (var player in SessionManager.Instance.Players)
+            {
+                if (player.playerRef == Runner.LocalPlayer)
+                {
+                    CenterHost.Instance.SpawnPlayer(player.playerRef, CharacterTypeShip.Instance.currentHost, true);
+                }
+                else
+                {
+                    CenterHost.Instance.SpawnPlayer(player.playerRef, CharacterTypeShip.Instance.currentClient, false);
+                }
+            }
+        }
+    }
+
+    #endregion
 
     #endregion
 

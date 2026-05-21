@@ -1,7 +1,6 @@
-using Fusion;
+﻿using Fusion;
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class CenterHost : SingletonNetwork<CenterHost>
@@ -25,6 +24,13 @@ public class CenterHost : SingletonNetwork<CenterHost>
 
     [Networked] characterType currentHost { get; set; }
     [Networked] characterType currentClient { get; set; }
+
+    [Header("Core Systems (Local Prefabs)")]
+    [SerializeField] private GameObject canvasPrefab;
+    [SerializeField] private GameObject coreManagerPrefab;
+
+    [Header("Core Systems (Network Prefabs)")]
+    [SerializeField] private NetworkObject networkMenuControllerPrefab;
     public void GetRunner()
     {
         if (hostRunner != null)
@@ -40,7 +46,63 @@ public class CenterHost : SingletonNetwork<CenterHost>
         {
             Debug.Log("Host runner ready");
         }
+
+        SetupGameCore();
     }
+
+    private void SetupGameCore()
+    {
+        if (canvasPrefab != null && GameObject.Find(canvasPrefab.name) == null)
+        {
+            GameObject canvasObj = Instantiate(canvasPrefab);
+            canvasObj.name = canvasPrefab.name;
+            DontDestroyOnLoad(canvasObj);
+
+            PlayerInterface.Instance?.RegisterCanvas(canvasObj);
+            TutorialUIManager.Instance?.RegisterCanvas(canvasObj);
+            LevelData.Instance?.RegisterCanvas(canvasObj);
+        }
+        else
+        {
+            GameObject existingCanvas = GameObject.Find(canvasPrefab.name);
+            if (existingCanvas != null)
+            {
+                LevelData.Instance?.RegisterCanvas(existingCanvas);
+            }
+        }
+
+        MenuController[] allMenus = FindObjectsByType<MenuController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        foreach (var menu in allMenus)
+        {
+            if (menu.GetComponent<NetworkObject>() == null)
+            {
+                Destroy(menu.gameObject);
+                Debug.LogWarning("Deleted fake MenuController from Canvas.");
+            }
+        }
+
+        if (GameObject.Find("CoreManagerSceneHop") == null && coreManagerPrefab != null)
+        {
+            Instantiate(coreManagerPrefab);
+            Debug.Log("Spawned Local CoreManagers");
+        }
+
+        if (HasStateAuthority)
+        {
+            bool hasNetMenu = false;
+            foreach (var menu in FindObjectsByType<MenuController>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (menu.GetComponent<NetworkObject>() != null) hasNetMenu = true;
+            }
+
+            if (!hasNetMenu && networkMenuControllerPrefab != null)
+            {
+                Runner.Spawn(networkMenuControllerPrefab, Vector3.zero, Quaternion.identity);
+                Debug.Log("Spawned Networked MenuController");
+            }
+        }
+    }
+
 
     public override void FixedUpdateNetwork()
     {

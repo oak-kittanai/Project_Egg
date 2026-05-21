@@ -87,22 +87,27 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
             if (Keyboard.current.escapeKey.isPressed) press_ESC = true;
             else press_ESC = false;
 
-            // ---
-
-            Vector2 mousePosition = Mouse.current.position.ReadValue();
-
-            // For Test
-
             bool press_X;
             if (Keyboard.current.xKey.isPressed) press_X = true;
             else press_X = false;
 
-            bool press_Z;
-            if (Keyboard.current.zKey.isPressed) press_Z = true;
-            else press_Z = false;
+            Vector2 mousePosition = Mouse.current.position.ReadValue();
 
-            data.KeybindThrowItem = press_Z;
-            data.KeybindPrepareThrowItem = press_X;
+            bool press_C;
+            if (Keyboard.current.cKey.isPressed) press_C = true;
+            else press_C = false;
+
+            bool press_Q;
+            if (Keyboard.current.qKey.isPressed) press_Q = true;
+            else press_Q = false;
+
+            bool press_G;
+            if (Keyboard.current.gKey.isPressed) press_G = true;
+            else press_G = false;
+
+            data.KeybindThrowItem = press_Q;
+            data.KeybindPrepareThrowItem = press_C;
+            data.KeybindDropItem = press_G;
 
             // Data Input
             data.mousePos = mousePosition;
@@ -112,7 +117,7 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
             data.Keyboard_F = press_F;
             data.KeybindInteract = press_E;
             data.Keyboard_ESC = press_ESC;
-
+            data.Keyboard_X = press_X;
         }
 
         input.Set(data);
@@ -237,6 +242,7 @@ public struct NetworkInputData : INetworkInput
     public bool Keyboard_F;
 
     public bool Keyboard_ESC;
+    public bool Keyboard_X;
 
     public bool KeybindInteract;
     public bool KeybindDropItem;

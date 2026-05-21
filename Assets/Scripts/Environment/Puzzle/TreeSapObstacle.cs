@@ -5,11 +5,11 @@ using UnityEngine;
 [RequireComponent(typeof(Collider2D))]
 public class TreeSapObstacle : NetworkBehaviour
 {
-    [Header("Sap Sprite")]
+    [Header("Sprite")]
     [SerializeField] private Sprite[] sapSprites;
     [SerializeField] private float hitCooldown = 0.5f; //Coolstar
 
-    [Header("Components")]
+    [Header("Component")]
     private SpriteRenderer sr;
     private Collider2D col;
 
@@ -49,19 +49,16 @@ public class TreeSapObstacle : NetworkBehaviour
             return;
         }
 
-        if (collision.gameObject.TryGetComponent<ThrowAble>(out var throwable))
+        if (collision.gameObject.CompareTag("Rock"))
         {
-            if (throwable.itemName == "Rock")
+            float impactSpeed = collision.relativeVelocity.magnitude;
+
+            if (impactSpeed < 1f)
             {
-                float impactSpeed = collision.relativeVelocity.magnitude;
-
-                if (impactSpeed < 1f)
-                {
-                    return;
-                }
-
-                TakeHit();
+                return;
             }
+
+            TakeHit();
         }
     }
 

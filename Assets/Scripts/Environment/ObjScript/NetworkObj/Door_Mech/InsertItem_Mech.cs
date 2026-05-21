@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class InsertItem_Mech : NetworkBehaviour, Interactable
 {
-    [Header("Sprites")]
+    [Header("Sprite")]
     [SerializeField] Sprite emptyDoor;
     [SerializeField] Sprite orangeStoneDoor;
     [SerializeField] Sprite blueStoneDoor;
@@ -60,7 +60,6 @@ public class InsertItem_Mech : NetworkBehaviour, Interactable
             HasOrangeStone = true;
             GameManager.Instance.TeamHasOrangeStone = false;
             insertedAny = true;
-            Debug.Log("Inserted Orange Stone!");
         }
 
         if (!HasBlueStone && GameManager.Instance.TeamHasBlueStone)
@@ -68,7 +67,6 @@ public class InsertItem_Mech : NetworkBehaviour, Interactable
             HasBlueStone = true;
             GameManager.Instance.TeamHasBlueStone = false;
             insertedAny = true;
-            Debug.Log("Inserted Blue Stone!");
         }
 
         if (!insertedAny)

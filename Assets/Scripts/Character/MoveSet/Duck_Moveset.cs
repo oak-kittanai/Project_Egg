@@ -33,7 +33,8 @@ public class Duck_Moveset : MovementCharacter
 
     [SerializeField] float emergencyAcceleration = 1f;
 
-    [Networked] public bool onDiving { get; set; }
+    [Networked, OnChangedRender(nameof(OnDivingStateChanged))]
+    public NetworkBool onDiving { get; set; }
     [Networked] bool onDivingControl { get; set; }
     [Networked] bool justDive { get; set; }
 
@@ -56,23 +57,33 @@ public class Duck_Moveset : MovementCharacter
 
     [Header("Carry System (Duck Only)")]
     [Networked] public NetworkId CarriedFriendId { get; set; }
-    [Networked] public bool IsCarry { get; set; }
+    [Networked, OnChangedRender(nameof(OnCarryStateChanged))]
+    public NetworkBool IsCarry { get; set; }
+
+    [Header("Unlockable Skills")]
+    [Networked, OnChangedRender(nameof(OnSkillStateChanged))] public NetworkBool isDiveUnlocked { get; set; }
+    [Networked, OnChangedRender(nameof(OnSkillStateChanged))] public NetworkBool isSmashUnlocked { get; set; }
 
     protected override void OnFixedUpdateSpecific()
     {
         bool isJumpPressed = false;
 
+        bool isMenuOpen = MenuController.Instance != null && MenuController.Instance.Object != null && MenuController.Instance.Object.IsValid && MenuController.Instance.IsMenuOpen;
+
         if (GetInput(out NetworkInputData input))
         {
-            isJumpPressed = input.KeybindJump && !_wasJumpPressed;
-
-            HandleDuckInteraction(input);
-            HandleWaterLogic(input);
-
-            if (isJumpAble)
+            if (!isMenuOpen)
             {
-                if (input.KeybindJump) isJumpingUp = true;
-                else isJumpingUp = false;
+                isJumpPressed = input.KeybindJump && !_wasJumpPressed;
+
+                HandleDuckInteraction(input);
+                HandleWaterLogic(input);
+
+                if (isJumpAble)
+                {
+                    if (input.KeybindJump) isJumpingUp = true;
+                    else isJumpingUp = false;
+                }
             }
 
             _wasEPressed = input.KeybindInteract;
@@ -162,24 +173,21 @@ public class Duck_Moveset : MovementCharacter
     public void PickupFriend(MovementCharacter friend)
     {
         IsCarry = true;
-        if (HasInputAuthority)
-        {
-            if (playerAudioSource != null && pickupSoundClip != null)
-            {
-                playerAudioSource.PlayOneShot(pickupSoundClip);
-            }
-        }
         CarriedFriendId = friend.Object.Id;
 
         friend.localIsBeingCarriedPredict = true;
         friend.localCarrierIdPredict = Object.Id;
 
-        friend.RPC_UpdateCarry(true, Object.Id);
+        if (friend.rb2D != null) friend.rb2D.bodyType = RigidbodyType2D.Kinematic;
+        if (friend.coll2D != null) friend.coll2D.isTrigger = true;
+
+        if (carryCollider != null && friend.coll2D != null) Physics2D.IgnoreCollision(carryCollider, friend.coll2D, true);
+        if (normalCollider != null && friend.coll2D != null) Physics2D.IgnoreCollision(normalCollider, friend.coll2D, true);
 
         if (normalCollider != null) normalCollider.enabled = false;
         if (carryCollider != null) carryCollider.enabled = true;
 
-        resetAnimation = true;
+        friend.RPC_UpdateCarry(true, Object.Id);
     }
 
     public void DropFriend(bool throwFriend = true)
@@ -192,18 +200,17 @@ public class Duck_Moveset : MovementCharacter
                 if (friend.enabled)
                 {
                     float throwDir = cAnimation.FlipX ? 1f : -1f;
+
                     friend.localIsBeingCarriedPredict = false;
+                    if (friend.rb2D != null) friend.rb2D.bodyType = RigidbodyType2D.Dynamic;
+                    if (friend.coll2D != null) friend.coll2D.isTrigger = false;
+
+                    if (carryCollider != null && friend.coll2D != null) Physics2D.IgnoreCollision(carryCollider, friend.coll2D, false);
+                    if (normalCollider != null && friend.coll2D != null) Physics2D.IgnoreCollision(normalCollider, friend.coll2D, false);
 
                     if (throwFriend && friend.visualTransform != null)
                     {
                         friend.visualTransform.position = transform.position + new Vector3(throwDir * 1f, 1f, 0);
-                        if (HasInputAuthority)
-                        {
-                            if (playerAudioSource != null && dropSoundClip != null)
-                            {
-                                playerAudioSource.PlayOneShot(dropSoundClip);
-                            }
-                        }
                     }
 
                     friend.RPC_UpdateCarry(false, Object.Id, throwFriend, throwDir, throwForceX, throwForceY);
@@ -221,8 +228,25 @@ public class Duck_Moveset : MovementCharacter
         resetAnimation = true;
     }
 
+    public void OnCarryStateChanged()
+    {
+        if (Object.InputAuthority == Runner.LocalPlayer)
+        {
+            if (IsCarry)
+            {
+                if (playerAudioSource != null && pickupSoundClip != null) playerAudioSource.PlayOneShot(pickupSoundClip);
+            }
+            else
+            {
+                if (playerAudioSource != null && dropSoundClip != null) playerAudioSource.PlayOneShot(dropSoundClip);
+            }
+        }
+    }
+
     public void HandleWaterLogic(NetworkInputData input)
     {
+        if (!isDiveUnlocked) return;
+
         if (IsBeingCarried)
         {
             if (onDiving) EndDiveLogic();
@@ -268,6 +292,7 @@ public class Duck_Moveset : MovementCharacter
                     optionalGravity = 0f;
                     isOptional = true;
                     isSpeedoptional = true;
+                    rb2D.gravityScale = 0f;
 
                     Vector2 inputDir = new Vector2(input.horizontal, input.vertical);
 
@@ -298,13 +323,6 @@ public class Duck_Moveset : MovementCharacter
     {
         if (currentWater == null) return;
         if (IsCarry) return;
-        if (HasInputAuthority)
-        {
-            if (playerAudioSource != null && drivingSoundClip != null)
-            {
-                playerAudioSource.PlayOneShot(drivingSoundClip);
-            }
-        }
 
         isMoveAble = false;
         ReadyToDive = false;
@@ -320,10 +338,22 @@ public class Duck_Moveset : MovementCharacter
 
         DiveTimer = TickTimer.CreateFromSeconds(Runner, divingTime);
         Debug.Log($"Duck Diving! Duration: {divingTime}s");
+    }
 
-        if (localGUI != null)
+    public void OnDivingStateChanged()
+    {
+        if (Object.InputAuthority == Runner.LocalPlayer)
         {
-            localGUI.StartOxygenTracking(DiveTimer, Runner, Mathf.CeilToInt(divingTime));
+            if (onDiving)
+            {
+                if (playerAudioSource != null && drivingSoundClip != null) playerAudioSource.PlayOneShot(drivingSoundClip);
+                if (localGUI != null) localGUI.StartOxygenTracking(DiveTimer, Runner, Mathf.CeilToInt(divingTime));
+            }
+            else
+            {
+                if (playerAudioSource != null && stopDrivingSoundClip != null) playerAudioSource.PlayOneShot(stopDrivingSoundClip);
+                if (localGUI != null) localGUI.StopOxygenTracking();
+            }
         }
     }
 
@@ -363,11 +393,6 @@ public class Duck_Moveset : MovementCharacter
         ReadyToDive = true;
         EmergencyTimer = TickTimer.None;
         DiveTimer = TickTimer.None;
-
-        if (localGUI != null)
-        {
-            localGUI.StopOxygenTracking();
-        }
     }
 
     public void EmergencySwimup()
@@ -378,6 +403,12 @@ public class Duck_Moveset : MovementCharacter
         }
         else
         {
+            if (!stilldrowning)
+            {
+                EndDiveLogic();
+                return;
+            }
+
             if (stilldrowning)
             {
                 Vector2 inputDir = new Vector2(0f, 1f);
@@ -401,13 +432,6 @@ public class Duck_Moveset : MovementCharacter
                 {
                     float exitForce = rb2D.mass * rb2D.linearVelocity.y;
                     currentWater.Splash(transform.position, exitForce);
-                    if (HasInputAuthority)
-                    {
-                        if (playerAudioSource != null && stopDrivingSoundClip != null)
-                        {
-                            playerAudioSource.PlayOneShot(stopDrivingSoundClip);
-                        }
-                    }
                 }
 
                 EndDiveLogic();
@@ -434,21 +458,26 @@ public class Duck_Moveset : MovementCharacter
         else
         {
             EndDiveLogic();
-            DeathMechanic_RPC();
+            DeathMechanic_RPC(true);
             Debug.Log("Dead");
         }
     }
 
     public void HandleBuoyancy()
     {
-        bool isBeingLiftedByBird = IsCarry && rb2D.linearVelocity.y > 1.5f;
+        bool isBeingLiftedByBird = false;
+        if (IsCarry && Runner.TryFindObject(CarriedFriendId, out var friendObj) && friendObj.TryGetComponent<Bird_Moveset>(out var bird))
+        {
+            isBeingLiftedByBird = bird.IsFlying;
+        }
 
-        if (IsBodyOnWater && currentWater != null && !onDiving && !isJumpingUp && !isBeingLiftedByBird)
+        bool canApplyBuoyancy = IsBodyOnWater && currentWater != null && !onDiving && !isJumpingUp && !isBeingLiftedByBird && !stilldrowning;
+
+        if (canApplyBuoyancy)
         {
             isOptional = true;
             optionalGravity = 0f;
             rb2D.gravityScale = 0f;
-
             isSpeedoptional = true;
 
             float surfaceY = currentWater.transform.position.y;
@@ -457,17 +486,58 @@ public class Duck_Moveset : MovementCharacter
 
             rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, difference * 10f);
         }
-        else if (currentWater == null || isJumpingUp || (!IsBodyOnWater && onDiving) || isBeingLiftedByBird)
+        else if (currentWater == null || isJumpingUp || (!IsBodyOnWater && onDiving) || isBeingLiftedByBird || stilldrowning)
         {
-            isOptional = false;
-            isSpeedoptional = false;
-
-            rb2D.gravityScale = normalGravity;
+            if (!onDiving)
+            {
+                isOptional = false;
+                isSpeedoptional = false;
+                rb2D.gravityScale = normalGravity;
+            }
         }
     }
+
+    #region Skill
+
+    public void OnSkillStateChanged() { SyncSkillUI(); }
+
+    public override void SyncSkillUI()
+    {
+        if (!HasInputAuthority || PlayerInterface.Instance == null) return;
+
+        if (isDiveUnlocked && PlayerInterface.Instance.spawnedDuckDive != null)
+        {
+            PlayerInterface.Instance.spawnedDuckDive.UnlockSkill();
+            PlayerInterface._duckDiveUnlocked = true;
+        }
+
+        if (isSmashUnlocked && PlayerInterface.Instance.spawnedDuckSmash != null)
+        {
+            PlayerInterface.Instance.spawnedDuckSmash.UnlockSkill();
+            PlayerInterface._duckSmashUnlocked = true;
+        }
+    }
+
+    #endregion
 
     public override void Render()
     {
         base.Render();
+
+        if (!HasInputAuthority || PlayerInterface.Instance == null) return;
+
+        if (isDiveUnlocked && PlayerInterface.Instance.spawnedDuckDive != null)
+        {
+            PlayerInterface.Instance.spawnedDuckDive.SetPressed(onDiving);
+
+            PlayerInterface.Instance.spawnedDuckDive.SetUsable(isWaterSurface);
+        }
+
+        if (isSmashUnlocked && PlayerInterface.Instance.spawnedDuckSmash != null)
+        {
+            PlayerInterface.Instance.spawnedDuckSmash.SetPressed(_isEPressed);
+
+            PlayerInterface.Instance.spawnedDuckSmash.SetUsable(isNearBreakableRock);
+        }
     }
 }

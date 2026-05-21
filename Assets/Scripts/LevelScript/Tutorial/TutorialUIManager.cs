@@ -1,6 +1,7 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using System.Collections;
 
 public class TutorialUIManager : MonoBehaviour
 {
@@ -17,14 +18,28 @@ public class TutorialUIManager : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
-            if (tutorialPanel != null) tutorialPanel.SetActive(false);
-
             DontDestroyOnLoad(gameObject.transform.root.gameObject);
+
+            GameObject canvas = GameObject.Find("Canvas");
+            if (canvas != null)
+            {
+                RegisterCanvas(canvas);
+            }
         }
         else
         {
             Destroy(gameObject.transform.root.gameObject);
         }
+    }
+
+    public void RegisterCanvas(GameObject canvas)
+    {
+        var panel = canvas.transform.Find("TutorialPanel");
+        if (panel == null) { Debug.LogWarning("TutorialPanel not found"); return; }
+
+        tutorialPanel = panel.gameObject;
+        tutorialImageSlot = tutorialPanel.transform.Find("TutorialSlot").GetComponent<Image>();
+        Debug.Log("TutorialManager Success Load UI");
     }
 
     public void ShowTutorial(Sprite spriteToShow, Vector2 customSize, float duration = 5f)

@@ -26,23 +26,31 @@ public class BreakableRock : NetworkBehaviour, Interactable
         if (coll == null) coll = GetComponent<Collider2D>();
     }
 
+    public bool CanInteract(MovementCharacter player)
+    {
+        if (player is Duck_Moveset duck && canDrop && duck.isSmashUnlocked)
+        {
+            return true;
+        }
+        return false;
+    }
+
     public void Interact(MovementCharacter player)
     {
         if (!HasStateAuthority) return;
 
-        if (player is Duck_Moveset duck)
+        if (player is Duck_Moveset duck && duck.isSmashUnlocked)
         {
             duck.PlayHitAnimation_RPC();
-
             RPC_BreakRock();
         }
         else
         {
-            Debug.Log("not duck");
+            Debug.Log("Interact failed: Not a duck or smash skill is locked.");
         }
     }
 
-    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    [Rpc(RpcSources.All, RpcTargets.All)]
     public void RPC_BreakRock()
     {
         if (itemToDrop != null && canDrop)
@@ -71,15 +79,7 @@ public class BreakableRock : NetworkBehaviour, Interactable
 
     public void SpawnItem()
     {
+        if (!HasStateAuthority) return;
         GameManager.Instance.SpawnDropItem(itemToDrop, transform.position);
-    }
-
-    public bool CanInteract(MovementCharacter player)
-    {
-        if (player is Duck_Moveset duck && canDrop)
-        {
-            return true;
-        }
-        else return false;
     }
 }

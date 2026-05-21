@@ -27,26 +27,29 @@ public class SessionHub : SingletonNetwork<SessionHub>
     [SerializeField] bool isReady;
     [SerializeField] Canvas _canvas;
 
+    [Header("Shared UI")]
+    [SerializeField] GameObject backgroundShared;
+
     [Header("Lobby")]
     [SerializeField] Button _CreateSessionButton;
     [SerializeField] Button _joinSessionButton;
 
-    [Header("JoinSession")]
-    [SerializeField] GameObject JoinSession;
+    [Header("JoinSession (UI Elements)")]
+    [SerializeField] GameObject[] joinSessionElements;
     [SerializeField] TMP_InputField _sessionNumberInsertField;
     [SerializeField] Button _JoinRoomButton;
 
-    [Header("InLobby")]
-    [SerializeField] GameObject GameMainMenu;
+    [Header("InLobby (Main Menu UI Elements)")]
+    [SerializeField] GameObject[] mainMenuElements;
     [SerializeField] Button playButton;
     [SerializeField] Button settingButton;
     [SerializeField] Button exitButton;
 
     // Lobby
-    [SerializeField] GameObject LobbyGameObject;
-    
+    [SerializeField] GameObject[] lobbyElements;
+
     // Session
-    [SerializeField] GameObject SessionGameObject;
+    [SerializeField] GameObject[] sessionElements;
     [SerializeField] GameObject _playerHost;
     [SerializeField] TMP_Text playerHostName;
     [SerializeField] GameObject _playerClient;
@@ -79,13 +82,15 @@ public class SessionHub : SingletonNetwork<SessionHub>
     [SerializeField] TMP_Text RoomCode;
     [SerializeField] Button _startButton;
 
+    [SerializeField] TMP_Text readyPlayersCheckText;
+
     [SerializeField] public Button _clientReadyButton;
     [SerializeField] public Button _hostReadyButton;
 
     [SerializeField] Sprite _isready;
     [SerializeField] Sprite _notReady;
 
-    [SerializeField] bool _gameReadyToStart => RuntimeUpdate.Instance.isHostReady && RuntimeUpdate.Instance.isClientReady;
+    [SerializeField] bool _gameReadyToStart => RuntimeUpdate.Instance != null && RuntimeUpdate.Instance.isHostReady && RuntimeUpdate.Instance.isClientReady;
 
     [Header("Support_Text")]
     [SerializeField] GameObject DebugTextObj;
@@ -177,12 +182,22 @@ public class SessionHub : SingletonNetwork<SessionHub>
     #endregion
 
     #region UI Panel Management
+    private void ToggleUIElements(GameObject[] elements, bool isActive)
+    {
+        if (elements == null || elements.Length == 0) return;
+        foreach (var element in elements)
+        {
+            if (element != null) element.SetActive(isActive);
+        }
+    }
+
     private void HideAllPanels()
     {
-        if (GameMainMenu != null) GameMainMenu.SetActive(false);
-        if (JoinSession != null) JoinSession.SetActive(false);
-        if (SessionGameObject != null) SessionGameObject.SetActive(false);
-        if (LobbyGameObject != null) LobbyGameObject.SetActive(false);
+        ToggleUIElements(mainMenuElements, false);
+        ToggleUIElements(joinSessionElements, false);
+        ToggleUIElements(sessionElements, false);
+        ToggleUIElements(lobbyElements, false);
+
         SetMainButtonOff(false);
         if (_startButton != null) _startButton.gameObject.SetActive(false);
     }
@@ -190,37 +205,44 @@ public class SessionHub : SingletonNetwork<SessionHub>
     public void OpenLobbyUI()
     {
         HideAllPanels();
+        if (backgroundShared != null) backgroundShared.SetActive(true);
+
         SetMainButtonOff(true);
-        if (LobbyGameObject != null) LobbyGameObject.SetActive(true);
+        ToggleUIElements(lobbyElements, true);
     }
 
     public void OpenMainMenuUI()
     {
         HideAllPanels();
+        if (backgroundShared != null) backgroundShared.SetActive(false);
         ResetMenuButtons();
-
-        if (GameMainMenu != null) GameMainMenu.SetActive(true);
+        ToggleUIElements(mainMenuElements, true);
     }
 
     public void OpenJoinUI()
     {
         HideAllPanels();
-        if (JoinSession != null) JoinSession.SetActive(true);
+
+        if (backgroundShared != null) backgroundShared.SetActive(true);
+        ToggleUIElements(joinSessionElements, true);
         if (_JoinRoomButton != null) _JoinRoomButton.interactable = true;
     }
 
     public void OpenSessionUI()
     {
         HideAllPanels();
-        if (SessionGameObject != null) SessionGameObject.SetActive(true);   
+        if (backgroundShared != null) backgroundShared.SetActive(false);
+        ToggleUIElements(sessionElements, true);
 
-        if (networkRunner != null && networkRunner.IsServer)
+        if (_startButton != null)
         {
-            if (_startButton != null) _startButton.gameObject.SetActive(true);
+            if (networkRunner != null && networkRunner.IsServer)
+                _startButton.gameObject.SetActive(true);
+            else
+                _startButton.gameObject.SetActive(false);
         }
 
         if (_leaveButton != null) { _leaveButton.gameObject.SetActive(true); _leaveButton.interactable = true; }
-        if (_leaveButtonJoinRoom != null) { _leaveButtonJoinRoom.gameObject.SetActive(true); _leaveButtonJoinRoom.interactable = true; }
     }
     #endregion
 
@@ -358,9 +380,14 @@ public class SessionHub : SingletonNetwork<SessionHub>
                 }
                 else
                 {
+                    _startButton.gameObject.SetActive(true);
                     _startButton.interactable = false;
                 }
             }
+        }
+        else
+        {
+            if (_startButton != null) _startButton.gameObject.SetActive(false);
         }
     }
 
@@ -531,6 +558,15 @@ public class SessionHub : SingletonNetwork<SessionHub>
 
         CheckCurrentType();
         ReadyToPlay();
+
+        if (readyPlayersCheckText != null && RuntimeUpdate.Instance != null)
+        {
+            int readyCount = 0;
+            if (RuntimeUpdate.Instance.isHostReady) readyCount++;
+            if (RuntimeUpdate.Instance.isClientReady) readyCount++;
+
+            readyPlayersCheckText.text = $"{readyCount} / 2 Players";
+        }
     }
 
     public void UpdateCode(string code)

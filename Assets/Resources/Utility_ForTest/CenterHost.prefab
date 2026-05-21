@@ -53,13 +53,10 @@ MonoBehaviour:
   hostStats: {fileID: 0}
   clientRunner: {fileID: 0}
   clientStats: {fileID: 0}
-  doneScan: 0
-  readySpawn: 0
-  firstStart: 0
-  ObjMoveAbleTrans: []
-  ObjTrapTrans: []
-  ObjEnemyTrans: []
   _RemoveOldObj: 0
+  canvasPrefab: {fileID: 8707019487019327968, guid: 295c8402bdc86c54b9d8e9489b2b686f, type: 3}
+  coreManagerPrefab: {fileID: 6220470830134951863, guid: d1f11188d278f98459741540fcff5596, type: 3}
+  networkMenuControllerPrefab: {fileID: 5228571391162681140, guid: 94ec73eb37818bf4d9b395a040ad16ba, type: 3}
 --- !u!114 &7825853430673868469
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -3,26 +3,35 @@ using UnityEngine;
 
 public class SnowBallProjectile : NetworkBehaviour
 {
-    [Header("Movement Settings")]
+    [Header("Movement Setting")]
     [SerializeField] private float speed = 15f;
 
-    [Header("Snowball Settings")]
+    [Header("Snowball Setting")]
     [SerializeField] private float minBounceForce = 2f;
 
-    [Header("Damage Settings")]
+    [Header("Damage Setting")]
     [SerializeField] private int damageAmount = 1;
     [SerializeField] private float knockbackForce = 4f;
+
+    [SerializeField] private LayerMask playerLayer;
+    [SerializeField] private float hitRadius = 0.5f;
+
     [Networked] private TickTimer LifeTimer { get; set; }
+    private bool hasHitPlayer = false;
 
     public override void Spawned()
     {
+        Runner.SetIsSimulated(Object, true);
+
         if (HasStateAuthority)
         {
             LifeTimer = TickTimer.CreateFromSeconds(Runner, 7f);
+            hasHitPlayer = false;
 
             Rigidbody2D rb = GetComponent<Rigidbody2D>();
             if (rb != null)
             {
+                rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
                 rb.linearVelocity = transform.right * speed;
             }
         }
@@ -35,35 +44,34 @@ public class SnowBallProjectile : NetworkBehaviour
         if (LifeTimer.Expired(Runner))
         {
             DespawnSnowball();
+            return;
         }
-    }
 
-    private void OnTriggerEnter2D(Collider2D collision)
-    {
-        if (!HasStateAuthority) return;
-
-        if (collision.gameObject.CompareTag("Player"))
+        if (!hasHitPlayer)
         {
-            MovementCharacter[] allCharacterMovement = collision.GetComponents<MovementCharacter>();
-
-            foreach (var character in allCharacterMovement)
+            Collider2D hit = Physics2D.OverlapCircle(transform.position, hitRadius, playerLayer);
+            if (hit != null)
             {
-                if (character.enabled)
+                MovementCharacter character = hit.GetComponentInParent<MovementCharacter>();
+                if (character == null) character = hit.GetComponentInChildren<MovementCharacter>();
+
+                if (character != null && character.enabled && !character.isDead)
                 {
-                    Vector2 knockbackDir = (collision.transform.position - transform.position).normalized;
+                    hasHitPlayer = true;
+                    Vector2 knockbackDir = (hit.transform.position - transform.position).normalized;
                     knockbackDir.y = 1f;
 
                     character.TakeDamage(damageAmount, knockbackForce, knockbackDir.normalized);
 
                     DespawnSnowball();
                 }
-            } 
+            }
         }
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (!HasStateAuthority) return;
+        if (!HasStateAuthority || hasHitPlayer) return;
 
         int layer = collision.gameObject.layer;
         if (layer == LayerMask.NameToLayer("Ground") || layer == LayerMask.NameToLayer("Platform"))
@@ -83,5 +91,11 @@ public class SnowBallProjectile : NetworkBehaviour
         {
             GameManager.Instance.RequestDespawn(this.Object);
         }
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.green;
+        Gizmos.DrawWireSphere(transform.position, hitRadius);
     }
 }

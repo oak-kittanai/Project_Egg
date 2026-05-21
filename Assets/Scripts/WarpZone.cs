@@ -1,4 +1,5 @@
 using Fusion;
+using System.Threading.Tasks;
 using UnityEngine;
 
 public class WarpZone : NetworkBehaviour
@@ -54,12 +55,12 @@ public class WarpZone : NetworkBehaviour
         }
     }
 
-    private void ExecuteWarp()
+    private async Task ExecuteWarp()
     {
         GameManager.Instance.ResetLoadingStateForNextLevel();
         GameManager.Instance.ShowGlobalLoadingScreen();
 
-        Runner.LoadScene(nextSceneBuildString);
+        await GameManager.Instance.LoadNextLevel(nextSceneBuildString);
 
         Debug.Log($"Host is warping everyone to Scene: {nextSceneBuildString}");
     }

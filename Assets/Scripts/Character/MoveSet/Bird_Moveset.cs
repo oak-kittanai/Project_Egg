@@ -20,20 +20,22 @@ public class Bird_Moveset : MovementCharacter
 
     [Header("Bird State")]
     [Networked] private TickTimer FlightTimer { get; set; }
-    [Networked] private bool IsFlying { get; set; }
+    [Networked, OnChangedRender(nameof(OnFlyingStateChanged))]
+    public NetworkBool IsFlying { get; set; }
     [Networked] public bool IsAlreadyFly { get; set; }
     [Networked] public bool AlreadyFloating { get; set; }
     
 
     [Header("Pressed")]
     [Networked] public bool _wasJumpPressed { get; set; }
-    [Networked] public bool _wasXPressed { get; set; }
-    [Networked] public bool _wasZPressed { get; set; }
+    [Networked] public bool _wasPrepareThrowPressed { get; set; }
+    [Networked] public bool _wasisThrowItemPressed { get; set; }
 
     // Drowning
     [Networked] private TickTimer DrownTimer { get; set; }
     [SerializeField] float drowningTime = 3f;
-    [Networked] public bool startTimer { get; set; }
+    [Networked, OnChangedRender(nameof(OnDrownTimerStateChanged))]
+    public NetworkBool startTimer { get; set; }
 
     [Header("ThrowSystem")]
     [SerializeField] public NetworkObject throwAblePrefab;
@@ -50,6 +52,10 @@ public class Bird_Moveset : MovementCharacter
     [SerializeField] float aimSweepSpeed = 3f;
     [SerializeField] float maxAimAngle = 30f;
 
+    [Header("Unlockable Skills")]
+    [Networked, OnChangedRender(nameof(OnSkillStateChanged))] public NetworkBool isFlyUnlocked { get; set; }
+    [Networked, OnChangedRender(nameof(OnSkillStateChanged))] public NetworkBool isThrowUnlocked { get; set; }
+
     public override void Spawned()
     {
         base.Spawned();
@@ -65,20 +71,30 @@ public class Bird_Moveset : MovementCharacter
 
     protected override void OnFixedUpdateSpecific()
     {
+        bool isMenuOpen = MenuController.Instance != null && MenuController.Instance.Object != null && MenuController.Instance.Object.IsValid && MenuController.Instance.IsMenuOpen;
+
         if (GetInput(out NetworkInputData input))
         {
-            HandleFlightLogic(input);
-            HandleThrowLogic(input);
+            if (!isMenuOpen)
+            {
+                HandleFlightLogic(input);
+                HandleThrowLogic(input);
+            }
+            else
+            {
+                if (_prepareToThrow) CancelThrow();
+
+                _wasJumpPressed = input.KeybindJump;
+                _wasPrepareThrowPressed = input.KeybindPrepareThrowItem;
+                _wasisThrowItemPressed = input.KeybindThrowItem;
+            }
         }
 
         if (IsGrounded)
         {
             IsAlreadyFly = false;
 
-            if (AlreadyFloating)
-            {
-                StopFloating();
-            }
+            if (AlreadyFloating) StopFloating();
 
             if (!IsFlying && rb2D != null && rb2D.sharedMaterial != defaultMaterial)
             {
@@ -86,19 +102,21 @@ public class Bird_Moveset : MovementCharacter
             }
         }
 
-        if (IsBeingCarried)
-        {
-            if (AlreadyFloating)
-            {
-                StopFloating();
-            }
+        bool effectivelyCarried = IsBeingCarried || localIsBeingCarriedPredict;
+        NetworkId effectiveCarrierId = IsBeingCarried ? CarrierId : localCarrierIdPredict;
 
-            if (Runner.TryFindObject(CarrierId, out var duckObj) && duckObj.TryGetComponent<MovementCharacter>(out var duck))
+        if (effectivelyCarried)
+        {
+            if (AlreadyFloating) StopFloating();
+
+            if (Runner.TryFindObject(effectiveCarrierId, out var duckObj) && duckObj.TryGetComponent<MovementCharacter>(out var duck))
             {
-                if (duck.IsGrounded || duck.isWaterSurface && !IsFlying)
+                if (!IsFlying && (duck.IsGrounded || duck.isWaterSurface))
                 {
                     IsAlreadyFly = false;
                     resetAnimation = true;
+
+                    if (cAnimation != null) cAnimation.ReturnToBlendAnimation();
                 }
                 else if (duck.IsHeadUnderwater) { /* do drowning but duck carry animation */ }
 
@@ -114,40 +132,60 @@ public class Bird_Moveset : MovementCharacter
 
     private void HandleDrowning()
     {
-        if (!IsBeingCarried && (isWaterSurface || stilldrowning))
+        bool effectivelyCarried = IsBeingCarried || localIsBeingCarriedPredict;
+        NetworkId effectiveCarrierId = IsBeingCarried ? CarrierId : localCarrierIdPredict;
+
+        bool isBirdDrowning = false;
+
+        if (effectivelyCarried)
         {
-            isMoveAble = false;
-            isOptional = true;
-            optionalGravity = 0f;
-
-            rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, -1.5f);
-
-            if (!startTimer)
+            if (Runner.TryFindObject(effectiveCarrierId, out var duckObj) && duckObj.TryGetComponent<Duck_Moveset>(out var duck))
             {
-                StartDrowningTimer();
-            }
-
-            if (startTimer)
-            {
-                if (DrownTimer.Expired(Runner))
+                if (duck.onDiving || duck.IsHeadUnderwater)
                 {
-                    startTimer = false;
-                    DeathMechanic_RPC();
-                }
-                else
-                {
-                    // drowning animation
+                    isBirdDrowning = true;
                 }
             }
         }
-        else if (startTimer)
+        else
         {
-            DrownTimer = TickTimer.None;
-            startTimer = false;
-
-            if (Runner.IsForward && localGUI != null)
+            if (isWaterSurface || stilldrowning)
             {
-                localGUI.StopOxygenTracking();
+                isBirdDrowning = true;
+            }
+        }
+
+        if (isBirdDrowning)
+        {
+            if (!effectivelyCarried)
+            {
+                isMoveAble = false;
+                isOptional = true;
+                optionalGravity = 0f;
+
+                rb2D.linearVelocity = new Vector2(0f, -1.5f);
+                rb2D.linearDamping = 3f;
+            }
+
+            if (!startTimer)
+            {
+                if (HasStateAuthority) StartDrowningTimer();
+            }
+            else
+            {
+                if (DrownTimer.Expired(Runner) && HasStateAuthority)
+                {
+                    startTimer = false;
+                    DeathMechanic_RPC(true);
+                }
+            }
+        }
+        else
+        {
+            if (startTimer && HasStateAuthority)
+            {
+                DrownTimer = TickTimer.None;
+                startTimer = false;
             }
         }
     }
@@ -156,10 +194,20 @@ public class Bird_Moveset : MovementCharacter
     {
         startTimer = true;
         DrownTimer = TickTimer.CreateFromSeconds(Runner, drowningTime);
+    }
 
-        if (localGUI != null)
+    public void OnDrownTimerStateChanged()
+    {
+        if (HasInputAuthority && localGUI != null)
         {
-            localGUI.StartOxygenTracking(DrownTimer, Runner, Mathf.CeilToInt(drowningTime));
+            if (startTimer)
+            {
+                localGUI.StartOxygenTracking(DrownTimer, Runner, Mathf.CeilToInt(drowningTime));
+            }
+            else
+            {
+                localGUI.StopOxygenTracking();
+            }
         }
     }
 
@@ -194,6 +242,9 @@ public class Bird_Moveset : MovementCharacter
         {
             cAnimation.FallingAndFloatAnimation(true, false);
         }
+
+        startTimer = false;
+        DrownTimer = TickTimer.None;
     }
 
     #region FlyLogic
@@ -205,35 +256,27 @@ public class Bird_Moveset : MovementCharacter
         {
             if (isPressed && IsInAir)
             {
-                if (!IsFlying && !IsAlreadyFly)
+                if (!IsFlying && !IsAlreadyFly && !stilldrowning)
                 {
                     StartFlying();
                 }
             }
         }
-
-        if (IsBeingCarried)
+        else
         {
             isMoveAble = false;
+
             if (isPressed)
             {
-                if (!IsFlying && !IsAlreadyFly)
+                bool isDuckDiving = false;
+                if (Runner.TryFindObject(CarrierId, out var duckObj) && duckObj.TryGetComponent<Duck_Moveset>(out var duck))
+                {
+                    isDuckDiving = duck.onDiving || duck.IsHeadUnderwater;
+                }
+
+                if (!IsFlying && !IsAlreadyFly && !isDuckDiving)
                 {
                     StartFlying();
-                }
-            }
-        }
-
-        if (IsBeingCarried && IsAlreadyFly && !IsFlying)
-        {
-            if (Runner.TryFindObject(CarrierId, out var carrierObj))
-            {
-                if (carrierObj.TryGetComponent<MovementCharacter>(out var duck))
-                {
-                    if (duck.IsGrounded)
-                    {
-                        resetAnimation = true;
-                    }
                 }
             }
         }
@@ -260,12 +303,9 @@ public class Bird_Moveset : MovementCharacter
                 }
                 else
                 {
-                    if (Runner.TryFindObject(CarrierId, out var carrierObj))
+                    if (Runner.TryFindObject(CarrierId, out var carrierObj) && carrierObj.TryGetComponent<MovementCharacter>(out var duck))
                     {
-                        if (carrierObj.TryGetComponent<MovementCharacter>(out var duck))
-                        {
-                            duck.rb2D.linearVelocity = new Vector2(duck.rb2D.linearVelocity.x, stats.s_flySpeed);
-                        }
+                        duck.rb2D.linearVelocity = new Vector2(duck.rb2D.linearVelocity.x, stats.s_flySpeed);
                     }
                 }
             }
@@ -273,6 +313,25 @@ public class Bird_Moveset : MovementCharacter
 
         _wasJumpPressed = input.KeybindJump;
     }
+
+    public void OnFlyingStateChanged()
+    {
+        if (Object.InputAuthority == Runner.LocalPlayer)
+        {
+            if (IsFlying)
+            {
+                float duration = IsBeingCarried ? carryFlyTime : normalFlyTime;
+                if (playerAudioSource != null && flySoundClip != null) playerAudioSource.PlayOneShot(flySoundClip);
+                if (localGUI != null) localGUI.StartFlightBar(FlightTimer, Runner, duration);
+            }
+            else
+            {
+                if (playerAudioSource != null && stopFlySoundClip != null) playerAudioSource.PlayOneShot(stopFlySoundClip);
+                if (localGUI != null) localGUI.StopFlightBar();
+            }
+        }
+    }
+
     private void StartFloating()
     {
         FallingBusy = true;
@@ -300,64 +359,49 @@ public class Bird_Moveset : MovementCharacter
     {
         IsFlying = true;
         isJumping = false;
-        if (HasInputAuthority)
-        {
-            if (playerAudioSource != null && flySoundClip != null)
-            {
-                playerAudioSource.PlayOneShot(flySoundClip);
-            }
-        }
 
         float duration = IsBeingCarried ? carryFlyTime : normalFlyTime;
         FlightTimer = TickTimer.CreateFromSeconds(Runner, duration);
 
-        cAnimation.FlyUpAnimation();
-
-        if (HasInputAuthority)
-        {
-            if (localGUI != null)
-            {
-                localGUI.StartFlightBar(FlightTimer, Runner, duration);
-            }
-        }
+        if (cAnimation != null) cAnimation.FlyUpAnimation();
 
         if (rb2D != null && zeroFrictionMaterial != null)
         {
             rb2D.sharedMaterial = zeroFrictionMaterial;
         }
 
-        Debug.Log($"Bird Flying! Duration: {duration}s (Being Carried: {IsBeingCarried})");
+        if (IsBeingCarried && Runner.TryFindObject(CarrierId, out var carrierObj))
+        {
+            if (carrierObj.TryGetComponent<Duck_Moveset>(out var duck))
+            {
+                if (duck.carryCollider != null) duck.carryCollider.sharedMaterial = zeroFrictionMaterial;
+            }
+        }
+
+        Debug.Log($"Bird Flying! Duration: {duration}s");
     }
 
     private void StopFlying()
     {
         IsFlying = false;
-        if (HasInputAuthority)
-        {
-            if (playerAudioSource != null && stopFlySoundClip != null)
-            {
-                playerAudioSource.PlayOneShot(stopFlySoundClip);
-            }
-        }
         FlightTimer = TickTimer.None;
-
-        if (HasInputAuthority)
-        {
-            if (localGUI != null)
-            {
-                localGUI.StopFlightBar();
-            }
-        }
 
         if (rb2D != null)
         {
             rb2D.sharedMaterial = defaultMaterial;
         }
+
+        if (IsBeingCarried && Runner.TryFindObject(CarrierId, out var carrierObj))
+        {
+            if (carrierObj.TryGetComponent<Duck_Moveset>(out var duck))
+            {
+                if (duck.carryCollider != null) duck.carryCollider.sharedMaterial = null;
+            }
+        }
     }
 
     public void ForceCancelFlight()
     {
-        if (IsFlying) StopFlying();
         if (AlreadyFloating) StopFloating();
         IsAlreadyFly = false;
     }
@@ -367,11 +411,13 @@ public class Bird_Moveset : MovementCharacter
 
     public void HandleThrowLogic(NetworkInputData input)
     {
-        bool isXPressed = input.KeybindPrepareThrowItem && !_wasXPressed;
-        bool isZPressed = input.KeybindThrowItem && !_wasZPressed;
+        bool isPrepareThrowPressed = input.KeybindPrepareThrowItem && !_wasPrepareThrowPressed;
+        bool isThrowItemPressed = input.KeybindThrowItem && !_wasisThrowItemPressed;
 
-        if (isXPressed)
+        if (isPrepareThrowPressed)
         {
+            if (!isThrowUnlocked) return;
+
             if (_canThrowItem && !(isWaterSurface || stilldrowning))
             {
                 _prepareToThrow = !_prepareToThrow;
@@ -399,14 +445,14 @@ public class Bird_Moveset : MovementCharacter
             UpdateOscillatingAim();
             IsInteractBusy = true;
 
-            if (isZPressed)
+            if (isThrowItemPressed)
             {
                 ExecuteThrow();
             }
         }
 
-        _wasXPressed = input.KeybindPrepareThrowItem;
-        _wasZPressed = input.KeybindThrowItem;
+        _wasPrepareThrowPressed = input.KeybindPrepareThrowItem;
+        _wasisThrowItemPressed = input.KeybindThrowItem;
     }
 
     private void ExecuteThrow()
@@ -474,6 +520,29 @@ public class Bird_Moveset : MovementCharacter
 
     #endregion
 
+    #region Skill
+
+    public void OnSkillStateChanged() { SyncSkillUI(); }
+
+    public override void SyncSkillUI()
+    {
+        if (!HasInputAuthority || PlayerInterface.Instance == null) return;
+
+        if (isFlyUnlocked && PlayerInterface.Instance.spawnedBirdFly != null)
+        {
+            PlayerInterface.Instance.spawnedBirdFly.UnlockSkill();
+            PlayerInterface._birdFlyUnlocked = true;
+        }
+
+        if (isThrowUnlocked && PlayerInterface.Instance.spawnedBirdThrow != null)
+        {
+            PlayerInterface.Instance.spawnedBirdThrow.UnlockSkill();
+            PlayerInterface._birdThrowUnlocked = true;
+        }
+    }
+
+    #endregion
+
     public override void Render()
     {
         base.Render();
@@ -486,6 +555,24 @@ public class Bird_Moveset : MovementCharacter
         else
         {
             if (lineRenderer.enabled) lineRenderer.enabled = false;
+        }
+
+        if (!HasInputAuthority || PlayerInterface.Instance == null) return;
+
+        if (isFlyUnlocked && PlayerInterface.Instance.spawnedBirdFly != null)
+        {
+            PlayerInterface.Instance.spawnedBirdFly.SetPressed(IsFlying);
+
+            PlayerInterface.Instance.spawnedBirdFly.UpdateCooldown(FlightTimer, Runner);
+
+            PlayerInterface.Instance.spawnedBirdFly.SetUsable(!IsAlreadyFly && !stilldrowning);
+        }
+
+        if (isThrowUnlocked && PlayerInterface.Instance.spawnedBirdThrow != null)
+        {
+            PlayerInterface.Instance.spawnedBirdThrow.SetPressed(_prepareToThrow);
+
+            PlayerInterface.Instance.spawnedBirdThrow.SetUsable(_canThrowItem);
         }
     }
 }
