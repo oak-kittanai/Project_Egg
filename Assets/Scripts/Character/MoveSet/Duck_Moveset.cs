@@ -213,11 +213,6 @@ public class Duck_Moveset : MovementCharacter
                     if (carryCollider != null && friend.coll2D != null) Physics2D.IgnoreCollision(carryCollider, friend.coll2D, false);
                     if (normalCollider != null && friend.coll2D != null) Physics2D.IgnoreCollision(normalCollider, friend.coll2D, false);
 
-                    if (throwFriend && friend.visualTransform != null)
-                    {
-                        friend.visualTransform.position = transform.position + new Vector3(throwDir * 1f, 1f, 0);
-                    }
-
                     friend.RPC_UpdateCarry(false, Object.Id, throwFriend, throwDir, throwForceX, throwForceY);
                     break;
                 }

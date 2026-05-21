@@ -94,6 +94,10 @@ public class PlayerInterface : MonoBehaviour
     public Slider soundSlider;
     public Button settingLeaveButton;
 
+    [Header("Cutscene UI")]
+    public Button skipButton;
+    public TMP_Text skipPlayerCheckText;
+
     private void Awake()
     {
         if (Instance == null) Instance = this;
@@ -223,6 +227,21 @@ public class PlayerInterface : MonoBehaviour
             settingLeaveButton = settingMenuT.Find("Leave_Button")?.GetComponent<Button>();
 
             settingPanelObj.SetActive(false);
+        }
+
+        // Skip Cutscene
+        Transform loadingScene = canvas.transform.Find("LoadingScene");
+
+        if (loadingScene != null)
+        {
+            Transform skipButtoN = loadingScene.Find("SkipButton");
+
+            if (skipButtoN != null)
+            {
+                skipButton = skipButtoN.GetComponent<Button>();
+
+                skipPlayerCheckText = skipButtoN.GetComponentInChildren<TMP_Text>();
+            }
         }
 
         HideQuestUI();
@@ -402,6 +421,15 @@ public class PlayerInterface : MonoBehaviour
         if (noteObj != null) noteObj.SetActive(false);
     }
 
+
+    #endregion
+
+    #region cutscene
+
+    public void SetSkipButtonActive(bool isActive)
+    {
+        if (skipButton != null) skipButton.gameObject.SetActive(isActive);
+    }
 
     #endregion
 
