@@ -162,10 +162,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
         if (TryGetComponent<Fusion.Addons.Physics.NetworkRigidbody2D>(out var netRb))
         {
-            if (visualTransform != null)
-                netRb.InterpolationTarget = visualTransform;
-            else
-                netRb.InterpolationTarget = transform;
+            netRb.InterpolationTarget = transform;
         }
     }
 
@@ -624,7 +621,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     #region CarrySystem
 
     [Rpc(RpcSources.All, RpcTargets.All)]
-    public void RPC_UpdateCarry(bool state, NetworkId carrierId, bool doThrow = false, float throwDir = 1f, float forceX = 4f, float forceY = 4f)
+    public void RPC_UpdateCarry(bool state, NetworkId carrierId, bool doThrow = false,
+                             float throwDir = 1f, float forceX = 4f, float forceY = 4f)
     {
         if (HasStateAuthority)
         {
@@ -632,11 +630,11 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             CarrierId = carrierId;
             IsInteractBusy = state;
         }
-
         localIsBeingCarriedPredict = state;
         localCarrierIdPredict = carrierId;
 
-        if (Runner.TryFindObject(carrierId, out var duckObj) && duckObj.TryGetComponent<Collider2D>(out var duckColl))
+        if (Runner.TryFindObject(carrierId, out var duckObjForCollision)
+            && duckObjForCollision.TryGetComponent<Collider2D>(out var duckColl))
         {
             Physics2D.IgnoreCollision(coll2D, duckColl, state);
         }
@@ -645,31 +643,31 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         {
             if (HasStateAuthority)
             {
-                if (duckObj != null)
+                if (Runner.TryFindObject(carrierId, out var duckObjForPos)
+                    && duckObjForPos.TryGetComponent<Rigidbody2D>(out var duckRb))
                 {
-                    rb2D.position = duckObj.transform.position + new Vector3(0, betweenCarryPosition, 0);
+                    rb2D.position = duckRb.position + Vector2.up * betweenCarryPosition;
+                }
+                else if (Runner.TryFindObject(carrierId, out var duckObjFallback))
+                {
+                    rb2D.position = (Vector2)duckObjFallback.transform.position + Vector2.up * betweenCarryPosition;
                 }
 
                 rb2D.bodyType = RigidbodyType2D.Dynamic;
                 rb2D.linearVelocity = Vector2.zero;
-
                 if (doThrow)
                 {
                     rb2D.AddForce(new Vector2(throwDir * forceX, forceY), ForceMode2D.Impulse);
                 }
-
                 IsGrounded = false;
                 IsInAir = true;
                 resetAnimation = false;
             }
 
             if (cAnimation != null)
-            {
                 cAnimation.FallingAndFloatAnimation(true, false);
-            }
-
-            if (visualTransform != null) visualTransform.localPosition = Vector3.zero;
-
+            if (visualTransform != null)
+                visualTransform.localPosition = Vector3.zero;
             OnDroppedEvent();
         }
     }
@@ -959,6 +957,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         else
         {
             if (spriteRenderer != null) spriteRenderer.sortingOrder = originalSortingOrder;
+
+            if (visualTransform != null) visualTransform.localPosition = Vector3.zero;
         }
         ManageMovementSounds();
     }
@@ -970,11 +970,19 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         bool effectivelyCarried = IsBeingCarried || localIsBeingCarriedPredict;
         NetworkId effectiveCarrierId = IsBeingCarried ? CarrierId : localCarrierIdPredict;
 
-        if (effectivelyCarried && Runner.TryFindObject(effectiveCarrierId, out var duckObj) && duckObj.TryGetComponent<MovementCharacter>(out var duckMC))
+        if (effectivelyCarried
+            && Runner.TryFindObject(effectiveCarrierId, out var duckObj)
+            && duckObj.TryGetComponent<MovementCharacter>(out var duckMC))
         {
             transform.position = duckMC.transform.position + new Vector3(0, betweenCarryPosition, 0);
 
-            if (visualTransform != null) visualTransform.localPosition = Vector3.zero;
+            if (visualTransform != null)
+                visualTransform.localPosition = Vector3.zero;
+        }
+        else
+        {
+            if (visualTransform != null)
+                visualTransform.localPosition = Vector3.zero;
         }
     }
 
@@ -991,12 +999,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     {
         if (playerAudioSource != null && dieSoundClip != null)
             playerAudioSource.PlayOneShot(dieSoundClip);
-    }
-
-    protected System.Collections.IEnumerator SyncSkillUINextFrame()
-    {
-        yield return null;
-        SyncSkillUI();
     }
 
     private void OnDrawGizmosSelected()
