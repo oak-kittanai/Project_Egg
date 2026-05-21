@@ -525,6 +525,31 @@ public class GameManager : SingletonNetwork<GameManager>
         AddQuestProgress(amount);
     }
 
+    public void ResetQuest()
+    {
+        if (HasStateAuthority)
+        {
+            IsQuestActive = false;
+            QuestIconName = "";
+            QuestDescription = "";
+            QuestIsBar = false;
+            QuestMaxProgress = 0;
+            QuestCurrentProgress = 0;
+
+            Debug.Log("Quest has been reset!");
+        }
+        else
+        {
+            RPC_ResetQuest();
+        }
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    private void RPC_ResetQuest()
+    {
+        ResetQuest();
+    }
+
     #endregion
 
     #region Scene
