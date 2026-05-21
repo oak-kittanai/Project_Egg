@@ -78,8 +78,9 @@ public class LevelData : MonoBehaviour
 
         if (introClip != null && introVideoPlayer != null)
         {
+            videoLoadingPlayer.enabled = false;
             if (loadingScreenUI != null) loadingScreenUI.SetActive(true);
-
+           
             introVideoPlayer.clip = introClip;
             introVideoPlayer.Play();
 
