@@ -982,6 +982,13 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         if (playerAudioSource != null && dieSoundClip != null)
             playerAudioSource.PlayOneShot(dieSoundClip);
     }
+
+    protected System.Collections.IEnumerator SyncSkillUINextFrame()
+    {
+        yield return null;
+        SyncSkillUI();
+    }
+
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.blue; Gizmos.DrawRay(transform.position, Vector2.down * rayDistance);

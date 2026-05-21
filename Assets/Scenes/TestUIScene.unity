@@ -408,6 +408,10 @@ MonoBehaviour:
   noteWriterText: {fileID: 0}
   noteHeadText: {fileID: 0}
   noteDescText: {fileID: 0}
+  settingPanelObj: {fileID: 0}
+  musicSlider: {fileID: 0}
+  soundSlider: {fileID: 0}
+  settingLeaveButton: {fileID: 0}
 --- !u!4 &1064318252
 Transform:
   m_ObjectHideFlags: 0
@@ -431,8 +435,20 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 573436268343405712, guid: 295c8402bdc86c54b9d8e9489b2b686f, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 1578888549213028270, guid: 295c8402bdc86c54b9d8e9489b2b686f, type: 3}
       propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1843384380056298580, guid: 295c8402bdc86c54b9d8e9489b2b686f, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2057845547631555766, guid: 295c8402bdc86c54b9d8e9489b2b686f, type: 3}
+      propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5339503688869227895, guid: 295c8402bdc86c54b9d8e9489b2b686f, type: 3}
@@ -514,6 +530,14 @@ PrefabInstance:
     - target: {fileID: 5339503688869227895, guid: 295c8402bdc86c54b9d8e9489b2b686f, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7668673352810045555, guid: 295c8402bdc86c54b9d8e9489b2b686f, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8520171715193646419, guid: 295c8402bdc86c54b9d8e9489b2b686f, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8707019487019327968, guid: 295c8402bdc86c54b9d8e9489b2b686f, type: 3}
       propertyPath: m_Name

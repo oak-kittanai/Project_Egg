@@ -95,6 +95,13 @@ public class SessionHub : SingletonNetwork<SessionHub>
     [Header("Support_Text")]
     [SerializeField] GameObject DebugTextObj;
     [SerializeField] TMP_Text DebugText;
+
+    [Header("Setting UI")]
+    [SerializeField] GameObject[] settingElements; // หน้าต่าง Setting
+    [SerializeField] Slider musicSlider;
+    [SerializeField] Slider soundSlider;
+    [SerializeField] Button settingLeaveButton;
+    [SerializeField] GameSettingsSO gameSettings;
     #endregion
 
     #region Initialization & State Management
@@ -122,6 +129,42 @@ public class SessionHub : SingletonNetwork<SessionHub>
         if (_hostReadyButton != null) _hostReadyButton.onClick.AddListener(HostReady);
 
         if (_clipBoardCopy != null) _clipBoardCopy.onClick.AddListener(CopyKeyToClipboard);
+
+        // Setting
+
+        if (gameSettings == null)
+        {
+            gameSettings = Resources.Load<GameSettingsSO>("GameSettings");
+
+            if (gameSettings == null)
+            {
+                Debug.LogWarning("[SessionHub] GameSettings! not found in path : Assets/Resources/GameSettings.asset");
+            }
+        }
+
+        if (settingButton != null) settingButton.onClick.AddListener(ChangeStateToSettingMenu);
+        if (settingLeaveButton != null) settingLeaveButton.onClick.AddListener(ChangeStateToMainMenu);
+
+        if (gameSettings == null)
+        {
+            gameSettings = Resources.Load<GameSettingsSO>("GameSettings");
+        }
+
+        if (gameSettings != null)
+        {
+            gameSettings.LoadSettings();
+
+            if (musicSlider != null)
+            {
+                musicSlider.value = gameSettings.musicVolume;
+                musicSlider.onValueChanged.AddListener(OnMusicVolumeChanged);
+            }
+            if (soundSlider != null)
+            {
+                soundSlider.value = gameSettings.sfxVolume;
+                soundSlider.onValueChanged.AddListener(OnSoundVolumeChanged);
+            }
+        }
 
         // Start Game
         if (_startButton != null)
@@ -161,6 +204,10 @@ public class SessionHub : SingletonNetwork<SessionHub>
                 OpenMainMenuUI();
                 break;
 
+            case SessionState.Setting:
+                OpenSettingUI();
+                break;
+
             case SessionState.Lobby:
                 OpenLobbyUI();
                 break;
@@ -172,10 +219,6 @@ public class SessionHub : SingletonNetwork<SessionHub>
             case SessionState.CharacterSelect:
             case SessionState.SessionSelect:
                 OpenSessionUI();
-                break;
-
-            case SessionState.Setting:
-                // OpenSettingUI();
                 break;
         }
     }
@@ -197,6 +240,7 @@ public class SessionHub : SingletonNetwork<SessionHub>
         ToggleUIElements(joinSessionElements, false);
         ToggleUIElements(sessionElements, false);
         ToggleUIElements(lobbyElements, false);
+        ToggleUIElements(settingElements, false);
 
         SetMainButtonOff(false);
         if (_startButton != null) _startButton.gameObject.SetActive(false);
@@ -340,7 +384,7 @@ public class SessionHub : SingletonNetwork<SessionHub>
 
     public void ChangeStateToSettingMenu()
     {
-
+        if (SessionManager.Instance != null) SessionManager.Instance.ChangeState(SessionState.Setting);
     }
 
     public void StartTheGame()
@@ -672,6 +716,45 @@ public class SessionHub : SingletonNetwork<SessionHub>
 
         StopAllCoroutines();
     }
+    #endregion
+
+    #region Setting
+
+    public void OpenSettingUI()
+    {
+        HideAllPanels();
+        if (backgroundShared != null) backgroundShared.SetActive(false);
+        ToggleUIElements(settingElements, true);
+    }
+    private void OnMusicVolumeChanged(float value)
+    {
+        if (gameSettings != null)
+        {
+            gameSettings.musicVolume = value;
+            gameSettings.SaveSettings();
+
+            AudioSession audioSession = FindAnyObjectByType<AudioSession>();
+            if (audioSession != null)
+            {
+                audioSession.UpdateBGMVolumeRealtime();
+            }
+
+            else if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.UpdateBGMVolumeRealtime();
+            }
+        }
+    }
+
+    private void OnSoundVolumeChanged(float value)
+    {
+        if (gameSettings != null)
+        {
+            gameSettings.sfxVolume = value;
+            gameSettings.SaveSettings();
+        }
+    }
+
     #endregion
 
     #region Function

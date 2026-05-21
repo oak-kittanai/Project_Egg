@@ -60,13 +60,8 @@ public class Bird_Moveset : MovementCharacter
     {
         base.Spawned();
 
-        if (rb2D != null)
-        {
-            defaultMaterial = rb2D.sharedMaterial;
-        }
-
+        if (rb2D != null) defaultMaterial = rb2D.sharedMaterial;
         if (lineRenderer == null) lineRenderer = GetComponent<LineRenderer>();
-        if (lineRenderer != null) Debug.Log("LineRenderer Found");
     }
 
     protected override void OnFixedUpdateSpecific()
