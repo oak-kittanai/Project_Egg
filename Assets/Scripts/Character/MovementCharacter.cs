@@ -101,7 +101,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     public NetworkId localCarrierIdPredict;
     [SerializeField] public bool _isEPressed;
 
-    private bool _wasTabPressed;
+    private bool _wasXPressed;
 
     [Header("Interaction & Physics")]
     public float rayDistance = 1.2f;
@@ -324,23 +324,28 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         bool isEscPressed = input.Keyboard_ESC && !_wasEscPressed;
         if (isEscPressed)
         {
-            if (MenuController.Instance != null &&
-                MenuController.Instance.Object != null &&
-                MenuController.Instance.Object.IsValid)
+            if (MenuController.Instance != null && MenuController.Instance.Object != null && MenuController.Instance.Object.IsValid)
             {
-                if (Runner.IsForward) MenuController.Instance.ToggleMenu();
-                Debug.Log("Try to open Menu");
+                if (Runner.IsForward)
+                {
+                    MenuController.Instance.ToggleMenu();
+                    Debug.Log($"Try to toggle menu from {(HasStateAuthority ? "Host" : "Client")}");
+                }
+            }
+            else
+            {
+                Debug.LogWarning("MenuController is not ready or not valid on this client!");
             }
         }
         _wasEscPressed = input.Keyboard_ESC;
 
-        bool isTabPressed = input.Keyboard_X && !_wasTabPressed;
+        bool isTabPressed = input.Keyboard_X && !_wasXPressed;
         if (isTabPressed)
         {
             if (HasInputAuthority && PlayerInterface.Instance != null)
                 PlayerInterface.Instance.HideNote();
         }
-        _wasTabPressed = input.Keyboard_X;
+        _wasXPressed = input.Keyboard_X;
     }
 
     private void HandleMovement(NetworkInputData input)

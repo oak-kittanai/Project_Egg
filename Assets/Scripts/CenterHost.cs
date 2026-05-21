@@ -1,4 +1,4 @@
-using Fusion;
+﻿using Fusion;
 using System;
 using System.Collections;
 using UnityEngine;
@@ -71,6 +71,16 @@ public class CenterHost : SingletonNetwork<CenterHost>
             }
         }
 
+        MenuController[] allMenus = FindObjectsByType<MenuController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        foreach (var menu in allMenus)
+        {
+            if (menu.GetComponent<NetworkObject>() == null)
+            {
+                Destroy(menu.gameObject);
+                Debug.LogWarning("Deleted fake MenuController from Canvas.");
+            }
+        }
+
         if (GameObject.Find("CoreManagerSceneHop") == null && coreManagerPrefab != null)
         {
             Instantiate(coreManagerPrefab);
@@ -79,7 +89,13 @@ public class CenterHost : SingletonNetwork<CenterHost>
 
         if (HasStateAuthority)
         {
-            if (FindAnyObjectByType<MenuController>() == null && networkMenuControllerPrefab != null)
+            bool hasNetMenu = false;
+            foreach (var menu in FindObjectsByType<MenuController>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (menu.GetComponent<NetworkObject>() != null) hasNetMenu = true;
+            }
+
+            if (!hasNetMenu && networkMenuControllerPrefab != null)
             {
                 Runner.Spawn(networkMenuControllerPrefab, Vector3.zero, Quaternion.identity);
                 Debug.Log("Spawned Networked MenuController");
