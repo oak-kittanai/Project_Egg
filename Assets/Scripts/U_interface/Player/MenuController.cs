@@ -1,6 +1,7 @@
 using Fusion;
-using UnityEngine;
 using System.Linq;
+using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class MenuController : NetworkBehaviour
 {
@@ -29,8 +30,20 @@ public class MenuController : NetworkBehaviour
     private void Awake()
     {
         Instance = this;
-
         gameSettings = Resources.Load<GameSettingsSO>("GameSettings");
+    }
+
+    private void OnEnable() { SceneManager.sceneLoaded += OnSceneLoaded_Refresh; }
+    private void OnDisable() { SceneManager.sceneLoaded -= OnSceneLoaded_Refresh; }
+
+    private void OnSceneLoaded_Refresh(Scene scene, LoadSceneMode mode)
+    {
+        Invoke(nameof(RefreshButtons), 0.6f);
+    }
+
+    public override void Spawned()
+    {
+        Invoke(nameof(SetupButtons), 0.5f);
     }
 
     private void OnDestroy()
@@ -41,9 +54,22 @@ public class MenuController : NetworkBehaviour
         }
     }
 
-    public override void Spawned()
+    public void RefreshButtons()
     {
-        Invoke(nameof(SetupButtons), 0.5f);
+        ClearAllButtonListeners();
+        SetupButtons();
+    }
+
+    private void ClearAllButtonListeners()
+    {
+        if (PlayerInterface.Instance == null) return;
+        PlayerInterface.Instance.resumeButton?.onClick.RemoveAllListeners();
+        PlayerInterface.Instance.resetButton?.onClick.RemoveAllListeners();
+        PlayerInterface.Instance.settingButton?.onClick.RemoveAllListeners();
+        PlayerInterface.Instance.quitButton?.onClick.RemoveAllListeners();
+        PlayerInterface.Instance.settingLeaveButton?.onClick.RemoveAllListeners();
+        PlayerInterface.Instance.musicSlider?.onValueChanged.RemoveAllListeners();
+        PlayerInterface.Instance.soundSlider?.onValueChanged.RemoveAllListeners();
     }
 
     private void SetupButtons()
@@ -65,9 +91,6 @@ public class MenuController : NetworkBehaviour
         if (PlayerInterface.Instance.quitButton != null)
             PlayerInterface.Instance.quitButton.onClick.AddListener(OnClickQuit);
 
-        if (PlayerInterface.Instance.quitButton != null)
-            PlayerInterface.Instance.quitButton.onClick.AddListener(OnClickQuit);
-
         if (PlayerInterface.Instance.settingLeaveButton != null)
             PlayerInterface.Instance.settingLeaveButton.onClick.AddListener(OnClickCloseSetting);
 
@@ -84,8 +107,6 @@ public class MenuController : NetworkBehaviour
                 PlayerInterface.Instance.soundSlider.onValueChanged.AddListener(OnSoundVolumeChanged);
             }
         }
-
-        if (pauseMenuPanel != null) pauseMenuPanel.SetActive(false);
 
         if (pauseMenuPanel != null) pauseMenuPanel.SetActive(false);
     }
@@ -113,25 +134,27 @@ public class MenuController : NetworkBehaviour
 
     public void OnMenuStateChanged()
     {
-        if (pauseMenuPanel != null)
+        if (pauseMenuPanel == null && PlayerInterface.Instance?.resumeButton != null)
+            pauseMenuPanel = PlayerInterface.Instance.resumeButton.transform.parent.gameObject;
+
+        if (pauseMenuPanel == null) return;
+
+        pauseMenuPanel.SetActive(IsMenuOpen);
+
+        if (IsMenuOpen && PlayerInterface.Instance != null)
         {
-            pauseMenuPanel.SetActive(IsMenuOpen);
+            if (PlayerInterface.Instance.resumeButton) PlayerInterface.Instance.resumeButton.interactable = true;
+            if (PlayerInterface.Instance.resetButton) PlayerInterface.Instance.resetButton.interactable = true;
 
-            if (IsMenuOpen && PlayerInterface.Instance != null)
-            {
-                if (PlayerInterface.Instance.resumeButton) PlayerInterface.Instance.resumeButton.interactable = true;
-                if (PlayerInterface.Instance.resetButton) PlayerInterface.Instance.resetButton.interactable = true;
-
-                int activePlayers = Runner.ActivePlayers.Count();
-                if (PlayerInterface.Instance.resumePlayerCheckText) PlayerInterface.Instance.resumePlayerCheckText.text = $"0/{activePlayers}";
-                if (PlayerInterface.Instance.resetPlayerCheckText) PlayerInterface.Instance.resetPlayerCheckText.text = $"0/{activePlayers}";
-
-                if (!IsMenuOpen && PlayerInterface.Instance != null && PlayerInterface.Instance.settingPanelObj != null)
-                {
-                    PlayerInterface.Instance.settingPanelObj.SetActive(false);
-                }
-            }
+            int activePlayers = Runner.ActivePlayers.Count();
+            if (PlayerInterface.Instance.resumePlayerCheckText)
+                PlayerInterface.Instance.resumePlayerCheckText.text = $"0/{activePlayers}";
+            if (PlayerInterface.Instance.resetPlayerCheckText)
+                PlayerInterface.Instance.resetPlayerCheckText.text = $"0/{activePlayers}";
         }
+
+        if (!IsMenuOpen && PlayerInterface.Instance?.settingPanelObj != null)
+            PlayerInterface.Instance.settingPanelObj.SetActive(false);
     }
 
     private void OnClickResume()

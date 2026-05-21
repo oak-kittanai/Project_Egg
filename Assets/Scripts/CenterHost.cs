@@ -71,14 +71,13 @@ public class CenterHost : SingletonNetwork<CenterHost>
             }
         }
 
-        /*MenuController[] allMenus = FindObjectsByType<MenuController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-        foreach (var menu in allMenus)
+        /*bool hadExistingMenuController = false;
+        MenuController[] oldMenus = FindObjectsByType<MenuController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        foreach (var menu in oldMenus)
         {
-            if (menu.GetComponent<NetworkObject>() == null)
-            {
-                Destroy(menu.gameObject);
-                Debug.LogWarning("Deleted fake MenuController from Canvas.");
-            }
+            hadExistingMenuController = true;
+            if (menu.Object != null) Runner.Despawn(menu.Object);
+            else Destroy(menu.gameObject);
         }*/
 
         if (GameObject.Find("CoreManagerSceneHop") == null && coreManagerPrefab != null)
@@ -87,27 +86,15 @@ public class CenterHost : SingletonNetwork<CenterHost>
             Debug.Log("Spawned Local CoreManagers");
         }
 
-        /*if (HasStateAuthority)
+        /*if (HasStateAuthority && networkMenuControllerPrefab != null)
         {
-            bool hasNetMenu = false;
-            foreach (var menu in FindObjectsByType<MenuController>(FindObjectsInactive.Include, FindObjectsSortMode.None))
-            {
-                if (menu.GetComponent<NetworkObject>() != null) hasNetMenu = true;
-            }
-
-            if (!hasNetMenu && networkMenuControllerPrefab != null)
+            if (hadExistingMenuController || FindFirstObjectByType<MenuController>() == null)
             {
                 Runner.Spawn(networkMenuControllerPrefab, Vector3.zero, Quaternion.identity);
-                Debug.Log("Spawned Networked MenuController");
             }
         }*/
     }
 
-
-    public override void FixedUpdateNetwork()
-    {
-
-    }
     
     #region ComponentZone
 

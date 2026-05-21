@@ -227,6 +227,8 @@ public class PlayerInterface : MonoBehaviour
 
         HideQuestUI();
         Debug.Log("[PlayerInterface] RegisterCanvas success");
+
+        if (MenuController.Instance != null) MenuController.Instance.RefreshButtons();
     }
 
     #region Health&Skill

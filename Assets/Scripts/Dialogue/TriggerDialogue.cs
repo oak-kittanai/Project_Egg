@@ -129,7 +129,7 @@ public class TriggerDialogue : NetworkBehaviour
         {
             if (isEndWithDialogue)
             {
-                AudioManager.Instance.StopBGM();
+                //AudioManager.Instance.StopBGM();
             }
             Debug.Log("Dialogue End");
         }
