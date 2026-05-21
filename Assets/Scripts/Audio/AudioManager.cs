@@ -9,12 +9,36 @@ public class AudioManager : MonoBehaviour
     [Header("Configs")]
     [SerializeField] private SoundConfig[] soundList;
 
+    [Header("Global Settings")]
+    [SerializeField] private GameSettingsSO gameSettings;
+
     [Header("BGM Settings")]
+    [SerializeField] private AudioSource uiSource;
     [SerializeField] private AudioSource bgmSource;
+    private float currentBgmBaseVolume = 1f;
 
     private void Awake()
     {
         if (Instance == null) Instance = this;
+
+        if (uiSource == null)
+        {
+            uiSource = GetComponent<AudioSource>();
+        }
+
+        if (gameSettings == null)
+        {
+            gameSettings = Resources.Load<GameSettingsSO>("GameSettings");
+
+            if (gameSettings == null)
+            {
+                Debug.LogWarning("[AudioManager] GameSettings! not found in : Assets/Resources/GameSettings.asset");
+            }
+        }
+
+        if (gameSettings != null) gameSettings.LoadSettings();
+
+        PlayBGM("FirstBGM");
     }
 
     private void OnEnable()
@@ -59,7 +83,7 @@ public class AudioManager : MonoBehaviour
 
         if (s == null)
         {
-            Debug.LogWarning($"[AudioManager] can't find '{name}'Config");
+            Debug.LogWarning($"[AudioManager] can't find '{name}' Config");
             return;
         }
 
@@ -68,11 +92,32 @@ public class AudioManager : MonoBehaviour
 
         AudioSource source = tempAudioObj.AddComponent<AudioSource>();
         source.clip = s.clip;
-        source.volume = s.volume;
+
+        float globalSfx = gameSettings != null ? (gameSettings.sfxVolume / 100f) : 1f;
+        source.volume = globalSfx;
+
         source.spatialBlend = 1f;
 
         source.Play();
         Destroy(tempAudioObj, s.clip.length);
+    }
+
+    public void PlayDirectSound(string name)
+    {
+        SoundConfig s = Array.Find(soundList, sound => sound.soundName == name);
+
+        if (s == null)
+        {
+            Debug.LogWarning($"[AudioManager] can't find '{name}' Config for Direct Sound");
+            return;
+        }
+
+        if (uiSource != null && s.clip != null)
+        {
+            float globalSfx = gameSettings != null ? (gameSettings.sfxVolume / 100f) : 1f;
+
+            uiSource.PlayOneShot(s.clip, globalSfx);
+        }
     }
 
     public void PlayBGM(string name)
@@ -94,9 +139,23 @@ public class AudioManager : MonoBehaviour
         if (bgmSource.clip == s.clip && bgmSource.isPlaying) return;
 
         bgmSource.clip = s.clip;
-        bgmSource.volume = s.volume;
+        currentBgmBaseVolume = 1f;
+
+        float globalMusic = gameSettings != null ? (gameSettings.musicVolume / 100f) : 1f;
+        bgmSource.volume = currentBgmBaseVolume * globalMusic;
+
         bgmSource.loop = true;
         bgmSource.Play();
+
+        Debug.Log($"[AudioManager] Playing BGM: {name}");
+    }
+
+    public void UpdateBGMVolumeRealtime()
+    {
+        if (bgmSource != null && gameSettings != null)
+        {
+            bgmSource.volume = currentBgmBaseVolume * (gameSettings.musicVolume / 100f);
+        }
     }
 
     public void StopBGM()
@@ -111,5 +170,4 @@ public class SoundConfig
 {
     public string soundName;
     public AudioClip clip;
-    [Range(0f, 1f)] public float volume = 1f;
 }

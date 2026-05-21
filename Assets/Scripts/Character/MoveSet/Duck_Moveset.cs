@@ -64,6 +64,11 @@ public class Duck_Moveset : MovementCharacter
     [Networked, OnChangedRender(nameof(OnSkillStateChanged))] public NetworkBool isDiveUnlocked { get; set; }
     [Networked, OnChangedRender(nameof(OnSkillStateChanged))] public NetworkBool isSmashUnlocked { get; set; }
 
+    public override void Spawned()
+    {
+        base.Spawned();
+    }
+
     protected override void OnFixedUpdateSpecific()
     {
         bool isJumpPressed = false;
@@ -498,6 +503,18 @@ public class Duck_Moveset : MovementCharacter
     }
 
     #region Skill
+
+    public void UnlockDiveSkill()
+    {
+        isDiveUnlocked = true;
+        PlayerInterface.Instance?.UnlockDuckDive();
+    }
+
+    public void UnlockSmashSkill()
+    {
+        isSmashUnlocked = true;
+        PlayerInterface.Instance?.UnlockDuckSmash();
+    }
 
     public void OnSkillStateChanged() { SyncSkillUI(); }
 

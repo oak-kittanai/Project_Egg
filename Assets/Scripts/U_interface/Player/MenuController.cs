@@ -1,8 +1,5 @@
 using Fusion;
-using TMPro;
 using UnityEngine;
-using UnityEngine.SceneManagement;
-using UnityEngine.UI;
 using System.Linq;
 
 public class MenuController : NetworkBehaviour
@@ -27,14 +24,21 @@ public class MenuController : NetworkBehaviour
 
     private GameObject pauseMenuPanel;
 
+    private GameSettingsSO gameSettings;
+
     private void Awake()
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(Instance.gameObject);
-        }
-
         Instance = this;
+
+        gameSettings = Resources.Load<GameSettingsSO>("GameSettings");
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance == this)
+        {
+            Instance = null;
+        }
     }
 
     public override void Spawned()
@@ -60,6 +64,28 @@ public class MenuController : NetworkBehaviour
 
         if (PlayerInterface.Instance.quitButton != null)
             PlayerInterface.Instance.quitButton.onClick.AddListener(OnClickQuit);
+
+        if (PlayerInterface.Instance.quitButton != null)
+            PlayerInterface.Instance.quitButton.onClick.AddListener(OnClickQuit);
+
+        if (PlayerInterface.Instance.settingLeaveButton != null)
+            PlayerInterface.Instance.settingLeaveButton.onClick.AddListener(OnClickCloseSetting);
+
+        if (gameSettings != null)
+        {
+            if (PlayerInterface.Instance.musicSlider != null)
+            {
+                PlayerInterface.Instance.musicSlider.value = gameSettings.musicVolume;
+                PlayerInterface.Instance.musicSlider.onValueChanged.AddListener(OnMusicVolumeChanged);
+            }
+            if (PlayerInterface.Instance.soundSlider != null)
+            {
+                PlayerInterface.Instance.soundSlider.value = gameSettings.sfxVolume;
+                PlayerInterface.Instance.soundSlider.onValueChanged.AddListener(OnSoundVolumeChanged);
+            }
+        }
+
+        if (pauseMenuPanel != null) pauseMenuPanel.SetActive(false);
 
         if (pauseMenuPanel != null) pauseMenuPanel.SetActive(false);
     }
@@ -99,6 +125,11 @@ public class MenuController : NetworkBehaviour
                 int activePlayers = Runner.ActivePlayers.Count();
                 if (PlayerInterface.Instance.resumePlayerCheckText) PlayerInterface.Instance.resumePlayerCheckText.text = $"0/{activePlayers}";
                 if (PlayerInterface.Instance.resetPlayerCheckText) PlayerInterface.Instance.resetPlayerCheckText.text = $"0/{activePlayers}";
+
+                if (!IsMenuOpen && PlayerInterface.Instance != null && PlayerInterface.Instance.settingPanelObj != null)
+                {
+                    PlayerInterface.Instance.settingPanelObj.SetActive(false);
+                }
             }
         }
     }
@@ -166,7 +197,34 @@ public class MenuController : NetworkBehaviour
 
     private void OnClickSetting()
     {
-        Debug.Log("Setting panel is not implemented yet!");
+        if (pauseMenuPanel != null) pauseMenuPanel.SetActive(false);
+        if (PlayerInterface.Instance.settingPanelObj != null) PlayerInterface.Instance.settingPanelObj.SetActive(true);
+    }
+
+    private void OnClickCloseSetting()
+    {
+        if (PlayerInterface.Instance.settingPanelObj != null) PlayerInterface.Instance.settingPanelObj.SetActive(false);
+        if (pauseMenuPanel != null) pauseMenuPanel.SetActive(true);
+    }
+
+    private void OnMusicVolumeChanged(float value)
+    {
+        if (gameSettings != null)
+        {
+            gameSettings.musicVolume = value;
+            gameSettings.SaveSettings();
+
+            if (AudioManager.Instance != null) AudioManager.Instance.UpdateBGMVolumeRealtime();
+        }
+    }
+
+    private void OnSoundVolumeChanged(float value)
+    {
+        if (gameSettings != null)
+        {
+            gameSettings.sfxVolume = value;
+            gameSettings.SaveSettings();
+        }
     }
 
     private void OnClickQuit()
@@ -179,10 +237,7 @@ public class MenuController : NetworkBehaviour
     {
         ExecuteQuitGameAsync();
 
-        PlayerInterface._birdFlyUnlocked = false;
-        PlayerInterface._birdThrowUnlocked = false;
-        PlayerInterface._duckDiveUnlocked = false;
-        PlayerInterface._duckSmashUnlocked = false;
+        GameManager.Instance?.ResetAllSkillUnlocks();
     }
 
     private void ExecuteQuitGameAsync()

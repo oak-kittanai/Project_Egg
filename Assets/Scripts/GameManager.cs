@@ -648,6 +648,60 @@ public class GameManager : SingletonNetwork<GameManager>
         }
     }
 
+    #region Skill Unlock System
+
+    [Header("Skill Unlock State")]
+    [Networked, OnChangedRender(nameof(OnSkillUnlockChanged))]
+    public NetworkBool SkillBirdFlyUnlocked { get; set; }
+    [Networked, OnChangedRender(nameof(OnSkillUnlockChanged))]
+    public NetworkBool SkillBirdThrowUnlocked { get; set; }
+    [Networked, OnChangedRender(nameof(OnSkillUnlockChanged))]
+    public NetworkBool SkillDuckDiveUnlocked { get; set; }
+    [Networked, OnChangedRender(nameof(OnSkillUnlockChanged))]
+    public NetworkBool SkillDuckSmashUnlocked { get; set; }
+    public void OnSkillUnlockChanged()
+    {
+        // sync static bools
+        PlayerInterface._birdFlyUnlocked = SkillBirdFlyUnlocked;
+        PlayerInterface._birdThrowUnlocked = SkillBirdThrowUnlocked;
+        PlayerInterface._duckDiveUnlocked = SkillDuckDiveUnlocked;
+        PlayerInterface._duckSmashUnlocked = SkillDuckSmashUnlocked;
+    }
+
+    public void UnlockSkill_BirdFly() => RequestUnlockSkill(0);
+    public void UnlockSkill_BirdThrow() => RequestUnlockSkill(1);
+    public void UnlockSkill_DuckDive() => RequestUnlockSkill(2);
+    public void UnlockSkill_DuckSmash() => RequestUnlockSkill(3);
+
+    private void RequestUnlockSkill(int skillIndex)
+    {
+        if (HasStateAuthority) SetSkillUnlocked(skillIndex);
+        else RPC_UnlockSkill(skillIndex);
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    private void RPC_UnlockSkill(int skillIndex) => SetSkillUnlocked(skillIndex);
+
+    private void SetSkillUnlocked(int skillIndex)
+    {
+        switch (skillIndex)
+        {
+            case 0: SkillBirdFlyUnlocked = true; break;
+            case 1: SkillBirdThrowUnlocked = true; break;
+            case 2: SkillDuckDiveUnlocked = true; break;
+            case 3: SkillDuckSmashUnlocked = true; break;
+        }
+    }
+
+    public void ResetAllSkillUnlocks()
+    {
+        if (!HasStateAuthority) return;
+        SkillBirdFlyUnlocked = SkillBirdThrowUnlocked = false;
+        SkillDuckDiveUnlocked = SkillDuckSmashUnlocked = false;
+    }
+
+    #endregion
+
 }
 
 [System.Serializable]

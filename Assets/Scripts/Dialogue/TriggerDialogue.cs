@@ -44,10 +44,13 @@ public class TriggerDialogue : NetworkBehaviour
                     if (doubleCharacterSkillUnlock)
                     {
                         RPC_UnlockSkillsBoth(character);
+                        PersistSkillUnlock(skillToUnlock);
+                        PersistSkillUnlock(skillToUnlock2);
                     }
                     else
                     {
                         character.RPC_UnlockSkill(skillToUnlock);
+                        PersistSkillUnlock(skillToUnlock);
                     }
                 }
 
@@ -65,6 +68,20 @@ public class TriggerDialogue : NetworkBehaviour
         }
     }
 
+    private void PersistSkillUnlock(MovementCharacter.SkillType skill)
+    {
+        if (GameManager.Instance == null) return;
+
+        switch (skill)
+        {
+            case MovementCharacter.SkillType.Bird_Fly: GameManager.Instance.UnlockSkill_BirdFly(); break;
+            case MovementCharacter.SkillType.Bird_Throw: GameManager.Instance.UnlockSkill_BirdThrow(); break;
+            case MovementCharacter.SkillType.Duck_Dive: GameManager.Instance.UnlockSkill_DuckDive(); break;
+            case MovementCharacter.SkillType.Duck_Smash: GameManager.Instance.UnlockSkill_DuckSmash(); break;
+        }
+    }
+
+
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
     private void RPC_UnlockSkillsBoth(MovementCharacter triggerer)
     {
@@ -74,9 +91,13 @@ public class TriggerDialogue : NetworkBehaviour
             if (p.enabled)
             {
                 p.RPC_UnlockSkill(skillToUnlock);
-                p.RPC_UnlockSkill(skillToUnlock2);
+                if (skillToUnlock2 != MovementCharacter.SkillType.None)
+                    p.RPC_UnlockSkill(skillToUnlock2);
             }
         }
+        PersistSkillUnlock(skillToUnlock);
+        if (skillToUnlock2 != MovementCharacter.SkillType.None)
+            PersistSkillUnlock(skillToUnlock2);
     }
 
     [Rpc(RpcSources.All, RpcTargets.All)]

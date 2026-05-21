@@ -88,6 +88,11 @@ public class PlayerInterface : MonoBehaviour
     public TMP_Text noteHeadText;
     public TMP_Text noteDescText;
 
+    [Header("Setting")]
+    public GameObject settingPanelObj;
+    public Slider musicSlider;
+    public Slider soundSlider;
+    public Button settingLeaveButton;
 
     private void Awake()
     {
@@ -116,8 +121,22 @@ public class PlayerInterface : MonoBehaviour
         if (canvas != null)
         {
             RegisterCanvas(canvas);
-            Debug.Log($"[PlayerInterface] Re-registered Canvas on scene: {scene.name}");
+
+            SyncSkillStateFromNetwork();
+
+            if (hasSetupSkills)
+                SetupSkills(isCurrentBirdSetup);
         }
+    }
+
+    private void SyncSkillStateFromNetwork()
+    {
+        if (GameManager.Instance == null) return;
+
+        _birdFlyUnlocked = GameManager.Instance.SkillBirdFlyUnlocked;
+        _birdThrowUnlocked = GameManager.Instance.SkillBirdThrowUnlocked;
+        _duckDiveUnlocked = GameManager.Instance.SkillDuckDiveUnlocked;
+        _duckSmashUnlocked = GameManager.Instance.SkillDuckSmashUnlocked;
     }
 
     public void RegisterCanvas(GameObject canvas)
@@ -133,7 +152,12 @@ public class PlayerInterface : MonoBehaviour
         // Skill
         Transform skillObjT = canvas.transform.Find("SkillObj");
         if (skillObjT != null)
+        {
             skillContainer = skillObjT.Find("SkillContainer");
+
+            if (_cachedSkillContainer == null)
+                _cachedSkillContainer = skillContainer;
+        }
 
         // Quest
         Transform questDialog = canvas.transform.Find("QuestDialog_Obj");
@@ -188,6 +212,19 @@ public class PlayerInterface : MonoBehaviour
             noteObj.SetActive(false);
         }
 
+        // In-Game Setting
+        Transform settingMenuT = canvas.transform.Find("Setting");
+        if (settingMenuT != null)
+        {
+            settingPanelObj = settingMenuT.gameObject;
+
+            musicSlider = settingMenuT.Find("Music_Slider")?.GetComponent<Slider>();
+            soundSlider = settingMenuT.Find("Sound_Slider")?.GetComponent<Slider>();
+            settingLeaveButton = settingMenuT.Find("Leave_Button")?.GetComponent<Button>();
+
+            settingPanelObj.SetActive(false);
+        }
+
         HideQuestUI();
         Debug.Log("[PlayerInterface] RegisterCanvas success");
     }
@@ -230,6 +267,34 @@ public class PlayerInterface : MonoBehaviour
 
         isCurrentBirdSetup = isBird;
         hasSetupSkills = true;
+    }
+
+    public void UnlockBirdFly()
+    {
+        _birdFlyUnlocked = true;
+        spawnedBirdFly?.UnlockSkill();
+        GameManager.Instance?.UnlockSkill_BirdFly();
+    }
+
+    public void UnlockBirdThrow()
+    {
+        _birdThrowUnlocked = true;
+        spawnedBirdThrow?.UnlockSkill();
+        GameManager.Instance?.UnlockSkill_BirdThrow();
+    }
+
+    public void UnlockDuckDive()
+    {
+        _duckDiveUnlocked = true;
+        spawnedDuckDive?.UnlockSkill();
+        GameManager.Instance?.UnlockSkill_DuckDive();
+    }
+
+    public void UnlockDuckSmash()
+    {
+        _duckSmashUnlocked = true;
+        spawnedDuckSmash?.UnlockSkill();
+        GameManager.Instance?.UnlockSkill_DuckSmash();
     }
 
     public void UpdateHealthUI(int currentHp)
