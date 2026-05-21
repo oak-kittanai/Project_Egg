@@ -11,6 +11,13 @@ public class ItemMapping
     public NetworkObject itemPrefab;
 }
 
+[System.Serializable]
+public class IconMapping
+{
+    public string iconName;
+    public Sprite iconSprite;
+}
+
 public class GameManager : SingletonNetwork<GameManager>
 {
     [SerializeField] GameObject canvasObject;
@@ -44,6 +51,18 @@ public class GameManager : SingletonNetwork<GameManager>
 
     [SerializeField] float playerReadyTimeout = 15f; // รอ Client นานสุด 15 วิ
     [Networked] TickTimer PlayerReadyTimeoutTimer { get; set; }
+
+    [Header("Quest Icons")]
+    public List<IconMapping> questIconDatabase = new List<IconMapping>();
+
+    public Sprite GetQuestIcon(string iconName)
+    {
+        foreach (var mapping in questIconDatabase)
+        {
+            if (mapping.iconName == iconName) return mapping.iconSprite;
+        }
+        return null;
+    }
 
 
     public async Task SetUpScene()
@@ -295,12 +314,10 @@ public class GameManager : SingletonNetwork<GameManager>
     {
         if (HasStateAuthority)
         {
-            if (OrangeKeys)
-            {
-                TeamOrangeKeys++;
-            }
-            else
-                TeamBlueKeys++;
+            if (OrangeKeys) TeamOrangeKeys++;
+            else TeamBlueKeys++;
+
+            if (IsQuestActive && QuestIsBar) AddQuestProgress(1);
         }
         else RPC_RequestAddKey(OrangeKeys);
     }
@@ -309,18 +326,18 @@ public class GameManager : SingletonNetwork<GameManager>
     {
         if (HasStateAuthority)
         {
-            if (OrangeKeys)
-            {
-                TeamOrangeKeys--;
-            }
-            else
-                TeamBlueKeys--;
+            if (OrangeKeys) TeamOrangeKeys--;
+            else TeamBlueKeys--;
         }
         else RPC_RequestUseKey(OrangeKeys);
     }
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    private void RPC_RequestAddKey(bool OrangeKeys) { if (OrangeKeys) TeamOrangeKeys++; else TeamBlueKeys++; }
+    private void RPC_RequestAddKey(bool OrangeKeys)
+    {
+        if (OrangeKeys) TeamOrangeKeys++; else TeamBlueKeys++;
+        if (IsQuestActive && QuestIsBar) AddQuestProgress(1);
+    }
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
     private void RPC_RequestUseKey(bool OrangeKeys) { if (OrangeKeys) TeamOrangeKeys--; else TeamBlueKeys--; }
@@ -392,11 +409,10 @@ public class GameManager : SingletonNetwork<GameManager>
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
     public void RPC_RequestAddStone(bool isOrange)
     {
-        if (isOrange)
-        {
-            TeamHasOrangeStone = true;
-        }
+        if (isOrange) TeamHasOrangeStone = true;
         else TeamHasBlueStone = true;
+
+        if (IsQuestActive) AddQuestProgress(1);
     }
 
     [Header("Item Database Settings")]
@@ -443,20 +459,32 @@ public class GameManager : SingletonNetwork<GameManager>
     public NetworkBool IsQuestActive { get; set; }
 
     [Networked, OnChangedRender(nameof(OnQuestStateChanged))]
+    public NetworkBool QuestIsBar { get; set; }
+
+    [Networked, OnChangedRender(nameof(OnQuestStateChanged))]
+    public NetworkString<_32> QuestIconName { get; set; }
+
+    [Networked, OnChangedRender(nameof(OnQuestStateChanged))]
     public int QuestCurrentProgress { get; set; }
 
     [Networked, OnChangedRender(nameof(OnQuestStateChanged))]
     public int QuestMaxProgress { get; set; }
 
-    [Networked, OnChangedRender(nameof(OnQuestStateChanged))]
-    public NetworkString<_64> QuestDescription { get; set; }
     public void OnQuestStateChanged()
     {
         if (PlayerInterface.Instance != null)
         {
             if (IsQuestActive)
             {
-                PlayerInterface.Instance.UpdateQuestUI(QuestDescription.ToString(), QuestCurrentProgress, QuestMaxProgress);
+                Sprite icon = GetQuestIcon(QuestIconName.ToString());
+
+                PlayerInterface.Instance.UpdateQuestUI(
+                    QuestDescription.ToString(),
+                    QuestCurrentProgress,
+                    QuestMaxProgress,
+                    QuestIsBar,
+                    icon
+                );
             }
             else
             {
@@ -465,22 +493,24 @@ public class GameManager : SingletonNetwork<GameManager>
         }
     }
 
-    public void StartGlobalQuest(string desc, int maxProgress)
+    public void StartGlobalQuest(string iconName, string desc, bool isbar, int maxProgress = 0)
     {
         if (HasStateAuthority)
         {
+            QuestIconName = iconName;
             QuestDescription = desc;
-            QuestMaxProgress = maxProgress;
+            QuestIsBar = isbar;
+            QuestMaxProgress = isbar ? maxProgress : 0;
             QuestCurrentProgress = 0;
             IsQuestActive = true;
         }
-        else RPC_StartGlobalQuest(desc, maxProgress);
+        else RPC_StartGlobalQuest(iconName, desc, isbar, maxProgress);
     }
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    private void RPC_StartGlobalQuest(NetworkString<_64> desc, int maxProgress)
+    private void RPC_StartGlobalQuest(NetworkString<_32> iconName, NetworkString<_64> desc, NetworkBool isbar, int maxProgress)
     {
-        StartGlobalQuest(desc.ToString(), maxProgress);
+        StartGlobalQuest(iconName.ToString(), desc.ToString(), isbar, maxProgress);
     }
 
     public void AddQuestProgress(int amount = 1)
@@ -491,7 +521,7 @@ public class GameManager : SingletonNetwork<GameManager>
 
             QuestCurrentProgress += amount;
 
-            if (QuestCurrentProgress >= QuestMaxProgress)
+            if (QuestIsBar && QuestCurrentProgress >= QuestMaxProgress)
             {
                 IsQuestActive = false;
                 Debug.Log("Quest Completed!");

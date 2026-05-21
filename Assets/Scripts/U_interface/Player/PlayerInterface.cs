@@ -23,11 +23,17 @@ public class PlayerInterface : MonoBehaviour
     public Sprite FifthHealth;
 
     [Header("Quest Setting")]
-    public GameObject questContainer;
-    public TMP_Text questText;
+    // Quest Setting (With Bar)
+    public GameObject questContainerWithBar;
+    public TMP_Text questTextWithBar;
     public Slider questProgressBar;
     public TMP_Text questItemAmountText;
-    public Image questItemIcon;
+    public Image questItemIconWithBar;
+
+    // Quest Setting (No Bar)
+    public GameObject questContainerNoBar;
+    public TMP_Text questTextNoBar;
+    public Image questItemIconNoBar;
 
     [Header("Interact Prompt")]
     public GameObject interactPromptObj;
@@ -129,14 +135,22 @@ public class PlayerInterface : MonoBehaviour
         Transform questDialog = canvas.transform.Find("QuestDialog_Obj");
         if (questDialog != null)
         {
-            Transform questObj = questDialog.Find("QuestContainer");
-            if (questObj != null)
+            Transform questObjBar = questDialog.Find("QuestContainer_Bar");
+            if (questObjBar != null)
             {
-                questContainer = questObj.gameObject;
-                questText = questObj.Find("QuestText")?.GetComponent<TMP_Text>();
-                questProgressBar = questObj.Find("QuestProgressBar")?.GetComponent<Slider>();
-                questItemAmountText = questObj.Find("QuestItemAmountText")?.GetComponent<TMP_Text>();
-                questItemIcon = questObj.Find("QuestItemIcon")?.GetComponent<Image>();
+                questContainerWithBar = questObjBar.gameObject;
+                questTextWithBar = questObjBar.Find("QuestText")?.GetComponent<TMP_Text>();
+                questProgressBar = questObjBar.Find("QuestProgressBar")?.GetComponent<Slider>();
+                questItemAmountText = questObjBar.Find("QuestItemAmountText")?.GetComponent<TMP_Text>();
+                questItemIconWithBar = questObjBar.Find("QuestItemIcon")?.GetComponent<Image>();
+            }
+
+            Transform questObjNoBar = questDialog.Find("QuestContainer_NoBar");
+            if (questObjNoBar != null)
+            {
+                questContainerNoBar = questObjNoBar.gameObject;
+                questTextNoBar = questObjNoBar.Find("QuestText")?.GetComponent<TMP_Text>();
+                questItemIconNoBar = questObjNoBar.Find("QuestItemIcon")?.GetComponent<Image>();
             }
         }
 
@@ -236,21 +250,40 @@ public class PlayerInterface : MonoBehaviour
     #endregion
 
     #region Quest
-    public void UpdateQuestUI(string detail, int currentProgress, int maxProgress)
+    public void UpdateQuestUI(string detail, int currentProgress, int maxProgress, bool isBar, Sprite icon)
     {
-        if (questContainer != null) questContainer.SetActive(true);
-        if (questText != null) questText.text = detail;
-        if (questItemAmountText != null) questItemAmountText.text = $"{currentProgress}/{maxProgress}";
-        if (questProgressBar != null)
+        HideQuestUI();
+
+        if (isBar)
         {
-            questProgressBar.maxValue = maxProgress;
-            questProgressBar.value = currentProgress;
+            if (questContainerWithBar != null) questContainerWithBar.SetActive(true);
+            if (questTextWithBar != null) questTextWithBar.text = detail;
+            if (questItemAmountText != null) questItemAmountText.text = $"{currentProgress}/{maxProgress}";
+            if (questProgressBar != null)
+            {
+                questProgressBar.maxValue = maxProgress;
+                questProgressBar.value = currentProgress;
+            }
+            if (questItemIconWithBar != null && icon != null)
+            {
+                questItemIconWithBar.sprite = icon;
+            }
+        }
+        else
+        {
+            if (questContainerNoBar != null) questContainerNoBar.SetActive(true);
+            if (questTextNoBar != null) questTextNoBar.text = detail;
+            if (questItemIconNoBar != null && icon != null)
+            {
+                questItemIconNoBar.sprite = icon;
+            }
         }
     }
 
     public void HideQuestUI()
     {
-        if (questContainer != null) questContainer.SetActive(false);
+        if (questContainerWithBar != null) questContainerWithBar.SetActive(false);
+        if (questContainerNoBar != null) questContainerNoBar.SetActive(false);
     }
 
     #endregion
