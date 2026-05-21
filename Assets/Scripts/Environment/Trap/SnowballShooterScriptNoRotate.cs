@@ -62,7 +62,7 @@ public class Turret_Shooter : NetworkBehaviour
                 if (canSeePlayer && distance < minDistance)
                 {
                     minDistance = distance;
-                    targetPosToShoot = targetPos; 
+                    targetPosToShoot = targetPos;
                 }
             }
         }
