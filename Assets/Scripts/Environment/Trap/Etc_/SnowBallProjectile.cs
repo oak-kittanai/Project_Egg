@@ -49,21 +49,26 @@ public class SnowBallProjectile : NetworkBehaviour
 
         if (!hasHitPlayer)
         {
-            Collider2D hit = Physics2D.OverlapCircle(transform.position, hitRadius, playerLayer);
-            if (hit != null)
-            {
-                MovementCharacter character = hit.GetComponentInParent<MovementCharacter>();
-                if (character == null) character = hit.GetComponentInChildren<MovementCharacter>();
+            MovementCharacter[] allPlayers = FindObjectsByType<MovementCharacter>(FindObjectsSortMode.None);
 
-                if (character != null && character.enabled && !character.isDead)
+            foreach (MovementCharacter character in allPlayers)
+            {
+
+                if (character == null || !character.enabled || character.isDead) continue;
+
+                float distance = Vector2.Distance(transform.position, character.transform.position);
+
+                if (distance <= hitRadius)
                 {
                     hasHitPlayer = true;
-                    Vector2 knockbackDir = (hit.transform.position - transform.position).normalized;
+
+                    Vector2 knockbackDir = (character.transform.position - transform.position).normalized;
                     knockbackDir.y = 1f;
 
                     character.TakeDamage(damageAmount, knockbackForce, knockbackDir.normalized);
 
                     DespawnSnowball();
+                    break;
                 }
             }
         }
