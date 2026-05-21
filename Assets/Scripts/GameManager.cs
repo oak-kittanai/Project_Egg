@@ -62,6 +62,21 @@ public class GameManager : SingletonNetwork<GameManager>
         SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        LevelData levelDataInScene = FindFirstObjectByType<LevelData>();
+
+        if (levelDataInScene != null)
+        {
+            SetupLevelData(levelDataInScene);
+            Debug.Log($"GameManager Succes Load LevelData");
+        }
+        else
+        {
+            Debug.Log($"GameManager Fail To Load LevelData");
+        }
+    }
+
     #region Network
 
     public void GetNetworkRunner(NetworkRunner networkRunner)
@@ -583,42 +598,28 @@ public class GameManager : SingletonNetwork<GameManager>
         if (!HasStateAuthority) return;
 
         ShowGlobalLoadingScreen();
+
         ResetLoadingStateForNextLevel();
 
         Debug.Log($"[GameManager] Host is loading next level: {nextSceneName}");
 
         await Runner.LoadScene(nextSceneName, UnityEngine.SceneManagement.LoadSceneMode.Single);
-    }
 
-    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
-    {
-        LevelData levelDataInScene = FindFirstObjectByType<LevelData>();
+        await Task.Delay(500);
 
-        if (levelDataInScene != null)
+        if (CenterHost.Instance != null && SessionManager.Instance != null)
         {
-            SetupLevelData(levelDataInScene);
-            Debug.Log($"GameManager Succes Load LevelData");
-
-            // เสกผู้เล่นที่นี่! เพราะมั่นใจได้ 100% ว่าฉากใหม่ถูกโหลดขึ้นมาเสร็จเรียบร้อยแล้ว
-            if (HasStateAuthority && CenterHost.Instance != null && SessionManager.Instance != null)
+            foreach (var player in SessionManager.Instance.Players)
             {
-                foreach (var player in SessionManager.Instance.Players)
+                if (player.playerRef == Runner.LocalPlayer)
                 {
-                    if (player.playerRef == Runner.LocalPlayer)
-                    {
-                        CenterHost.Instance.SpawnPlayer(player.playerRef, CharacterTypeShip.Instance.currentHost, true);
-                    }
-                    else
-                    {
-                        CenterHost.Instance.SpawnPlayer(player.playerRef, CharacterTypeShip.Instance.currentClient, false);
-                    }
+                    CenterHost.Instance.SpawnPlayer(player.playerRef, CharacterTypeShip.Instance.currentHost, true);
                 }
-                Debug.Log("✅ [GameManager] Players successfully spawned in the new scene!");
+                else
+                {
+                    CenterHost.Instance.SpawnPlayer(player.playerRef, CharacterTypeShip.Instance.currentClient, false);
+                }
             }
-        }
-        else
-        {
-            Debug.Log($"GameManager Fail To Load LevelData");
         }
     }
 

@@ -39,25 +39,6 @@ public class CenterHost : SingletonNetwork<CenterHost>
         }
     }
 
-    private void OnEnable()
-    {
-        UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
-    }
-
-    private void OnDisable()
-    {
-        UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
-    }
-
-    private void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
-    {
-        if (Runner != null && Runner.IsRunning && Object != null && Object.IsValid)
-        {
-            Debug.Log("[CenterHost] Detected new scene loaded, setting up Core...");
-            SetupGameCore();
-        }
-    }
-
     public override void Spawned()
     {
         base.Spawned();
