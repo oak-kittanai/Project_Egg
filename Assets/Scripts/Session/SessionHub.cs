@@ -82,6 +82,8 @@ public class SessionHub : SingletonNetwork<SessionHub>
     [SerializeField] TMP_Text RoomCode;
     [SerializeField] Button _startButton;
 
+    [SerializeField] TMP_Text readyPlayersCheckText;
+
     [SerializeField] public Button _clientReadyButton;
     [SerializeField] public Button _hostReadyButton;
 
@@ -232,9 +234,12 @@ public class SessionHub : SingletonNetwork<SessionHub>
         if (backgroundShared != null) backgroundShared.SetActive(false);
         ToggleUIElements(sessionElements, true);
 
-        if (networkRunner != null && networkRunner.IsServer)
+        if (_startButton != null)
         {
-            if (_startButton != null) _startButton.gameObject.SetActive(true);
+            if (networkRunner != null && networkRunner.IsServer)
+                _startButton.gameObject.SetActive(true);
+            else
+                _startButton.gameObject.SetActive(false);
         }
 
         if (_leaveButton != null) { _leaveButton.gameObject.SetActive(true); _leaveButton.interactable = true; }
@@ -375,9 +380,14 @@ public class SessionHub : SingletonNetwork<SessionHub>
                 }
                 else
                 {
+                    _startButton.gameObject.SetActive(true);
                     _startButton.interactable = false;
                 }
             }
+        }
+        else
+        {
+            if (_startButton != null) _startButton.gameObject.SetActive(false);
         }
     }
 
@@ -548,6 +558,15 @@ public class SessionHub : SingletonNetwork<SessionHub>
 
         CheckCurrentType();
         ReadyToPlay();
+
+        if (readyPlayersCheckText != null && RuntimeUpdate.Instance != null)
+        {
+            int readyCount = 0;
+            if (RuntimeUpdate.Instance.isHostReady) readyCount++;
+            if (RuntimeUpdate.Instance.isClientReady) readyCount++;
+
+            readyPlayersCheckText.text = $"{readyCount} / 2 Players";
+        }
     }
 
     public void UpdateCode(string code)
