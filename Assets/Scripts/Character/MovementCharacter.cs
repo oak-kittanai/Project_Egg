@@ -101,7 +101,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     public NetworkId localCarrierIdPredict;
     [SerializeField] public bool _isEPressed;
 
-    private bool _wasTabPressed;
+    private bool _wasXPressed;
 
     [Header("Interaction & Physics")]
     public float rayDistance = 1.2f;
@@ -324,23 +324,32 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         bool isEscPressed = input.Keyboard_ESC && !_wasEscPressed;
         if (isEscPressed)
         {
-            if (MenuController.Instance != null &&
-                MenuController.Instance.Object != null &&
-                MenuController.Instance.Object.IsValid)
+            // 🟢 1. เช็คว่าปุ่ม ESC ส่งค่าเข้ามาใน NetworkInputData จริงหรือไม่
+            Debug.Log("✅ ESC Input Registered! (ระบบรับรู้การกดปุ่มแล้ว)");
+
+            if (MenuController.Instance == null)
+            {
+                Debug.LogError("❌ MenuController.Instance is NULL! (หาไม่เจอในฉาก)");
+            }
+            else if (MenuController.Instance.Object == null || !MenuController.Instance.Object.IsValid)
+            {
+                Debug.LogError("❌ MenuController ไม่ใช่ Network Object! (คุณอาจจะลืมลบตัวเก่าออกจาก Canvas หรือมันไม่ได้ถูกเสกจาก CenterHost)");
+            }
+            else
             {
                 if (Runner.IsForward) MenuController.Instance.ToggleMenu();
-                Debug.Log("Try to open Menu");
+                Debug.Log("✅ Try to open Menu (ส่งคำสั่งเปิดสำเร็จ)");
             }
         }
         _wasEscPressed = input.Keyboard_ESC;
 
-        bool isTabPressed = input.Keyboard_X && !_wasTabPressed;
+        bool isTabPressed = input.Keyboard_X && !_wasXPressed;
         if (isTabPressed)
         {
             if (HasInputAuthority && PlayerInterface.Instance != null)
                 PlayerInterface.Instance.HideNote();
         }
-        _wasTabPressed = input.Keyboard_X;
+        _wasXPressed = input.Keyboard_X;
     }
 
     private void HandleMovement(NetworkInputData input)
