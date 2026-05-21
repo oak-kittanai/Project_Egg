@@ -506,10 +506,16 @@ public class Duck_Moveset : MovementCharacter
         if (!HasInputAuthority || PlayerInterface.Instance == null) return;
 
         if (isDiveUnlocked && PlayerInterface.Instance.spawnedDuckDive != null)
+        {
             PlayerInterface.Instance.spawnedDuckDive.UnlockSkill();
+            PlayerInterface._duckDiveUnlocked = true;
+        }
 
         if (isSmashUnlocked && PlayerInterface.Instance.spawnedDuckSmash != null)
+        {
             PlayerInterface.Instance.spawnedDuckSmash.UnlockSkill();
+            PlayerInterface._duckSmashUnlocked = true;
+        }
     }
 
     #endregion

@@ -186,6 +186,17 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             characterMaxHealth = stats != null ? stats.s_maxHealth : 5;
             currentHealth = characterMaxHealth;
             isDead = false;
+
+            if (isThisCharacterBird && this is Bird_Moveset bird)
+            {
+                bird.isFlyUnlocked = PlayerInterface._birdFlyUnlocked;
+                bird.isThrowUnlocked = PlayerInterface._birdThrowUnlocked;
+            }
+            else if (!isThisCharacterBird && this is Duck_Moveset duck)
+            {
+                duck.isDiveUnlocked = PlayerInterface._duckDiveUnlocked;
+                duck.isSmashUnlocked = PlayerInterface._duckSmashUnlocked;
+            }
         }
         else if (stats != null)
         {
@@ -317,8 +328,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                 MenuController.Instance.Object != null &&
                 MenuController.Instance.Object.IsValid)
             {
-                if (Runner.IsForward)
-                    MenuController.Instance.ToggleMenu();
+                if (Runner.IsForward) MenuController.Instance.ToggleMenu();
+                Debug.Log("Try to open Menu");
             }
         }
         _wasEscPressed = input.Keyboard_ESC;
