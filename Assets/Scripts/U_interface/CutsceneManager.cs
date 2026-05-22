@@ -2,6 +2,7 @@
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Video;
+using System.Collections;
 
 public class CutsceneManager : NetworkBehaviour
 {
@@ -18,6 +19,20 @@ public class CutsceneManager : NetworkBehaviour
     private void Awake()
     {
         Instance = this;
+    }
+
+    public override void Spawned()
+    {
+        base.Spawned();
+        StartCoroutine(SetupWhenLevelDataReady());
+    }
+
+    private IEnumerator SetupWhenLevelDataReady()
+    {
+        yield return new WaitUntil(() => LevelData.Instance != null);
+        yield return null;
+
+        Setup();
     }
 
     public void Setup()

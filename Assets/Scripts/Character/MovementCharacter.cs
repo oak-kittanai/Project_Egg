@@ -257,22 +257,26 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
         if (isDead) { if (HasStateAuthority && canbeRespawn && respawnTimer.Expired(Runner)) Respawn(); return; }
 
-        bool effectivelyCarried = localIsBeingCarriedPredict;
-        NetworkId effectiveCarrierId = localCarrierIdPredict;
+        bool effectivelyCarried = IsBeingCarried || localIsBeingCarriedPredict;
+        NetworkId effectiveCarrierId = IsBeingCarried ? CarrierId : localCarrierIdPredict;
 
         if (effectivelyCarried)
         {
-            if (rb2D.bodyType != RigidbodyType2D.Kinematic) rb2D.bodyType = RigidbodyType2D.Kinematic;
+            rb2D.gravityScale = 0f;
             rb2D.linearVelocity = Vector2.zero;
-
             if (coll2D != null && !coll2D.isTrigger) coll2D.isTrigger = true;
-
             isMoveAble = false;
 
-            if (Runner.TryFindObject(effectiveCarrierId, out var duckObj) && duckObj.TryGetComponent<Rigidbody2D>(out var duckRb))
+            if (HasStateAuthority
+                && Runner.TryFindObject(effectiveCarrierId, out var duckObj)
+                && duckObj.TryGetComponent<Rigidbody2D>(out var duckRb))
             {
                 Vector2 targetPos = duckRb.position + Vector2.up * betweenCarryPosition;
-                rb2D.position = targetPos;
+
+                if (TryGetComponent<NetworkRigidbody2D>(out var netRb))
+                    netRb.Teleport(targetPos, transform.rotation);
+                else
+                    rb2D.position = targetPos;
             }
         }
 
@@ -621,9 +625,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     #region CarrySystem
 
     [Rpc(RpcSources.All, RpcTargets.All)]
-    public void RPC_UpdateCarry(bool state, NetworkId carrierId, bool doThrow = false,
-                            float throwDir = 1f, float forceX = 4f, float forceY = 4f,
-                            Vector2 throwSpawnPos = default)
+    public void RPC_UpdateCarry(bool state, NetworkId carrierId, bool doThrow = false, float throwDir = 1f, float forceX = 4f, float forceY = 4f, Vector2 throwSpawnPos = default)
     {
         if (HasStateAuthority)
         {
@@ -639,25 +641,40 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         {
             Physics2D.IgnoreCollision(coll2D, duckColl, state);
         }
-
         if (!state)
         {
             if (HasStateAuthority)
             {
+                Debug.Log($"[DROP] Bird rb2D.position ปัจจุบัน: {rb2D.position}");
+                Debug.Log($"[DROP] throwSpawnPos ที่ได้รับ: {throwSpawnPos}");
+                Debug.Log($"[DROP] Duck position: {(Runner.TryFindObject(carrierId, out var d) && d.TryGetComponent<Rigidbody2D>(out var dr) ? dr.position.ToString() : "NOT FOUND")}");
+
+                Vector2 dropPos;
                 if (throwSpawnPos != default)
                 {
-                    rb2D.position = throwSpawnPos;
+                    dropPos = throwSpawnPos;
+                }
+                else if (Runner.TryFindObject(carrierId, out var duckObjForPos)
+                         && duckObjForPos.TryGetComponent<Rigidbody2D>(out var duckRb))
+                {
+                    dropPos = duckRb.position + Vector2.up * betweenCarryPosition;
                 }
                 else
                 {
-                    if (Runner.TryFindObject(carrierId, out var duckObjForPos)
-                        && duckObjForPos.TryGetComponent<Rigidbody2D>(out var duckRb))
-                    {
-                        rb2D.position = duckRb.position + Vector2.up * betweenCarryPosition;
-                    }
+                    dropPos = rb2D.position;
                 }
 
-                rb2D.bodyType = RigidbodyType2D.Dynamic;
+                rb2D.gravityScale = normalGravity;
+
+                if (TryGetComponent<NetworkRigidbody2D>(out var netRb))
+                {
+                    netRb.Teleport(dropPos, transform.rotation);
+                }
+                else
+                {
+                    rb2D.position = dropPos;
+                }
+
                 rb2D.linearVelocity = Vector2.zero;
 
                 if (doThrow)

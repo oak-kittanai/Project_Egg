@@ -183,7 +183,6 @@ public class Duck_Moveset : MovementCharacter
         friend.localIsBeingCarriedPredict = true;
         friend.localCarrierIdPredict = Object.Id;
 
-        if (friend.rb2D != null) friend.rb2D.bodyType = RigidbodyType2D.Kinematic;
         if (friend.coll2D != null) friend.coll2D.isTrigger = true;
 
         if (carryCollider != null && friend.coll2D != null) Physics2D.IgnoreCollision(carryCollider, friend.coll2D, true);
