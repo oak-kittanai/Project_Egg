@@ -84,37 +84,6 @@ public class GameManager : SingletonNetwork<GameManager>
         }
     }
 
-    private void RepositionAllPlayers(LevelData level)
-    {
-        if (level == null || level.SpawnPosition == null)
-        {
-            Debug.LogWarning("[GameManager] SpawnPosition null — skip reposition");
-            return;
-        }
-
-        Vector3 basePos = level.SpawnPosition.position;
-        MovementCharacter[] players = FindObjectsByType<MovementCharacter>(FindObjectsSortMode.None);
-        Debug.Log($"[GameManager] RepositionAllPlayers: found {players.Length} players");
-
-        int index = 0;
-        foreach (var p in players)
-        {
-            if (p.Object == null || !p.Object.IsValid) continue;
-
-            Vector3 pos = basePos + new Vector3(index * 1.5f, 0f, 0f);
-
-            if (p.TryGetComponent<Fusion.Addons.Physics.NetworkRigidbody2D>(out var netRb))
-            {
-                netRb.Teleport(pos, Quaternion.identity);
-                Debug.Log($"[GameManager] Player {p.Object.Id} → {pos}");
-            }
-
-            index++;
-        }
-
-        UpdateRespawnPos(basePos);
-    }
-
     public void MapAllPlayersFinishedLoading()
     {
         if (!HasStateAuthority) return;
