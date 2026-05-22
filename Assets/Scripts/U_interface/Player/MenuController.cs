@@ -1,9 +1,7 @@
-using Fusion;
-using TMPro;
+﻿using Fusion;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
-using System.Linq;
 
 public class MenuController : NetworkBehaviour
 {
@@ -27,19 +25,51 @@ public class MenuController : NetworkBehaviour
 
     private GameObject pauseMenuPanel;
 
+    private GameSettingsSO gameSettings;
+
     private void Awake()
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(Instance.gameObject);
-        }
-
         Instance = this;
+        gameSettings = Resources.Load<GameSettingsSO>("GameSettings");
+    }
+
+    private void OnEnable() { SceneManager.sceneLoaded += OnSceneLoaded_Refresh; }
+    private void OnDisable() { SceneManager.sceneLoaded -= OnSceneLoaded_Refresh; }
+
+    private void OnSceneLoaded_Refresh(Scene scene, LoadSceneMode mode)
+    {
+        Invoke(nameof(RefreshButtons), 0.6f);
     }
 
     public override void Spawned()
     {
         Invoke(nameof(SetupButtons), 0.5f);
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance == this)
+        {
+            Instance = null;
+        }
+    }
+
+    public void RefreshButtons()
+    {
+        ClearAllButtonListeners();
+        SetupButtons();
+    }
+
+    private void ClearAllButtonListeners()
+    {
+        if (PlayerInterface.Instance == null) return;
+        PlayerInterface.Instance.resumeButton?.onClick.RemoveAllListeners();
+        PlayerInterface.Instance.resetButton?.onClick.RemoveAllListeners();
+        PlayerInterface.Instance.settingButton?.onClick.RemoveAllListeners();
+        PlayerInterface.Instance.quitButton?.onClick.RemoveAllListeners();
+        PlayerInterface.Instance.settingLeaveButton?.onClick.RemoveAllListeners();
+        PlayerInterface.Instance.musicSlider?.onValueChanged.RemoveAllListeners();
+        PlayerInterface.Instance.soundSlider?.onValueChanged.RemoveAllListeners();
     }
 
     private void SetupButtons()
@@ -61,20 +91,33 @@ public class MenuController : NetworkBehaviour
         if (PlayerInterface.Instance.quitButton != null)
             PlayerInterface.Instance.quitButton.onClick.AddListener(OnClickQuit);
 
+        if (PlayerInterface.Instance.settingLeaveButton != null)
+            PlayerInterface.Instance.settingLeaveButton.onClick.AddListener(OnClickCloseSetting);
+
+        if (gameSettings != null)
+        {
+            if (PlayerInterface.Instance.musicSlider != null)
+            {
+                PlayerInterface.Instance.musicSlider.value = gameSettings.musicVolume;
+                PlayerInterface.Instance.musicSlider.onValueChanged.AddListener(OnMusicVolumeChanged);
+            }
+            if (PlayerInterface.Instance.soundSlider != null)
+            {
+                PlayerInterface.Instance.soundSlider.value = gameSettings.sfxVolume;
+                PlayerInterface.Instance.soundSlider.onValueChanged.AddListener(OnSoundVolumeChanged);
+            }
+        }
+
         if (pauseMenuPanel != null) pauseMenuPanel.SetActive(false);
     }
 
-    public void ToggleMenu()
+    public void OpenMenuState()
     {
-        RPC_ToggleMenu();
-    }
-
-    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    private void RPC_ToggleMenu()
-    {
-        IsMenuOpen = !IsMenuOpen;
-
-        ClearAllVotes();
+        if (HasStateAuthority)
+        {
+            IsMenuOpen = true;
+            ClearAllVotes();
+        }
     }
 
     private void ClearAllVotes()
@@ -87,20 +130,27 @@ public class MenuController : NetworkBehaviour
 
     public void OnMenuStateChanged()
     {
-        if (pauseMenuPanel != null)
+        if (pauseMenuPanel == null && PlayerInterface.Instance?.resumeButton != null)
+            pauseMenuPanel = PlayerInterface.Instance.resumeButton.transform.parent.gameObject;
+
+        if (pauseMenuPanel == null) return;
+
+        pauseMenuPanel.SetActive(IsMenuOpen);
+
+        if (IsMenuOpen && PlayerInterface.Instance != null)
         {
-            pauseMenuPanel.SetActive(IsMenuOpen);
+            if (PlayerInterface.Instance.resumeButton) PlayerInterface.Instance.resumeButton.interactable = true;
+            if (PlayerInterface.Instance.resetButton) PlayerInterface.Instance.resetButton.interactable = true;
 
-            if (IsMenuOpen && PlayerInterface.Instance != null)
-            {
-                if (PlayerInterface.Instance.resumeButton) PlayerInterface.Instance.resumeButton.interactable = true;
-                if (PlayerInterface.Instance.resetButton) PlayerInterface.Instance.resetButton.interactable = true;
-
-                int activePlayers = Runner.ActivePlayers.Count();
-                if (PlayerInterface.Instance.resumePlayerCheckText) PlayerInterface.Instance.resumePlayerCheckText.text = $"0/{activePlayers}";
-                if (PlayerInterface.Instance.resetPlayerCheckText) PlayerInterface.Instance.resetPlayerCheckText.text = $"0/{activePlayers}";
-            }
+            int activePlayers = Runner.ActivePlayers.Count();
+            if (PlayerInterface.Instance.resumePlayerCheckText)
+                PlayerInterface.Instance.resumePlayerCheckText.text = $"0/{activePlayers}";
+            if (PlayerInterface.Instance.resetPlayerCheckText)
+                PlayerInterface.Instance.resetPlayerCheckText.text = $"0/{activePlayers}";
         }
+
+        if (!IsMenuOpen && PlayerInterface.Instance?.settingPanelObj != null)
+            PlayerInterface.Instance.settingPanelObj.SetActive(false);
     }
 
     private void OnClickResume()
@@ -166,7 +216,34 @@ public class MenuController : NetworkBehaviour
 
     private void OnClickSetting()
     {
-        Debug.Log("Setting panel is not implemented yet!");
+        if (pauseMenuPanel != null) pauseMenuPanel.SetActive(false);
+        if (PlayerInterface.Instance.settingPanelObj != null) PlayerInterface.Instance.settingPanelObj.SetActive(true);
+    }
+
+    private void OnClickCloseSetting()
+    {
+        if (PlayerInterface.Instance.settingPanelObj != null) PlayerInterface.Instance.settingPanelObj.SetActive(false);
+        if (pauseMenuPanel != null) pauseMenuPanel.SetActive(true);
+    }
+
+    private void OnMusicVolumeChanged(float value)
+    {
+        if (gameSettings != null)
+        {
+            gameSettings.musicVolume = value;
+            gameSettings.SaveSettings();
+
+            if (AudioManager.Instance != null) AudioManager.Instance.UpdateBGMVolumeRealtime();
+        }
+    }
+
+    private void OnSoundVolumeChanged(float value)
+    {
+        if (gameSettings != null)
+        {
+            gameSettings.sfxVolume = value;
+            gameSettings.SaveSettings();
+        }
     }
 
     private void OnClickQuit()
@@ -179,10 +256,7 @@ public class MenuController : NetworkBehaviour
     {
         ExecuteQuitGameAsync();
 
-        PlayerInterface._birdFlyUnlocked = false;
-        PlayerInterface._birdThrowUnlocked = false;
-        PlayerInterface._duckDiveUnlocked = false;
-        PlayerInterface._duckSmashUnlocked = false;
+        GameManager.Instance?.ResetAllSkillUnlocks();
     }
 
     private void ExecuteQuitGameAsync()
@@ -200,4 +274,22 @@ public class MenuController : NetworkBehaviour
             UnityEngine.SceneManagement.SceneManager.LoadScene("SessionScene");
         }
     }
+
+    #region Menu Control
+
+    public void RequestOpenMenu()
+    {
+        if (!HasStateAuthority) return;
+
+        if (MenuController.Instance != null && MenuController.Instance.Object != null && MenuController.Instance.Object.IsValid)
+        {
+            if (MenuController.Instance.IsMenuOpen)
+            {
+                return;
+            }
+            MenuController.Instance.OpenMenuState();
+        }
+    }
+
+    #endregion
 }

@@ -60,13 +60,8 @@ public class Bird_Moveset : MovementCharacter
     {
         base.Spawned();
 
-        if (rb2D != null)
-        {
-            defaultMaterial = rb2D.sharedMaterial;
-        }
-
+        if (rb2D != null) defaultMaterial = rb2D.sharedMaterial;
         if (lineRenderer == null) lineRenderer = GetComponent<LineRenderer>();
-        if (lineRenderer != null) Debug.Log("LineRenderer Found");
     }
 
     protected override void OnFixedUpdateSpecific()
@@ -412,7 +407,14 @@ public class Bird_Moveset : MovementCharacter
     public void HandleThrowLogic(NetworkInputData input)
     {
         bool isPrepareThrowPressed = input.KeybindPrepareThrowItem && !_wasPrepareThrowPressed;
-        bool isThrowItemPressed = input.KeybindThrowItem && !_wasisThrowItemPressed;
+
+        if (_prepareToThrow)
+        {
+            if (Mathf.Abs(input.horizontal) > 0.1f || input.KeybindJump)
+            {
+                CancelThrow();
+            }
+        }
 
         if (isPrepareThrowPressed)
         {
@@ -420,11 +422,13 @@ public class Bird_Moveset : MovementCharacter
 
             if (_canThrowItem && !(isWaterSurface || stilldrowning))
             {
-                _prepareToThrow = !_prepareToThrow;
-
                 if (!_prepareToThrow)
                 {
-                    CancelThrow();
+                    _prepareToThrow = true;
+                }
+                else
+                {
+                    ExecuteThrow();
                 }
             }
             else
@@ -436,23 +440,15 @@ public class Bird_Moveset : MovementCharacter
             }
         }
 
-        float inputAD = input.horizontal;
-
         if (_prepareToThrow)
         {
             isMoveAble = false;
-            cAnimation.FaceTo(inputAD);
-            UpdateOscillatingAim();
             IsInteractBusy = true;
 
-            if (isThrowItemPressed)
-            {
-                ExecuteThrow();
-            }
+            UpdateOscillatingAim();
         }
 
         _wasPrepareThrowPressed = input.KeybindPrepareThrowItem;
-        _wasisThrowItemPressed = input.KeybindThrowItem;
     }
 
     private void ExecuteThrow()

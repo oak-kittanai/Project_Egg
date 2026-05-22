@@ -182,31 +182,13 @@ public class GameManager : SingletonNetwork<GameManager>
         }
     }
 
-    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    private void RPC_MapFinishedLoading()
+    public void CheckMapLoadingPublic()
     {
-        MapsLoadedCount++;
-        CheckMapLoading();
-    }
-    public void MapFinishedLoading()
-    {
-        if (HasStateAuthority)
-        {
-            MapsLoadedCount++;
-            CheckMapLoading();
-        }
-        else
-        {
-            RPC_MapFinishedLoading();
-        }
-    }
-
-    private void CheckMapLoading()
-    {
+        Debug.Log($"[GameManager] CheckMapLoading — count: {MapsLoadedCount}, done: {isLoadMapDone}");
         if (MapsLoadedCount >= 2 && !isLoadMapDone)
         {
             isLoadMapDone = true;
-            Debug.Log("Map Ready");
+            Debug.Log("[GameManager] Map Ready!");
             CheckGameStart();
         }
     }
@@ -598,32 +580,25 @@ public class GameManager : SingletonNetwork<GameManager>
         if (!HasStateAuthority) return;
 
         ShowGlobalLoadingScreen();
-
         ResetLoadingStateForNextLevel();
 
-        Debug.Log($"[GameManager] Host is loading next level: {nextSceneName}");
-
         await Runner.LoadScene(nextSceneName, UnityEngine.SceneManagement.LoadSceneMode.Single);
+    }
+    #endregion
+    #endregion
+    #region Menu Control
 
-        await Task.Delay(500);
+    public void RequestOpenMenu()
+    {
+        if (!HasStateAuthority) return;
 
-        if (CenterHost.Instance != null && SessionManager.Instance != null)
+        if (MenuController.Instance != null && MenuController.Instance.Object != null && MenuController.Instance.Object.IsValid)
         {
-            foreach (var player in SessionManager.Instance.Players)
-            {
-                if (player.playerRef == Runner.LocalPlayer)
-                {
-                    CenterHost.Instance.SpawnPlayer(player.playerRef, CharacterTypeShip.Instance.currentHost, true);
-                }
-                else
-                {
-                    CenterHost.Instance.SpawnPlayer(player.playerRef, CharacterTypeShip.Instance.currentClient, false);
-                }
-            }
+            if (MenuController.Instance.IsMenuOpen) return;
+
+            MenuController.Instance.OpenMenuState();
         }
     }
-
-    #endregion
 
     #endregion
 
@@ -647,6 +622,60 @@ public class GameManager : SingletonNetwork<GameManager>
             allowCloseUI = false;
         }
     }
+
+    #region Skill Unlock System
+
+    [Header("Skill Unlock State")]
+    [Networked, OnChangedRender(nameof(OnSkillUnlockChanged))]
+    public NetworkBool SkillBirdFlyUnlocked { get; set; }
+    [Networked, OnChangedRender(nameof(OnSkillUnlockChanged))]
+    public NetworkBool SkillBirdThrowUnlocked { get; set; }
+    [Networked, OnChangedRender(nameof(OnSkillUnlockChanged))]
+    public NetworkBool SkillDuckDiveUnlocked { get; set; }
+    [Networked, OnChangedRender(nameof(OnSkillUnlockChanged))]
+    public NetworkBool SkillDuckSmashUnlocked { get; set; }
+    public void OnSkillUnlockChanged()
+    {
+        // sync static bools
+        PlayerInterface._birdFlyUnlocked = SkillBirdFlyUnlocked;
+        PlayerInterface._birdThrowUnlocked = SkillBirdThrowUnlocked;
+        PlayerInterface._duckDiveUnlocked = SkillDuckDiveUnlocked;
+        PlayerInterface._duckSmashUnlocked = SkillDuckSmashUnlocked;
+    }
+
+    public void UnlockSkill_BirdFly() => RequestUnlockSkill(0);
+    public void UnlockSkill_BirdThrow() => RequestUnlockSkill(1);
+    public void UnlockSkill_DuckDive() => RequestUnlockSkill(2);
+    public void UnlockSkill_DuckSmash() => RequestUnlockSkill(3);
+
+    private void RequestUnlockSkill(int skillIndex)
+    {
+        if (HasStateAuthority) SetSkillUnlocked(skillIndex);
+        else RPC_UnlockSkill(skillIndex);
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    private void RPC_UnlockSkill(int skillIndex) => SetSkillUnlocked(skillIndex);
+
+    private void SetSkillUnlocked(int skillIndex)
+    {
+        switch (skillIndex)
+        {
+            case 0: SkillBirdFlyUnlocked = true; break;
+            case 1: SkillBirdThrowUnlocked = true; break;
+            case 2: SkillDuckDiveUnlocked = true; break;
+            case 3: SkillDuckSmashUnlocked = true; break;
+        }
+    }
+
+    public void ResetAllSkillUnlocks()
+    {
+        if (!HasStateAuthority) return;
+        SkillBirdFlyUnlocked = SkillBirdThrowUnlocked = false;
+        SkillDuckDiveUnlocked = SkillDuckSmashUnlocked = false;
+    }
+
+    #endregion
 
 }
 

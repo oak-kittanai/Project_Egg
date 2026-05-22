@@ -10,9 +10,9 @@ public class MouseClickSound : MonoBehaviour
     {
         if (Input.GetMouseButtonDown(0))
         {
-            if (clickAudioSource != null && clickClip != null)
+            if (AudioSession.Instance != null && clickClip != null)
             {
-                clickAudioSource.PlayOneShot(clickClip);
+                AudioSession.Instance.PlayClickSound(clickClip);
             }
         }
     }

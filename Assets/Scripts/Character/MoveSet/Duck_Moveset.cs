@@ -64,6 +64,11 @@ public class Duck_Moveset : MovementCharacter
     [Networked, OnChangedRender(nameof(OnSkillStateChanged))] public NetworkBool isDiveUnlocked { get; set; }
     [Networked, OnChangedRender(nameof(OnSkillStateChanged))] public NetworkBool isSmashUnlocked { get; set; }
 
+    public override void Spawned()
+    {
+        base.Spawned();
+    }
+
     protected override void OnFixedUpdateSpecific()
     {
         bool isJumpPressed = false;
@@ -201,30 +206,23 @@ public class Duck_Moveset : MovementCharacter
                 {
                     float throwDir = cAnimation.FlipX ? 1f : -1f;
 
+                    Vector2 throwSpawnPos = (Vector2)friend.transform.position;
+
                     friend.localIsBeingCarriedPredict = false;
                     if (friend.rb2D != null) friend.rb2D.bodyType = RigidbodyType2D.Dynamic;
                     if (friend.coll2D != null) friend.coll2D.isTrigger = false;
-
                     if (carryCollider != null && friend.coll2D != null) Physics2D.IgnoreCollision(carryCollider, friend.coll2D, false);
                     if (normalCollider != null && friend.coll2D != null) Physics2D.IgnoreCollision(normalCollider, friend.coll2D, false);
 
-                    if (throwFriend && friend.visualTransform != null)
-                    {
-                        friend.visualTransform.position = transform.position + new Vector3(throwDir * 1f, 1f, 0);
-                    }
-
-                    friend.RPC_UpdateCarry(false, Object.Id, throwFriend, throwDir, throwForceX, throwForceY);
+                    friend.RPC_UpdateCarry(false, Object.Id, throwFriend, throwDir, throwForceX, throwForceY, throwSpawnPos);
                     break;
                 }
             }
         }
-
         if (normalCollider != null) normalCollider.enabled = true;
         if (carryCollider != null) carryCollider.enabled = false;
-
         IsCarry = false;
         CarriedFriendId = default;
-
         resetAnimation = true;
     }
 
@@ -446,6 +444,7 @@ public class Duck_Moveset : MovementCharacter
         if (cAnimation != null)
         {
             cAnimation.SmashAnimation();
+            Debug.Log("Try Smash Animation");
         }
     }
 
@@ -498,6 +497,18 @@ public class Duck_Moveset : MovementCharacter
     }
 
     #region Skill
+
+    public void UnlockDiveSkill()
+    {
+        isDiveUnlocked = true;
+        PlayerInterface.Instance?.UnlockDuckDive();
+    }
+
+    public void UnlockSmashSkill()
+    {
+        isSmashUnlocked = true;
+        PlayerInterface.Instance?.UnlockDuckSmash();
+    }
 
     public void OnSkillStateChanged() { SyncSkillUI(); }
 

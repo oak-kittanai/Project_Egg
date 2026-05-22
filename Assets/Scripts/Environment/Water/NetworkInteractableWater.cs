@@ -63,20 +63,16 @@ public class NetworkInteractableWater : NetworkBehaviour
 
     public void Splash(Vector3 position, float velocity)
     {
-        if (Object != null && Object.IsValid)
-        {
-            RPC_TriggerSplash(position, velocity);
-        }
-        else
-        {
-            // for Offline test
-            ApplySplashPhysics(position, velocity);
-        }
+        if (Runner == null || !Object.IsValid || !Runner.IsRunning) return;
+
+        RPC_TriggerSplash(position, velocity);
     }
 
     [Rpc(RpcSources.All, RpcTargets.All)]
     public void RPC_TriggerSplash(Vector3 position, float velocity)
     {
+        if (Runner == null || !Runner.IsRunning) return;
+
         ApplySplashPhysics(position, velocity);
 
         if (splashParticles != null)

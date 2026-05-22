@@ -61,11 +61,6 @@ public class LevelData : MonoBehaviour
         if (canvas != null)
         {
             RegisterCanvas(canvas);
-            Debug.Log("LevelData: Found existing Canvas");
-        }
-        else
-        {
-            Debug.LogWarning("LevelData: Canvas not found yet");
         }
     }
 
@@ -75,20 +70,7 @@ public class LevelData : MonoBehaviour
         yield return new WaitUntil(() => GameManager.Instance.Object != null && GameManager.Instance.Object.IsValid);
 
         GameManager.Instance.SetupLevelData(this);
-
-        if (introClip != null && introVideoPlayer != null)
-        {
-            if (loadingScreenUI != null) loadingScreenUI.SetActive(true);
-
-            introVideoPlayer.clip = introClip;
-            introVideoPlayer.Play();
-
-            introVideoPlayer.loopPointReached += OnVideoEnd;
-        }
-        else
-        {
-            GameManager.Instance.MapFinishedLoading();
-        }
+        CutsceneManager.Instance.Setup();
     }
 
     public void RegisterCanvas(GameObject canvas)
@@ -103,27 +85,8 @@ public class LevelData : MonoBehaviour
 
             Transform lv = loadingScene.Find("LoadingVideo");
             if (lv != null) videoLoadingPlayer = lv.GetComponent<VideoPlayer>();
-
-            Debug.Log("LevelData: Canvas UI registered successfully");
-        }
-        else
-        {
-            Debug.LogWarning("LevelData: LoadingScene not found in Canvas");
         }
     }
-
-    #region Video
-
-    private void OnVideoEnd(VideoPlayer vp)
-    {
-        introVideoPlayer.loopPointReached -= OnVideoEnd;
-
-        if (loadingScreenUI != null) loadingScreenUI.SetActive(false);
-
-        GameManager.Instance.MapFinishedLoading();
-    }
-
-    #endregion
 
     public void RequestTutorialShow(string requestedName)
     {
@@ -138,7 +101,6 @@ public class LevelData : MonoBehaviour
                 return;
             }
         }
-        Debug.LogWarning($"can't find Tutorial name : {requestedName} in LevelData!");
     }
 
     public void RequestTutorialHide()

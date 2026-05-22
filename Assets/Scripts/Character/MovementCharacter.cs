@@ -101,7 +101,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     public NetworkId localCarrierIdPredict;
     [SerializeField] public bool _isEPressed;
 
-    private bool _wasXPressed;
+    private bool _wasTabPressed;
 
     [Header("Interaction & Physics")]
     public float rayDistance = 1.2f;
@@ -162,10 +162,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
         if (TryGetComponent<Fusion.Addons.Physics.NetworkRigidbody2D>(out var netRb))
         {
-            if (visualTransform != null)
-                netRb.InterpolationTarget = visualTransform;
-            else
-                netRb.InterpolationTarget = transform;
+            netRb.InterpolationTarget = transform;
         }
     }
 
@@ -260,8 +257,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
         if (isDead) { if (HasStateAuthority && canbeRespawn && respawnTimer.Expired(Runner)) Respawn(); return; }
 
-        bool effectivelyCarried = IsBeingCarried || localIsBeingCarriedPredict;
-        NetworkId effectiveCarrierId = IsBeingCarried ? CarrierId : localCarrierIdPredict;
+        bool effectivelyCarried = localIsBeingCarriedPredict;
+        NetworkId effectiveCarrierId = localCarrierIdPredict;
 
         if (effectivelyCarried)
         {
@@ -324,28 +321,36 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         bool isEscPressed = input.Keyboard_ESC && !_wasEscPressed;
         if (isEscPressed)
         {
-            if (MenuController.Instance != null && MenuController.Instance.Object != null && MenuController.Instance.Object.IsValid)
+            if (Runner.IsForward)
             {
-                if (Runner.IsForward)
+                if (HasStateAuthority)
                 {
-                    MenuController.Instance.ToggleMenu();
-                    Debug.Log($"Try to toggle menu from {(HasStateAuthority ? "Host" : "Client")}");
+                    if (GameManager.Instance != null) GameManager.Instance.RequestOpenMenu();
                 }
-            }
-            else
-            {
-                Debug.LogWarning("MenuController is not ready or not valid on this client!");
+                else if (HasInputAuthority)
+                {
+                    RPC_RequestOpenMenuFromClient();
+                }
             }
         }
         _wasEscPressed = input.Keyboard_ESC;
 
-        bool isTabPressed = input.Keyboard_X && !_wasXPressed;
+        bool isTabPressed = input.Keyboard_Tab && !_wasTabPressed;
         if (isTabPressed)
         {
             if (HasInputAuthority && PlayerInterface.Instance != null)
                 PlayerInterface.Instance.HideNote();
         }
-        _wasXPressed = input.Keyboard_X;
+        _wasTabPressed = input.Keyboard_Tab;
+    }
+
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+    public void RPC_RequestOpenMenuFromClient()
+    {
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.RequestOpenMenu();
+        }
     }
 
     private void HandleMovement(NetworkInputData input)
@@ -533,6 +538,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             IsFalling = false;
             FallingBusy = false;
 
+            if (cAnimation != null) cAnimation.ClearAnimationLock();
+
             if (GameManager.Instance != null)
             {
                 Vector3 newPos = GameManager.Instance.GetRespawnPosition();
@@ -614,7 +621,9 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     #region CarrySystem
 
     [Rpc(RpcSources.All, RpcTargets.All)]
-    public void RPC_UpdateCarry(bool state, NetworkId carrierId, bool doThrow = false, float throwDir = 1f, float forceX = 4f, float forceY = 4f)
+    public void RPC_UpdateCarry(bool state, NetworkId carrierId, bool doThrow = false,
+                            float throwDir = 1f, float forceX = 4f, float forceY = 4f,
+                            Vector2 throwSpawnPos = default)
     {
         if (HasStateAuthority)
         {
@@ -622,11 +631,11 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             CarrierId = carrierId;
             IsInteractBusy = state;
         }
-
         localIsBeingCarriedPredict = state;
         localCarrierIdPredict = carrierId;
 
-        if (Runner.TryFindObject(carrierId, out var duckObj) && duckObj.TryGetComponent<Collider2D>(out var duckColl))
+        if (Runner.TryFindObject(carrierId, out var duckObjForCollision)
+            && duckObjForCollision.TryGetComponent<Collider2D>(out var duckColl))
         {
             Physics2D.IgnoreCollision(coll2D, duckColl, state);
         }
@@ -635,9 +644,17 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         {
             if (HasStateAuthority)
             {
-                if (duckObj != null)
+                if (throwSpawnPos != default)
                 {
-                    rb2D.position = duckObj.transform.position + new Vector3(0, betweenCarryPosition, 0);
+                    rb2D.position = throwSpawnPos;
+                }
+                else
+                {
+                    if (Runner.TryFindObject(carrierId, out var duckObjForPos)
+                        && duckObjForPos.TryGetComponent<Rigidbody2D>(out var duckRb))
+                    {
+                        rb2D.position = duckRb.position + Vector2.up * betweenCarryPosition;
+                    }
                 }
 
                 rb2D.bodyType = RigidbodyType2D.Dynamic;
@@ -654,12 +671,9 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             }
 
             if (cAnimation != null)
-            {
                 cAnimation.FallingAndFloatAnimation(true, false);
-            }
-
-            if (visualTransform != null) visualTransform.localPosition = Vector3.zero;
-
+            if (visualTransform != null)
+                visualTransform.localPosition = Vector3.zero;
             OnDroppedEvent();
         }
     }
@@ -949,6 +963,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         else
         {
             if (spriteRenderer != null) spriteRenderer.sortingOrder = originalSortingOrder;
+
+            if (visualTransform != null) visualTransform.localPosition = Vector3.zero;
         }
         ManageMovementSounds();
     }
@@ -957,14 +973,22 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     {
         if (Runner == null || !Runner.IsRunning) return;
 
-        bool effectivelyCarried = IsBeingCarried || localIsBeingCarriedPredict;
-        NetworkId effectiveCarrierId = IsBeingCarried ? CarrierId : localCarrierIdPredict;
+        bool effectivelyCarried = localIsBeingCarriedPredict;
+        NetworkId effectiveCarrierId = localCarrierIdPredict;
 
-        if (effectivelyCarried && Runner.TryFindObject(effectiveCarrierId, out var duckObj) && duckObj.TryGetComponent<MovementCharacter>(out var duckMC))
+        if (effectivelyCarried
+            && Runner.TryFindObject(effectiveCarrierId, out var duckObj)
+            && duckObj.TryGetComponent<MovementCharacter>(out var duckMC))
         {
             transform.position = duckMC.transform.position + new Vector3(0, betweenCarryPosition, 0);
 
-            if (visualTransform != null) visualTransform.localPosition = Vector3.zero;
+            if (visualTransform != null)
+                visualTransform.localPosition = Vector3.zero;
+        }
+        else
+        {
+            if (visualTransform != null)
+                visualTransform.localPosition = Vector3.zero;
         }
     }
 
@@ -982,6 +1006,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         if (playerAudioSource != null && dieSoundClip != null)
             playerAudioSource.PlayOneShot(dieSoundClip);
     }
+
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.blue; Gizmos.DrawRay(transform.position, Vector2.down * rayDistance);
