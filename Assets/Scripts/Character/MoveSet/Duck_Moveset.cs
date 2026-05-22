@@ -497,18 +497,6 @@ public class Duck_Moveset : MovementCharacter
 
     #region Skill
 
-    public void UnlockDiveSkill()
-    {
-        isDiveUnlocked = true;
-        PlayerInterface.Instance?.UnlockDuckDive();
-    }
-
-    public void UnlockSmashSkill()
-    {
-        isSmashUnlocked = true;
-        PlayerInterface.Instance?.UnlockDuckSmash();
-    }
-
     public void OnSkillStateChanged() { SyncSkillUI(); }
 
     public override void SyncSkillUI()

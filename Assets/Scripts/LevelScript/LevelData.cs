@@ -102,6 +102,26 @@ public class LevelData : MonoBehaviour
         }
     }
 
+    private void OnDestroy()
+    {
+        if (introVideoPlayer != null)
+        {
+            introVideoPlayer.Stop();
+            introVideoPlayer.clip = null;
+        }
+
+        if (videoLoadingPlayer != null)
+        {
+            videoLoadingPlayer.Stop();
+            videoLoadingPlayer.enabled = false;
+        }
+
+        if (loadingScreenUI != null)
+        {
+            loadingScreenUI.SetActive(false);
+        }
+    }
+
     public void RequestTutorialHide()
     {
         if (TutorialUIManager.Instance != null)
