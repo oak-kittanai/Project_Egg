@@ -182,31 +182,13 @@ public class GameManager : SingletonNetwork<GameManager>
         }
     }
 
-    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    private void RPC_MapFinishedLoading()
+    public void CheckMapLoadingPublic()
     {
-        MapsLoadedCount++;
-        CheckMapLoading();
-    }
-    public void MapFinishedLoading()
-    {
-        if (HasStateAuthority)
-        {
-            MapsLoadedCount++;
-            CheckMapLoading();
-        }
-        else
-        {
-            RPC_MapFinishedLoading();
-        }
-    }
-
-    private void CheckMapLoading()
-    {
+        Debug.Log($"[GameManager] CheckMapLoading — count: {MapsLoadedCount}, done: {isLoadMapDone}");
         if (MapsLoadedCount >= 2 && !isLoadMapDone)
         {
             isLoadMapDone = true;
-            Debug.Log("Map Ready");
+            Debug.Log("[GameManager] Map Ready!");
             CheckGameStart();
         }
     }

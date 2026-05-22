@@ -257,8 +257,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
         if (isDead) { if (HasStateAuthority && canbeRespawn && respawnTimer.Expired(Runner)) Respawn(); return; }
 
-        bool effectivelyCarried = IsBeingCarried || localIsBeingCarriedPredict;
-        NetworkId effectiveCarrierId = IsBeingCarried ? CarrierId : localCarrierIdPredict;
+        bool effectivelyCarried = localIsBeingCarriedPredict;
+        NetworkId effectiveCarrierId = localCarrierIdPredict;
 
         if (effectivelyCarried)
         {
@@ -622,7 +622,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     [Rpc(RpcSources.All, RpcTargets.All)]
     public void RPC_UpdateCarry(bool state, NetworkId carrierId, bool doThrow = false,
-                             float throwDir = 1f, float forceX = 4f, float forceY = 4f)
+                            float throwDir = 1f, float forceX = 4f, float forceY = 4f,
+                            Vector2 throwSpawnPos = default)
     {
         if (HasStateAuthority)
         {
@@ -643,22 +644,27 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         {
             if (HasStateAuthority)
             {
-                if (Runner.TryFindObject(carrierId, out var duckObjForPos)
-                    && duckObjForPos.TryGetComponent<Rigidbody2D>(out var duckRb))
+                if (throwSpawnPos != default)
                 {
-                    rb2D.position = duckRb.position + Vector2.up * betweenCarryPosition;
+                    rb2D.position = throwSpawnPos;
                 }
-                else if (Runner.TryFindObject(carrierId, out var duckObjFallback))
+                else
                 {
-                    rb2D.position = (Vector2)duckObjFallback.transform.position + Vector2.up * betweenCarryPosition;
+                    if (Runner.TryFindObject(carrierId, out var duckObjForPos)
+                        && duckObjForPos.TryGetComponent<Rigidbody2D>(out var duckRb))
+                    {
+                        rb2D.position = duckRb.position + Vector2.up * betweenCarryPosition;
+                    }
                 }
 
                 rb2D.bodyType = RigidbodyType2D.Dynamic;
                 rb2D.linearVelocity = Vector2.zero;
+
                 if (doThrow)
                 {
                     rb2D.AddForce(new Vector2(throwDir * forceX, forceY), ForceMode2D.Impulse);
                 }
+
                 IsGrounded = false;
                 IsInAir = true;
                 resetAnimation = false;
@@ -967,8 +973,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     {
         if (Runner == null || !Runner.IsRunning) return;
 
-        bool effectivelyCarried = IsBeingCarried || localIsBeingCarriedPredict;
-        NetworkId effectiveCarrierId = IsBeingCarried ? CarrierId : localCarrierIdPredict;
+        bool effectivelyCarried = localIsBeingCarriedPredict;
+        NetworkId effectiveCarrierId = localCarrierIdPredict;
 
         if (effectivelyCarried
             && Runner.TryFindObject(effectiveCarrierId, out var duckObj)

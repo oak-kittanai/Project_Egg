@@ -206,25 +206,23 @@ public class Duck_Moveset : MovementCharacter
                 {
                     float throwDir = cAnimation.FlipX ? 1f : -1f;
 
+                    Vector2 throwSpawnPos = (Vector2)friend.transform.position;
+
                     friend.localIsBeingCarriedPredict = false;
                     if (friend.rb2D != null) friend.rb2D.bodyType = RigidbodyType2D.Dynamic;
                     if (friend.coll2D != null) friend.coll2D.isTrigger = false;
-
                     if (carryCollider != null && friend.coll2D != null) Physics2D.IgnoreCollision(carryCollider, friend.coll2D, false);
                     if (normalCollider != null && friend.coll2D != null) Physics2D.IgnoreCollision(normalCollider, friend.coll2D, false);
 
-                    friend.RPC_UpdateCarry(false, Object.Id, throwFriend, throwDir, throwForceX, throwForceY);
+                    friend.RPC_UpdateCarry(false, Object.Id, throwFriend, throwDir, throwForceX, throwForceY, throwSpawnPos);
                     break;
                 }
             }
         }
-
         if (normalCollider != null) normalCollider.enabled = true;
         if (carryCollider != null) carryCollider.enabled = false;
-
         IsCarry = false;
         CarriedFriendId = default;
-
         resetAnimation = true;
     }
 

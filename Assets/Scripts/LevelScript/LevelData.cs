@@ -70,6 +70,7 @@ public class LevelData : MonoBehaviour
         yield return new WaitUntil(() => GameManager.Instance.Object != null && GameManager.Instance.Object.IsValid);
 
         GameManager.Instance.SetupLevelData(this);
+        CutsceneManager.Instance.Setup();
     }
 
     public void RegisterCanvas(GameObject canvas)
