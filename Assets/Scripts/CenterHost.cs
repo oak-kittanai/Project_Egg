@@ -45,25 +45,28 @@ public class CenterHost : SingletonNetwork<CenterHost>
 
     private void SetupGameCore()
     {
-        if (canvasPrefab != null && GameObject.Find(canvasPrefab.name) == null)
+        GameObject canvasObj = GameObject.Find(canvasPrefab.name);
+
+        // ถ้ายังไม่มีในฉาก ให้สร้างใหม่
+        if (canvasObj == null && canvasPrefab != null)
         {
-            GameObject canvasObj = Instantiate(canvasPrefab);
+            canvasObj = Instantiate(canvasPrefab);
             canvasObj.name = canvasPrefab.name;
             DontDestroyOnLoad(canvasObj);
+        }
 
+        if (canvasObj != null)
+        {
             PlayerInterface.Instance?.RegisterCanvas(canvasObj);
             TutorialUIManager.Instance?.RegisterCanvas(canvasObj);
         }
-        else
-        {
-            GameObject existingCanvas = GameObject.Find(canvasPrefab.name);
-            if (existingCanvas != null)
-            {
-                PlayerInterface.Instance?.RegisterCanvas(existingCanvas);
-            }
 
-            if (GameObject.Find("CoreManagerSceneHop") == null && coreManagerPrefab != null)
-                Instantiate(coreManagerPrefab);
+        string coreName = "CoreManagerSceneHop";
+        if (GameObject.Find(coreName) == null && coreManagerPrefab != null)
+        {
+            GameObject core = Instantiate(coreManagerPrefab);
+            core.name = coreName;
+            DontDestroyOnLoad(core);
         }
     }
 
