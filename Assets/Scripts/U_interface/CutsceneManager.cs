@@ -1,8 +1,8 @@
 ﻿using Fusion;
 using System.Linq;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Video;
-using System.Collections;
 
 public class CutsceneManager : NetworkBehaviour
 {
@@ -10,11 +10,10 @@ public class CutsceneManager : NetworkBehaviour
 
     [Networked, OnChangedRender(nameof(OnVoteChanged))]
     public NetworkBool HostSkipReady { get; set; }
-
     [Networked, OnChangedRender(nameof(OnVoteChanged))]
     public NetworkBool ClientSkipReady { get; set; }
 
-    [Networked] public NetworkBool IsCutscenePlaying { get; set; }
+    private bool hasFinishedLocal = false;
 
     private void Awake()
     {
@@ -30,85 +29,70 @@ public class CutsceneManager : NetworkBehaviour
     private IEnumerator SetupWhenLevelDataReady()
     {
         yield return new WaitUntil(() => LevelData.Instance != null);
+
+        yield return new WaitUntil(() => PlayerInterface.Instance != null);
+
+        if (LevelData.Instance.introClip != null)
+        {
+            yield return new WaitUntil(() => PlayerInterface.Instance.introVideoPlayer != null);
+        }
+
         yield return null;
 
         Setup();
     }
 
-    public void Setup()
+    private void Setup()
     {
         if (LevelData.Instance == null)
         {
-            Debug.LogWarning("[CutsceneManager] LevelData.Instance is null");
+            Debug.LogWarning("[CutsceneManager] LevelData null");
             return;
         }
 
-        if (LevelData.Instance.introClip == null)
+        VideoClip clip = LevelData.Instance.introClip;
+
+        bool hasCutscene = clip != null && PlayerInterface.Instance != null && PlayerInterface.Instance.introVideoPlayer != null;
+
+        if (hasCutscene)
         {
-            Debug.Log("[CutsceneManager] No introClip → PlayLoadingOnly");
-            PlayLoadingOnly();
-            return;
+            Debug.Log("[CutsceneManager] Has introClip → cutscene");
+            SetupAndPlayCutscene(clip);
         }
-
-        if (LevelData.Instance.introVideoPlayer == null)
+        else
         {
-            Debug.LogWarning("[CutsceneManager] introVideoPlayer null → fallback PlayLoadingOnly");
+            Debug.Log("[CutsceneManager] No introClip → loading only");
             PlayLoadingOnly();
-            return;
         }
-
-        if (LevelData.Instance.videoLoadingPlayer != null)
-            LevelData.Instance.videoLoadingPlayer.enabled = false;
-
-        Debug.Log("[CutsceneManager] Has introClip → SetupAndPlayCutscene");
-        SetupAndPlayCutscene();
     }
 
     private void PlayLoadingOnly()
     {
-        if (LevelData.Instance.videoLoadingPlayer != null)
-        {
-            LevelData.Instance.videoLoadingPlayer.enabled = true;
-            LevelData.Instance.videoLoadingPlayer.Play();
-        }
-
         if (PlayerInterface.Instance != null)
+        {
+            PlayerInterface.Instance.PlayLoadingVideo();
             PlayerInterface.Instance.SetSkipButtonActive(false);
-
-        Debug.Log($"[CutsceneManager] PlayLoadingOnly (HasAuth: {HasStateAuthority})");
-        if (HasStateAuthority)
-        {
-            GameManager.Instance.MapsLoadedCount++;
-            GameManager.Instance.CheckMapLoadingPublic();
         }
-        else
-        {
-            RPC_NotifyMapReady();
-        }
+        NotifyMapReady();
     }
 
-    private void SetupAndPlayCutscene()
+    private void SetupAndPlayCutscene(VideoClip clip)
     {
-        IsCutscenePlaying = true;
-
-        if (PlayerInterface.Instance?.skipButton != null)
+        if (PlayerInterface.Instance != null)
         {
-            PlayerInterface.Instance.skipButton.onClick.RemoveAllListeners();
-            PlayerInterface.Instance.skipButton.onClick.AddListener(OnClickSkip);
-            PlayerInterface.Instance.SetSkipButtonActive(true);
-            PlayerInterface.Instance.skipButton.interactable = true;
-            UpdateVoteUI();
-        }
+            if (PlayerInterface.Instance.skipButton != null)
+            {
+                PlayerInterface.Instance.skipButton.onClick.RemoveAllListeners();
+                PlayerInterface.Instance.skipButton.onClick.AddListener(OnClickSkip);
+                PlayerInterface.Instance.SetSkipButtonActive(true);
+                PlayerInterface.Instance.skipButton.interactable = true;
+                UpdateVoteUI();
+            }
 
-        if (LevelData.Instance.loadingScreenUI != null)
-            LevelData.Instance.loadingScreenUI.SetActive(true);
+            PlayerInterface.Instance.PlayIntroCutscene(clip);
 
-        LevelData.Instance.introVideoPlayer.clip = LevelData.Instance.introClip;
-        LevelData.Instance.introVideoPlayer.Play();
-
-        if (HasStateAuthority)
-        {
-            LevelData.Instance.introVideoPlayer.loopPointReached += OnVideoPlaybackFinished;
+            if (HasStateAuthority && PlayerInterface.Instance.introVideoPlayer != null)
+                PlayerInterface.Instance.introVideoPlayer.loopPointReached += OnVideoPlaybackFinished;
         }
     }
 
@@ -123,20 +107,11 @@ public class CutsceneManager : NetworkBehaviour
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
     private void RPC_SubmitSkipVote(PlayerRef playerRef)
     {
-        if (playerRef == Runner.LocalPlayer)
-            HostSkipReady = true;
-        else
-            ClientSkipReady = true;
+        if (playerRef == Runner.LocalPlayer) HostSkipReady = true;
+        else ClientSkipReady = true;
 
-        CheckVoteProgress();
-    }
-
-    private void CheckVoteProgress()
-    {
         int activePlayers = Runner.ActivePlayers.Count();
         int skipCount = (HostSkipReady ? 1 : 0) + (ClientSkipReady ? 1 : 0);
-
-        Debug.Log($"[CutsceneManager] CheckVoteProgress {skipCount}/{activePlayers}");
 
         if (skipCount >= activePlayers)
             RPC_EndCutsceneAll();
@@ -144,64 +119,60 @@ public class CutsceneManager : NetworkBehaviour
 
     private void OnVideoPlaybackFinished(VideoPlayer vp)
     {
-        LevelData.Instance.introVideoPlayer.loopPointReached -= OnVideoPlaybackFinished;
-        Debug.Log("[CutsceneManager] Video finished → RPC_EndCutsceneAll");
+        if (PlayerInterface.Instance?.introVideoPlayer != null)
+            PlayerInterface.Instance.introVideoPlayer.loopPointReached -= OnVideoPlaybackFinished;
+
         RPC_EndCutsceneAll();
     }
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
     private void RPC_EndCutsceneAll()
     {
-        Debug.Log("[CutsceneManager] RPC_EndCutsceneAll received → FinishCutsceneAndStartGame");
-        FinishCutsceneAndStartGame();
+        FinishCutscene();
     }
 
-    private void FinishCutsceneAndStartGame()
-    {
-        if (LevelData.Instance?.introVideoPlayer != null)
-            LevelData.Instance.introVideoPlayer.Stop();
 
-        if (LevelData.Instance?.loadingScreenUI != null)
-            LevelData.Instance.loadingScreenUI.SetActive(false);
+    private void FinishCutscene()
+    {
+        if (hasFinishedLocal) return;
+        hasFinishedLocal = true;
 
         if (PlayerInterface.Instance != null)
+        {
+            PlayerInterface.Instance.StopIntroCutscene();
             PlayerInterface.Instance.SetSkipButtonActive(false);
+            PlayerInterface.Instance.PlayLoadingVideo();
+        }
 
         if (HasStateAuthority)
         {
-            int playerCount = Runner.ActivePlayers.Count();
-            Debug.Log($"[CutsceneManager] StateAuthority: counting {playerCount} players as map ready");
-            GameManager.Instance.MapsLoadedCount += playerCount;
-            GameManager.Instance.CheckMapLoadingPublic();
+            GameManager.Instance?.MapAllPlayersFinishedLoading();
         }
     }
 
-    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    private void RPC_NotifyMapReady()
+    private void NotifyMapReady()
     {
-        Debug.Log("[CutsceneManager] RPC_NotifyMapReady received");
-        GameManager.Instance.MapsLoadedCount++;
-        Debug.Log($"[CutsceneManager] MapsLoadedCount: {GameManager.Instance.MapsLoadedCount}");
-        GameManager.Instance.CheckMapLoadingPublic();
+        Debug.Log($"[CutsceneManager] NotifyMapReady (HasAuth: {HasStateAuthority})");
+        GameManager.Instance?.MapFinishedLoading();
     }
+
 
     public void OnVoteChanged() => UpdateVoteUI();
 
     private void UpdateVoteUI()
     {
-        if (PlayerInterface.Instance == null) return;
+        if (PlayerInterface.Instance?.skipPlayerCheckText == null) return;
 
         int activePlayers = Runner.ActivePlayers.Count();
         int skipCount = (HostSkipReady ? 1 : 0) + (ClientSkipReady ? 1 : 0);
-
-        if (PlayerInterface.Instance.skipPlayerCheckText != null)
-            PlayerInterface.Instance.skipPlayerCheckText.text = $"{skipCount}/{activePlayers}";
+        PlayerInterface.Instance.skipPlayerCheckText.text = $"{skipCount}/{activePlayers}";
     }
 
     private void OnDestroy()
     {
         if (Instance == this) Instance = null;
-        if (LevelData.Instance?.introVideoPlayer != null)
-            LevelData.Instance.introVideoPlayer.loopPointReached -= OnVideoPlaybackFinished;
+
+        if (PlayerInterface.Instance?.introVideoPlayer != null)
+            PlayerInterface.Instance.introVideoPlayer.loopPointReached -= OnVideoPlaybackFinished;
     }
 }

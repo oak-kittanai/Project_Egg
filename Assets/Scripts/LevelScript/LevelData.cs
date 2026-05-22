@@ -12,13 +12,8 @@ public class LevelData : MonoBehaviour
     public Transform SpawnPosition;
     public CheckPoint[] levelCheckPoints;
 
-    [Header("UI")]
-    public GameObject loadingScreenUI;
-
-    [Header("Cutscene Settings (Intro)")]
+    [Header("Cutscene")]
     public VideoClip introClip;
-    public VideoPlayer introVideoPlayer;
-    public VideoPlayer videoLoadingPlayer;
 
     [Header("SpawnPoints")]
     public GameObject[] spawnPointsInMap;
@@ -40,51 +35,21 @@ public class LevelData : MonoBehaviour
 
     [Header("Tutorial")]
     [SerializeField] bool isTutorialAvailable;
-
-    public bool isInteractShow;
-    public bool isJumpShow;
-    public bool isFlyingShow;
-    public bool isDivingShow;
-    public bool isMovingShow;
-    public bool isCarryShow;
-
-    // Render
+    public bool isInteractShow, isJumpShow, isFlyingShow;
+    public bool isDivingShow, isMovingShow, isCarryShow;
     [SerializeField] Image tutorialSlot;
-
     public TutorialData[] tutorials;
 
     private void Awake()
     {
         Instance = this;
-
-        GameObject canvas = GameObject.Find("Canvas");
-        if (canvas != null)
-        {
-            RegisterCanvas(canvas);
-        }
     }
 
     private IEnumerator Start()
     {
         yield return new WaitUntil(() => GameManager.Instance != null);
         yield return new WaitUntil(() => GameManager.Instance.Object != null && GameManager.Instance.Object.IsValid);
-
         GameManager.Instance.SetupLevelData(this);
-    }
-
-    public void RegisterCanvas(GameObject canvas)
-    {
-        Transform loadingScene = canvas.transform.Find("LoadingScene");
-        if (loadingScene != null)
-        {
-            loadingScreenUI = loadingScene.gameObject;
-
-            Transform vp = loadingScene.Find("videoPlayer");
-            if (vp != null) introVideoPlayer = vp.GetComponent<VideoPlayer>();
-
-            Transform lv = loadingScene.Find("LoadingVideo");
-            if (lv != null) videoLoadingPlayer = lv.GetComponent<VideoPlayer>();
-        }
     }
 
     public void RequestTutorialShow(string requestedName)
@@ -93,42 +58,14 @@ public class LevelData : MonoBehaviour
         {
             if (tut.tutorialName == requestedName)
             {
-                if (TutorialUIManager.Instance != null)
-                {
-                    TutorialUIManager.Instance.ShowTutorial(tut.tutorialSprite, tut.RectTransform, tut.displayDuration);
-                }
+                TutorialUIManager.Instance?.ShowTutorial(
+                    tut.tutorialSprite, tut.RectTransform, tut.displayDuration);
                 return;
             }
         }
     }
 
-    private void OnDestroy()
-    {
-        if (introVideoPlayer != null)
-        {
-            introVideoPlayer.Stop();
-            introVideoPlayer.clip = null;
-        }
-
-        if (videoLoadingPlayer != null)
-        {
-            videoLoadingPlayer.Stop();
-            videoLoadingPlayer.enabled = false;
-        }
-
-        if (loadingScreenUI != null)
-        {
-            loadingScreenUI.SetActive(false);
-        }
-    }
-
-    public void RequestTutorialHide()
-    {
-        if (TutorialUIManager.Instance != null)
-        {
-            TutorialUIManager.Instance.HideTutorial();
-        }
-    }
+    public void RequestTutorialHide() => TutorialUIManager.Instance?.HideTutorial();
 }
 
 [System.Serializable]

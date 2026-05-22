@@ -410,7 +410,9 @@ public class Bird_Moveset : MovementCharacter
         if (_prepareToThrow)
         {
             if (Mathf.Abs(input.horizontal) > 0.1f || input.KeybindJump)
+            {
                 CancelThrow();
+            }
         }
 
         if (isPrepareThrowPressed)
@@ -420,14 +422,26 @@ public class Bird_Moveset : MovementCharacter
             if (_canThrowItem && !(isWaterSurface || stilldrowning))
             {
                 if (!_prepareToThrow)
+                {
                     _prepareToThrow = true;
+                }
                 else
+                {
                     ExecuteThrow();
+                }
             }
             else
             {
                 if (_prepareToThrow) CancelThrow();
             }
+        }
+
+        if (_prepareToThrow)
+        {
+            isMoveAble = false;
+            IsInteractBusy = true;
+
+            UpdateOscillatingAim();
         }
 
         _wasisThrowItemPressed = input.KeybindThrowItem;

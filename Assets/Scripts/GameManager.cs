@@ -1,8 +1,9 @@
 ﻿using Fusion;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using System.Threading.Tasks;
 
 [System.Serializable]
 public class ItemMapping
@@ -64,17 +65,64 @@ public class GameManager : SingletonNetwork<GameManager>
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        LevelData levelDataInScene = FindFirstObjectByType<LevelData>();
+        StartCoroutine(HandleSceneLoaded());
+    }
 
-        if (levelDataInScene != null)
+    private System.Collections.IEnumerator HandleSceneLoaded()
+    {
+        yield return new WaitUntil(() => FindFirstObjectByType<LevelData>() != null);
+
+        LevelData levelData = FindFirstObjectByType<LevelData>();
+        SetupLevelData(levelData);
+        Debug.Log("[GameManager] LevelData setup complete");
+
+        if (HasStateAuthority)
         {
-            SetupLevelData(levelDataInScene);
-            Debug.Log($"GameManager Succes Load LevelData");
+            yield return null;
+
+            SpawnPlayersForNewScene();
         }
-        else
+    }
+
+    private void RepositionAllPlayers(LevelData level)
+    {
+        if (level == null || level.SpawnPosition == null)
         {
-            Debug.Log($"GameManager Fail To Load LevelData");
+            Debug.LogWarning("[GameManager] SpawnPosition null — skip reposition");
+            return;
         }
+
+        Vector3 basePos = level.SpawnPosition.position;
+        MovementCharacter[] players = FindObjectsByType<MovementCharacter>(FindObjectsSortMode.None);
+        Debug.Log($"[GameManager] RepositionAllPlayers: found {players.Length} players");
+
+        int index = 0;
+        foreach (var p in players)
+        {
+            if (p.Object == null || !p.Object.IsValid) continue;
+
+            Vector3 pos = basePos + new Vector3(index * 1.5f, 0f, 0f);
+
+            if (p.TryGetComponent<Fusion.Addons.Physics.NetworkRigidbody2D>(out var netRb))
+            {
+                netRb.Teleport(pos, Quaternion.identity);
+                Debug.Log($"[GameManager] Player {p.Object.Id} → {pos}");
+            }
+
+            index++;
+        }
+
+        UpdateRespawnPos(basePos);
+    }
+
+    public void MapAllPlayersFinishedLoading()
+    {
+        if (!HasStateAuthority) return;
+
+        int playerCount = Runner.ActivePlayers.Count();
+        MapsLoadedCount += playerCount;
+        Debug.Log($"[GameManager] MapAllPlayersFinishedLoading +{playerCount} → {MapsLoadedCount}");
+        CheckMapLoading();
     }
 
     #region Network
@@ -124,22 +172,13 @@ public class GameManager : SingletonNetwork<GameManager>
     public void RegisterPlayer(MovementCharacter player)
     {
         if (!activePlayers.Contains(player))
-        {   
+        {
             activePlayers.Add(player);
             Debug.Log($"[GameManager] Player {player.Object.Id} Has Joined");
         }
     }
     public void SetupLevelData(LevelData data)
     {
-        currentLoadingUI = data.loadingScreenUI;
-
-        if (currentLoadingUI != null) currentLoadingUI.SetActive(true);
-
-        if (data.introClip == null && data.videoLoadingPlayer != null)
-        {
-            data.videoLoadingPlayer.Play();
-        }
-
         allowCloseUI = false;
 
         if (data.SpawnPosition != null)
@@ -150,12 +189,47 @@ public class GameManager : SingletonNetwork<GameManager>
         if (HasStateAuthority)
         {
             loadingSceneCooldown = data.introClip != null ? 1f : 4f;
-
             PlayerReadyTimeoutTimer = TickTimer.CreateFromSeconds(Runner, playerReadyTimeout);
-            Debug.Log($"[GameManager] Loading Timeout set: {playerReadyTimeout}s");
         }
     }
 
+    [Header("Player Spawner (Same as CenterHost)")]
+    [SerializeField] NetworkObject PlayerPrefab;
+
+    public void SpawnPlayersForNewScene()
+    {
+        if (!HasStateAuthority) return;
+
+        MovementCharacter[] existingPlayers = FindObjectsByType<MovementCharacter>(FindObjectsSortMode.None);
+        if (existingPlayers.Length > 0)
+        {
+            Debug.Log("[GameManager] Players already exist in scene. Skip spawning.");
+            return;
+        }
+
+        Vector3 spawnPos = GetRespawnPosition();
+        activePlayers.Clear();
+
+        foreach (var playerRef in Runner.ActivePlayers)
+        {
+            if (PlayerPrefab != null)
+            {
+                Runner.Spawn(PlayerPrefab, spawnPos, Quaternion.identity, playerRef, (runner, obj) =>
+                {
+                    CharacterStats playerStats = obj.GetComponent<CharacterStats>();
+                    if (playerStats != null)
+                    {
+                        playerStats.skinType = (playerRef == Runner.LocalPlayer) ? characterType.Bird : characterType.Duck;
+                    }
+                    obj.name = $"Spawned_{playerStats?.skinType}";
+                });
+            }
+            else
+            {
+                Debug.LogError("[GameManager] PlayerPrefab is missing! Please assign it in the Inspector.");
+            }
+        }
+    }
 
     #endregion
     #endregion
@@ -182,9 +256,30 @@ public class GameManager : SingletonNetwork<GameManager>
         }
     }
 
-    public void CheckMapLoadingPublic()
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    private void RPC_MapFinishedLoading()
     {
-        Debug.Log($"[GameManager] CheckMapLoading — count: {MapsLoadedCount}, done: {isLoadMapDone}");
+        MapsLoadedCount++;
+        CheckMapLoading();
+    }
+
+
+    public void MapFinishedLoading()
+    {
+        if (HasStateAuthority)
+        {
+            MapsLoadedCount++;
+            CheckMapLoading();
+        }
+        else
+        {
+            RPC_MapFinishedLoading();
+        }
+    }
+
+    private void CheckMapLoading()
+    {
+        Debug.Log($"[GameManager] CheckMapLoading — count: {MapsLoadedCount}/2, done: {isLoadMapDone}");
         if (MapsLoadedCount >= 2 && !isLoadMapDone)
         {
             isLoadMapDone = true;
@@ -614,10 +709,8 @@ public class GameManager : SingletonNetwork<GameManager>
         {
             HideGlobalLoadingScreen();
 
-            if (currentLoadingUI != null && currentLoadingUI.activeSelf)
-            {
-                currentLoadingUI.SetActive(false);
-            }
+            if (PlayerInterface.Instance != null)
+                PlayerInterface.Instance.StopAllVideos();
 
             allowCloseUI = false;
         }
