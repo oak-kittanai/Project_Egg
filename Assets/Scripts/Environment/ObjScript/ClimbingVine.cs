@@ -6,8 +6,9 @@ public class ClimbingVine : NetworkBehaviour, Interactable
 {
     [SerializeField] private float climbUpSpeed = 0.8f;
     [SerializeField] private float fallSpeed = -5f;
+    [SerializeField] private float autoSlideDownSpeed = -1.5f;
 
-    [Header("Physics...")]
+    [Header("Physics")]
     [SerializeField] private float vineGravity = 0f;
     [SerializeField] private float vineAcceleration = 5f;
     [SerializeField] private float vineDeceleration = 5f;
@@ -16,12 +17,24 @@ public class ClimbingVine : NetworkBehaviour, Interactable
     private List<MovementCharacter> playersInTrigger = new List<MovementCharacter>();
     private List<MovementCharacter> climbingPlayers = new List<MovementCharacter>();
     private Dictionary<MovementCharacter, bool> previousEPress = new Dictionary<MovementCharacter, bool>();
+
     private Collider2D col;
-    private Collider2D[] hitResults = new Collider2D[10];
+    private ContactFilter2D playerFilter;
+    private List<Collider2D> overlappedColliders = new List<Collider2D>();
 
     public override void Spawned()
     {
         col = GetComponent<Collider2D>();
+
+        playerFilter.SetLayerMask(LayerMask.GetMask("Player"));
+        playerFilter.useLayerMask = true;
+    }
+
+    private void RemovePlayer(MovementCharacter player)
+    {
+        if (playersInTrigger.Contains(player)) playersInTrigger.Remove(player);
+        if (climbingPlayers.Contains(player)) StopClimbing(player);
+        if (previousEPress.ContainsKey(player)) previousEPress.Remove(player);
     }
 
     public void Interact(MovementCharacter player) { }
@@ -29,48 +42,35 @@ public class ClimbingVine : NetworkBehaviour, Interactable
 
     public override void FixedUpdateNetwork()
     {
-        if (col != null)
+        if (col == null) return;
+
+        int count = col.OverlapCollider(playerFilter, overlappedColliders);
+
+        List<MovementCharacter> currentPlayers = new List<MovementCharacter>();
+        for (int i = 0; i < count; i++)
         {
-            Vector2 center = col.bounds.center;
-            Vector2 size = col.bounds.size;
-
-            int hitCount = Runner.GetPhysicsScene2D().OverlapBox(center, size, 0f, hitResults, LayerMask.GetMask("Player"));
-            List<MovementCharacter> currentPlayersInVine = new List<MovementCharacter>();
-
-            for (int i = 0; i < hitCount; i++)
+            if (overlappedColliders[i].TryGetComponent<MovementCharacter>(out var p))
             {
-                if (hitResults[i] != null && hitResults[i].TryGetComponent<MovementCharacter>(out var p))
+                if (p.Object != null && p.Object.IsValid && !p.isDead && p.gameObject.activeInHierarchy)
                 {
-                    if (!p.isDead && p.Object != null && p.Object.IsValid)
-                    {
-                        currentPlayersInVine.Add(p);
-                    }
-                }
-            }
-
-            foreach (var p in currentPlayersInVine)
-            {
-                if (!playersInTrigger.Contains(p)) playersInTrigger.Add(p);
-            }
-
-            for (int i = playersInTrigger.Count - 1; i >= 0; i--)
-            {
-                var p = playersInTrigger[i];
-                if (!currentPlayersInVine.Contains(p))
-                {
-                    playersInTrigger.RemoveAt(i);
-                    if (climbingPlayers.Contains(p)) StopClimbing(p);
-                    previousEPress.Remove(p);
+                    currentPlayers.Add(p);
                 }
             }
         }
 
         for (int i = playersInTrigger.Count - 1; i >= 0; i--)
         {
-            var player = playersInTrigger[i];
+            var p = playersInTrigger[i];
+            if (!currentPlayers.Contains(p)) RemovePlayer(p);
+        }
 
-            if (player == null || !player.Object.IsValid || player.isDead) continue;
+        foreach (var p in currentPlayers)
+        {
+            if (!playersInTrigger.Contains(p)) playersInTrigger.Add(p);
+        }
 
+        foreach (var player in playersInTrigger)
+        {
             if (player.HasStateAuthority || player.HasInputAuthority)
             {
                 if (player.GetInput(out NetworkInputData input))
@@ -90,11 +90,7 @@ public class ClimbingVine : NetworkBehaviour, Interactable
 
         if (pressedE)
         {
-            if (isClimbing)
-            {
-                StopClimbing(player);
-                return;
-            }
+            if (isClimbing) StopClimbing(player);
             else
             {
                 StartClimbing(player);
@@ -124,41 +120,28 @@ public class ClimbingVine : NetworkBehaviour, Interactable
             }
             else
             {
-                //player.rb2D.linearVelocity = 0f;
+                player.rb2D.linearVelocity = new Vector2(player.rb2D.linearVelocity.x, autoSlideDownSpeed);
             }
         }
     }
 
     private void StartClimbing(MovementCharacter player)
     {
-        if (!climbingPlayers.Contains(player))
-        {
-            climbingPlayers.Add(player);
-        }
+        if (!climbingPlayers.Contains(player)) climbingPlayers.Add(player);
 
-        if (player is Bird_Moveset bird)
-        {
-            bird.ForceCancelFlight();
-        }
+        if (player is Bird_Moveset bird) bird.ForceCancelFlight();
 
         player.isOptional = true;
         player.isSpeedoptional = true;
-
         player.FallingBusy = false;
         player.IsFalling = false;
-
         player.optionalGravity = vineGravity;
         player.rb2D.gravityScale = player.optionalGravity;
-
-        //player.rb2D.linearVelocity = 0f;
     }
 
     private void StopClimbing(MovementCharacter player)
     {
-        if (climbingPlayers.Contains(player))
-        {
-            climbingPlayers.Remove(player);
-        }
+        if (climbingPlayers.Contains(player)) climbingPlayers.Remove(player);
 
         player.isOptional = false;
         player.isSpeedoptional = false;
