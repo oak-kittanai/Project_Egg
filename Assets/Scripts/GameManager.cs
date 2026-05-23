@@ -172,7 +172,7 @@ public class GameManager : SingletonNetwork<GameManager>
         MovementCharacter[] existingPlayers = FindObjectsByType<MovementCharacter>(FindObjectsSortMode.None);
         if (existingPlayers.Length > 0)
         {
-            Debug.Log("[GameManager] Players already exist in scene. Skip spawning.");
+            Debug.Log("[GameManager] Players already exist. Skip spawning.");
             return;
         }
 
@@ -181,22 +181,20 @@ public class GameManager : SingletonNetwork<GameManager>
 
         foreach (var playerRef in Runner.ActivePlayers)
         {
-            if (PlayerPrefab != null)
+            bool isHost = (playerRef == Runner.LocalPlayer);
+            characterType type = isHost
+                ? CenterHost.Instance.currentHost
+                : CenterHost.Instance.currentClient;
+
+            Runner.Spawn(PlayerPrefab, spawnPos, Quaternion.identity, playerRef, (runner, obj) =>
             {
-                Runner.Spawn(PlayerPrefab, spawnPos, Quaternion.identity, playerRef, (runner, obj) =>
+                CharacterStats playerStats = obj.GetComponent<CharacterStats>();
+                if (playerStats != null)
                 {
-                    CharacterStats playerStats = obj.GetComponent<CharacterStats>();
-                    if (playerStats != null)
-                    {
-                        playerStats.skinType = (playerRef == Runner.LocalPlayer) ? characterType.Bird : characterType.Duck;
-                    }
-                    obj.name = $"Spawned_{playerStats?.skinType}";
-                });
-            }
-            else
-            {
-                Debug.LogError("[GameManager] PlayerPrefab is missing! Please assign it in the Inspector.");
-            }
+                    playerStats.skinType = type;
+                }
+                obj.name = $"Spawned_{type}";
+            });
         }
     }
 

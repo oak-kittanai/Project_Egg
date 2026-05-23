@@ -7,7 +7,10 @@ public class AudioManager : MonoBehaviour
     public static AudioManager Instance { get; private set; }
 
     [Header("Configs")]
-    [SerializeField] private SoundConfig[] soundList;
+    [SerializeField] private SoundConfig[] soundBGMList;
+    [SerializeField] private SoundConfig[] playerSoundList;
+    [SerializeField] private SoundConfig[] sfxSoundList;
+    [SerializeField] private SoundConfig[] assetsSoundList;
 
     [Header("Global Settings")]
     [SerializeField] private GameSettingsSO gameSettings;
@@ -70,9 +73,9 @@ public class AudioManager : MonoBehaviour
         }
     }
 
-    public void PlaySoundAtPosition(string name, Vector3 position)
+    public void PlayPlayerSoundAtPosition(string name, Vector3 position)
     {
-        SoundConfig s = Array.Find(soundList, sound => sound.soundName == name);
+        SoundConfig s = Array.Find(playerSoundList, sound => sound.soundName == name);
 
         if (s == null)
         {
@@ -95,9 +98,34 @@ public class AudioManager : MonoBehaviour
         Destroy(tempAudioObj, s.clip.length);
     }
 
-    public void PlayDirectSound(string name)
+    public void PlaySFXSoundAtPosition(string name, Vector3 position)
     {
-        SoundConfig s = Array.Find(soundList, sound => sound.soundName == name);
+        SoundConfig s = Array.Find(sfxSoundList, sound => sound.soundName == name);
+
+        if (s == null)
+        {
+            Debug.LogWarning($"[AudioManager] can't find '{name}' Config");
+            return;
+        }
+
+        GameObject tempAudioObj = new GameObject("TempAudio_" + name);
+        tempAudioObj.transform.position = position;
+
+        AudioSource source = tempAudioObj.AddComponent<AudioSource>();
+        source.clip = s.clip;
+
+        float globalSfx = gameSettings != null ? (gameSettings.sfxVolume / 100f) : 1f;
+        source.volume = globalSfx;
+
+        source.spatialBlend = 1f;
+
+        source.Play();
+        Destroy(tempAudioObj, s.clip.length);
+    }
+
+    public void PlaySFXDirectSound(string name) // all in map
+    {
+        SoundConfig s = Array.Find(sfxSoundList, sound => sound.soundName == name);
 
         if (s == null)
         {
@@ -121,7 +149,7 @@ public class AudioManager : MonoBehaviour
             return;
         }
 
-        SoundConfig s = Array.Find(soundList, sound => sound.soundName == name);
+        SoundConfig s = Array.Find(soundBGMList, sound => sound.soundName == name);
 
         if (s == null)
         {

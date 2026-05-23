@@ -3,7 +3,7 @@ using UnityEngine;
 public class AudioClick : MonoBehaviour
 {
     [Header("Audio Setting")]
-    public string clickSoundName = "Click";
+    public string clickSoundName = "ClickSound";
 
     void Update()
     {
@@ -11,7 +11,7 @@ public class AudioClick : MonoBehaviour
         {
             if (AudioManager.Instance != null)
             {
-                AudioManager.Instance.PlayDirectSound(clickSoundName);
+                AudioManager.Instance.PlaySFXDirectSound(clickSoundName);
             }
         }
     }

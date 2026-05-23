@@ -254,25 +254,18 @@ public class MenuController : NetworkBehaviour
     [Rpc(RpcSources.All, RpcTargets.All)]
     private void RPC_QuitGame()
     {
-        ExecuteQuitGameAsync();
-
         GameManager.Instance?.ResetAllSkillUnlocks();
+        StartCoroutine(QuitSequence());
     }
 
-    private void ExecuteQuitGameAsync()
+    private System.Collections.IEnumerator QuitSequence()
     {
+        UnityEngine.SceneManagement.SceneManager.LoadScene("SessionScene");
+
+        yield return null;
+
         if (SessionManager.Instance != null)
-        {
             SessionManager.Instance.ReStartNetworkRunner();
-        }
-        else if (GameManager.Instance != null)
-        {
-            GameManager.Instance.BackToSessionScene();
-        }
-        else
-        {
-            UnityEngine.SceneManagement.SceneManager.LoadScene("SessionScene");
-        }
     }
 
     #region Menu Control
