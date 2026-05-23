@@ -45,29 +45,28 @@ public class CenterHost : SingletonNetwork<CenterHost>
 
     private void SetupGameCore()
     {
-        // 1. เสก Canvas
-        if (canvasPrefab != null && GameObject.Find(canvasPrefab.name) == null)
+        GameObject canvasObj = GameObject.Find(canvasPrefab.name);
+
+        // ถ้ายังไม่มีในฉาก ให้สร้างใหม่
+        if (canvasObj == null && canvasPrefab != null)
         {
-            GameObject canvasObj = Instantiate(canvasPrefab);
+            canvasObj = Instantiate(canvasPrefab);
             canvasObj.name = canvasPrefab.name;
             DontDestroyOnLoad(canvasObj);
+        }
 
+        if (canvasObj != null)
+        {
             PlayerInterface.Instance?.RegisterCanvas(canvasObj);
             TutorialUIManager.Instance?.RegisterCanvas(canvasObj);
-            LevelData.Instance?.RegisterCanvas(canvasObj);
-        }
-        else
-        {
-            GameObject existingCanvas = GameObject.Find(canvasPrefab.name);
-            if (existingCanvas != null)
-            {
-                LevelData.Instance?.RegisterCanvas(existingCanvas);
-            }
         }
 
-        if (GameObject.Find("CoreManagerSceneHop") == null && coreManagerPrefab != null)
+        string coreName = "CoreManagerSceneHop";
+        if (GameObject.Find(coreName) == null && coreManagerPrefab != null)
         {
-            Instantiate(coreManagerPrefab);
+            GameObject core = Instantiate(coreManagerPrefab);
+            core.name = coreName;
+            DontDestroyOnLoad(core);
         }
     }
 
@@ -193,7 +192,7 @@ public class CenterHost : SingletonNetwork<CenterHost>
         com = netObj.GetComponent<T>();
     }
 
-    private void TryGetComponentFromGameObject<T>(GameObject obj,ref T com) where T : Component
+    private void TryGetComponentFromGameObject<T>(GameObject obj, ref T com) where T : Component
     {
         com = obj.GetComponent<T>();
     }

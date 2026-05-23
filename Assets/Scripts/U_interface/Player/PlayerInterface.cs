@@ -1,9 +1,10 @@
-﻿using Fusion;
+﻿using DG.Tweening;
+using Fusion;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.SceneManagement;
-using DG.Tweening;
+using UnityEngine.UI;
+using UnityEngine.Video;
 
 public class PlayerInterface : MonoBehaviour
 {
@@ -93,6 +94,11 @@ public class PlayerInterface : MonoBehaviour
     public Slider musicSlider;
     public Slider soundSlider;
     public Button settingLeaveButton;
+
+    [Header("Loading / Cutscene Video")]
+    public GameObject loadingScreenUI;
+    public VideoPlayer introVideoPlayer;
+    public VideoPlayer videoLoadingPlayer;
 
     [Header("Cutscene UI")]
     public Button skipButton;
@@ -231,7 +237,6 @@ public class PlayerInterface : MonoBehaviour
 
         // Skip Cutscene
         Transform skipButtoN = canvas.transform.Find("SkipButton");
-
         if (skipButtoN != null)
         {
             skipButton = skipButtoN.GetComponent<Button>();
@@ -239,9 +244,21 @@ public class PlayerInterface : MonoBehaviour
             skipPlayerCheckText = skipButtoN.Find("SkipText")?.GetComponent<TMP_Text>();
         }
 
+        // Loading
+        Transform loadingScene = canvas.transform.Find("LoadingScene");
+        if (loadingScene != null)
+        {
+            loadingScreenUI = loadingScene.gameObject;
+
+            Transform vp = loadingScene.Find("videoPlayer");
+            if (vp != null) introVideoPlayer = vp.GetComponent<VideoPlayer>();
+
+            Transform lv = loadingScene.Find("LoadingVideo");
+            if (lv != null) videoLoadingPlayer = lv.GetComponent<VideoPlayer>();
+        }
+
         HideQuestUI();
         Debug.Log("[PlayerInterface] RegisterCanvas success");
-
         if (MenuController.Instance != null) MenuController.Instance.RefreshButtons();
     }
 
@@ -419,11 +436,63 @@ public class PlayerInterface : MonoBehaviour
 
     #endregion
 
-    #region cutscene
+    #region Loading & Cutscene Video
 
     public void SetSkipButtonActive(bool isActive)
     {
         if (skipButton != null) skipButton.gameObject.SetActive(isActive);
+    }
+
+    public void ShowLoadingScreen(bool show)
+    {
+        if (loadingScreenUI != null) loadingScreenUI.SetActive(show);
+    }
+
+    public void StopAllVideos()
+    {
+        if (introVideoPlayer != null)
+        {
+            introVideoPlayer.Stop();
+            introVideoPlayer.clip = null;
+        }
+
+        if (videoLoadingPlayer != null)
+        {
+            videoLoadingPlayer.Stop();
+            videoLoadingPlayer.enabled = false;
+        }
+
+        ShowLoadingScreen(false);
+    }
+
+    public void PlayIntroCutscene(VideoClip clip)
+    {
+        ShowLoadingScreen(true);
+
+        if (videoLoadingPlayer != null)
+            videoLoadingPlayer.enabled = false;
+
+        if (introVideoPlayer != null && clip != null)
+        {
+            introVideoPlayer.clip = clip;
+            introVideoPlayer.Play();
+        }
+    }
+
+    public void StopIntroCutscene()
+    {
+        if (introVideoPlayer != null) introVideoPlayer.Stop();
+    }
+
+    public void PlayLoadingVideo()
+    {
+        ShowLoadingScreen(true);
+
+        if (videoLoadingPlayer != null)
+        {
+            videoLoadingPlayer.enabled = true;
+            videoLoadingPlayer.Play();
+        }
     }
 
     #endregion

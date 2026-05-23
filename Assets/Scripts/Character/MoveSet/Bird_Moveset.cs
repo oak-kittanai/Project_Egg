@@ -80,7 +80,6 @@ public class Bird_Moveset : MovementCharacter
                 if (_prepareToThrow) CancelThrow();
 
                 _wasJumpPressed = input.KeybindJump;
-                _wasPrepareThrowPressed = input.KeybindPrepareThrowItem;
                 _wasisThrowItemPressed = input.KeybindThrowItem;
             }
         }
@@ -406,7 +405,7 @@ public class Bird_Moveset : MovementCharacter
 
     public void HandleThrowLogic(NetworkInputData input)
     {
-        bool isPrepareThrowPressed = input.KeybindPrepareThrowItem && !_wasPrepareThrowPressed;
+        bool isPrepareThrowPressed = input.KeybindThrowItem && !_wasisThrowItemPressed;
 
         if (_prepareToThrow)
         {
@@ -433,10 +432,7 @@ public class Bird_Moveset : MovementCharacter
             }
             else
             {
-                if (_prepareToThrow)
-                {
-                    CancelThrow();
-                }
+                if (_prepareToThrow) CancelThrow();
             }
         }
 
@@ -448,7 +444,7 @@ public class Bird_Moveset : MovementCharacter
             UpdateOscillatingAim();
         }
 
-        _wasPrepareThrowPressed = input.KeybindPrepareThrowItem;
+        _wasisThrowItemPressed = input.KeybindThrowItem;
     }
 
     private void ExecuteThrow()

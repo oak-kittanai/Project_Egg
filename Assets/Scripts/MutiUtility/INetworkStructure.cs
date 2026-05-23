@@ -93,10 +93,6 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
 
             Vector2 mousePosition = Mouse.current.position.ReadValue();
 
-            bool press_C;
-            if (Keyboard.current.cKey.isPressed) press_C = true;
-            else press_C = false;
-
             bool press_Q;
             if (Keyboard.current.qKey.isPressed) press_Q = true;
             else press_Q = false;
@@ -106,7 +102,6 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
             else press_G = false;
 
             data.KeybindThrowItem = press_Q;
-            data.KeybindPrepareThrowItem = press_C;
             data.KeybindDropItem = press_G;
 
             // Data Input
@@ -246,6 +241,5 @@ public struct NetworkInputData : INetworkInput
 
     public bool KeybindInteract;
     public bool KeybindDropItem;
-    public bool KeybindPrepareThrowItem;
     public bool KeybindThrowItem;
 }
