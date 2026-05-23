@@ -396,6 +396,7 @@ public class Bird_Moveset : MovementCharacter
 
     public void ForceCancelFlight()
     {
+        if (IsFlying) StopFlying();
         if (AlreadyFloating) StopFloating();
         IsAlreadyFly = false;
     }
