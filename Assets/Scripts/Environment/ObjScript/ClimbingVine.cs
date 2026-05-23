@@ -4,63 +4,72 @@ using System.Collections.Generic;
 
 public class ClimbingVine : NetworkBehaviour, Interactable
 {
-    [Header("Settings")]
     [SerializeField] private float climbUpSpeed = 0.8f;
     [SerializeField] private float fallSpeed = -5f;
 
-    [Header("Vine Physics")]
+    [Header("Physics...")]
     [SerializeField] private float vineGravity = 0f;
     [SerializeField] private float vineAcceleration = 5f;
     [SerializeField] private float vineDeceleration = 5f;
     [SerializeField] private float vineMaxSpeedX = 2f;
 
     private List<MovementCharacter> playersInTrigger = new List<MovementCharacter>();
-
     private List<MovementCharacter> climbingPlayers = new List<MovementCharacter>();
-
     private Dictionary<MovementCharacter, bool> previousEPress = new Dictionary<MovementCharacter, bool>();
+    private Collider2D col;
+    private Collider2D[] hitResults = new Collider2D[10];
 
-    private void OnTriggerEnter2D(Collider2D collision)
+    public override void Spawned()
     {
-        if (collision.TryGetComponent<MovementCharacter>(out var player))
-        {
-            if (!playersInTrigger.Contains(player))
-            {
-                playersInTrigger.Add(player);
-            }
-        }
+        col = GetComponent<Collider2D>();
     }
 
-    private void OnTriggerExit2D(Collider2D collision)
-    {
-        if (collision.TryGetComponent<MovementCharacter>(out var player))
-        {
-            playersInTrigger.Remove(player);
-
-            if (climbingPlayers.Contains(player))
-            {
-                StopClimbing(player);
-            }
-        }
-    }
-    public void Interact(MovementCharacter player)
-    {
-
-    }
+    public void Interact(MovementCharacter player) { }
+    public bool CanInteract(MovementCharacter player) { return true; }
 
     public override void FixedUpdateNetwork()
     {
+        if (col != null)
+        {
+            Vector2 center = col.bounds.center;
+            Vector2 size = col.bounds.size;
+
+            int hitCount = Runner.GetPhysicsScene2D().OverlapBox(center, size, 0f, hitResults, LayerMask.GetMask("Player"));
+            List<MovementCharacter> currentPlayersInVine = new List<MovementCharacter>();
+
+            for (int i = 0; i < hitCount; i++)
+            {
+                if (hitResults[i] != null && hitResults[i].TryGetComponent<MovementCharacter>(out var p))
+                {
+                    if (!p.isDead && p.Object != null && p.Object.IsValid)
+                    {
+                        currentPlayersInVine.Add(p);
+                    }
+                }
+            }
+
+            foreach (var p in currentPlayersInVine)
+            {
+                if (!playersInTrigger.Contains(p)) playersInTrigger.Add(p);
+            }
+
+            for (int i = playersInTrigger.Count - 1; i >= 0; i--)
+            {
+                var p = playersInTrigger[i];
+                if (!currentPlayersInVine.Contains(p))
+                {
+                    playersInTrigger.RemoveAt(i);
+                    if (climbingPlayers.Contains(p)) StopClimbing(p);
+                    previousEPress.Remove(p);
+                }
+            }
+        }
+
         for (int i = playersInTrigger.Count - 1; i >= 0; i--)
         {
             var player = playersInTrigger[i];
 
-            if (player == null || !player.Object.IsValid || player.isDead)
-            {
-                playersInTrigger.RemoveAt(i);
-                climbingPlayers.Remove(player);
-                previousEPress.Remove(player);
-                continue;
-            }
+            if (player == null || !player.Object.IsValid || player.isDead) continue;
 
             if (player.HasStateAuthority || player.HasInputAuthority)
             {
@@ -70,11 +79,6 @@ public class ClimbingVine : NetworkBehaviour, Interactable
                 }
             }
         }
-    }
-
-    public bool CanInteract(MovementCharacter player)
-    {
-        return true;
     }
 
     private void HandleClimbing(MovementCharacter player, NetworkInputData input)
@@ -120,7 +124,7 @@ public class ClimbingVine : NetworkBehaviour, Interactable
             }
             else
             {
-                player.rb2D.linearVelocity = new Vector2(player.rb2D.linearVelocity.x, 0f);
+                //player.rb2D.linearVelocity = 0f;
             }
         }
     }
@@ -146,11 +150,7 @@ public class ClimbingVine : NetworkBehaviour, Interactable
         player.optionalGravity = vineGravity;
         player.rb2D.gravityScale = player.optionalGravity;
 
-        player.accelerationSpeedOptional = vineAcceleration;
-        player.decelerationSpeedOptional = vineDeceleration;
-        player.optionalMaxSpeed = vineMaxSpeedX;
-
-        player.rb2D.linearVelocity = new Vector2(player.rb2D.linearVelocity.x, 0f);
+        //player.rb2D.linearVelocity = 0f;
     }
 
     private void StopClimbing(MovementCharacter player)
