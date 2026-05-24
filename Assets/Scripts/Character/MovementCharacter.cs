@@ -640,16 +640,23 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     private void TryGrabVine(NetworkInputData input)
     {
         Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, climbCheckRadius, climbableMask);
+        Debug.Log($"[TryGrabVine] mask={climbableMask.value}, hits={hits.Length}");
 
         foreach (var hit in hits)
         {
+            Debug.Log($"[TryGrabVine] hit: {hit.name}, hasIClimbable: {hit.GetComponent<IClimbable>() != null}");
+
             if (hit.TryGetComponent<IClimbable>(out var vine))
             {
                 if (vine.TryStartClimb(this))
                 {
                     currentVine = vine;
-                    Debug.Log("[Player] Grabbed vine");
+                    Debug.Log("[Player] Grabbed vine ✓");
                     break;
+                }
+                else
+                {
+                    Debug.Log("[TryGrabVine] TryStartClimb returned false (อยู่นอก topY/bottomY)");
                 }
             }
         }

@@ -586,7 +586,6 @@ MonoBehaviour:
   coll2D: {fileID: 0}
   localGUI: {fileID: 843996908277204990}
   spriteRenderer: {fileID: 3464039886670934113}
-  playerAudioSource: {fileID: -4954465623273972117}
   jumpSoundClip: {fileID: 8300000, guid: 89bfe5baebba4b5458ae67985ad462a0, type: 3}
   landingSoundClip: {fileID: 8300000, guid: 89bfe5baebba4b5458ae67985ad462a0, type: 3}
   dmgSoundClip: {fileID: 8300000, guid: 51ca9d2c0dd2f3b4d82b97237be54bdb, type: 3}
@@ -648,6 +647,11 @@ MonoBehaviour:
   _damageFlash: {fileID: 0}
   duck_Color: {r: 0, g: 0.4745098, b: 1, a: 0}
   bird_Color: {r: 1, g: 0.54901963, b: 0, a: 0}
+  climbCheckRadius: 0.8
+  climbableMask:
+    serializedVersion: 2
+    m_Bits: 131072
+  _isClimbing: 0
   _HeldItemName:
     _length: 0
     _data:
@@ -705,7 +709,6 @@ MonoBehaviour:
   coll2D: {fileID: 0}
   localGUI: {fileID: 843996908277204990}
   spriteRenderer: {fileID: 3464039886670934113}
-  playerAudioSource: {fileID: -4954465623273972117}
   jumpSoundClip: {fileID: 8300000, guid: 7c11918bcbe05d14ab8418dc7ebc26a9, type: 3}
   landingSoundClip: {fileID: 8300000, guid: 89bfe5baebba4b5458ae67985ad462a0, type: 3}
   dmgSoundClip: {fileID: 8300000, guid: 51ca9d2c0dd2f3b4d82b97237be54bdb, type: 3}
@@ -767,6 +770,11 @@ MonoBehaviour:
   _damageFlash: {fileID: 0}
   duck_Color: {r: 0, g: 0.4745098, b: 1, a: 0}
   bird_Color: {r: 1, g: 0.54901963, b: 0, a: 0}
+  climbCheckRadius: 0.8
+  climbableMask:
+    serializedVersion: 2
+    m_Bits: 131072
+  _isClimbing: 0
   _HeldItemName:
     _length: 0
     _data:

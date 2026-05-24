@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 1085532249196871913}
   - component: {fileID: 1581869760090644828}
   - component: {fileID: -2126449535944077140}
-  m_Layer: 0
+  m_Layer: 17
   m_Name: Vine2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -28,7 +28,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8947267852431787601}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -23.17, y: -13.69, z: 0}
   m_LocalScale: {x: 0.33194128, y: 0.33194128, z: 0.33194128}
   m_ConstrainProportionsScale: 0
@@ -47,12 +47,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7c8a2d36969c2534c9f13470378683e0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ClimbingVine
+  topY: -19
+  bottomY: -14
   climbUpSpeed: 0.8
-  fallSpeed: -5
-  vineGravity: 0
-  vineAcceleration: 5
-  vineDeceleration: 5
-  vineMaxSpeedX: 2
+  climbDownSpeed: 4
 --- !u!212 &1085532249196871913
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -173,6 +171,5 @@ MonoBehaviour:
   ObjectInterest: 1
   Flags: 262145
   NestedObjects: []
-  NetworkedBehaviours:
-  - {fileID: -6673475714210061528}
+  NetworkedBehaviours: []
   ForceRemoteRenderTimeframe: 0
