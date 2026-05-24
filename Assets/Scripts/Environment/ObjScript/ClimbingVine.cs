@@ -5,6 +5,7 @@ public class ClimbingVine : NetworkBehaviour
 {
     private void OnTriggerStay2D(Collider2D other)
     {
+        Debug.Log("Player has enter");
         if (!HasStateAuthority) return;
 
         MovementCharacter[] all = other.GetComponents<MovementCharacter>();
@@ -15,7 +16,7 @@ public class ClimbingVine : NetworkBehaviour
             if (!c.isClimbing && Mathf.Abs(c.MoveInput.y) > 0.1f)
             {
                 if (c is IClimbable climber)
-                    climber.StartClimbing();
+                    climber.StartClimbing(); Debug.Log("Player try to climb");
             }
             break;
         }
@@ -23,6 +24,7 @@ public class ClimbingVine : NetworkBehaviour
 
     private void OnTriggerExit2D(Collider2D other)
     {
+        Debug.Log("Player has exit");
         if (!HasStateAuthority) return;
 
         MovementCharacter[] all = other.GetComponents<MovementCharacter>();
@@ -30,7 +32,7 @@ public class ClimbingVine : NetworkBehaviour
         {
             if (!c.enabled) continue;
             if (c.isClimbing && c is IClimbable climber)
-                climber.StopClimbing();
+                climber.StopClimbing(); Debug.Log("Player try to exit climb");
             break;
         }
     }
