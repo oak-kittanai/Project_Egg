@@ -2,7 +2,7 @@ using Fusion;
 
 public interface IClimbable
 {
-    void ClimbHandle(NetworkInputData input);
-    void StartClimbing();
-    void StopClimbing();
+    bool TryStartClimb(MovementCharacter player);
+    void OnClimbTick(MovementCharacter player, NetworkInputData input);
+    void OnStopClimb(MovementCharacter player);
 }

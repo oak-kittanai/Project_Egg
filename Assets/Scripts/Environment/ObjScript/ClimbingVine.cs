@@ -1,44 +1,36 @@
 using UnityEngine;
 using Fusion;
 
-public class ClimbingVine : NetworkBehaviour
+public class ClimbingVine : MonoBehaviour, IClimbable
 {
-    private void OnTriggerEnter2D(Collider2D other)
+    [Header("Climb Bounds")]
+    [SerializeField] float topY;
+    [SerializeField] float bottomY;
+    [SerializeField] float climbUpSpeed = 3f;
+    [SerializeField] float climbDownSpeed = 4f;
+
+    public bool TryStartClimb(MovementCharacter player)
     {
-        if (!HasStateAuthority) return;
+        float py = player.transform.position.y;
+        if (py < bottomY || py > topY) return false;
 
-        MovementCharacter[] all = other.GetComponents<MovementCharacter>();
-        foreach (var c in all)
-        {
-            if (!c.enabled) continue;
-
-            if (!c.isClimbing && c.MoveInput.y > 0.1f)
-            {
-                if (c is IClimbable climber)
-                {
-                    climber.StartClimbing();
-                    Debug.Log("Player started climbing");
-                }
-            }
-            break;
-        }
+        player.StartClimbing();
+        return true;
     }
 
-    private void OnTriggerExit2D(Collider2D other)
+    public void OnClimbTick(MovementCharacter player, NetworkInputData input)
     {
-        if (!HasStateAuthority) return;
+        float py = player.transform.position.y;
+        float v = 0f;
 
-        MovementCharacter[] all = other.GetComponents<MovementCharacter>();
-        foreach (var c in all)
-        {
-            if (!c.enabled) continue;
+        if (input.vertical > 0.1f && py < topY) v = climbUpSpeed;
+        else if (input.vertical < -0.1f && py > bottomY) v = -climbDownSpeed;
 
-            if (c.isClimbing && c is IClimbable climber)
-            {
-                climber.StopClimbing();
-                Debug.Log("Player exited vine — stop climbing");
-            }
-            break;
-        }
+        player.ApplyClimbVelocity(v);
+    }
+
+    public void OnStopClimb(MovementCharacter player)
+    {
+        player.StopClimbing();
     }
 }

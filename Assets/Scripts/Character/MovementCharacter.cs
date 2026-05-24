@@ -2,7 +2,7 @@
 using UnityEngine;
 using Fusion.Addons.Physics;
 
-public class MovementCharacter : NetworkBehaviour, IDamageable, IClimbable
+public class MovementCharacter : NetworkBehaviour, IDamageable
 {
     [Header("References")]
     [SerializeField] public CharacterStats stats;
@@ -115,9 +115,11 @@ public class MovementCharacter : NetworkBehaviour, IDamageable, IClimbable
     [SerializeField] public Color bird_Color;
 
     [Header("Climbing")]
-    [SerializeField] float climbUpSpeed = 3f;
-    [SerializeField] float climbDownSpeed = 4f;
+    [SerializeField] float climbCheckRadius = 0.8f;
+    [SerializeField] LayerMask climbableMask;
     [Networked] public bool isClimbing { get; set; }
+
+    private IClimbable currentVine;
 
     // UnlockableSkills
     public enum SkillType { None, Duck_Dive, Duck_Smash, Bird_Fly, Bird_Throw }
@@ -302,7 +304,19 @@ public class MovementCharacter : NetworkBehaviour, IDamageable, IClimbable
             }
             else if (isClimbing)
             {
-                ClimbHandle(input);
+                if (currentVine != null)
+                    currentVine.OnClimbTick(this, input);
+
+                if (input.KeybindJump)
+                {
+                    currentVine?.OnStopClimb(this);
+                    HandleJump(input);
+                }
+                else if (Mathf.Abs(input.horizontal) > 0.5f)
+                {
+                    currentVine?.OnStopClimb(this);
+                }
+
                 HandleEtcInput(input);
             }
             else
@@ -312,6 +326,10 @@ public class MovementCharacter : NetworkBehaviour, IDamageable, IClimbable
                     HandleMovement(input);
                     HandleJump(input);
                 }
+
+                if (input.vertical > 0.1f)
+                    TryGrabVine(input);
+
                 if (!IsInteractBusy) HandleInteraction(input);
                 HandleEtcInput(input);
                 HandleDrop(input);
@@ -619,50 +637,46 @@ public class MovementCharacter : NetworkBehaviour, IDamageable, IClimbable
         }
     }
 
+    private void TryGrabVine(NetworkInputData input)
+    {
+        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, climbCheckRadius, climbableMask);
+
+        foreach (var hit in hits)
+        {
+            if (hit.TryGetComponent<IClimbable>(out var vine))
+            {
+                if (vine.TryStartClimb(this))
+                {
+                    currentVine = vine;
+                    Debug.Log("[Player] Grabbed vine");
+                    break;
+                }
+            }
+        }
+    }
+
+    public void ApplyClimbVelocity(float velocityY)
+    {
+        rb2D.linearVelocity = new Vector2(0f, velocityY);
+        if (cAnimation != null) cAnimation.UpdateClimbAnimation(velocityY);
+    }
+
     public void StartClimbing()
     {
         isClimbing = true;
         isMoveAble = false;
         IsGrounded = false;
         isJumping = false;
-
         rb2D.gravityScale = 0f;
         rb2D.linearVelocity = Vector2.zero;
     }
+
     public void StopClimbing()
     {
         isClimbing = false;
         isMoveAble = true;
         rb2D.gravityScale = normalGravity;
-    }
-
-    public void ClimbHandle(NetworkInputData input)
-    {
-        if (!isClimbing) return;
-
-        if (input.KeybindJump)
-        {
-            StopClimbing();
-            HandleJump(input);
-            return;
-        }
-
-        if (Mathf.Abs(input.horizontal) > 0.5f)
-        {
-            StopClimbing();
-            return;
-        }
-
-        float climbVelocity = 0f;
-        if (input.vertical > 0.1f)
-            climbVelocity = climbUpSpeed;
-        else if (input.vertical < -0.1f)
-            climbVelocity = -climbDownSpeed;
-
-        rb2D.linearVelocity = new Vector2(0f, climbVelocity);
-
-        if (cAnimation != null)
-            cAnimation.UpdateClimbAnimation(climbVelocity);
+        currentVine = null;
     }
 
     #endregion
