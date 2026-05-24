@@ -1,3 +1,6 @@
+using UnityEngine;
+using Fusion;
+
 public class ClimbingVine : NetworkBehaviour
 {
     private void OnTriggerEnter2D(Collider2D other)
