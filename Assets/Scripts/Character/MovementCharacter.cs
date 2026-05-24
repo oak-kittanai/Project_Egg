@@ -2,7 +2,7 @@
 using UnityEngine;
 using Fusion.Addons.Physics;
 
-public class MovementCharacter : NetworkBehaviour, IDamageable
+public class MovementCharacter : NetworkBehaviour, IDamageable, IClimbable
 {
     [Header("References")]
     [SerializeField] public CharacterStats stats;
@@ -113,6 +113,11 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [SerializeField] private DamageFlash _damageFlash;
     [SerializeField] public Color duck_Color;
     [SerializeField] public Color bird_Color;
+
+    [Header("Climbing")]
+    [SerializeField] float climbUpSpeed = 3f;
+    [SerializeField] float climbDownSpeed = 4f;
+    [Networked] public bool isClimbing { get; set; }
 
     // UnlockableSkills
     public enum SkillType { None, Duck_Dive, Duck_Smash, Bird_Fly, Bird_Throw }
@@ -295,6 +300,11 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
                 HandleEtcInput(input);
             }
+            else if (isClimbing)
+            {
+                ClimbHandle(input);
+                HandleEtcInput(input);
+            }
             else
             {
                 if (isMoveAble)
@@ -302,11 +312,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                     HandleMovement(input);
                     HandleJump(input);
                 }
-
-                if (!IsInteractBusy)
-                {
-                    HandleInteraction(input);
-                }
+                if (!IsInteractBusy) HandleInteraction(input);
                 HandleEtcInput(input);
                 HandleDrop(input);
             }
@@ -611,6 +617,52 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             visualTransform.position = newPos;
             visualTransform.localPosition = Vector3.zero;
         }
+    }
+
+    public void StartClimbing()
+    {
+        isClimbing = true;
+        isMoveAble = false;
+        IsGrounded = false;
+        isJumping = false;
+
+        rb2D.gravityScale = 0f;
+        rb2D.linearVelocity = Vector2.zero;
+    }
+    public void StopClimbing()
+    {
+        isClimbing = false;
+        isMoveAble = true;
+        rb2D.gravityScale = normalGravity;
+    }
+
+    public void ClimbHandle(NetworkInputData input)
+    {
+        if (!isClimbing) return;
+
+        if (input.KeybindJump)
+        {
+            StopClimbing();
+            HandleJump(input);
+            return;
+        }
+
+        if (Mathf.Abs(input.horizontal) > 0.5f)
+        {
+            StopClimbing();
+            return;
+        }
+
+        float climbVelocity = 0f;
+        if (input.vertical > 0.1f)
+            climbVelocity = climbUpSpeed;
+        else if (input.vertical < -0.1f)
+            climbVelocity = -climbDownSpeed;
+
+        rb2D.linearVelocity = new Vector2(0f, climbVelocity);
+
+        if (cAnimation != null)
+            cAnimation.UpdateClimbAnimation(climbVelocity);
     }
 
     #endregion

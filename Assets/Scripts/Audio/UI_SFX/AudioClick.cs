@@ -11,7 +11,7 @@ public class AudioClick : MonoBehaviour
         {
             if (AudioManager.Instance != null)
             {
-                AudioManager.Instance.PlaySFXDirectSound(clickSoundName);
+                AudioManager.Instance.PlayDirectSound(clickSoundName);
             }
         }
     }

@@ -203,6 +203,7 @@ public class CharacterAnimation : NetworkBehaviour
     public void InteractAnimation() => SetActionAnimation("Interact", 0.5f);
     public void DeathAnimation() => SetActionAnimation("Death", 999f);
     public void PrepareToRespawnAnimation() => SetActionAnimation("PrepareToRespawn", 999f);
+    public void UpdateClimbAnimation(float x) => PlayAnimationNetworked("Climb");
 
     public void BirdPrepareFallingAnimaion()
     {

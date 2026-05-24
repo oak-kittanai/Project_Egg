@@ -1,6 +1,8 @@
-using UnityEngine;
+using Fusion;
 
-public interface IclimbAble
+public interface IClimbable
 {
     void ClimbHandle(NetworkInputData input);
+    void StartClimbing();
+    void StopClimbing();
 }
