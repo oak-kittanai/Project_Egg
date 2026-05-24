@@ -24,7 +24,7 @@ public class Bird_Moveset : MovementCharacter
     public NetworkBool IsFlying { get; set; }
     [Networked] public bool IsAlreadyFly { get; set; }
     [Networked] public bool AlreadyFloating { get; set; }
-    
+
 
     [Header("Pressed")]
     [Networked] public bool _wasJumpPressed { get; set; }
@@ -315,12 +315,14 @@ public class Bird_Moveset : MovementCharacter
             if (IsFlying)
             {
                 float duration = IsBeingCarried ? carryFlyTime : normalFlyTime;
-                if (playerAudioSource != null && flySoundClip != null) playerAudioSource.PlayOneShot(flySoundClip);
+                if (flySoundClip != null) AudioManager.Instance?.PlayClipAtPosition(flySoundClip, transform.position);
+
                 if (localGUI != null) localGUI.StartFlightBar(FlightTimer, Runner, duration);
             }
             else
             {
-                if (playerAudioSource != null && stopFlySoundClip != null) playerAudioSource.PlayOneShot(stopFlySoundClip);
+                if (stopFlySoundClip != null) AudioManager.Instance?.PlayClipAtPosition(stopFlySoundClip, transform.position);
+
                 if (localGUI != null) localGUI.StopFlightBar();
             }
         }
@@ -453,12 +455,9 @@ public class Bird_Moveset : MovementCharacter
         Vector2 direction = throwPoint.right;
 
         GameManager.Instance.ProjectileSpawn(throwAblePrefab, throwPos, direction, throwPoint.rotation, projectileSpeed);
-        if (HasInputAuthority)
+        if (HasInputAuthority && throwSoundClip != null)
         {
-            if (playerAudioSource != null && throwSoundClip != null)
-            {
-                playerAudioSource.PlayOneShot(throwSoundClip);
-            }
+            AudioManager.Instance?.PlayClipAtPosition(throwSoundClip, transform.position);
         }
 
         _canThrowItem = false;
@@ -568,4 +567,3 @@ public class Bird_Moveset : MovementCharacter
         }
     }
 }
-

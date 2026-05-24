@@ -14,14 +14,13 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     //SOUND
     [Header("Audio System")]
-    [SerializeField] public AudioSource playerAudioSource;
     [SerializeField] public AudioClip jumpSoundClip;
     [SerializeField] public AudioClip landingSoundClip;
     [SerializeField] public AudioClip dmgSoundClip;
     [SerializeField] public AudioClip dieSoundClip;
     [SerializeField] public AudioClip respawnSoundClip;
 
-    [Header("Movement Audio")]
+    [Header("Movement Audio (Local Loop)")]
     [SerializeField] public AudioSource movementAudioSource;
     [SerializeField] public AudioClip walkSoundClip;
     [SerializeField] public AudioClip swimSoundClip;
@@ -376,12 +375,9 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         {
             isJumping = true;
 
-            if (HasInputAuthority)
+            if (HasInputAuthority && jumpSoundClip != null)
             {
-                if (playerAudioSource != null && jumpSoundClip != null)
-                {
-                    playerAudioSource.PlayOneShot(jumpSoundClip);
-                }
+                AudioManager.Instance?.PlayClipAtPosition(jumpSoundClip, transform.position);
             }
             rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, 0f);
             rb2D.AddForce(Vector2.up * stats.s_jumpForce, ForceMode2D.Impulse);
@@ -439,12 +435,9 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     public void RPC_TakeDamage(int dmg, float knockbackForce, Vector2 vec)
     {
         currentHealth -= dmg;
-        if (HasInputAuthority)
+        if (HasInputAuthority && dmgSoundClip != null)
         {
-            if (playerAudioSource != null && dmgSoundClip != null)
-            {
-                playerAudioSource.PlayOneShot(dmgSoundClip);
-            }
+            AudioManager.Instance?.PlayClipAtPosition(dmgSoundClip, transform.position);
         }
         rb2D.linearVelocity = Vector2.zero;
         rb2D.AddForce(vec * knockbackForce, ForceMode2D.Impulse);
@@ -579,9 +572,9 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
         if (cAnimation != null) cAnimation.ReturnToBlendAnimation();
 
-        if (playerAudioSource != null && respawnSoundClip != null)
+        if (respawnSoundClip != null)
         {
-            playerAudioSource.PlayOneShot(respawnSoundClip);
+            AudioManager.Instance?.PlayClipAtPosition(respawnSoundClip, transform.position);
         }
 
         if (visualTransform != null)
@@ -787,12 +780,9 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         {
             isJumping = false;
             resetAnimation = true;
-            if (HasInputAuthority)
+            if (HasInputAuthority && landingSoundClip != null)
             {
-                if (playerAudioSource != null && landingSoundClip != null)
-                {
-                    playerAudioSource.PlayOneShot(landingSoundClip);
-                }
+                AudioManager.Instance?.PlayClipAtPosition(landingSoundClip, transform.position);
             }
         }
 
@@ -837,6 +827,12 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     {
         if (!HasInputAuthority) return;
         if (movementAudioSource == null) return;
+
+        // 🟢 ดึง Volume จาก AudioManager ตลอดเวลา
+        if (AudioManager.Instance != null)
+        {
+            movementAudioSource.volume = AudioManager.Instance.GetGlobalSFXVolume();
+        }
 
         AudioClip targetClip = null;
 
@@ -1012,16 +1008,16 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [Rpc(RpcSources.All, RpcTargets.All)]
     public void RPC_PlayRespawnSound()
     {
-        if (playerAudioSource != null && respawnSoundClip != null)
+        if (respawnSoundClip != null)
         {
-            playerAudioSource.PlayOneShot(respawnSoundClip);
+            AudioManager.Instance?.PlayClipAtPosition(respawnSoundClip, transform.position);
         }
     }
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
     public void RPC_PlayDieSound()
     {
-        if (playerAudioSource != null && dieSoundClip != null)
-            playerAudioSource.PlayOneShot(dieSoundClip);
+        if (dieSoundClip != null)
+            AudioManager.Instance?.PlayClipAtPosition(dieSoundClip, transform.position);
     }
 
     private void OnDrawGizmosSelected()

@@ -231,11 +231,11 @@ public class Duck_Moveset : MovementCharacter
         {
             if (IsCarry)
             {
-                if (playerAudioSource != null && pickupSoundClip != null) playerAudioSource.PlayOneShot(pickupSoundClip);
+                if (pickupSoundClip != null) AudioManager.Instance?.PlayClipAtPosition(pickupSoundClip, transform.position);
             }
             else
             {
-                if (playerAudioSource != null && dropSoundClip != null) playerAudioSource.PlayOneShot(dropSoundClip);
+                if (dropSoundClip != null) AudioManager.Instance?.PlayClipAtPosition(dropSoundClip, transform.position);
             }
         }
     }
@@ -343,12 +343,14 @@ public class Duck_Moveset : MovementCharacter
         {
             if (onDiving)
             {
-                if (playerAudioSource != null && drivingSoundClip != null) playerAudioSource.PlayOneShot(drivingSoundClip);
+                if (drivingSoundClip != null) AudioManager.Instance?.PlayClipAtPosition(drivingSoundClip, transform.position);
+
                 if (localGUI != null) localGUI.StartOxygenTracking(DiveTimer, Runner, Mathf.CeilToInt(divingTime));
             }
             else
             {
-                if (playerAudioSource != null && stopDrivingSoundClip != null) playerAudioSource.PlayOneShot(stopDrivingSoundClip);
+                if (stopDrivingSoundClip != null) AudioManager.Instance?.PlayClipAtPosition(stopDrivingSoundClip, transform.position);
+
                 if (localGUI != null) localGUI.StopOxygenTracking();
             }
         }

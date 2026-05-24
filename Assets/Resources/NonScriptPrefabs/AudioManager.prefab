@@ -157,10 +157,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AudioManager
   soundBGMList: []
-  playerSoundList: []
+  playerSoundList:
+  - soundName: DuckReceiveDamage
+    clip: {fileID: 8300000, guid: 51ca9d2c0dd2f3b4d82b97237be54bdb, type: 3}
+  - soundName: SnowWalkSFX
+    clip: {fileID: 8300000, guid: 9c1f85ad404d5dd4f9d13b12ba96e02b, type: 3}
+  - soundName: DeathSFX
+    clip: {fileID: 8300000, guid: ed2bed66dc78a3746bb6f9528917fcc2, type: 3}
+  - soundName: 
+    clip: {fileID: 0}
   sfxSoundList:
   - soundName: ClickSound
     clip: {fileID: 8300000, guid: 2583171527df68d41abcc191209b5b9b, type: 3}
+  assetsSoundList: []
   gameSettings: {fileID: 0}
   uiSource: {fileID: 3562781797650811021}
   bgmSource: {fileID: 0}
