@@ -244,6 +244,8 @@ public class Bird_Moveset : MovementCharacter
     #region FlyLogic
     private void HandleFlightLogic(NetworkInputData input)
     {
+        if (!isFlyUnlocked) return;
+
         bool isPressed = input.KeybindJump && !_wasJumpPressed;
 
         if (!IsBeingCarried)
