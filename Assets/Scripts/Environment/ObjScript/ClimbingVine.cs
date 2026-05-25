@@ -1,50 +1,58 @@
 ﻿using UnityEngine;
 using Fusion;
 
+[RequireComponent(typeof(Collider2D))]
 public class ClimbingVine : MonoBehaviour, IClimbable
 {
-    [Header("Climb Bounds")]
-    [SerializeField] float topY;
-    [SerializeField] float bottomY;
+    [Header("Climb Speed")]
+    [SerializeField] float climbSideSpeed = 2f;
+
     [SerializeField] float climbUpSpeed = 3f;
     [SerializeField] float climbDownSpeed = 4f;
+
+    private Collider2D climbCollider;
+
+    [SerializeField] float climbMargin = 0.5f;
+
+    private float MinY => climbCollider.bounds.min.y - climbMargin;
+    private float MaxY => climbCollider.bounds.max.y + climbMargin;
+
+    private void Awake()
+    {
+        climbCollider = GetComponent<Collider2D>();
+    }
 
     public bool TryStartClimb(MovementCharacter player)
     {
         float py = player.transform.position.y;
+        Debug.Log($"[Vine] player.y={py:F2}, range={MinY:F2}~{MaxY:F2}");
 
-        Debug.Log($"[Vine] player.y={py:F2}, bottomY={bottomY:F2}, topY={topY:F2}");
-
-        if (py < bottomY || py > topY)
+        if (py < MinY || py > MaxY)
         {
-            Debug.Log($"[Vine] ❌ player.y นอกช่วง — ต้องอยู่ {bottomY:F2} ถึง {topY:F2}");
+            Debug.Log("[Vine] ❌ player outside");
             return false;
         }
 
-        player.StartClimbing(); 
+        player.StartClimbing();
+        Debug.Log("[Vine] ✓ Start climbing");
         return true;
     }
 
     public void OnClimbTick(MovementCharacter player, NetworkInputData input)
     {
         float py = player.transform.position.y;
-        float v = 0f;
 
-        if (input.vertical > 0.1f && py < topY) v = climbUpSpeed;
-        else if (input.vertical < -0.1f && py > bottomY) v = -climbDownSpeed;
+        float vy = 0f;
+        if (input.vertical > 0.1f && py < MaxY) vy = climbUpSpeed;
+        else if (input.vertical < -0.1f && py > MinY) vy = -climbDownSpeed;
 
-        player.ApplyClimbVelocity(v);
+        float vx = input.horizontal * climbSideSpeed;
+
+        player.ApplyClimbVelocity(vx, vy);
     }
 
     public void OnStopClimb(MovementCharacter player)
     {
         player.StopClimbing();
-    }
-
-
-    private void OnDrawGizmos()
-    {
-        Gizmos.color = Color.green;
-        Gizmos.DrawLine(new Vector3(transform.position.x, bottomY), new Vector3(transform.position.x, topY));
     }
 }

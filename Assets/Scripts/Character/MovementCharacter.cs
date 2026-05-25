@@ -119,6 +119,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [SerializeField] LayerMask climbableMask;
     [Networked] public bool isClimbing { get; set; }
 
+    [Networked] public bool jumpedFromClimb { get; set; }
+
     private IClimbable currentVine;
 
     // UnlockableSkills
@@ -310,11 +312,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                 if (input.KeybindJump)
                 {
                     currentVine?.OnStopClimb(this);
-                    HandleJump(input);
-                }
-                else if (Mathf.Abs(input.horizontal) > 0.5f)
-                {
-                    currentVine?.OnStopClimb(this);
+                    jumpedFromClimb = true;
+                    ClimbJump();
                 }
 
                 HandleEtcInput(input);
@@ -395,6 +394,12 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     protected virtual void HandleJump(NetworkInputData input)
     {
+        if (jumpedFromClimb)
+        {
+            if (IsGrounded) jumpedFromClimb = false;
+            else return;
+        }
+
         if (input.KeybindJump && IsGrounded && JumpCooldown.ExpiredOrNotRunning(Runner))
         {
             isJumping = true;
@@ -662,10 +667,36 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         }
     }
 
-    public void ApplyClimbVelocity(float velocityY)
+    public void ApplyClimbVelocity(float velocityX, float velocityY)
     {
-        rb2D.linearVelocity = new Vector2(0f, velocityY);
+        rb2D.linearVelocity = new Vector2(velocityX, velocityY);
+
+        if (Mathf.Abs(velocityX) < 0.01f && Mathf.Abs(velocityY) < 0.01f)
+        {
+            rb2D.linearVelocity = Vector2.zero;
+            rb2D.angularVelocity = 0f;
+        }
+
         if (cAnimation != null) cAnimation.UpdateClimbAnimation(velocityY);
+    }
+
+    private void ClimbJump()
+    {
+        isClimbing = false;
+        isMoveAble = true;
+        rb2D.gravityScale = normalGravity;
+        currentVine = null;
+
+        isJumping = true;
+        rb2D.linearVelocity = Vector2.zero;
+        rb2D.AddForce(Vector2.up * stats.s_jumpForce, ForceMode2D.Impulse);
+        IsGrounded = false;
+        resetAnimation = false;
+        JumpCooldown = TickTimer.CreateFromSeconds(Runner, JumpCooldownTimer);
+
+        if (HasInputAuthority && jumpSoundClip != null)
+            AudioManager.Instance?.PlayClipAtPosition(jumpSoundClip, transform.position);
+        if (cAnimation != null && !isCarrying) cAnimation.JumpAnimation();
     }
 
     public void StartClimbing()
@@ -683,6 +714,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         isClimbing = false;
         isMoveAble = true;
         rb2D.gravityScale = normalGravity;
+        rb2D.linearVelocity = Vector2.zero;
         currentVine = null;
     }
 
