@@ -12,7 +12,6 @@ GameObject:
   - component: {fileID: -6673475714210061528}
   - component: {fileID: 1085532249196871913}
   - component: {fileID: 1581869760090644828}
-  - component: {fileID: -2126449535944077140}
   m_Layer: 17
   m_Name: Vine2
   m_TagString: Untagged
@@ -47,10 +46,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7c8a2d36969c2534c9f13470378683e0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ClimbingVine
-  topY: -19
-  bottomY: -14
-  climbUpSpeed: 0.8
-  climbDownSpeed: 4
 --- !u!212 &1085532249196871913
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -155,21 +150,3 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 1.1629593, y: 6}
   m_EdgeRadius: 0
---- !u!114 &-2126449535944077140
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8947267852431787601}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
-  SortKey: 818493341
-  ObjectInterest: 1
-  Flags: 262145
-  NestedObjects: []
-  NetworkedBehaviours: []
-  ForceRemoteRenderTimeframe: 0
