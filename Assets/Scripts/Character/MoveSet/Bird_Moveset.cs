@@ -241,6 +241,26 @@ public class Bird_Moveset : MovementCharacter
         DrownTimer = TickTimer.None;
     }
 
+    public override void RPC_OnRespawned()
+    {
+        base.RPC_OnRespawned();
+
+        IsFlying = false;
+        IsAlreadyFly = false;
+        AlreadyFloating = false;
+        FallingBusy = false;
+        startTimer = false;
+        DrownTimer = TickTimer.None;
+
+        if (rb2D != null)
+        {
+            rb2D.sharedMaterial = defaultMaterial;
+        }
+
+        if (HasInputAuthority && localGUI != null)
+            localGUI.StopOxygenTracking();
+    }
+
     #region FlyLogic
     private void HandleFlightLogic(NetworkInputData input)
     {

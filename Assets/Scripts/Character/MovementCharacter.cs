@@ -147,6 +147,9 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [Header("Etc")]
     [Networked] public bool _wasEscPressed { get; set; }
 
+    [Header("LifeCycle Effect")]
+    [SerializeField] public LifeCycle lifeCycle;
+
     private void Awake()
     {
         if (stats == null) stats = GetComponent<CharacterStats>();
@@ -165,6 +168,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         {
             visualTransform = transform.Find("Player_Animation");
         }
+
+        if (lifeCycle == null) lifeCycle = GetComponentInChildren<LifeCycle>();
 
         if (TryGetComponent<Fusion.Addons.Physics.NetworkRigidbody2D>(out var netRb))
         {
@@ -214,7 +219,12 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             spriteRenderer.SetPropertyBlock(mpb);
         }
 
-        if (cAnimation != null) cAnimation.UpdateSkin(stats.skinType);
+        if (cAnimation != null)
+        {
+            cAnimation.UpdateSkin(stats.skinType);
+            if (lifeCycle != null) lifeCycle.Initialize(isThisCharacterBird);
+        }
+
         JumpCooldown = TickTimer.CreateFromSeconds(Runner, JumpCooldownTimer);
         resetAnimation = true;
 
@@ -508,6 +518,12 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             localGUI.StopFlightBar();
         }
 
+        if (!isPrimaryDeath && lifeCycle != null)
+        {
+            Debug.Log($"[LifeCycle] ▶ PlayOnFriendDeath on {gameObject.name}");
+            lifeCycle.PlayOnFriendDeath();
+        }
+
         CharacterDie(isPrimaryDeath);
     }
 
@@ -543,10 +559,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             {
                 cAnimation.DeathAnimation();
             }
-            else
-            {
-                cAnimation.PrepareToRespawnAnimation();
-            }
         }
 
         if (HasStateAuthority && canbeRespawn)
@@ -560,10 +572,11 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
             foreach (var partner in allPlayers)
             {
-                if (partner != this && !partner.isDead)
-                {
-                    partner.DeathMechanic_RPC(false);
-                }
+                if (!partner.enabled) continue;
+                if (partner == this) continue;
+                if (partner.isDead) continue;
+
+                partner.DeathMechanic_RPC(false);
             }
         }
     }
@@ -579,6 +592,13 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             isWaterSurface = false;
             IsFalling = false;
             FallingBusy = false;
+
+            isMoveAble = true;
+            isOptional = false;
+            isSpeedoptional = false;
+            isClimbing = false;
+            jumpedFromClimb = false;
+            isJumping = false;
 
             if (cAnimation != null) cAnimation.ClearAnimationLock();
 
@@ -602,7 +622,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     }
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    public void RPC_OnRespawned()
+    public virtual void RPC_OnRespawned()
     {
         isMoveAble = true;
 
@@ -613,6 +633,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             rb2D.gravityScale = normalGravity;
             rb2D.linearVelocity = Vector2.zero;
             rb2D.angularVelocity = 0f;
+            rb2D.linearDamping = 0f;
         }
 
         if (cAnimation != null) cAnimation.ReturnToBlendAnimation();
@@ -626,6 +647,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         {
             visualTransform.localPosition = Vector3.zero;
         }
+
+        if (lifeCycle != null) lifeCycle.PlayOnRespawn();
     }
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]

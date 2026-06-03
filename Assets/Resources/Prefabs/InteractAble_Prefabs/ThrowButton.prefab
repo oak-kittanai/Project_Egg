@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 9153028255348108727}
   - component: {fileID: 321579640838464604}
   - component: {fileID: 923441588923036547}
+  - component: {fileID: 5570827418739036074}
   m_Layer: 0
   m_Name: ThrowButton
   m_TagString: Untagged
@@ -158,3 +159,22 @@ MonoBehaviour:
   pressed: {fileID: -3026982275421995717, guid: 278d237a74371d94b89cee654fea8c78, type: 3}
   _IsPressed:
     _value: 0
+--- !u!114 &5570827418739036074
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4373729558401486238}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
+  SortKey: 697979356
+  ObjectInterest: 1
+  Flags: 262145
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: 923441588923036547}
+  ForceRemoteRenderTimeframe: 0
