@@ -31,7 +31,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 5.492, y: -13.39, z: 0}
-  m_LocalScale: {x: 2.0895615, y: 2.0895615, z: 2.0895615}
+  m_LocalScale: {x: 2.0224326, y: 2.0224326, z: 2.0224326}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -83,7 +83,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 1
-  m_Sprite: {fileID: 380291502196500599, guid: a3fe2c39faa9d48449c02ff92bb0136f, type: 3}
+  m_Sprite: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -91,7 +91,7 @@ SpriteRenderer:
   m_Size: {x: 1, y: 0.6458333}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 1
+  m_WasSpriteAssigned: 0
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!114 &705382238490353640
@@ -110,7 +110,7 @@ MonoBehaviour:
   coll: {fileID: 661784451826234151}
   _isBroken:
     _value: 0
-  selfNet: {fileID: 8435920208396272353}
+  selfNet: {fileID: 0}
   itemToDrop: {fileID: 5283567399167749245, guid: f6ee7c8d2993a114cbcc32c8f96ce6a2, type: 3}
   dropAmount: 1
   canDrop: 1

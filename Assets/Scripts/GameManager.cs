@@ -10,6 +10,7 @@ public class ItemMapping
 {
     public string itemName;
     public NetworkObject itemPrefab;
+    public Sprite itemSprite;
 }
 
 [System.Serializable]
@@ -466,6 +467,18 @@ public class GameManager : SingletonNetwork<GameManager>
         {
             player.HeldItemName = "";
         }
+    }
+
+    public Sprite GetItemSprite(string itemName)
+    {
+        if (string.IsNullOrEmpty(itemName)) return null;
+
+        foreach (var mapping in itemDatabase)
+        {
+            if (mapping.itemName == itemName)
+                return mapping.itemSprite;
+        }
+        return null;
     }
 
     #endregion

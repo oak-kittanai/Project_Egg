@@ -133,12 +133,17 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     public void OnHeldItemChanged()
     {
+        string itemName = HeldItemName.ToString();
+
         if (HasInputAuthority && PlayerInterface.Instance != null)
         {
-            Debug.Log($"UI Update : {HeldItemName}");
+            if (string.IsNullOrEmpty(itemName))
+                PlayerInterface.Instance.HideItemOverlay();
+            else
+                PlayerInterface.Instance.ShowItemOverlay(itemName);
         }
 
-        if (HeldItemName == "Rock") _canThrowItem = true; else _canThrowItem = false;
+        _canThrowItem = (itemName == "Rock");
     }
 
     // Throw System
