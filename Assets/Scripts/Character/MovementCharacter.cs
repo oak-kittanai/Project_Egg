@@ -115,13 +115,11 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [SerializeField] public Color bird_Color;
 
     [Header("Climbing")]
-    [SerializeField] float climbCheckRadius = 0.8f;
+    [SerializeField] float climbSpeed = 2f;
     [SerializeField] LayerMask climbableMask;
+    [Networked] public bool isInClimbZone { get; set; }
     [Networked] public bool isClimbing { get; set; }
-
     [Networked] public bool jumpedFromClimb { get; set; }
-
-    private IClimbable currentVine;
 
     // UnlockableSkills
     public enum SkillType { None, Duck_Dive, Duck_Smash, Bird_Fly, Bird_Throw }
@@ -292,6 +290,17 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
         if (HasStateAuthority || HasInputAuthority) CheckGround();
 
+        // Test
+
+        bool wasInZone = isInClimbZone;
+        isInClimbZone = CheckInClimbZone();
+
+        // ----
+        if (wasInZone && !isInClimbZone && isClimbing)
+        {
+            ExitClimbState();
+        }
+
         if (GetInput(out NetworkInputData input))
         {
             if (isMenuOpen)
@@ -304,34 +313,41 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
                 HandleEtcInput(input);
             }
-            else if (isClimbing)
-            {
-                if (currentVine != null)
-                    currentVine.OnClimbTick(this, input);
-
-                if (input.KeybindJump)
-                {
-                    currentVine?.OnStopClimb(this);
-                    jumpedFromClimb = true;
-                    ClimbJump();
-                }
-
-                HandleEtcInput(input);
-            }
             else
             {
-                if (isMoveAble)
+                if (isInClimbZone && !isClimbing && Mathf.Abs(input.vertical) > 0.1f)
                 {
-                    HandleMovement(input);
-                    HandleJump(input);
+                    EnterClimbState();
                 }
 
-                if (input.vertical > 0.1f)
-                    TryGrabVine(input);
+                if (isClimbing)
+                {
+                    if (input.KeybindJump && !jumpedFromClimb)
+                    {
+                        ExitClimbState();
+                        jumpedFromClimb = true;
+                        ClimbJump();
+                    }
+                    else
+                    {
+                        HandleMovement(input);
 
-                if (!IsInteractBusy) HandleInteraction(input);
-                HandleEtcInput(input);
-                HandleDrop(input);
+                        rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, input.vertical * climbSpeed);
+                    }
+
+                    HandleEtcInput(input);
+                }
+                else
+                {
+                    if (isMoveAble)
+                    {
+                        HandleMovement(input);
+                        HandleJump(input);
+                    }
+                    if (!IsInteractBusy) HandleInteraction(input);
+                    HandleEtcInput(input);
+                    HandleDrop(input);
+                }
             }
         }
 
@@ -642,51 +658,69 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         }
     }
 
-    private void TryGrabVine(NetworkInputData input)
+    #region Climb System
+    /*private void OnTriggerEnter2D(Collider2D other)
     {
-        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, climbCheckRadius, climbableMask);
-        Debug.Log($"[TryGrabVine] mask={climbableMask.value}, hits={hits.Length}");
+        if (((1 << other.gameObject.layer) & climbableMask) == 0) return;
+
+        IClimbable vine = other.GetComponent<IClimbable>()
+                       ?? other.GetComponentInParent<IClimbable>();
+        if (vine != null) isInClimbZone = true;
+    }
+
+    private void OnTriggerExit2D(Collider2D other)
+    {
+        if (((1 << other.gameObject.layer) & climbableMask) == 0) return;
+
+        IClimbable vine = other.GetComponent<IClimbable>()
+                       ?? other.GetComponentInParent<IClimbable>();
+        if (vine != null)
+        {
+            isInClimbZone = false;
+            if (isClimbing) ExitClimbState();
+        }
+    }*/
+
+    // Test
+
+    private bool CheckInClimbZone()
+    {
+        Collider2D[] hits = Physics2D.OverlapBoxAll(
+            transform.position,
+            new Vector2(0.5f, 1f),  // ขนาดตัวละคร — ปรับให้พอดี
+            0f,
+            climbableMask
+        );
 
         foreach (var hit in hits)
         {
-            Debug.Log($"[TryGrabVine] hit: {hit.name}, hasIClimbable: {hit.GetComponent<IClimbable>() != null}");
-
-            if (hit.TryGetComponent<IClimbable>(out var vine))
-            {
-                if (vine.TryStartClimb(this))
-                {
-                    currentVine = vine;
-                    Debug.Log("[Player] Grabbed vine ✓");
-                    break;
-                }
-                else
-                {
-                    Debug.Log("[TryGrabVine] TryStartClimb returned false (อยู่นอก topY/bottomY)");
-                }
-            }
+            if (hit.GetComponent<IClimbable>() != null
+             || hit.GetComponentInParent<IClimbable>() != null)
+                return true;
         }
+        return false;
     }
 
-    public void ApplyClimbVelocity(float velocityX, float velocityY)
+    private void EnterClimbState()
     {
-        rb2D.linearVelocity = new Vector2(velocityX, velocityY);
+        if (isClimbing) return;
+        isClimbing = true;
+        IsGrounded = false;
+        isJumping = false;
+        rb2D.gravityScale = 0f;
+        rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, 0f);
+    }
 
-        if (Mathf.Abs(velocityX) < 0.01f && Mathf.Abs(velocityY) < 0.01f)
-        {
-            rb2D.linearVelocity = Vector2.zero;
-            rb2D.angularVelocity = 0f;
-        }
-
-        if (cAnimation != null) cAnimation.UpdateClimbAnimation(velocityY);
+    private void ExitClimbState()
+    {
+        if (!isClimbing) return;
+        isClimbing = false;
+        isMoveAble = true;
+        rb2D.gravityScale = normalGravity;
     }
 
     private void ClimbJump()
     {
-        isClimbing = false;
-        isMoveAble = true;
-        rb2D.gravityScale = normalGravity;
-        currentVine = null;
-
         isJumping = true;
         rb2D.linearVelocity = Vector2.zero;
         rb2D.AddForce(Vector2.up * stats.s_jumpForce, ForceMode2D.Impulse);
@@ -699,25 +733,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         if (cAnimation != null && !isCarrying) cAnimation.JumpAnimation();
     }
 
-    public void StartClimbing()
-    {
-        isClimbing = true;
-        isMoveAble = false;
-        IsGrounded = false;
-        isJumping = false;
-        rb2D.gravityScale = 0f;
-        rb2D.linearVelocity = Vector2.zero;
-    }
-
-    public void StopClimbing()
-    {
-        isClimbing = false;
-        isMoveAble = true;
-        rb2D.gravityScale = normalGravity;
-        rb2D.linearVelocity = Vector2.zero;
-        currentVine = null;
-    }
-
+    #endregion
     #endregion
 
     #region CarrySystem
@@ -902,7 +918,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             }
         }
 
-        if (IsInAir)
+        if (IsInAir && !isClimbing)
         {
             if (referenceVelocityY < -0.1f)
             {
@@ -914,7 +930,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                 }
             }
         }
-        else if (!effectivelyCarried)
+        else if (!effectivelyCarried && !isClimbing)
         {
             rb2D.gravityScale = isOptional ? optionalGravity : normalGravity;
         }
