@@ -217,6 +217,15 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             characterMaxHealth = stats.s_maxHealth;
         }
 
+        CameraCharacter cam = GetComponentInChildren<CameraCharacter>();
+        if (cam != null)
+        {
+            if (HasInputAuthority)
+                cam.InitializeAsLocal(transform);  // ← local player → ใช้กล้อง
+            else
+                cam.DisableForRemote();             // ← remote player → ปิด
+        }
+
         MaterialPropertyBlock mpb = new MaterialPropertyBlock();
         if (spriteRenderer != null)
         {
@@ -1218,6 +1227,14 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         if (lifeCycle != null) lifeCycle.PlayOnFriendDeath();
     }
     #endregion
+
+    public override void Despawned(NetworkRunner runner, bool hasState)
+    {
+        if (HasInputAuthority && CameraCharacter.LocalCamera != null)
+        {
+            Destroy(CameraCharacter.LocalCamera.transform.root.gameObject);
+        }
+    }
 
     private void OnDrawGizmosSelected()
     {

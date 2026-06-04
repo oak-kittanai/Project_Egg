@@ -1009,8 +1009,7 @@ MonoBehaviour:
   SortKey: 73483203
   ObjectInterest: 1
   Flags: 262145
-  NestedObjects:
-  - {fileID: 8631318365322448296}
+  NestedObjects: []
   NetworkedBehaviours:
   - {fileID: 2792661054029248767}
   - {fileID: 6373651154092321298}
@@ -1969,7 +1968,6 @@ GameObject:
   - component: {fileID: 4453805492448230122}
   - component: {fileID: 3864613986048667308}
   - component: {fileID: 1343375671234220939}
-  - component: {fileID: 8631318365322448296}
   m_Layer: 0
   m_Name: PlayerCamera
   m_TagString: Camera
@@ -2107,25 +2105,6 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 65536
   littleBitOffset: 2
---- !u!114 &8631318365322448296
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7536769481680919600}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
-  SortKey: 1225555068
-  ObjectInterest: 1
-  Flags: 262145
-  NestedObjects: []
-  NetworkedBehaviours:
-  - {fileID: 1343375671234220939}
-  ForceRemoteRenderTimeframe: 0
 --- !u!1 &7548102190230661385
 GameObject:
   m_ObjectHideFlags: 0
@@ -2190,9 +2169,9 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 7231295230271618671}
   - {fileID: 4601319342094996036}
   - {fileID: 5626639202278760556}
+  - {fileID: 7231295230271618671}
   m_Father: {fileID: 7827371518752826412}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &3464039886670934113

@@ -1,8 +1,7 @@
 ﻿using UnityEngine;
-using Fusion;
 using UnityEngine.SceneManagement;
 
-public class CameraCharacter : NetworkBehaviour
+public class CameraCharacter : MonoBehaviour
 {
     public static Camera LocalCamera { get; private set; }
 
@@ -17,42 +16,58 @@ public class CameraCharacter : NetworkBehaviour
 
     private Transform target;
     private Vector3 offset;
+    private bool isLocalCamera = false;
 
     [Header("Boundary System")]
-    [SerializeField, Tooltip("Layer กั้นแบบเด็ดขาด ห้ามกล้องทะลุ")]
-    private LayerMask outOfBoundLayer;
+    [SerializeField] private LayerMask outOfBoundLayer;
 
-    [SerializeField, Tooltip("Layer กั้นแบบยอมให้ทะลุขอบได้นิดหน่อย")]
-    private LayerMask littleBitOfBoundLayer;
+    [SerializeField] private LayerMask littleBitOfBoundLayer;
 
-    [SerializeField, Tooltip("ระยะที่ยอมให้ทะลุได้สำหรับ LittleBitOfBound (ยิ่งมากยิ่งทะลุได้เยอะ)")]
-    private float littleBitOffset = 2f;
+    [SerializeField] private float littleBitOffset = 2f;
 
-    public override void Spawned()
+    public void InitializeAsLocal(Transform followTarget)
     {
-        if (HasInputAuthority)
+        if (isLocalCamera) return;
+
+        if (LocalCamera != null && LocalCamera.gameObject != gameObject)
         {
-            LocalCamera = GetComponentInChildren<Camera>();
-
-            oldPosition = transform.position.x;
-            offset = transform.localPosition;
-            target = transform.parent;
-
-            DontDestroyOnLoad(gameObject);
-            transform.SetParent(null);
-
-            SceneManager.activeSceneChanged += OnSceneChanged;
-
-            if (ParallaxBackground.Instance != null)
-                ParallaxBackground.Instance.SetCamera(this);
+            Debug.LogWarning("[Camera] Replacing existing LocalCamera");
         }
-        else
-        {
-            Camera cam = GetComponentInChildren<Camera>();
-            if (cam != null) cam.enabled = false;
 
-            AudioListener listener = GetComponentInChildren<AudioListener>();
-            if (listener != null) listener.enabled = false;
+        isLocalCamera = true;
+        LocalCamera = GetComponentInChildren<Camera>();
+
+        offset = transform.localPosition;
+        target = followTarget;
+        oldPosition = transform.position.x;
+
+        transform.SetParent(null);
+        DontDestroyOnLoad(gameObject);
+
+        SceneManager.activeSceneChanged += OnSceneChanged;
+
+        if (ParallaxBackground.Instance != null)
+            ParallaxBackground.Instance.SetCamera(this);
+    }
+
+    public void DisableForRemote()
+    {
+        Camera cam = GetComponentInChildren<Camera>();
+        if (cam != null) cam.enabled = false;
+
+        AudioListener listener = GetComponentInChildren<AudioListener>();
+        if (listener != null) listener.enabled = false;
+
+        Destroy(gameObject);
+    }
+
+    private void OnDestroy()
+    {
+        if (isLocalCamera)
+        {
+            SceneManager.activeSceneChanged -= OnSceneChanged;
+            if (LocalCamera != null && LocalCamera.gameObject == this.gameObject)
+                LocalCamera = null;
         }
     }
 
@@ -62,18 +77,9 @@ public class CameraCharacter : NetworkBehaviour
         Debug.Log("[Camera] Scene changed, cleared Parallax delegate.");
     }
 
-    public override void Despawned(NetworkRunner runner, bool hasState)
-    {
-        if (HasInputAuthority && gameObject != null)
-        {
-            SceneManager.activeSceneChanged -= OnSceneChanged;
-            Destroy(gameObject);
-        }
-    }
-
     private void LateUpdate()
     {
-        if (!HasInputAuthority || target == null || !target.gameObject.activeInHierarchy) return;
+        if (!isLocalCamera || target == null || !target.gameObject.activeInHierarchy) return;
 
         Vector3 desiredPosition = target.position + offset;
 
@@ -102,7 +108,6 @@ public class CameraCharacter : NetworkBehaviour
                 float delta = oldPosition - transform.position.x;
                 onCameraTranslate(delta);
             }
-
             oldPosition = transform.position.x;
         }
     }
@@ -123,7 +128,6 @@ public class CameraCharacter : NetworkBehaviour
 
             if (distanceToWall < requiredDistance)
             {
-                // ถ้ากล้องล้ำเส้นที่กำหนด ให้คำนวณระยะแล้วดันถอยหลังกลับ
                 float pushBackDistance = requiredDistance - distanceToWall;
                 pos -= (Vector3)(direction * pushBackDistance);
             }
