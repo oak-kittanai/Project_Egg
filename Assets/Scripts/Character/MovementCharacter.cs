@@ -135,12 +135,12 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     {
         string itemName = HeldItemName.ToString();
 
-        if (HasInputAuthority && PlayerInterface.Instance != null)
-        {
-            if (string.IsNullOrEmpty(itemName))
-                PlayerInterface.Instance.HideItemOverlay();
-            else
-                PlayerInterface.Instance.ShowItemOverlay(itemName);
+        if (HasInputAuthority && PlayerInterface.Instance != null && GameManager.Instance != null && GameManager.Instance.IsGameReady)
+        {   
+            if (HasInputAuthority && PlayerInterface.Instance != null)
+            {
+                if (string.IsNullOrEmpty(itemName)) PlayerInterface.Instance.ShowItemOverlay(itemName);
+            }
         }
 
         _canThrowItem = (itemName == "Rock");
