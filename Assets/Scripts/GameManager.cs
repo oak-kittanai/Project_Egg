@@ -95,6 +95,26 @@ public class GameManager : SingletonNetwork<GameManager>
         CheckMapLoading();
     }
 
+    // Find NetObj
+
+    [ContextMenu("Find NetworkObject By ID")]
+    private void FindNetworkObjectById()
+    {
+        int targetId = 2613;
+
+        var allNets = FindObjectsByType<NetworkObject>(FindObjectsSortMode.None);
+        foreach (var n in allNets)
+        {
+            if (n.Id.Raw == targetId)
+            {
+                string parentName = n.transform.parent != null ? n.transform.parent.name : "ROOT";
+                Debug.Log($"[FIND] Object 2613 = {n.gameObject.name}, parent = {parentName}, scene = {n.gameObject.scene.name}", n.gameObject);
+                return;
+            }
+        }
+        Debug.Log("[FIND] Object 2613 NOT FOUND in scene");
+    }
+
     #region Network
 
     public void GetNetworkRunner(NetworkRunner networkRunner)
