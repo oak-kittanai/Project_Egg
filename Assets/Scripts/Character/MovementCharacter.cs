@@ -135,7 +135,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     {
         string itemName = HeldItemName.ToString();
 
-        if (HasInputAuthority && PlayerInterface.Instance != null)
+        if (HasInputAuthority && PlayerInterface.Instance != null
+            && GameManager.Instance != null && GameManager.Instance.IsGameReady)
         {
             if (string.IsNullOrEmpty(itemName))
                 PlayerInterface.Instance.HideItemOverlay();
@@ -977,7 +978,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         if (!HasInputAuthority) return;
         if (movementAudioSource == null) return;
 
-        // 🟢 ดึง Volume จาก AudioManager ตลอดเวลา
         if (AudioManager.Instance != null)
         {
             movementAudioSource.volume = AudioManager.Instance.GetGlobalSFXVolume();
