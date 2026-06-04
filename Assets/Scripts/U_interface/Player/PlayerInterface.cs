@@ -69,7 +69,6 @@ public class PlayerInterface : MonoBehaviour
 
     private Transform _cachedSkillContainer;
 
-    // ตัวแปรเก็บสถานะเพื่อป้องกันการ Spawn ซ้ำถ้าไม่ได้เปลี่ยนตัวละคร
     [HideInInspector] public bool isCurrentBirdSetup;
     [HideInInspector] public bool hasSetupSkills = false;
 
