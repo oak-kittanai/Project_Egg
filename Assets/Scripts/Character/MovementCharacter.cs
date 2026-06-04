@@ -302,7 +302,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             }
         }
 
-        bool isMenuOpen = MenuController.Instance != null && MenuController.Instance.Object != null && MenuController.Instance.Object.IsValid && MenuController.Instance.IsMenuOpen;
+        bool isMenuOpen = MenuController.Instance != null && MenuController.Instance.Object != null
+        && MenuController.Instance.Object.IsValid && MenuController.Instance.Runner != null && MenuController.Instance.IsMenuOpen;
 
         if (HasStateAuthority || HasInputAuthority) CheckGround();
 
@@ -350,7 +351,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                         rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, input.vertical * climbSpeed);
                         if (cAnimation != null)
                         {
-                            /* Climb Animation */
+                            cAnimation.UpdateClimbAnimation(Mathf.Abs(input.vertical));
                         }
                     }
 
