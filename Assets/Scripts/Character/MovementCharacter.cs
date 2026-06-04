@@ -978,7 +978,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         if (!HasInputAuthority) return;
         if (movementAudioSource == null) return;
 
-        // 🟢 ดึง Volume จาก AudioManager ตลอดเวลา
         if (AudioManager.Instance != null)
         {
             movementAudioSource.volume = AudioManager.Instance.GetGlobalSFXVolume();

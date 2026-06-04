@@ -16,7 +16,7 @@ GameObject:
   - component: {fileID: 4242906921448433288}
   - component: {fileID: 3861217525652326464}
   m_Layer: 14
-  m_Name: Item_Pinecone_0
+  m_Name: Item_Pinecone
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -107,7 +107,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0844418ba7bdc9d40ae7cd6a51fcb278, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PuzzleItem
-  itemName: Item_Pinecone_0
+  itemName: Item_Pinecone
   selfNet: {fileID: 1587735438816007911}
   spriteRenderer: {fileID: 3959273947249924156}
 --- !u!114 &1587735438816007911
@@ -168,7 +168,7 @@ BoxCollider2D:
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 0.85, y: 0.9625}
+    oldSize: {x: 0.52307695, y: 0.5923077}
     newSize: {x: 0.85, y: 0.9625}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
