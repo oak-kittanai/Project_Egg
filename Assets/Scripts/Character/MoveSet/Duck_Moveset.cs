@@ -465,6 +465,8 @@ public class Duck_Moveset : MovementCharacter
 
     public void HandleBuoyancy()
     {
+        if (isClimbing) return;
+
         bool isBeingLiftedByBird = false;
         if (IsCarry && Runner.TryFindObject(CarriedFriendId, out var friendObj) && friendObj.TryGetComponent<Bird_Moveset>(out var bird))
         {
