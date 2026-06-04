@@ -347,8 +347,11 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                     else
                     {
                         HandleMovement(input);
-
                         rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, input.vertical * climbSpeed);
+                        if (cAnimation != null)
+                        {
+                            /* Climb Animation */
+                        }
                     }
 
                     HandleEtcInput(input);
@@ -1144,6 +1147,76 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         if (dieSoundClip != null)
             AudioManager.Instance?.PlayClipAtPosition(dieSoundClip, transform.position);
     }
+
+    #region resetForce
+
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    public void RPC_ResetPlayer()
+    {
+        if (!HasStateAuthority) return;
+        DoResetToSpawn();
+    }
+
+    private void DoResetToSpawn()
+    {
+        // ── Reset state ──
+        isDead = false;
+        currentHealth = characterMaxHealth;
+        stilldrowning = false;
+        IsHeadUnderwater = false;
+        isWaterSurface = false;
+        IsFalling = false;
+        FallingBusy = false;
+
+        // ── Reset movement modifiers ──
+        isMoveAble = true;
+        isOptional = false;
+        isSpeedoptional = false;
+        isClimbing = false;
+        isInClimbZone = false;
+        jumpedFromClimb = false;
+        isJumping = false;
+
+        if (cAnimation != null) cAnimation.ClearAnimationLock();
+
+        // ── cancel carry ──
+        if (IsBeingCarried)
+        {
+            if (Runner.TryFindObject(CarrierId, out var carrierObj)
+                && carrierObj.TryGetComponent<Duck_Moveset>(out var duck))
+            {
+                duck.DropFriend(false);
+            }
+            RPC_UpdateCarry(false, default);
+        }
+        else if (isCarrying)
+        {
+            ((Duck_Moveset)this).DropFriend(false);
+        }
+
+        if (GameManager.Instance != null)
+        {
+            Vector3 newPos = GameManager.Instance.GetRespawnPosition();
+            if (TryGetComponent<NetworkRigidbody2D>(out var netRb))
+                netRb.Teleport(newPos, transform.rotation);
+            else
+            {
+                transform.position = newPos;
+                if (rb2D != null) rb2D.position = newPos;
+            }
+        }
+
+        RPC_PlayFriendDeathEffect();
+
+        RPC_OnRespawned();
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    public void RPC_PlayFriendDeathEffect()
+    {
+        if (lifeCycle != null) lifeCycle.PlayOnFriendDeath();
+    }
+    #endregion
 
     private void OnDrawGizmosSelected()
     {

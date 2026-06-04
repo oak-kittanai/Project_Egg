@@ -15,7 +15,6 @@ GameObject:
   - component: {fileID: 5256107838132452362}
   - component: {fileID: 2290628059944899222}
   - component: {fileID: -6668410760131653382}
-  - component: {fileID: 1677187131315807274}
   m_Layer: 14
   m_Name: Item_Arrow
   m_TagString: Untagged
@@ -227,17 +226,3 @@ MonoBehaviour:
     Position: 0.01
     Rotation: 0.01
     Scale: 0.01
---- !u!114 &1677187131315807274
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 640053823067256316}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 1541381998, guid: e725a070cec140c4caffb81624c8c787, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObjectPrefabData
-  Guid:
-    RawGuidValue: 8d020bf830d161542967cf6c59365a0e
