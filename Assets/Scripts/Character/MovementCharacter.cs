@@ -688,35 +688,11 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     }
 
     #region Climb System
-    /*private void OnTriggerEnter2D(Collider2D other)
-    {
-        if (((1 << other.gameObject.layer) & climbableMask) == 0) return;
-
-        IClimbable vine = other.GetComponent<IClimbable>()
-                       ?? other.GetComponentInParent<IClimbable>();
-        if (vine != null) isInClimbZone = true;
-    }
-
-    private void OnTriggerExit2D(Collider2D other)
-    {
-        if (((1 << other.gameObject.layer) & climbableMask) == 0) return;
-
-        IClimbable vine = other.GetComponent<IClimbable>()
-                       ?? other.GetComponentInParent<IClimbable>();
-        if (vine != null)
-        {
-            isInClimbZone = false;
-            if (isClimbing) ExitClimbState();
-        }
-    }*/
-
-    // Test
-
     private bool CheckInClimbZone()
     {
         Collider2D[] hits = Physics2D.OverlapBoxAll(
             transform.position,
-            new Vector2(0.5f, 1f),  // ขนาดตัวละคร — ปรับให้พอดี
+            new Vector2(0.5f, 1f),
             0f,
             climbableMask
         );
