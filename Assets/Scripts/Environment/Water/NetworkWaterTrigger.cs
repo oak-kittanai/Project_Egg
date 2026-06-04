@@ -11,9 +11,13 @@ public class NetworkWaterTrigger : NetworkBehaviour
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (((1 << collision.gameObject.layer) & hitLayers) == 0) return;
+        if (Runner == null || !Runner.IsRunning) return;
+        if (Object == null || !Object.IsValid) return;
+        if (!HasStateAuthority) return;
+        if (collision == null) return;
+        if (water == null) return;
 
-        if (Object != null && !HasStateAuthority) return;
+        if (((1 << collision.gameObject.layer) & hitLayers) == 0) return;
 
         Rigidbody2D rb = collision.GetComponent<Rigidbody2D>();
         if (rb != null)

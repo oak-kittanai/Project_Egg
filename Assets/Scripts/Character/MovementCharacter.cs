@@ -1228,14 +1228,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     }
     #endregion
 
-    public override void Despawned(NetworkRunner runner, bool hasState)
-    {
-        if (HasInputAuthority && CameraCharacter.LocalCamera != null)
-        {
-            Destroy(CameraCharacter.LocalCamera.transform.root.gameObject);
-        }
-    }
-
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.blue; Gizmos.DrawRay(transform.position, Vector2.down * rayDistance);
