@@ -107,9 +107,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0844418ba7bdc9d40ae7cd6a51fcb278, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PuzzleItem
-  itemName: Item_Crow feather
+  itemName: Item_Crow_feather
   selfNet: {fileID: 4603130114610414024}
   spriteRenderer: {fileID: 991583575279717356}
+  highlightRadius: 1.5
+  playerMask:
+    serializedVersion: 2
+    m_Bits: 0
+  shaderFloatProperty: _OutlineThickness
+  activeValue: 3
+  inactiveValue: 0
 --- !u!114 &4603130114610414024
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -218,7 +225,7 @@ PolygonCollider2D:
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 0.6076923, y: 0.5846154}
+    oldSize: {x: 0.6076923, y: 0.5769231}
     newSize: {x: 0.9625, y: 0.925}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
