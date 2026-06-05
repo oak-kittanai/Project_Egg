@@ -164,9 +164,14 @@ public class WeighingScale_Mech : NetworkBehaviour
 
     private bool IsValidItemConfig(Collider2D item)
     {
-        if (item.TryGetComponent<MovementCharacter>(out _)) return true;
+        MovementCharacter[] players = item.GetComponentsInParent<MovementCharacter>();
+        foreach (var p in players)
+        {
+            if (p.enabled) return true;
+        }
 
-        if (item.TryGetComponent<PuzzleItem>(out var pItem))
+        PuzzleItem pItem = item.GetComponentInParent<PuzzleItem>();
+        if (pItem != null)
         {
             foreach (var config in itemConfigs)
             {
@@ -185,17 +190,40 @@ public class WeighingScale_Mech : NetworkBehaviour
     private float CalculateSide(List<Collider2D> items)
     {
         float total = 0;
+        HashSet<GameObject> processedObjects = new HashSet<GameObject>();
+
         foreach (var item in items)
         {
-            if (item.TryGetComponent<MovementCharacter>(out var player))
+            MovementCharacter[] players = item.GetComponentsInParent<MovementCharacter>();
+            bool foundPlayer = false;
+
+            foreach (var player in players)
             {
-                if (player is Duck_Moveset) total += 130f;
-                else if (player is Bird_Moveset) total += 100f;
-                continue;
+                if (player.enabled)
+                {
+                    if (processedObjects.Contains(player.gameObject))
+                    {
+                        foundPlayer = true;
+                        break;
+                    }
+                    processedObjects.Add(player.gameObject);
+
+                    if (player is Duck_Moveset) total += 130f;
+                    else if (player is Bird_Moveset) total += 100f;
+
+                    foundPlayer = true;
+                    break;
+                }
             }
 
-            if (item.TryGetComponent<PuzzleItem>(out var pItem))
+            if (foundPlayer) continue;
+
+            PuzzleItem pItem = item.GetComponentInParent<PuzzleItem>();
+            if (pItem != null)
             {
+                if (processedObjects.Contains(pItem.gameObject)) continue;
+                processedObjects.Add(pItem.gameObject);
+
                 foreach (var config in itemConfigs)
                 {
                     if (pItem.ItemName == config.itemName)
