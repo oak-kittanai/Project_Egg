@@ -30,6 +30,16 @@ public class WeighingScale_Mech : NetworkBehaviour
     [Header("Scale Movement")]
     [SerializeField] Transform leftPlateVisual;
     [SerializeField] Transform rightPlateVisual;
+
+    [Header("Rope Visual")]
+    [SerializeField] Transform leftRopeVisual;
+    [SerializeField] Transform rightRopeVisual;
+
+    private Vector3 leftRopeStartScale;
+    private Vector3 rightRopeStartScale;
+    private float leftOriginalDist;
+    private float rightOriginalDist;
+
     [Tooltip("น้ำหนักสูงสุด")]
     [SerializeField] float maxWeightToSink = 150f;
     [Tooltip("ระยะลึกแกน Y")]
@@ -70,8 +80,22 @@ public class WeighingScale_Mech : NetworkBehaviour
     public override void Spawned()
     {
         if (successIndicator != null) successIndicator.enabled = false;
+
         if (leftPlateVisual != null) leftPlateStartPos = leftPlateVisual.position;
+
         if (rightPlateVisual != null) rightPlateStartPos = rightPlateVisual.position;
+
+        if (leftRopeVisual != null && leftPlateVisual != null)
+        {
+            leftRopeStartScale = leftRopeVisual.localScale;
+            leftOriginalDist = Mathf.Max(Mathf.Abs(leftRopeVisual.position.y - leftPlateVisual.position.y), 0.01f);
+        }
+
+        if (rightRopeVisual != null && rightPlateVisual != null)
+        {
+            rightRopeStartScale = rightRopeVisual.localScale;
+            rightOriginalDist = Mathf.Max(Mathf.Abs(rightRopeVisual.position.y - rightPlateVisual.position.y), 0.01f);
+        }
     }
 
     public override void FixedUpdateNetwork()
@@ -117,6 +141,13 @@ public class WeighingScale_Mech : NetworkBehaviour
             float leftSinkRatio = Mathf.Clamp01(itemOnLeftWeight / maxWeightToSink);
             Vector3 leftTargetPos = leftPlateStartPos + new Vector3(0, -leftSinkRatio * maxSinkDistance, 0);
             leftPlateVisual.position = Vector3.Lerp(leftPlateVisual.position, leftTargetPos, Time.deltaTime * plateMoveSpeed);
+
+            if (leftRopeVisual != null)
+            {
+                float currentDist = Mathf.Abs(leftRopeVisual.position.y - leftPlateVisual.position.y);
+                float scaleMultiplier = currentDist / leftOriginalDist;
+                leftRopeVisual.localScale = new Vector3(leftRopeStartScale.x, leftRopeStartScale.y * scaleMultiplier, leftRopeStartScale.z);
+            }
         }
 
         if (rightPlateVisual != null)
@@ -124,6 +155,13 @@ public class WeighingScale_Mech : NetworkBehaviour
             float rightSinkRatio = Mathf.Clamp01(itemOnRightWeight / maxWeightToSink);
             Vector3 rightTargetPos = rightPlateStartPos + new Vector3(0, -rightSinkRatio * maxSinkDistance, 0);
             rightPlateVisual.position = Vector3.Lerp(rightPlateVisual.position, rightTargetPos, Time.deltaTime * plateMoveSpeed);
+
+            if (rightRopeVisual != null)
+            {
+                float currentDist = Mathf.Abs(rightRopeVisual.position.y - rightPlateVisual.position.y);
+                float scaleMultiplier = currentDist / rightOriginalDist;
+                rightRopeVisual.localScale = new Vector3(rightRopeStartScale.x, rightRopeStartScale.y * scaleMultiplier, rightRopeStartScale.z);
+            }
         }
     }
 
@@ -164,9 +202,14 @@ public class WeighingScale_Mech : NetworkBehaviour
 
     private bool IsValidItemConfig(Collider2D item)
     {
-        if (item.TryGetComponent<MovementCharacter>(out _)) return true;
+        MovementCharacter[] players = item.GetComponentsInParent<MovementCharacter>();
+        foreach (var p in players)
+        {
+            if (p.enabled) return true;
+        }
 
-        if (item.TryGetComponent<PuzzleItem>(out var pItem))
+        PuzzleItem pItem = item.GetComponentInParent<PuzzleItem>();
+        if (pItem != null)
         {
             foreach (var config in itemConfigs)
             {
@@ -185,17 +228,40 @@ public class WeighingScale_Mech : NetworkBehaviour
     private float CalculateSide(List<Collider2D> items)
     {
         float total = 0;
+        HashSet<GameObject> processedObjects = new HashSet<GameObject>();
+
         foreach (var item in items)
         {
-            if (item.TryGetComponent<MovementCharacter>(out var player))
+            MovementCharacter[] players = item.GetComponentsInParent<MovementCharacter>();
+            bool foundPlayer = false;
+
+            foreach (var player in players)
             {
-                if (player is Duck_Moveset) total += 130f;
-                else if (player is Bird_Moveset) total += 100f;
-                continue;
+                if (player.enabled)
+                {
+                    if (processedObjects.Contains(player.gameObject))
+                    {
+                        foundPlayer = true;
+                        break;
+                    }
+                    processedObjects.Add(player.gameObject);
+
+                    if (player is Duck_Moveset) total += 130f;
+                    else if (player is Bird_Moveset) total += 100f;
+
+                    foundPlayer = true;
+                    break;
+                }
             }
 
-            if (item.TryGetComponent<PuzzleItem>(out var pItem))
+            if (foundPlayer) continue;
+
+            PuzzleItem pItem = item.GetComponentInParent<PuzzleItem>();
+            if (pItem != null)
             {
+                if (processedObjects.Contains(pItem.gameObject)) continue;
+                processedObjects.Add(pItem.gameObject);
+
                 foreach (var config in itemConfigs)
                 {
                     if (pItem.ItemName == config.itemName)
