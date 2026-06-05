@@ -5,6 +5,7 @@ public class PuzzleItem : NetworkBehaviour, Interactable
 {
     [Header("Item Settings")]
     [SerializeField] string itemName = "";
+    public string ItemName => itemName;
     [SerializeField] NetworkObject selfNet;
     [SerializeField] SpriteRenderer spriteRenderer;
 

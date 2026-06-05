@@ -110,10 +110,10 @@ MonoBehaviour:
   playerLayer:
     serializedVersion: 2
     m_Bits: 128
-  checkLineOfSight: 0
+  checkLineOfSight: 1
   obstacleLayer:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 512
   bulletPrefab: {fileID: 1309256803320509252, guid: 1c533efa9431a064896e59f6422c1cb4, type: 3}
   projectileSpeed: 10
   fireRate: 4

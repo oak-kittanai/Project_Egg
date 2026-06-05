@@ -22,10 +22,22 @@ public class WeighingScale_Mech : NetworkBehaviour
     public float delayBetweenPhases = 2f;
 
     [Header("Visual&Audio")]
-    public SpriteRenderer successIndicator; // กล่องเขียวตอนทำโจทย์เสร็จ
+    public SpriteRenderer successIndicator;
     public AudioSource audioSource;
     public AudioClip itemDropSound;
     public AudioClip phaseCompleteSound;
+
+    [Header("Scale Movement")]
+    [SerializeField] Transform leftPlateVisual;
+    [SerializeField] Transform rightPlateVisual;
+    [Tooltip("น้ำหนักสูงสุด")]
+    [SerializeField] float maxWeightToSink = 150f;
+    [Tooltip("ระยะลึกแกน Y")]
+    [SerializeField] float maxSinkDistance = 1.5f;
+    [SerializeField] float plateMoveSpeed = 5f;
+
+    private Vector3 leftPlateStartPos;
+    private Vector3 rightPlateStartPos;
 
     [Header("Items Config")]
     [SerializeField] ItemWeightConfigs[] itemConfigs;
@@ -53,10 +65,13 @@ public class WeighingScale_Mech : NetworkBehaviour
     [Networked] public NetworkBool IsWaitingNextPhase { get; set; }
     [Networked] private TickTimer PhaseTimer { get; set; }
     [Networked] public NetworkBool IsAllPhasesCompleted { get; set; }
+    [Networked] private TickTimer SoundCooldownTimer { get; set; }
 
     public override void Spawned()
     {
         if (successIndicator != null) successIndicator.enabled = false;
+        if (leftPlateVisual != null) leftPlateStartPos = leftPlateVisual.position;
+        if (rightPlateVisual != null) rightPlateStartPos = rightPlateVisual.position;
     }
 
     public override void FixedUpdateNetwork()
@@ -86,10 +101,29 @@ public class WeighingScale_Mech : NetworkBehaviour
     public override void Render()
     {
         UpdateHUD();
+        UpdatePlateVisuals();
 
         if (successIndicator != null)
         {
             successIndicator.enabled = IsWaitingNextPhase;
+        }
+    }
+
+    // --- ขยับตาชั่ง ---
+    private void UpdatePlateVisuals()
+    {
+        if (leftPlateVisual != null)
+        {
+            float leftSinkRatio = Mathf.Clamp01(itemOnLeftWeight / maxWeightToSink);
+            Vector3 leftTargetPos = leftPlateStartPos + new Vector3(0, -leftSinkRatio * maxSinkDistance, 0);
+            leftPlateVisual.position = Vector3.Lerp(leftPlateVisual.position, leftTargetPos, Time.deltaTime * plateMoveSpeed);
+        }
+
+        if (rightPlateVisual != null)
+        {
+            float rightSinkRatio = Mathf.Clamp01(itemOnRightWeight / maxWeightToSink);
+            Vector3 rightTargetPos = rightPlateStartPos + new Vector3(0, -rightSinkRatio * maxSinkDistance, 0);
+            rightPlateVisual.position = Vector3.Lerp(rightPlateVisual.position, rightTargetPos, Time.deltaTime * plateMoveSpeed);
         }
     }
 
@@ -115,9 +149,10 @@ public class WeighingScale_Mech : NetworkBehaviour
                 hasNewItemDropped = true;
         }
 
-        if (hasNewItemDropped)
+        if (hasNewItemDropped && SoundCooldownTimer.ExpiredOrNotRunning(Runner))
         {
-            RPC_PlaySound(true); // เสียงวางของ
+            RPC_PlaySound(true);
+            SoundCooldownTimer = TickTimer.CreateFromSeconds(Runner, 0.3f);
         }
 
         prevLeftItems.Clear();
@@ -129,9 +164,14 @@ public class WeighingScale_Mech : NetworkBehaviour
 
     private bool IsValidItemConfig(Collider2D item)
     {
-        foreach (var config in itemConfigs)
+        if (item.TryGetComponent<MovementCharacter>(out _)) return true;
+
+        if (item.TryGetComponent<PuzzleItem>(out var pItem))
         {
-            if (item.name.Contains(config.itemName)) return true;
+            foreach (var config in itemConfigs)
+            {
+                if (pItem.ItemName == config.itemName) return true;
+            }
         }
         return false;
     }
@@ -147,15 +187,22 @@ public class WeighingScale_Mech : NetworkBehaviour
         float total = 0;
         foreach (var item in items)
         {
-            if (item.name.Contains(duckName)) total += 130f;
-            else if (item.name.Contains(birdName)) total += 100f;
-
-            foreach (var config in itemConfigs)
+            if (item.TryGetComponent<MovementCharacter>(out var player))
             {
-                if (item.name.Contains(config.itemName))
+                if (player is Duck_Moveset) total += 130f;
+                else if (player is Bird_Moveset) total += 100f;
+                continue;
+            }
+
+            if (item.TryGetComponent<PuzzleItem>(out var pItem))
+            {
+                foreach (var config in itemConfigs)
                 {
-                    total += config.weight;
-                    break;
+                    if (pItem.ItemName == config.itemName)
+                    {
+                        total += config.weight;
+                        break;
+                    }
                 }
             }
         }
@@ -171,7 +218,6 @@ public class WeighingScale_Mech : NetworkBehaviour
         bool isLeftCorrect = false;
         bool isRightCorrect = false;
 
-        // เช็ควิธีคิดคำตอบ >>> requireExactMatch 
         if (currentPhase.requireExactMatch)
         {
             isLeftCorrect = (itemOnLeftWeight == currentPhase.targetLeftWeight);
@@ -189,7 +235,6 @@ public class WeighingScale_Mech : NetworkBehaviour
             PhaseTimer = TickTimer.CreateFromSeconds(Runner, delayBetweenPhases);
             RPC_PlaySound(false);
 
-            // ส่ง Progress
             if (targetDoor != null)
             {
                 targetDoor.AdvanceProgress(puzzlePhases.Length);
@@ -203,7 +248,6 @@ public class WeighingScale_Mech : NetworkBehaviour
         if (showTextWeight_R != null) showTextWeight_R.text = $"{itemOnRightWeight}Rm";
     }
 
-    // เสียง
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
     public void RPC_PlaySound(bool isDropSound)
     {
