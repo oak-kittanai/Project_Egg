@@ -22,8 +22,8 @@ public class CenterHost : SingletonNetwork<CenterHost>
 
     [Networked] public bool RemoveOldObj { get; set; }
 
-    [Networked] characterType currentHost { get; set; }
-    [Networked] characterType currentClient { get; set; }
+    [Networked] public characterType currentHost { get; set; }
+    [Networked] public characterType currentClient { get; set; }
 
     [Header("Core Systems (Local Prefabs)")]
     [SerializeField] private GameObject canvasPrefab;
@@ -47,7 +47,6 @@ public class CenterHost : SingletonNetwork<CenterHost>
     {
         GameObject canvasObj = GameObject.Find(canvasPrefab.name);
 
-        // ถ้ายังไม่มีในฉาก ให้สร้างใหม่
         if (canvasObj == null && canvasPrefab != null)
         {
             canvasObj = Instantiate(canvasPrefab);
@@ -158,8 +157,10 @@ public class CenterHost : SingletonNetwork<CenterHost>
 
     public void SpawnPlayer(PlayerRef player, characterType Type, bool isHost)
     {
+        if (isHost) currentHost = Type;
+        else currentClient = Type;
+
         Vector2 spawnPos = isHost ? HostSpawnPos : ClientSpawnPos;
-        Debug.Log($"Try Spawn Player: {Type} at {spawnPos}");
 
         if (hostRunner != null)
         {

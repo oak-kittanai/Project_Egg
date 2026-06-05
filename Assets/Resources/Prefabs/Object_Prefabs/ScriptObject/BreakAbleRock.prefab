@@ -31,7 +31,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 5.492, y: -13.39, z: 0}
-  m_LocalScale: {x: 2.0895615, y: 2.0895615, z: 2.0895615}
+  m_LocalScale: {x: 2.0224326, y: 2.0224326, z: 2.0224326}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -88,7 +88,7 @@ SpriteRenderer:
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 1, y: 0.6458333}
+  m_Size: {x: 0.6666667, y: 0.6666667}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
@@ -110,7 +110,7 @@ MonoBehaviour:
   coll: {fileID: 661784451826234151}
   _isBroken:
     _value: 0
-  selfNet: {fileID: 8435920208396272353}
+  selfNet: {fileID: 0}
   itemToDrop: {fileID: 5283567399167749245, guid: f6ee7c8d2993a114cbcc32c8f96ce6a2, type: 3}
   dropAmount: 1
   canDrop: 1
@@ -175,7 +175,7 @@ PolygonCollider2D:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
     oldSize: {x: 0.6666667, y: 0.6666667}
-    newSize: {x: 1, y: 0.6458333}
+    newSize: {x: 0.6666667, y: 0.6666667}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
     adaptiveTiling: 0

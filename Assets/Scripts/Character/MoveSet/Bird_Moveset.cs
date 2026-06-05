@@ -24,7 +24,7 @@ public class Bird_Moveset : MovementCharacter
     public NetworkBool IsFlying { get; set; }
     [Networked] public bool IsAlreadyFly { get; set; }
     [Networked] public bool AlreadyFloating { get; set; }
-    
+
 
     [Header("Pressed")]
     [Networked] public bool _wasJumpPressed { get; set; }
@@ -241,9 +241,31 @@ public class Bird_Moveset : MovementCharacter
         DrownTimer = TickTimer.None;
     }
 
+    public override void RPC_OnRespawned()
+    {
+        base.RPC_OnRespawned();
+
+        IsFlying = false;
+        IsAlreadyFly = false;
+        AlreadyFloating = false;
+        FallingBusy = false;
+        startTimer = false;
+        DrownTimer = TickTimer.None;
+
+        if (rb2D != null)
+        {
+            rb2D.sharedMaterial = defaultMaterial;
+        }
+
+        if (HasInputAuthority && localGUI != null)
+            localGUI.StopOxygenTracking();
+    }
+
     #region FlyLogic
     private void HandleFlightLogic(NetworkInputData input)
     {
+        if (!isFlyUnlocked) return;
+
         bool isPressed = input.KeybindJump && !_wasJumpPressed;
 
         if (!IsBeingCarried)
@@ -315,12 +337,14 @@ public class Bird_Moveset : MovementCharacter
             if (IsFlying)
             {
                 float duration = IsBeingCarried ? carryFlyTime : normalFlyTime;
-                if (playerAudioSource != null && flySoundClip != null) playerAudioSource.PlayOneShot(flySoundClip);
+                if (flySoundClip != null) AudioManager.Instance?.PlayClipAtPosition(flySoundClip, transform.position);
+
                 if (localGUI != null) localGUI.StartFlightBar(FlightTimer, Runner, duration);
             }
             else
             {
-                if (playerAudioSource != null && stopFlySoundClip != null) playerAudioSource.PlayOneShot(stopFlySoundClip);
+                if (stopFlySoundClip != null) AudioManager.Instance?.PlayClipAtPosition(stopFlySoundClip, transform.position);
+
                 if (localGUI != null) localGUI.StopFlightBar();
             }
         }
@@ -396,6 +420,7 @@ public class Bird_Moveset : MovementCharacter
 
     public void ForceCancelFlight()
     {
+        if (IsFlying) StopFlying();
         if (AlreadyFloating) StopFloating();
         IsAlreadyFly = false;
     }
@@ -453,12 +478,9 @@ public class Bird_Moveset : MovementCharacter
         Vector2 direction = throwPoint.right;
 
         GameManager.Instance.ProjectileSpawn(throwAblePrefab, throwPos, direction, throwPoint.rotation, projectileSpeed);
-        if (HasInputAuthority)
+        if (HasInputAuthority && throwSoundClip != null)
         {
-            if (playerAudioSource != null && throwSoundClip != null)
-            {
-                playerAudioSource.PlayOneShot(throwSoundClip);
-            }
+            AudioManager.Instance?.PlayClipAtPosition(throwSoundClip, transform.position);
         }
 
         _canThrowItem = false;
@@ -568,4 +590,3 @@ public class Bird_Moveset : MovementCharacter
         }
     }
 }
-

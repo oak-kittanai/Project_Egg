@@ -34,6 +34,7 @@ public class BaseMonster : NetworkBehaviour
 
     [Header("Detect")]
     [SerializeField] public LayerMask playerLayer;
+    [SerializeField] public LayerMask obstacleLayer;
     [SerializeField] public float detectionRadius = 15f;
     [SerializeField] public float attackRadius = 15f;
 
@@ -84,7 +85,10 @@ public class BaseMonster : NetworkBehaviour
         foreach (var hit in hits)
         {
             if (!hit.TryGetComponent<MovementCharacter>(out _)) continue;
-
+            Vector2 dirToPlayer = (hit.transform.position - transform.position).normalized;
+            float distToPlayer = Vector2.Distance(transform.position, hit.transform.position);
+            RaycastHit2D hitObstacle = Physics2D.Raycast(transform.position, dirToPlayer, distToPlayer, obstacleLayer);
+            if (hitObstacle.collider != null) continue;
             targetPosition = hit.transform.position;
             hasSpotPlayer = true;
             foundPlayer = true;

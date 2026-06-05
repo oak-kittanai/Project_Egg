@@ -69,7 +69,6 @@ public class PlayerInterface : MonoBehaviour
 
     private Transform _cachedSkillContainer;
 
-    // ตัวแปรเก็บสถานะเพื่อป้องกันการ Spawn ซ้ำถ้าไม่ได้เปลี่ยนตัวละคร
     [HideInInspector] public bool isCurrentBirdSetup;
     [HideInInspector] public bool hasSetupSkills = false;
 
@@ -103,6 +102,10 @@ public class PlayerInterface : MonoBehaviour
     [Header("Cutscene UI")]
     public Button skipButton;
     public TMP_Text skipPlayerCheckText;
+
+    [Header("Item Overlay")]
+    public GameObject itemOverlayObj;
+    public Image itemPic;
 
     private void Awake()
     {
@@ -255,6 +258,22 @@ public class PlayerInterface : MonoBehaviour
 
             Transform lv = loadingScene.Find("LoadingVideo");
             if (lv != null) videoLoadingPlayer = lv.GetComponent<VideoPlayer>();
+        }
+
+        // Overlay item
+        Transform overlay = canvas.transform.Find("ItemOverlay");
+        if (overlay != null)
+        {
+            itemOverlayObj = overlay.gameObject;
+
+            Transform frame = overlay.Find("ItemFrame");
+            if (frame != null)
+            {
+                Transform itemIcon = frame.Find("ItemPic");
+                if (itemIcon != null) itemPic = itemIcon.GetComponent<Image>();
+            }
+
+            itemOverlayObj.SetActive(false);
         }
 
         HideQuestUI();
@@ -493,6 +512,25 @@ public class PlayerInterface : MonoBehaviour
             videoLoadingPlayer.enabled = true;
             videoLoadingPlayer.Play();
         }
+    }
+
+    #endregion
+
+    #region Item Overlay
+
+    public void ShowItemOverlay(string itemName)
+    {
+        if (itemOverlayObj == null || GameManager.Instance == null) return;
+
+        Sprite sprite = GameManager.Instance.GetItemSprite(itemName);
+        if (itemPic != null && sprite != null) itemPic.sprite = sprite;
+
+        itemOverlayObj.SetActive(true);
+    }
+
+    public void HideItemOverlay()
+    {
+        if (itemOverlayObj != null) itemOverlayObj.SetActive(false);
     }
 
     #endregion

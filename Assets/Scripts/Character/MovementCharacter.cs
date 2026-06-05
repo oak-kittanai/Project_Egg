@@ -14,14 +14,13 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     //SOUND
     [Header("Audio System")]
-    [SerializeField] public AudioSource playerAudioSource;
     [SerializeField] public AudioClip jumpSoundClip;
     [SerializeField] public AudioClip landingSoundClip;
     [SerializeField] public AudioClip dmgSoundClip;
     [SerializeField] public AudioClip dieSoundClip;
     [SerializeField] public AudioClip respawnSoundClip;
 
-    [Header("Movement Audio")]
+    [Header("Movement Audio (Local Loop)")]
     [SerializeField] public AudioSource movementAudioSource;
     [SerializeField] public AudioClip walkSoundClip;
     [SerializeField] public AudioClip swimSoundClip;
@@ -115,6 +114,13 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [SerializeField] public Color duck_Color;
     [SerializeField] public Color bird_Color;
 
+    [Header("Climbing")]
+    [SerializeField] float climbSpeed = 2f;
+    [SerializeField] LayerMask climbableMask;
+    [Networked] public bool isInClimbZone { get; set; }
+    [Networked] public bool isClimbing { get; set; }
+    [Networked] public bool jumpedFromClimb { get; set; }
+
     // UnlockableSkills
     public enum SkillType { None, Duck_Dive, Duck_Smash, Bird_Fly, Bird_Throw }
 
@@ -127,12 +133,18 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     public void OnHeldItemChanged()
     {
-        if (HasInputAuthority && PlayerInterface.Instance != null)
+        string itemName = HeldItemName.ToString();
+
+        if (HasInputAuthority && PlayerInterface.Instance != null
+            && GameManager.Instance != null && GameManager.Instance.IsGameReady)
         {
-            Debug.Log($"UI Update : {HeldItemName}");
+            if (string.IsNullOrEmpty(itemName))
+                PlayerInterface.Instance.HideItemOverlay();
+            else
+                PlayerInterface.Instance.ShowItemOverlay(itemName);
         }
 
-        if (HeldItemName == "Rock") _canThrowItem = true; else _canThrowItem = false;
+        _canThrowItem = (itemName == "Rock");
     }
 
     // Throw System
@@ -140,6 +152,9 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     [Header("Etc")]
     [Networked] public bool _wasEscPressed { get; set; }
+
+    [Header("LifeCycle Effect")]
+    [SerializeField] public LifeCycle lifeCycle;
 
     private void Awake()
     {
@@ -159,6 +174,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         {
             visualTransform = transform.Find("Player_Animation");
         }
+
+        if (lifeCycle == null) lifeCycle = GetComponentInChildren<LifeCycle>();
 
         if (TryGetComponent<Fusion.Addons.Physics.NetworkRigidbody2D>(out var netRb))
         {
@@ -200,6 +217,15 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             characterMaxHealth = stats.s_maxHealth;
         }
 
+        CameraCharacter cam = GetComponentInChildren<CameraCharacter>();
+        if (cam != null)
+        {
+            if (HasInputAuthority)
+                cam.InitializeAsLocal(transform);  // ← local player → ใช้กล้อง
+            else
+                cam.DisableForRemote();             // ← remote player → ปิด
+        }
+
         MaterialPropertyBlock mpb = new MaterialPropertyBlock();
         if (spriteRenderer != null)
         {
@@ -208,7 +234,12 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             spriteRenderer.SetPropertyBlock(mpb);
         }
 
-        if (cAnimation != null) cAnimation.UpdateSkin(stats.skinType);
+        if (cAnimation != null)
+        {
+            cAnimation.UpdateSkin(stats.skinType);
+            if (lifeCycle != null) lifeCycle.Initialize(isThisCharacterBird);
+        }
+
         JumpCooldown = TickTimer.CreateFromSeconds(Runner, JumpCooldownTimer);
         resetAnimation = true;
 
@@ -280,9 +311,21 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             }
         }
 
-        bool isMenuOpen = MenuController.Instance != null && MenuController.Instance.Object != null && MenuController.Instance.Object.IsValid && MenuController.Instance.IsMenuOpen;
+        bool isMenuOpen = MenuController.Instance != null && MenuController.Instance.Object != null
+        && MenuController.Instance.Object.IsValid && MenuController.Instance.Runner != null && MenuController.Instance.IsMenuOpen;
 
         if (HasStateAuthority || HasInputAuthority) CheckGround();
+
+        // Test
+
+        bool wasInZone = isInClimbZone;
+        isInClimbZone = CheckInClimbZone();
+
+        // ----
+        if (wasInZone && !isInClimbZone && isClimbing)
+        {
+            ExitClimbState();
+        }
 
         if (GetInput(out NetworkInputData input))
         {
@@ -298,18 +341,42 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             }
             else
             {
-                if (isMoveAble)
+                if (isInClimbZone && !isClimbing && Mathf.Abs(input.vertical) > 0.1f)
                 {
-                    HandleMovement(input);
-                    HandleJump(input);
+                    EnterClimbState();
                 }
 
-                if (!IsInteractBusy)
+                if (isClimbing)
                 {
-                    HandleInteraction(input);
+                    if (input.KeybindJump && !jumpedFromClimb)
+                    {
+                        ExitClimbState();
+                        jumpedFromClimb = true;
+                        ClimbJump();
+                    }
+                    else
+                    {
+                        HandleMovement(input);
+                        rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, input.vertical * climbSpeed);
+                        if (cAnimation != null)
+                        {
+                            cAnimation.UpdateClimbAnimation(Mathf.Abs(input.vertical));
+                        }
+                    }
+
+                    HandleEtcInput(input);
                 }
-                HandleEtcInput(input);
-                HandleDrop(input);
+                else
+                {
+                    if (isMoveAble)
+                    {
+                        HandleMovement(input);
+                        HandleJump(input);
+                    }
+                    if (!IsInteractBusy) HandleInteraction(input);
+                    HandleEtcInput(input);
+                    HandleDrop(input);
+                }
             }
         }
 
@@ -372,16 +439,19 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     protected virtual void HandleJump(NetworkInputData input)
     {
+        if (jumpedFromClimb)
+        {
+            if (IsGrounded) jumpedFromClimb = false;
+            else return;
+        }
+
         if (input.KeybindJump && IsGrounded && JumpCooldown.ExpiredOrNotRunning(Runner))
         {
             isJumping = true;
 
-            if (HasInputAuthority)
+            if (HasInputAuthority && jumpSoundClip != null)
             {
-                if (playerAudioSource != null && jumpSoundClip != null)
-                {
-                    playerAudioSource.PlayOneShot(jumpSoundClip);
-                }
+                AudioManager.Instance?.PlayClipAtPosition(jumpSoundClip, transform.position);
             }
             rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, 0f);
             rb2D.AddForce(Vector2.up * stats.s_jumpForce, ForceMode2D.Impulse);
@@ -439,12 +509,9 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     public void RPC_TakeDamage(int dmg, float knockbackForce, Vector2 vec)
     {
         currentHealth -= dmg;
-        if (HasInputAuthority)
+        if (HasInputAuthority && dmgSoundClip != null)
         {
-            if (playerAudioSource != null && dmgSoundClip != null)
-            {
-                playerAudioSource.PlayOneShot(dmgSoundClip);
-            }
+            AudioManager.Instance?.PlayClipAtPosition(dmgSoundClip, transform.position);
         }
         rb2D.linearVelocity = Vector2.zero;
         rb2D.AddForce(vec * knockbackForce, ForceMode2D.Impulse);
@@ -468,6 +535,12 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         {
             localGUI.StopOxygenTracking();
             localGUI.StopFlightBar();
+        }
+
+        if (!isPrimaryDeath && lifeCycle != null)
+        {
+            Debug.Log($"[LifeCycle] ▶ PlayOnFriendDeath on {gameObject.name}");
+            lifeCycle.PlayOnFriendDeath();
         }
 
         CharacterDie(isPrimaryDeath);
@@ -505,10 +578,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             {
                 cAnimation.DeathAnimation();
             }
-            else
-            {
-                cAnimation.PrepareToRespawnAnimation();
-            }
         }
 
         if (HasStateAuthority && canbeRespawn)
@@ -522,10 +591,11 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
             foreach (var partner in allPlayers)
             {
-                if (partner != this && !partner.isDead)
-                {
-                    partner.DeathMechanic_RPC(false);
-                }
+                if (!partner.enabled) continue;
+                if (partner == this) continue;
+                if (partner.isDead) continue;
+
+                partner.DeathMechanic_RPC(false);
             }
         }
     }
@@ -541,6 +611,13 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             isWaterSurface = false;
             IsFalling = false;
             FallingBusy = false;
+
+            isMoveAble = true;
+            isOptional = false;
+            isSpeedoptional = false;
+            isClimbing = false;
+            jumpedFromClimb = false;
+            isJumping = false;
 
             if (cAnimation != null) cAnimation.ClearAnimationLock();
 
@@ -564,7 +641,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     }
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    public void RPC_OnRespawned()
+    public virtual void RPC_OnRespawned()
     {
         isMoveAble = true;
 
@@ -575,19 +652,22 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             rb2D.gravityScale = normalGravity;
             rb2D.linearVelocity = Vector2.zero;
             rb2D.angularVelocity = 0f;
+            rb2D.linearDamping = 0f;
         }
 
         if (cAnimation != null) cAnimation.ReturnToBlendAnimation();
 
-        if (playerAudioSource != null && respawnSoundClip != null)
+        if (respawnSoundClip != null)
         {
-            playerAudioSource.PlayOneShot(respawnSoundClip);
+            AudioManager.Instance?.PlayClipAtPosition(respawnSoundClip, transform.position);
         }
 
         if (visualTransform != null)
         {
             visualTransform.localPosition = Vector3.zero;
         }
+
+        if (lifeCycle != null) lifeCycle.PlayOnRespawn();
     }
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
@@ -620,6 +700,58 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         }
     }
 
+    #region Climb System
+    private bool CheckInClimbZone()
+    {
+        Collider2D[] hits = Physics2D.OverlapBoxAll(
+            transform.position,
+            new Vector2(0.5f, 1f),
+            0f,
+            climbableMask
+        );
+
+        foreach (var hit in hits)
+        {
+            if (hit.GetComponent<IClimbable>() != null
+             || hit.GetComponentInParent<IClimbable>() != null)
+                return true;
+        }
+        return false;
+    }
+
+    private void EnterClimbState()
+    {
+        if (isClimbing) return;
+        isClimbing = true;
+        IsGrounded = false;
+        isJumping = false;
+        rb2D.gravityScale = 0f;
+        rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, 0f);
+    }
+
+    private void ExitClimbState()
+    {
+        if (!isClimbing) return;
+        isClimbing = false;
+        isMoveAble = true;
+        rb2D.gravityScale = normalGravity;
+    }
+
+    private void ClimbJump()
+    {
+        isJumping = true;
+        rb2D.linearVelocity = Vector2.zero;
+        rb2D.AddForce(Vector2.up * stats.s_jumpForce, ForceMode2D.Impulse);
+        IsGrounded = false;
+        resetAnimation = false;
+        JumpCooldown = TickTimer.CreateFromSeconds(Runner, JumpCooldownTimer);
+
+        if (HasInputAuthority && jumpSoundClip != null)
+            AudioManager.Instance?.PlayClipAtPosition(jumpSoundClip, transform.position);
+        if (cAnimation != null && !isCarrying) cAnimation.JumpAnimation();
+    }
+
+    #endregion
     #endregion
 
     #region CarrySystem
@@ -787,12 +919,9 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         {
             isJumping = false;
             resetAnimation = true;
-            if (HasInputAuthority)
+            if (HasInputAuthority && landingSoundClip != null)
             {
-                if (playerAudioSource != null && landingSoundClip != null)
-                {
-                    playerAudioSource.PlayOneShot(landingSoundClip);
-                }
+                AudioManager.Instance?.PlayClipAtPosition(landingSoundClip, transform.position);
             }
         }
 
@@ -807,7 +936,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             }
         }
 
-        if (IsInAir)
+        if (IsInAir && !isClimbing)
         {
             if (referenceVelocityY < -0.1f)
             {
@@ -819,7 +948,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                 }
             }
         }
-        else if (!effectivelyCarried)
+        else if (!effectivelyCarried && !isClimbing)
         {
             rb2D.gravityScale = isOptional ? optionalGravity : normalGravity;
         }
@@ -837,6 +966,11 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     {
         if (!HasInputAuthority) return;
         if (movementAudioSource == null) return;
+
+        if (AudioManager.Instance != null)
+        {
+            movementAudioSource.volume = AudioManager.Instance.GetGlobalSFXVolume();
+        }
 
         AudioClip targetClip = null;
 
@@ -1012,17 +1146,87 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [Rpc(RpcSources.All, RpcTargets.All)]
     public void RPC_PlayRespawnSound()
     {
-        if (playerAudioSource != null && respawnSoundClip != null)
+        if (respawnSoundClip != null)
         {
-            playerAudioSource.PlayOneShot(respawnSoundClip);
+            AudioManager.Instance?.PlayClipAtPosition(respawnSoundClip, transform.position);
         }
     }
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
     public void RPC_PlayDieSound()
     {
-        if (playerAudioSource != null && dieSoundClip != null)
-            playerAudioSource.PlayOneShot(dieSoundClip);
+        if (dieSoundClip != null)
+            AudioManager.Instance?.PlayClipAtPosition(dieSoundClip, transform.position);
     }
+
+    #region resetForce
+
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    public void RPC_ResetPlayer()
+    {
+        if (!HasStateAuthority) return;
+        DoResetToSpawn();
+    }
+
+    private void DoResetToSpawn()
+    {
+        // ── Reset state ──
+        isDead = false;
+        currentHealth = characterMaxHealth;
+        stilldrowning = false;
+        IsHeadUnderwater = false;
+        isWaterSurface = false;
+        IsFalling = false;
+        FallingBusy = false;
+
+        // ── Reset movement modifiers ──
+        isMoveAble = true;
+        isOptional = false;
+        isSpeedoptional = false;
+        isClimbing = false;
+        isInClimbZone = false;
+        jumpedFromClimb = false;
+        isJumping = false;
+
+        if (cAnimation != null) cAnimation.ClearAnimationLock();
+
+        // ── cancel carry ──
+        if (IsBeingCarried)
+        {
+            if (Runner.TryFindObject(CarrierId, out var carrierObj)
+                && carrierObj.TryGetComponent<Duck_Moveset>(out var duck))
+            {
+                duck.DropFriend(false);
+            }
+            RPC_UpdateCarry(false, default);
+        }
+        else if (isCarrying)
+        {
+            ((Duck_Moveset)this).DropFriend(false);
+        }
+
+        if (GameManager.Instance != null)
+        {
+            Vector3 newPos = GameManager.Instance.GetRespawnPosition();
+            if (TryGetComponent<NetworkRigidbody2D>(out var netRb))
+                netRb.Teleport(newPos, transform.rotation);
+            else
+            {
+                transform.position = newPos;
+                if (rb2D != null) rb2D.position = newPos;
+            }
+        }
+
+        RPC_PlayFriendDeathEffect();
+
+        RPC_OnRespawned();
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    public void RPC_PlayFriendDeathEffect()
+    {
+        if (lifeCycle != null) lifeCycle.PlayOnFriendDeath();
+    }
+    #endregion
 
     private void OnDrawGizmosSelected()
     {

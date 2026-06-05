@@ -201,8 +201,12 @@ public class CharacterAnimation : NetworkBehaviour
     // Overall
     public void JumpAnimation() => PlayAnimationNetworked("Jump");
     public void InteractAnimation() => SetActionAnimation("Interact", 0.5f);
-    public void DeathAnimation() => SetActionAnimation("Death", 999f);
-    public void PrepareToRespawnAnimation() => SetActionAnimation("PrepareToRespawn", 999f);
+    public void DeathAnimation() => SetActionAnimation("Death", 10f);
+    public void UpdateClimbAnimation(float vertical)
+    {
+        // animator.SetFloat("ClimbSpeed", vertical);
+        // Animator blend tree ClimbUp/Idle/Down
+    }
 
     public void BirdPrepareFallingAnimaion()
     {

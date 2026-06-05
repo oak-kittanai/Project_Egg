@@ -37,6 +37,7 @@ public class SessionHub : SingletonNetwork<SessionHub>
     [Header("JoinSession (UI Elements)")]
     [SerializeField] GameObject[] joinSessionElements;
     [SerializeField] TMP_InputField _sessionNumberInsertField;
+    [SerializeField] TMP_Text _sessionNumberError;
     [SerializeField] Button _JoinRoomButton;
 
     [Header("InLobby (Main Menu UI Elements)")]
@@ -316,7 +317,8 @@ public class SessionHub : SingletonNetwork<SessionHub>
 
         if (_sessionNumberInsertField.text.Length < 6 || _sessionNumberInsertField.text.Length > 6)
         {
-            _sessionNumberInsertField.text = "Wrong Session key";
+            _sessionNumberInsertField.text = string.Empty;
+            StartCoroutine(ShowErrorHint("Wrong session key"));
         }
         else if (_sessionNumberInsertField.text.Length == 6)
         {
@@ -338,7 +340,15 @@ public class SessionHub : SingletonNetwork<SessionHub>
     public void OnJoinFailed()
     {
         if (_JoinRoomButton != null) _JoinRoomButton.interactable = true;
-        if (_sessionNumberInsertField != null) _sessionNumberInsertField.text = "Connection Failed";
+        if (_sessionNumberInsertField != null) _sessionNumberInsertField.text = string.Empty;
+        StartCoroutine(ShowErrorHint("Connection failed"));
+    }
+
+    private IEnumerator ShowErrorHint(string error)
+    {
+        _sessionNumberError.text = error;
+        yield return new WaitForSeconds(2f);
+        _sessionNumberError.text = string.Empty;
     }
 
     public void LeaveRoom()

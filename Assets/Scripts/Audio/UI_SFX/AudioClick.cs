@@ -3,7 +3,7 @@ using UnityEngine;
 public class AudioClick : MonoBehaviour
 {
     [Header("Audio Setting")]
-    public string clickSoundName = "Click";
+    public string clickSoundName = "ClickSound";
 
     void Update()
     {

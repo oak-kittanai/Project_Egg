@@ -191,11 +191,7 @@ public class MenuController : NetworkBehaviour
             IsMenuOpen = false;
             ClearAllVotes();
 
-            MovementCharacter[] allPlayers = FindObjectsByType<MovementCharacter>(FindObjectsSortMode.None);
-            foreach (var p in allPlayers)
-            {
-                if (!p.isDead) p.DeathMechanic_RPC(true);
-            }
+            ResetAllPlayersFromMenu();
         }
     }
 
@@ -254,25 +250,18 @@ public class MenuController : NetworkBehaviour
     [Rpc(RpcSources.All, RpcTargets.All)]
     private void RPC_QuitGame()
     {
-        ExecuteQuitGameAsync();
-
         GameManager.Instance?.ResetAllSkillUnlocks();
+        StartCoroutine(QuitSequence());
     }
 
-    private void ExecuteQuitGameAsync()
+    private System.Collections.IEnumerator QuitSequence()
     {
+        UnityEngine.SceneManagement.SceneManager.LoadScene("SessionScene");
+
+        yield return null;
+
         if (SessionManager.Instance != null)
-        {
             SessionManager.Instance.ReStartNetworkRunner();
-        }
-        else if (GameManager.Instance != null)
-        {
-            GameManager.Instance.BackToSessionScene();
-        }
-        else
-        {
-            UnityEngine.SceneManagement.SceneManager.LoadScene("SessionScene");
-        }
     }
 
     #region Menu Control
@@ -289,6 +278,23 @@ public class MenuController : NetworkBehaviour
             }
             MenuController.Instance.OpenMenuState();
         }
+    }
+
+    public void ResetAllPlayersFromMenu()
+    {
+        if (!HasStateAuthority) return;
+
+        MovementCharacter[] players = FindObjectsByType<MovementCharacter>(FindObjectsSortMode.None);
+
+        foreach (var p in players)
+        {
+            if (!p.enabled) continue;
+            if (p.Object == null || !p.Object.IsValid) continue;
+
+            p.RPC_ResetPlayer();
+        }
+
+        Debug.Log("[GameManager] Reset all players from menu");
     }
 
     #endregion

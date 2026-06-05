@@ -232,29 +232,32 @@ public class NetworkInteractableWater : NetworkBehaviour
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
+        if (Runner == null || !Runner.IsRunning) return;
+        if (Object == null || !Object.IsValid) return;
         if (!HasStateAuthority) return;
+        if (collision == null) return;
 
         Rigidbody2D rb = collision.GetComponent<Rigidbody2D>();
         if (rb != null)
         {
             float impactVelocity = rb.linearVelocity.y * 0.2f;
-
             impactVelocity = Mathf.Clamp(impactVelocity, -maxVelocity, maxVelocity);
-
             Splash(collision.transform.position, impactVelocity);
         }
     }
 
     private void OnTriggerExit2D(Collider2D collision)
     {
+        if (Runner == null || !Runner.IsRunning) return;
+        if (Object == null || !Object.IsValid) return;
         if (!HasStateAuthority) return;
+        if (collision == null) return;
 
         Rigidbody2D rb = collision.GetComponent<Rigidbody2D>();
         if (rb != null)
         {
             float impactVelocity = rb.linearVelocity.y * 0.15f;
             impactVelocity = Mathf.Clamp(impactVelocity, -maxVelocity, maxVelocity);
-
             Splash(collision.transform.position, impactVelocity);
         }
     }
