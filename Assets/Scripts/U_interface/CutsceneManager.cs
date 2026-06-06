@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Collections;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.Video;
 
 public class CutsceneManager : NetworkBehaviour
@@ -29,16 +30,18 @@ public class CutsceneManager : NetworkBehaviour
     private IEnumerator SetupWhenLevelDataReady()
     {
         yield return new WaitUntil(() => LevelData.Instance != null);
-
         yield return new WaitUntil(() => PlayerInterface.Instance != null);
 
+#if UNITY_WEBGL && !UNITY_EDITOR
+    yield return new WaitUntil(() => PlayerInterface.Instance.introVideoPlayer != null);
+#else
         if (LevelData.Instance.introClip != null)
         {
             yield return new WaitUntil(() => PlayerInterface.Instance.introVideoPlayer != null);
         }
+#endif
 
         yield return null;
-
         Setup();
     }
 
@@ -50,20 +53,30 @@ public class CutsceneManager : NetworkBehaviour
             return;
         }
 
-        VideoClip clip = LevelData.Instance.introClip;
-
-        bool hasCutscene = clip != null && PlayerInterface.Instance != null && PlayerInterface.Instance.introVideoPlayer != null;
-
-        if (hasCutscene)
+        if (PlayerInterface.Instance == null || PlayerInterface.Instance.introVideoPlayer == null)
         {
-            Debug.Log("[CutsceneManager] Has introClip → cutscene");
-            SetupAndPlayCutscene(clip);
+            PlayLoadingOnly();
+            return;
+        }
+
+        var data = LevelData.Instance;
+
+#if UNITY_WEBGL && !UNITY_EDITOR
+    // WebGL build → ใช้ไฟล์จาก StreamingAssets
+    Debug.Log("[CutsceneManager] Platform: WebGL → StreamingAssets file");
+    SetupAndPlayCutsceneFromFile();
+#else
+        if (data.introClip != null)
+        {
+            Debug.Log("[CutsceneManager] Platform: Standalone → VideoClip");
+            SetupAndPlayCutsceneFromClip(data.introClip);
         }
         else
         {
             Debug.Log("[CutsceneManager] No introClip → loading only");
             PlayLoadingOnly();
         }
+#endif
     }
 
     private void PlayLoadingOnly()
@@ -76,26 +89,70 @@ public class CutsceneManager : NetworkBehaviour
         NotifyMapReady();
     }
 
-    private void SetupAndPlayCutscene(VideoClip clip)
+    // ==== Mode 1: VideoClip (in-build) ====
+    private void SetupAndPlayCutsceneFromClip(VideoClip clip)
     {
-        if (PlayerInterface.Instance != null)
-        {
-            if (PlayerInterface.Instance.skipButton != null)
-            {
-                PlayerInterface.Instance.skipButton.onClick.RemoveAllListeners();
-                PlayerInterface.Instance.skipButton.onClick.AddListener(OnClickSkip);
-                PlayerInterface.Instance.SetSkipButtonActive(true);
-                PlayerInterface.Instance.skipButton.interactable = true;
-                UpdateVoteUI();
-            }
-
-            PlayerInterface.Instance.PlayIntroCutscene(clip);
-
-            if (HasStateAuthority && PlayerInterface.Instance.introVideoPlayer != null)
-                PlayerInterface.Instance.introVideoPlayer.loopPointReached += OnVideoPlaybackFinished;
-        }
+        SetupSkipButton();
+        PlayerInterface.Instance.PlayIntroCutscene(clip);
+        HookVideoEvents();
     }
 
+    // ==== Mode 2: StreamingAssets file ====
+    private void SetupAndPlayCutsceneFromFile()
+    {
+        string folderName = LevelData.Instance.cutsceneFolderName;
+        if (string.IsNullOrEmpty(folderName))
+            folderName = SceneManager.GetActiveScene().name;
+
+        string fileName = LevelData.Instance.cutsceneFileName;
+        if (string.IsNullOrEmpty(fileName))
+            fileName = "Cutscene1.mp4";
+
+        Debug.Log($"[CutsceneManager] Loading: StreamingAssets/{folderName}/{fileName}");
+
+        SetupSkipButton();
+        PlayerInterface.Instance.PlayIntroCutsceneFromFile(folderName, fileName);
+        HookVideoEvents();
+    }
+
+    // ==== Shared helpers ====
+    private void SetupSkipButton()
+    {
+        if (PlayerInterface.Instance.skipButton == null) return;
+
+        PlayerInterface.Instance.skipButton.onClick.RemoveAllListeners();
+        PlayerInterface.Instance.skipButton.onClick.AddListener(OnClickSkip);
+        PlayerInterface.Instance.SetSkipButtonActive(true);
+        PlayerInterface.Instance.skipButton.interactable = true;
+        UpdateVoteUI();
+    }
+
+    private void HookVideoEvents()
+    {
+        if (!HasStateAuthority) return;
+        if (PlayerInterface.Instance.introVideoPlayer == null) return;
+
+        var vp = PlayerInterface.Instance.introVideoPlayer;
+
+        vp.loopPointReached -= OnVideoPlaybackFinished;
+        vp.loopPointReached += OnVideoPlaybackFinished;
+
+        vp.errorReceived -= OnVideoError;
+        vp.errorReceived += OnVideoError;
+    }
+
+    private void OnVideoError(VideoPlayer source, string message)
+    {
+        Debug.LogError($"[CutsceneManager] Video error: {message} → skip cutscene");
+
+        if (PlayerInterface.Instance?.introVideoPlayer != null)
+            PlayerInterface.Instance.introVideoPlayer.errorReceived -= OnVideoError;
+
+        if (HasStateAuthority)
+            RPC_EndCutsceneAll();
+    }
+
+    // ==== Skip vote ====
     private void OnClickSkip()
     {
         if (PlayerInterface.Instance?.skipButton != null)
@@ -131,7 +188,6 @@ public class CutsceneManager : NetworkBehaviour
         FinishCutscene();
     }
 
-
     private void FinishCutscene()
     {
         if (hasFinishedLocal) return;
@@ -156,7 +212,7 @@ public class CutsceneManager : NetworkBehaviour
         GameManager.Instance?.MapFinishedLoading();
     }
 
-
+    // ==== Vote UI ====
     public void OnVoteChanged() => UpdateVoteUI();
 
     private void UpdateVoteUI()
@@ -173,6 +229,9 @@ public class CutsceneManager : NetworkBehaviour
         if (Instance == this) Instance = null;
 
         if (PlayerInterface.Instance?.introVideoPlayer != null)
+        {
             PlayerInterface.Instance.introVideoPlayer.loopPointReached -= OnVideoPlaybackFinished;
+            PlayerInterface.Instance.introVideoPlayer.errorReceived -= OnVideoError;
+        }
     }
 }

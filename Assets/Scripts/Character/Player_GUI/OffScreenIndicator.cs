@@ -1,6 +1,7 @@
-﻿using UnityEngine;
+﻿using Fusion;
+using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using Fusion;
 
 public class OffScreenIndicator : NetworkBehaviour
 {
@@ -30,32 +31,51 @@ public class OffScreenIndicator : NetworkBehaviour
     public override void Spawned()
     {
         targetPlayer = null;
+        if (indicatorUI != null) indicatorUI.gameObject.SetActive(false);
 
-        if (indicatorUI != null)
-        {
-            indicatorUI.gameObject.SetActive(false);
-        }
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
 
-        Debug.Log("UI Indicator Work fine");
+    public override void Despawned(NetworkRunner runner, bool hasState)
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        targetPlayer = null;
+        mainCam = null;
+        if (indicatorUI != null) indicatorUI.gameObject.SetActive(false);
     }
 
     private void Update()
     {
-        if (targetPlayer != null) return;
+        if (!IsTargetValid())
+        {
+            targetPlayer = null;
+            FindAndSetFriendTarget();
+        }
+    }
 
-        FindAndSetFriendTarget();
+    private bool IsTargetValid()
+    {
+        if (targetPlayer == null) return false;
+        if (!targetPlayer.gameObject.activeInHierarchy) return false;
+        if (targetPlayer.Object == null || !targetPlayer.Object.IsValid) return false;
+        return true;
     }
 
     private void LateUpdate()
     {
-        if (mainCam == null)
+        if (mainCam == null || !mainCam.gameObject.activeInHierarchy)
         {
             mainCam = CameraCharacter.LocalCamera;
         }
 
-        if (targetPlayer == null || mainCam == null)
+        if (!IsTargetValid() || mainCam == null)
         {
-            if (indicatorUI.gameObject.activeSelf) indicatorUI.gameObject.SetActive(false);
+            if (indicatorUI != null && indicatorUI.gameObject.activeSelf)
+                indicatorUI.gameObject.SetActive(false);
             return;
         }
 

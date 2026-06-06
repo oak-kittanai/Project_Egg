@@ -514,6 +514,79 @@ public class PlayerInterface : MonoBehaviour
         }
     }
 
+    // WebGL
+
+    /// <summary>
+    /// เล่นวีดีโอจากไฟล์ใน StreamingAssets folder
+    /// รองรับทั้ง WebGL (โหลดผ่าน URL) และ Standalone (โหลดผ่าน file path)
+    /// </summary>
+    /// <param name="videoFileName">ชื่อไฟล์รวมนามสกุล เช่น "intro.mp4"</param>
+    /// <param name="targetPlayer">VideoPlayer ที่จะใช้ (ถ้า null จะใช้ introVideoPlayer)</param>
+    public void PlayVideoFromStreamingAssets(string videoFileName, VideoPlayer targetPlayer = null)
+    {
+        VideoPlayer player = targetPlayer != null ? targetPlayer : introVideoPlayer;
+
+        if (player == null)
+        {
+            Debug.LogWarning("[PlayerInterface] VideoPlayer is null, cannot play video.");
+            return;
+        }
+
+        if (string.IsNullOrEmpty(videoFileName))
+        {
+            Debug.LogError("[PlayerInterface] videoFileName is empty.");
+            return;
+        }
+
+        string videoPath = GetStreamingAssetsPath(videoFileName);
+
+        player.source = VideoSource.Url;
+        player.clip = null;
+        player.url = videoPath;
+        player.Play();
+
+        Debug.Log($"[PlayerInterface] Playing video from: {videoPath}");
+    }
+
+    /// <summary>
+    /// คืน path/URL สำหรับเข้าถึงไฟล์ใน StreamingAssets
+    /// WebGL: คืน URL (https://...) เพราะ StreamingAssets ถูก host เป็นไฟล์บนเว็บ
+    /// Platform อื่น: คืน file path ปกติ (Editor/Windows/Mac/Mobile)
+    /// </summary>
+    private string GetStreamingAssetsPath(string fileName)
+    {
+#if UNITY_WEBGL && !UNITY_EDITOR
+    // บน WebGL: streamingAssetsPath เป็น URL อยู่แล้ว ต้องต่อด้วย "/" ห้ามใช้ Path.Combine
+    // เพราะ Path.Combine บน build จาก Windows อาจกลายเป็น "\" → URL พัง
+    return Application.streamingAssetsPath + "/" + fileName;
+#else
+        return System.IO.Path.Combine(Application.streamingAssetsPath, fileName);
+#endif
+    }
+
+    /// <summary>
+    /// เล่น cutscene จากไฟล์ใน StreamingAssets (ทางเลือกแทน VideoClip)
+    /// </summary>
+    public void PlayIntroCutsceneFromFile(string folderName, string fileName)
+    {
+        ShowLoadingScreen(true);
+
+        if (videoLoadingPlayer != null)
+            videoLoadingPlayer.enabled = false;
+
+        if (introVideoPlayer == null)
+        {
+            Debug.LogWarning("[PlayerInterface] introVideoPlayer is null");
+            return;
+        }
+
+        string relativePath = string.IsNullOrEmpty(folderName)
+            ? fileName
+            : folderName + "/" + fileName;
+
+        PlayVideoFromStreamingAssets(relativePath, introVideoPlayer);
+    }
+
     #endregion
 
     #region Item Overlay
