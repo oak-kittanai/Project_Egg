@@ -3,14 +3,17 @@ using UnityEngine;
 
 public class CheckpointTrigger : NetworkBehaviour
 {
-    [Header("Checkpoint Settings")]
+    [Header("Checkpoint")]
     [SerializeField] private Transform customSpawnPoint;
-
     [Networked] private NetworkBool isActivated { get; set; }
 
-    [Header("Visuals")]
+    [Header("Vis&Audi")]
     [SerializeField] private SpriteRenderer sr;
     [SerializeField] private Sprite activeSprite;
+
+    [SerializeField] private ParticleSystem activationParticles;
+    [SerializeField] private AudioSource audioSource;
+    [SerializeField] private AudioClip activateSoundClip;
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
@@ -21,8 +24,8 @@ public class CheckpointTrigger : NetworkBehaviour
             isActivated = true;
 
             Vector3 newSpawnPosition = customSpawnPoint != null ? customSpawnPoint.position : transform.position;
-
             GameManager.Instance.UpdateRespawnPos(newSpawnPosition);
+            RPC_PlayCheckpointEffects();
         }
     }
 
@@ -31,6 +34,20 @@ public class CheckpointTrigger : NetworkBehaviour
         if (isActivated && sr != null && activeSprite != null)
         {
             sr.sprite = activeSprite;
+        }
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_PlayCheckpointEffects()
+    {
+        if (activationParticles != null)
+        {
+            activationParticles.Play();
+        }
+
+        if (audioSource != null && activateSoundClip != null)
+        {
+            audioSource.PlayOneShot(activateSoundClip);
         }
     }
 }
