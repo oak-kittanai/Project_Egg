@@ -179,7 +179,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
         if (TryGetComponent<Fusion.Addons.Physics.NetworkRigidbody2D>(out var netRb))
         {
-            netRb.InterpolationTarget = transform;
+            netRb.InterpolationTarget = visualTransform;
         }
     }
 
@@ -221,9 +221,9 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         if (cam != null)
         {
             if (HasInputAuthority)
-                cam.InitializeAsLocal(transform);  // ← local player → ใช้กล้อง
+                cam.InitializeAsLocal(visualTransform);
             else
-                cam.DisableForRemote();             // ← remote player → ปิด
+                cam.DisableForRemote();
         }
 
         MaterialPropertyBlock mpb = new MaterialPropertyBlock();
@@ -277,10 +277,12 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         if (!hasSetInitialPosition)
         {
             hasSetInitialPosition = true;
-
             if (HasStateAuthority)
             {
                 GameManager.Instance.PlayerFinishedLoading();
+
+                if (TryGetComponent<NetworkRigidbody2D>(out var netRb))
+                    netRb.Teleport(GameManager.Instance.GetRespawnPosition(), transform.rotation);
             }
         }
 
@@ -298,16 +300,10 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             if (coll2D != null && !coll2D.isTrigger) coll2D.isTrigger = true;
             isMoveAble = false;
 
-            if (HasStateAuthority
-                && Runner.TryFindObject(effectiveCarrierId, out var duckObj)
-                && duckObj.TryGetComponent<Rigidbody2D>(out var duckRb))
+            if ((HasStateAuthority || HasInputAuthority) && Runner.TryFindObject(effectiveCarrierId, out var duckObj) && duckObj.TryGetComponent<Rigidbody2D>(out var duckRb))
             {
                 Vector2 targetPos = duckRb.position + Vector2.up * betweenCarryPosition;
-
-                if (TryGetComponent<NetworkRigidbody2D>(out var netRb))
-                    netRb.Teleport(targetPos, transform.rotation);
-                else
-                    rb2D.position = targetPos;
+                rb2D.MovePosition(targetPos);
             }
         }
 
@@ -648,11 +644,15 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         if (rb2D != null)
         {
             rb2D.simulated = true;
-            rb2D.bodyType = RigidbodyType2D.Dynamic;
-            rb2D.gravityScale = normalGravity;
             rb2D.linearVelocity = Vector2.zero;
             rb2D.angularVelocity = 0f;
-            rb2D.linearDamping = 0f;
+
+            if (HasStateAuthority || HasInputAuthority)
+            {
+                rb2D.bodyType = RigidbodyType2D.Dynamic;
+                rb2D.gravityScale = normalGravity;
+                rb2D.linearDamping = 0f;
+            }
         }
 
         if (cAnimation != null) cAnimation.ReturnToBlendAnimation();
@@ -1109,38 +1109,12 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         if (effectivelyCarried && Runner.TryFindObject(effectiveCarrierId, out var duckObj) && duckObj.TryGetComponent<MovementCharacter>(out var duckMC))
         {
             if (spriteRenderer != null) spriteRenderer.sortingOrder = originalSortingOrder - 1;
-            if (cAnimation != null) cAnimation.FlipX = duckMC.cAnimation.FlipX;
         }
         else
         {
             if (spriteRenderer != null) spriteRenderer.sortingOrder = originalSortingOrder;
-
-            if (visualTransform != null) visualTransform.localPosition = Vector3.zero;
         }
         ManageMovementSounds();
-    }
-
-    private void LateUpdate()
-    {
-        if (Runner == null || !Runner.IsRunning) return;
-
-        bool effectivelyCarried = localIsBeingCarriedPredict;
-        NetworkId effectiveCarrierId = localCarrierIdPredict;
-
-        if (effectivelyCarried
-            && Runner.TryFindObject(effectiveCarrierId, out var duckObj)
-            && duckObj.TryGetComponent<MovementCharacter>(out var duckMC))
-        {
-            transform.position = duckMC.transform.position + new Vector3(0, betweenCarryPosition, 0);
-
-            if (visualTransform != null)
-                visualTransform.localPosition = Vector3.zero;
-        }
-        else
-        {
-            if (visualTransform != null)
-                visualTransform.localPosition = Vector3.zero;
-        }
     }
 
     [Rpc(RpcSources.All, RpcTargets.All)]
