@@ -25,10 +25,6 @@ public class CameraCharacter : MonoBehaviour
 
     [SerializeField] private float littleBitOffset = 2f;
 
-    [Header("── DEBUG / Isolation Test ──")]
-    [SerializeField] private bool disableBoundaryClamp = false;
-    [SerializeField] private bool disableSmoothing = false;
-
     public void InitializeAsLocal(Transform followTarget)
     {
         if (isLocalCamera) return;
@@ -87,28 +83,25 @@ public class CameraCharacter : MonoBehaviour
 
         Vector3 desiredPosition = target.position + offset;
 
-        // ── ชั้น 1: Boundary clamp ── (ปิดได้เพื่อเทสต์)
-        if (!disableBoundaryClamp && LocalCamera != null)
+        Vector3 smoothed = Vector3.SmoothDamp(transform.position, desiredPosition, ref velocity, smoothTime);
+
+        if (LocalCamera != null)
         {
             float camHeight = LocalCamera.orthographicSize;
             float camWidth = camHeight * LocalCamera.aspect;
 
-            desiredPosition = ApplyBoundary(desiredPosition, Vector2.left, camWidth, camHeight, littleBitOfBoundLayer, littleBitOffset);
-            desiredPosition = ApplyBoundary(desiredPosition, Vector2.right, camWidth, camHeight, littleBitOfBoundLayer, littleBitOffset);
-            desiredPosition = ApplyBoundary(desiredPosition, Vector2.up, camWidth, camHeight, littleBitOfBoundLayer, littleBitOffset);
-            desiredPosition = ApplyBoundary(desiredPosition, Vector2.down, camWidth, camHeight, littleBitOfBoundLayer, littleBitOffset);
+            smoothed = ApplyBoundary(smoothed, Vector2.left, camWidth, camHeight, littleBitOfBoundLayer, littleBitOffset);
+            smoothed = ApplyBoundary(smoothed, Vector2.right, camWidth, camHeight, littleBitOfBoundLayer, littleBitOffset);
+            smoothed = ApplyBoundary(smoothed, Vector2.up, camWidth, camHeight, littleBitOfBoundLayer, littleBitOffset);
+            smoothed = ApplyBoundary(smoothed, Vector2.down, camWidth, camHeight, littleBitOfBoundLayer, littleBitOffset);
 
-            desiredPosition = ApplyBoundary(desiredPosition, Vector2.left, camWidth, camHeight, outOfBoundLayer, 0f);
-            desiredPosition = ApplyBoundary(desiredPosition, Vector2.right, camWidth, camHeight, outOfBoundLayer, 0f);
-            desiredPosition = ApplyBoundary(desiredPosition, Vector2.up, camWidth, camHeight, outOfBoundLayer, 0f);
-            desiredPosition = ApplyBoundary(desiredPosition, Vector2.down, camWidth, camHeight, outOfBoundLayer, 0f);
+            smoothed = ApplyBoundary(smoothed, Vector2.left, camWidth, camHeight, outOfBoundLayer, 0f);
+            smoothed = ApplyBoundary(smoothed, Vector2.right, camWidth, camHeight, outOfBoundLayer, 0f);
+            smoothed = ApplyBoundary(smoothed, Vector2.up, camWidth, camHeight, outOfBoundLayer, 0f);
+            smoothed = ApplyBoundary(smoothed, Vector2.down, camWidth, camHeight, outOfBoundLayer, 0f);
         }
 
-        // ── ชั้น 2: Smoothing ── (ปิดได้เพื่อเทสต์ = ตามแบบดิบ ๆ)
-        if (disableSmoothing)
-            transform.position = desiredPosition;
-        else
-            transform.position = Vector3.SmoothDamp(transform.position, desiredPosition, ref velocity, smoothTime);
+        transform.position = smoothed;
 
         if (transform.position.x != oldPosition)
         {
