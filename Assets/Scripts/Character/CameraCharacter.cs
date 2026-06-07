@@ -83,23 +83,25 @@ public class CameraCharacter : MonoBehaviour
 
         Vector3 desiredPosition = target.position + offset;
 
+        Vector3 smoothed = Vector3.SmoothDamp(transform.position, desiredPosition, ref velocity, smoothTime);
+
         if (LocalCamera != null)
         {
             float camHeight = LocalCamera.orthographicSize;
             float camWidth = camHeight * LocalCamera.aspect;
 
-            desiredPosition = ApplyBoundary(desiredPosition, Vector2.left, camWidth, camHeight, littleBitOfBoundLayer, littleBitOffset);
-            desiredPosition = ApplyBoundary(desiredPosition, Vector2.right, camWidth, camHeight, littleBitOfBoundLayer, littleBitOffset);
-            desiredPosition = ApplyBoundary(desiredPosition, Vector2.up, camWidth, camHeight, littleBitOfBoundLayer, littleBitOffset);
-            desiredPosition = ApplyBoundary(desiredPosition, Vector2.down, camWidth, camHeight, littleBitOfBoundLayer, littleBitOffset);
+            smoothed = ApplyBoundary(smoothed, Vector2.left, camWidth, camHeight, littleBitOfBoundLayer, littleBitOffset);
+            smoothed = ApplyBoundary(smoothed, Vector2.right, camWidth, camHeight, littleBitOfBoundLayer, littleBitOffset);
+            smoothed = ApplyBoundary(smoothed, Vector2.up, camWidth, camHeight, littleBitOfBoundLayer, littleBitOffset);
+            smoothed = ApplyBoundary(smoothed, Vector2.down, camWidth, camHeight, littleBitOfBoundLayer, littleBitOffset);
 
-            desiredPosition = ApplyBoundary(desiredPosition, Vector2.left, camWidth, camHeight, outOfBoundLayer, 0f);
-            desiredPosition = ApplyBoundary(desiredPosition, Vector2.right, camWidth, camHeight, outOfBoundLayer, 0f);
-            desiredPosition = ApplyBoundary(desiredPosition, Vector2.up, camWidth, camHeight, outOfBoundLayer, 0f);
-            desiredPosition = ApplyBoundary(desiredPosition, Vector2.down, camWidth, camHeight, outOfBoundLayer, 0f);
+            smoothed = ApplyBoundary(smoothed, Vector2.left, camWidth, camHeight, outOfBoundLayer, 0f);
+            smoothed = ApplyBoundary(smoothed, Vector2.right, camWidth, camHeight, outOfBoundLayer, 0f);
+            smoothed = ApplyBoundary(smoothed, Vector2.up, camWidth, camHeight, outOfBoundLayer, 0f);
+            smoothed = ApplyBoundary(smoothed, Vector2.down, camWidth, camHeight, outOfBoundLayer, 0f);
         }
 
-        transform.position = Vector3.SmoothDamp(transform.position, desiredPosition, ref velocity, smoothTime);
+        transform.position = smoothed;
 
         if (transform.position.x != oldPosition)
         {

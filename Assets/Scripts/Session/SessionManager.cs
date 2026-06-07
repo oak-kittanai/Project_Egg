@@ -149,6 +149,12 @@ public class SessionManager : SingletonNetwork<SessionManager>
     {
         if (networkRunner == null)
         {
+            Debug.LogWarning("networkRunner is null, attempting to create runner...");
+            AddRunner();
+        }
+
+        if (networkRunner == null)
+        {
             Debug.LogError("can't find networkRunner");
             return;
         }
@@ -409,14 +415,14 @@ public class SessionManager : SingletonNetwork<SessionManager>
 
             networkRunner = null;
             Debug.Log("Runner shutdown complete");
+
+            await Task.Delay(200);
         }
 
         runTime = null;
         shipType = null;
         GM = null;
         Players.Clear();
-
-        await Task.Delay(200);
 
         AddRunner();
     }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
@@ -12,8 +12,12 @@ public class LevelData : MonoBehaviour
     public Transform SpawnPosition;
     public CheckPoint[] levelCheckPoints;
 
-    [Header("Cutscene")]
+    [Header("Intro Cutscene Setting")]
     public VideoClip introClip;
+
+    public string cutsceneFolderName = "";
+
+    public string cutsceneFileName = "Cutscene1.mp4";
 
     [Header("SpawnPoints")]
     public GameObject[] spawnPointsInMap;
