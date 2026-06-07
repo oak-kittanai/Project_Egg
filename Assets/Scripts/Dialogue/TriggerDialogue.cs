@@ -81,6 +81,37 @@ public class TriggerDialogue : NetworkBehaviour
         }
     }
 
+    // ใช้ชั่วคราวสำหรับการทริกเกอร์จากข้างนอก
+    public void TriggerFromExternal(MovementCharacter character)
+    {
+        if (isOneTimeTrigger && hasTriggeredLocal) return;
+
+        if (skillToUnlock != MovementCharacter.SkillType.None)
+        {
+            if (doubleCharacterSkillUnlock)
+            {
+                RPC_UnlockSkillsBoth(character);
+                PersistSkillUnlock(skillToUnlock);
+                PersistSkillUnlock(skillToUnlock2);
+            }
+            else
+            {
+                character.RPC_UnlockSkill(skillToUnlock);
+                PersistSkillUnlock(skillToUnlock);
+            }
+        }
+
+        if (differentCharacterDialogue)
+        {
+            if (character.isBird) RPC_TriggerDialogueNetwork(1, birdIndex);
+            else RPC_TriggerDialogueNetwork(2, duckIndex);
+        }
+        else
+        {
+            RPC_TriggerDialogueNetwork(0, normalIndex);
+        }
+    }
+
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
     private void RPC_UnlockSkillsBoth(MovementCharacter triggerer)

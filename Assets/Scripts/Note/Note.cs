@@ -9,6 +9,9 @@ public class Note : NetworkBehaviour, Interactable
     [Header("Language")]
     [SerializeField] private bool useThai = true;
 
+    [Header("Optional Dialogue Trigger")]
+    [SerializeField] private TriggerDialogue dialogueToTriggerAfterRead;
+
     private NoteContent _noteContent;
 
     public override void Spawned()
@@ -26,8 +29,14 @@ public class Note : NetworkBehaviour, Interactable
     public void Interact(MovementCharacter player)
     {
         if (!player.HasInputAuthority) return;
+
         if (_noteContent == null) return;
 
         PlayerInterface.Instance?.ShowNote(_noteContent, useThai);
+
+        if (dialogueToTriggerAfterRead != null)
+        {
+            dialogueToTriggerAfterRead.TriggerFromExternal(player);
+        }
     }
 }
