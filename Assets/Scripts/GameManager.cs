@@ -54,6 +54,9 @@ public class GameManager : SingletonNetwork<GameManager>
     [SerializeField] float playerReadyTimeout = 15f; // รอ Client นานสุด 15 วิ
     [Networked] TickTimer PlayerReadyTimeoutTimer { get; set; }
 
+    [Header("Item")]
+    [SerializeField] private LayerMask dropBlockLayer;
+
     private void OnEnable()
     {
         SceneManager.sceneLoaded += OnSceneLoaded;
@@ -408,16 +411,12 @@ public class GameManager : SingletonNetwork<GameManager>
     {
         if (!HasStateAuthority) return;
 
-        Vector3 spawnPos = new Vector3(posToSpawn.x, posToSpawn.y, 0f);
-        NetworkObject objIte = NetworkRunner.Spawn(objToSpawn, posToSpawn);
+        NetworkObject objIte = Runner.Spawn(objToSpawn, posToSpawn);
 
         Rigidbody2D rb = objIte.GetComponent<Rigidbody2D>();
         if (rb != null)
         {
-            float dropForce = 0.5f;
-            Vector2 dropDir = Vector2.up;
-
-            rb.AddForce(dropDir * dropForce, ForceMode2D.Impulse);
+            rb.AddForce(Vector2.up * 0.5f, ForceMode2D.Impulse);
         }
     }
 

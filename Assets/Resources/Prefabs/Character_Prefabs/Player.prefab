@@ -787,6 +787,11 @@ MonoBehaviour:
     _data:
       Data: 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
   isNearBreakableRock: 0
+  dropFrontOffset: 0.6
+  dropUpOffset: 0.5
+  dropBlockLayer:
+    serializedVersion: 2
+    m_Bits: 512
   __canThrowItem: 0
   __wasEscPressed: 0
   lifeCycle: {fileID: 0}
@@ -913,6 +918,11 @@ MonoBehaviour:
     _data:
       Data: 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
   isNearBreakableRock: 0
+  dropFrontOffset: 0.6
+  dropUpOffset: 0.5
+  dropBlockLayer:
+    serializedVersion: 2
+    m_Bits: 512
   __canThrowItem: 0
   __wasEscPressed: 0
   lifeCycle: {fileID: 0}
@@ -2105,8 +2115,6 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 65536
   littleBitOffset: 2
-  disableBoundaryClamp: 0
-  disableSmoothing: 0
 --- !u!1 &7548102190230661385
 GameObject:
   m_ObjectHideFlags: 0
@@ -2244,7 +2252,7 @@ Animator:
   m_GameObject: {fileID: 8943367767592067852}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 3a25e75ec6f1e1e4bbd8cabc82fe2aed, type: 2}
+  m_Controller: {fileID: 9100000, guid: 20e63ec707dbb4d40933af1bae28547a, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
