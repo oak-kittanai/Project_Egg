@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using UnityEngine.Video;
+using System.Collections;
 
 public class PlayerInterface : MonoBehaviour
 {
@@ -106,6 +107,9 @@ public class PlayerInterface : MonoBehaviour
     [Header("Item Overlay")]
     public GameObject itemOverlayObj;
     public Image itemPic;
+
+    [Header("Audio Settings")]
+    public GameSettingsSO gameSettings;
 
     private void Awake()
     {
@@ -274,6 +278,16 @@ public class PlayerInterface : MonoBehaviour
             }
 
             itemOverlayObj.SetActive(false);
+        }
+
+        // GameSettingSO
+        if (gameSettings == null)
+        {
+            gameSettings = Resources.Load<GameSettingsSO>("GameSettings");
+            if (gameSettings == null)
+                Debug.LogError("[PlayerInterface] GameSettings NOT found in Resources folder!");
+            else
+                Debug.Log("[PlayerInterface] GameSettings loaded from Resources");
         }
 
         HideQuestUI();
@@ -493,14 +507,21 @@ public class PlayerInterface : MonoBehaviour
 
         if (introVideoPlayer != null && clip != null)
         {
+            introVideoPlayer.source = VideoSource.VideoClip;
             introVideoPlayer.clip = clip;
-            introVideoPlayer.Play();
+            PrepareThenPlayWithVolume(introVideoPlayer);
         }
     }
 
     public void StopIntroCutscene()
     {
-        if (introVideoPlayer != null) introVideoPlayer.Stop();
+        if (_prepareTimeoutCo != null) { StopCoroutine(_prepareTimeoutCo); _prepareTimeoutCo = null; }
+
+        if (introVideoPlayer != null)
+        {
+            introVideoPlayer.prepareCompleted -= OnVideoPreparedForVolume;
+            introVideoPlayer.Stop();
+        }
     }
 
     public void PlayLoadingVideo()
@@ -510,11 +531,38 @@ public class PlayerInterface : MonoBehaviour
         if (videoLoadingPlayer != null)
         {
             videoLoadingPlayer.enabled = true;
+            ApplyMusicVolumeToVideo(videoLoadingPlayer);
             videoLoadingPlayer.Play();
         }
     }
 
+    public void ApplyMusicVolumeToVideo(VideoPlayer vp)
+    {
+        if (vp == null || gameSettings == null)
+        {
+            Debug.LogWarning($"[PlayerInterface] ApplyVolume skipped: vp null={vp == null}, settings null={gameSettings == null}");
+            return;
+        }
+
+        float vol = Mathf.Clamp01(gameSettings.musicVolume / 100f);
+        Debug.Log($"[PlayerInterface] Apply video volume: {vol} (musicVolume={gameSettings.musicVolume}, mode={vp.audioOutputMode})");
+
+        if (vp.audioOutputMode == VideoAudioOutputMode.Direct)
+        {
+            for (ushort i = 0; i < vp.audioTrackCount; i++)
+                vp.SetDirectAudioVolume(i, vol);
+        }
+        else if (vp.audioOutputMode == VideoAudioOutputMode.AudioSource)
+        {
+            AudioSource src = vp.GetTargetAudioSource(0);
+            if (src != null) src.volume = vol;
+            else Debug.LogWarning("[PlayerInterface] AudioSource mode but GetTargetAudioSource(0) is null!");
+        }
+    }
+
     // WebGL
+
+    private Coroutine _prepareTimeoutCo;
 
     /// <summary>
     /// เล่นวีดีโอจากไฟล์ใน StreamingAssets folder
@@ -531,7 +579,6 @@ public class PlayerInterface : MonoBehaviour
             Debug.LogWarning("[PlayerInterface] VideoPlayer is null, cannot play video.");
             return;
         }
-
         if (string.IsNullOrEmpty(videoFileName))
         {
             Debug.LogError("[PlayerInterface] videoFileName is empty.");
@@ -543,7 +590,8 @@ public class PlayerInterface : MonoBehaviour
         player.source = VideoSource.Url;
         player.clip = null;
         player.url = videoPath;
-        player.Play();
+
+        PrepareThenPlayWithVolume(player);
 
         Debug.Log($"[PlayerInterface] Playing video from: {videoPath}");
     }
@@ -585,6 +633,43 @@ public class PlayerInterface : MonoBehaviour
             : folderName + "/" + fileName;
 
         PlayVideoFromStreamingAssets(relativePath, introVideoPlayer);
+    }
+    private void PrepareThenPlayWithVolume(VideoPlayer vp)
+    {
+        if (vp == null) return;
+
+        vp.SetDirectAudioMute(0, true);
+
+        vp.prepareCompleted -= OnVideoPreparedForVolume;
+        vp.prepareCompleted += OnVideoPreparedForVolume;
+        vp.Prepare();
+
+        if (_prepareTimeoutCo != null) StopCoroutine(_prepareTimeoutCo);
+        _prepareTimeoutCo = StartCoroutine(PrepareTimeout(vp, 10f));
+    }
+
+
+    private IEnumerator PrepareTimeout(VideoPlayer vp, float seconds)
+    {
+        yield return new WaitForSeconds(seconds);
+
+        if (vp != null && !vp.isPrepared)
+        {
+            Debug.LogWarning("[PlayerInterface] Video Prepare timeout → force play anyway");
+            vp.prepareCompleted -= OnVideoPreparedForVolume;
+            ApplyMusicVolumeToVideo(vp);
+            vp.Play();
+        }
+    }
+
+    private void OnVideoPreparedForVolume(VideoPlayer vp)
+    {
+        if (_prepareTimeoutCo != null) { StopCoroutine(_prepareTimeoutCo); _prepareTimeoutCo = null; }
+
+        vp.prepareCompleted -= OnVideoPreparedForVolume;
+        vp.SetDirectAudioMute(0, false);
+        ApplyMusicVolumeToVideo(vp);
+        vp.Play();
     }
 
     #endregion
