@@ -98,6 +98,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     // Local Predict Variables
     public bool localIsBeingCarriedPredict;
     public NetworkId localCarrierIdPredict;
+    private bool _wasVisuallyCarried;
     [SerializeField] public bool _isEPressed;
 
     private bool _wasTabPressed;
@@ -1156,14 +1157,30 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         bool effectivelyCarried = IsBeingCarried || localIsBeingCarriedPredict;
         NetworkId effectiveCarrierId = IsBeingCarried ? CarrierId : localCarrierIdPredict;
 
-        if (effectivelyCarried && Runner.TryFindObject(effectiveCarrierId, out var duckObj) && duckObj.TryGetComponent<MovementCharacter>(out var duckMC))
+        if (effectivelyCarried
+            && Runner.TryFindObject(effectiveCarrierId, out var duckObj)
+            && duckObj.TryGetComponent<MovementCharacter>(out var duckMC))
         {
             if (spriteRenderer != null) spriteRenderer.sortingOrder = originalSortingOrder - 1;
+
+            if (visualTransform != null && duckMC.visualTransform != null)
+            {
+                visualTransform.position = duckMC.visualTransform.position
+                                           + Vector3.up * betweenCarryPosition;
+                _wasVisuallyCarried = true;
+            }
         }
         else
         {
             if (spriteRenderer != null) spriteRenderer.sortingOrder = originalSortingOrder;
+
+            if (_wasVisuallyCarried && visualTransform != null)
+            {
+                visualTransform.localPosition = Vector3.zero;
+                _wasVisuallyCarried = false;
+            }
         }
+
         ManageMovementSounds();
     }
 
