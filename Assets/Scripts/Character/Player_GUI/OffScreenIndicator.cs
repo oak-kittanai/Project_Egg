@@ -50,6 +50,8 @@ public class OffScreenIndicator : NetworkBehaviour
 
     private void Update()
     {
+        if (GameManager.Instance == null || !GameManager.Instance.IsGameReady) return;
+
         if (!IsTargetValid())
         {
             targetPlayer = null;
@@ -72,7 +74,7 @@ public class OffScreenIndicator : NetworkBehaviour
             mainCam = CameraCharacter.LocalCamera;
         }
 
-        if (!IsTargetValid() || mainCam == null)
+        if (GameManager.Instance == null || !GameManager.Instance.IsGameReady)
         {
             if (indicatorUI != null && indicatorUI.gameObject.activeSelf)
                 indicatorUI.gameObject.SetActive(false);

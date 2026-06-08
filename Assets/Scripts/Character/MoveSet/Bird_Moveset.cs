@@ -450,6 +450,7 @@ public class Bird_Moveset : MovementCharacter
                 }
                 else
                 {
+                    PlayThrowAnimation_RPC();
                     ExecuteThrow();
                 }
             }
@@ -483,8 +484,6 @@ public class Bird_Moveset : MovementCharacter
 
     private void ExecuteThrow()
     {
-        PlayThrowAnimation_RPC();
-
         Vector2 throwPos = throwPoint.position;
         Vector2 direction = throwPoint.right;
 
