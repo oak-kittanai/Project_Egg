@@ -110,6 +110,13 @@ MonoBehaviour:
   itemName: Item_Stick
   selfNet: {fileID: 3635996284596373609}
   spriteRenderer: {fileID: 4920343308978017047}
+  highlightRadius: 1.5
+  playerMask:
+    serializedVersion: 2
+    m_Bits: 128
+  shaderFloatProperty: OutlineThickness
+  activeValue: 1
+  inactiveValue: 0
 --- !u!114 &3635996284596373609
 MonoBehaviour:
   m_ObjectHideFlags: 0

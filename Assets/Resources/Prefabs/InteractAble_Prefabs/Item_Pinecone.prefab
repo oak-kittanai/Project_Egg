@@ -110,6 +110,13 @@ MonoBehaviour:
   itemName: Item_Pinecone
   selfNet: {fileID: 1587735438816007911}
   spriteRenderer: {fileID: 3959273947249924156}
+  highlightRadius: 1.5
+  playerMask:
+    serializedVersion: 2
+    m_Bits: 128
+  shaderFloatProperty: OutlineThickness
+  activeValue: 1
+  inactiveValue: 0
 --- !u!114 &1587735438816007911
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -110,6 +110,13 @@ MonoBehaviour:
   itemName: Item_Vine
   selfNet: {fileID: 8852410551397758109}
   spriteRenderer: {fileID: 9193609001993018701}
+  highlightRadius: 1.5
+  playerMask:
+    serializedVersion: 2
+    m_Bits: 128
+  shaderFloatProperty: OutlineThickness
+  activeValue: 1
+  inactiveValue: 0
 --- !u!114 &8852410551397758109
 MonoBehaviour:
   m_ObjectHideFlags: 0

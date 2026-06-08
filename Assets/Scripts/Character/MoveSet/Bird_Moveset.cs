@@ -506,6 +506,7 @@ public class Bird_Moveset : MovementCharacter
         _prepareToThrow = false;
         IsInteractBusy = false;
 
+        cAnimation.ReturnToBlendAnimation();
         throwPoint.localRotation = Quaternion.identity;
     }
 

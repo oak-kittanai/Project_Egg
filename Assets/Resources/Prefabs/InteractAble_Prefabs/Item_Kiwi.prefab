@@ -110,6 +110,13 @@ MonoBehaviour:
   itemName: Item_Kiwi
   selfNet: {fileID: 2951225995447569663}
   spriteRenderer: {fileID: 2585713847920183835}
+  highlightRadius: 1.5
+  playerMask:
+    serializedVersion: 2
+    m_Bits: 128
+  shaderFloatProperty: OutlineThickness
+  activeValue: 1
+  inactiveValue: 0
 --- !u!114 &2951225995447569663
 MonoBehaviour:
   m_ObjectHideFlags: 0
