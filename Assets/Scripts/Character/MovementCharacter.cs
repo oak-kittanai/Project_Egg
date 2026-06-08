@@ -131,6 +131,11 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     [HideInInspector] public bool isNearBreakableRock;
 
+    [Header("Drop Settings")]
+    [SerializeField] private float dropFrontOffset = 0.6f;
+    [SerializeField] private float dropUpOffset = 0.5f;
+    [SerializeField] private LayerMask dropBlockLayer;
+
     public void OnHeldItemChanged()
     {
         string itemName = HeldItemName.ToString();
@@ -641,6 +646,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     {
         isMoveAble = true;
 
+        if (coll2D != null) coll2D.isTrigger = false;
+
         if (rb2D != null)
         {
             rb2D.simulated = true;
@@ -655,12 +662,32 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             }
         }
 
+        if (this is Duck_Moveset duckSelf)
+        {
+            if (normalCollider != null) normalCollider.enabled = true;
+            if (carryCollider != null) carryCollider.enabled = false;
+            if (HasStateAuthority)
+            {
+                duckSelf.IsCarry = false;
+                duckSelf.CarriedFriendId = default;
+            }
+        }
+
+        localIsBeingCarriedPredict = false;
+        if (HasStateAuthority)
+        {
+            IsBeingCarried = false;
+            CarrierId = default;
+            IsInteractBusy = false;
+        }
+
         if (cAnimation != null) cAnimation.ReturnToBlendAnimation();
 
         if (respawnSoundClip != null)
         {
             AudioManager.Instance?.PlayClipAtPosition(respawnSoundClip, transform.position);
         }
+
 
         if (visualTransform != null)
         {
@@ -818,6 +845,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                 IsInAir = true;
                 resetAnimation = false;
             }
+
+            if (coll2D != null) coll2D.isTrigger = false;
 
             if (cAnimation != null)
                 cAnimation.FallingAndFloatAnimation(true, false);
@@ -1066,16 +1095,37 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
         if (isDropPressed && HeldItemName.ToString() != "")
         {
-            if (this is Bird_Moveset bird && bird._prepareToThrow) return;
+            if (this is Bird_Moveset bird && bird._prepareToThrow) { _wasDropPressed = input.KeybindDropItem; return; }
 
-            float offsetDir = cAnimation.FlipX ? 0.6f : -0.6f;
-            Vector2 dropPosition = (Vector2)transform.position + new Vector2(offsetDir, 0.5f);
-
-            GameManager.Instance.RPC_DropItemByName(HeldItemName.ToString(), dropPosition, this);
+            if (Runner.IsForward)
+            {
+                Vector2 dropPosition = GetSafeDropPosition();
+                GameManager.Instance.RPC_DropItemByName(HeldItemName.ToString(), dropPosition, this);
+            }
         }
 
         _wasDropPressed = input.KeybindDropItem;
     }
+
+    private Vector2 GetSafeDropPosition()
+    {
+        float dir = cAnimation.FlipX ? 1f : -1f;
+        Vector2 origin = transform.position;
+        Vector2 desired = origin + new Vector2(dir * dropFrontOffset, dropUpOffset);
+
+        Vector2 toDesired = desired - origin;
+        float dist = toDesired.magnitude;
+
+        if (dist > 0.001f)
+        {
+            RaycastHit2D hit = Physics2D.Raycast(origin, toDesired.normalized, dist, dropBlockLayer);
+            if (hit.collider != null)
+                return hit.point - toDesired.normalized * 0.2f;
+        }
+
+        return desired;
+    }
+
     #endregion
 
     #region SkillUnlock

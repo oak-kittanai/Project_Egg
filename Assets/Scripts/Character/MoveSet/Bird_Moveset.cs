@@ -143,9 +143,15 @@ public class Bird_Moveset : MovementCharacter
         }
         else
         {
-            if (isWaterSurface || stilldrowning)
+            if (!AlreadyFloating && !IsFlying && rb2D != null && rb2D.linearDamping != 0f)
             {
-                isBirdDrowning = true;
+                rb2D.linearDamping = 0f;
+            }
+
+            if (startTimer && HasStateAuthority)
+            {
+                DrownTimer = TickTimer.None;
+                startTimer = false;
             }
         }
 
@@ -472,8 +478,20 @@ public class Bird_Moveset : MovementCharacter
         _wasisThrowItemPressed = input.KeybindThrowItem;
     }
 
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    public void PlayThrowAnimation_RPC()
+    {
+        if (cAnimation != null)
+        {
+            cAnimation.ThrowAnimation();
+            Debug.Log("Try Smash Animation");
+        }
+    }
+
     private void ExecuteThrow()
     {
+        PlayThrowAnimation_RPC();
+
         Vector2 throwPos = throwPoint.position;
         Vector2 direction = throwPoint.right;
 
