@@ -136,23 +136,13 @@ public class Bird_Moveset : MovementCharacter
             if (Runner.TryFindObject(effectiveCarrierId, out var duckObj) && duckObj.TryGetComponent<Duck_Moveset>(out var duck))
             {
                 if (duck.onDiving || duck.IsHeadUnderwater)
-                {
                     isBirdDrowning = true;
-                }
             }
         }
         else
         {
-            if (!AlreadyFloating && !IsFlying && rb2D != null && rb2D.linearDamping != 0f)
-            {
-                rb2D.linearDamping = 0f;
-            }
-
-            if (startTimer && HasStateAuthority)
-            {
-                DrownTimer = TickTimer.None;
-                startTimer = false;
-            }
+            if (stilldrowning)
+                isBirdDrowning = true;
         }
 
         if (isBirdDrowning)
@@ -162,7 +152,6 @@ public class Bird_Moveset : MovementCharacter
                 isMoveAble = false;
                 isOptional = true;
                 optionalGravity = 0f;
-
                 rb2D.linearVelocity = new Vector2(0f, -1.5f);
                 rb2D.linearDamping = 3f;
             }
@@ -182,6 +171,9 @@ public class Bird_Moveset : MovementCharacter
         }
         else
         {
+            if (!AlreadyFloating && !IsFlying && rb2D != null && rb2D.linearDamping != 0f)
+                rb2D.linearDamping = 0f;
+
             if (startTimer && HasStateAuthority)
             {
                 DrownTimer = TickTimer.None;
@@ -472,6 +464,7 @@ public class Bird_Moveset : MovementCharacter
             isMoveAble = false;
             IsInteractBusy = true;
 
+            cAnimation.AimAnimation();
             UpdateOscillatingAim();
         }
 
@@ -516,16 +509,22 @@ public class Bird_Moveset : MovementCharacter
         throwPoint.localRotation = Quaternion.identity;
     }
 
+    private float GetAimAngle()
+    {
+        return Mathf.Sin((float)Runner.SimulationTime * aimSweepSpeed) * maxAimAngle;
+    }
+
+    private void ApplyAimRotation()
+    {
+        if (throwPoint == null || cAnimation == null) return;
+        float currentFaceTo = cAnimation.FlipX ? 0f : 180f;
+        throwPoint.localRotation = Quaternion.Euler(0, currentFaceTo, GetAimAngle());
+    }
+
     private void UpdateOscillatingAim()
     {
-        float time = (float)Runner.SimulationTime;
-
-        float currentAngle = Mathf.Sin(time * aimSweepSpeed) * maxAimAngle;
-        float currentFaceTo = cAnimation.FlipX ? 0f : 180f;
-
-        currentAimX = currentAngle;
-
-        throwPoint.localRotation = Quaternion.Euler(0, currentFaceTo, currentAngle);
+        ApplyAimRotation();
+        currentAimX = GetAimAngle();
     }
 
     public void DrawLine()
@@ -581,6 +580,7 @@ public class Bird_Moveset : MovementCharacter
 
         if (_prepareToThrow)
         {
+            ApplyAimRotation();
             if (!lineRenderer.enabled) lineRenderer.enabled = true;
             DrawLine();
         }

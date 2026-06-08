@@ -96,6 +96,23 @@ public class Duck_Moveset : MovementCharacter
             _wasJumpPressed = input.KeybindJump;
         }
 
+        if (IsCarry)
+        {
+            if (normalCollider != null && normalCollider.enabled)
+                normalCollider.enabled = false;
+
+            if (carryCollider != null && !carryCollider.enabled)
+            {
+                carryCollider.enabled = true;
+                if (Runner.TryFindObject(CarriedFriendId, out var fObj)
+                    && fObj.TryGetComponent<MovementCharacter>(out var f)
+                    && f.coll2D != null)
+                {
+                    Physics2D.IgnoreCollision(carryCollider, f.coll2D, true);
+                }
+            }
+        }
+
         if (isWaterSurface && !onDiving)
         {
             cAnimation.UpdateGroundTypeOnDuck(true);
@@ -185,11 +202,11 @@ public class Duck_Moveset : MovementCharacter
 
         if (friend.coll2D != null) friend.coll2D.isTrigger = true;
 
-        if (carryCollider != null && friend.coll2D != null) Physics2D.IgnoreCollision(carryCollider, friend.coll2D, true);
-        if (normalCollider != null && friend.coll2D != null) Physics2D.IgnoreCollision(normalCollider, friend.coll2D, true);
-
         if (normalCollider != null) normalCollider.enabled = false;
         if (carryCollider != null) carryCollider.enabled = true;
+
+        if (carryCollider != null && friend.coll2D != null)
+            Physics2D.IgnoreCollision(carryCollider, friend.coll2D, true);
 
         friend.RPC_UpdateCarry(true, Object.Id);
     }

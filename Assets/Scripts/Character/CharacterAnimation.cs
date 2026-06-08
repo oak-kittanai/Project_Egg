@@ -265,6 +265,7 @@ public class CharacterAnimation : NetworkBehaviour
 
     // Bird
     public void ThrowAnimation() => SetActionAnimation("Throwing", 1.43f);
+    public void AimAnimation() => SetActionAnimation("Aim", 999f);
 
     public void FlyUpAnimation() => PlayAnimationNetworked("Fly_Up");
     public void FlyFloatAnimation() => PlayAnimationNetworked("Fly");

@@ -470,6 +470,26 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         if (isEPressed)
         {
             Collider2D[] hitsItem = Physics2D.OverlapCircleAll(transform.position, interactRadius);
+
+            if (isBird && HeldItemName.ToString() == "")
+            {
+                foreach (var hit in hitsItem)
+                {
+                    if (hit.gameObject == gameObject) continue;
+
+                    if (hit.TryGetComponent<ThrowAbleItem>(out var throwableItem))
+                    {
+                        if (throwableItem.AlreadyThrow) continue;
+
+                        cAnimation.InteractAnimation();
+                        throwableItem.PickupItem_RPC(this);
+                        Debug.Log($"Try to pickup the item : {hit.name}");
+                        _isEPressed = input.KeybindInteract;
+                        return;
+                    }
+                }
+            }
+
             foreach (var hit in hitsItem)
             {
                 if (hit.gameObject == gameObject) continue;
@@ -482,19 +502,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                     interactable.Interact(this);
                     Debug.Log($"Try to Interact with {hit.name}");
                     break;
-                }
-                else if (hit.TryGetComponent<ThrowAbleItem>(out var throwableItem))
-                {
-                    if (isBird)
-                    {
-                        if (throwableItem.AlreadyThrow || HeldItemName.ToString() != "") continue;
-
-                        cAnimation.InteractAnimation();
-
-                        throwableItem.PickupItem_RPC(this);
-                        Debug.Log($"Try to pickup the item : {hit.name}");
-                        break;
-                    }
                 }
             }
         }
@@ -1040,8 +1047,12 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     private void CheckInteractable()
     {
         Collider2D[] hitsItem = Physics2D.OverlapCircleAll(transform.position, interactRadius);
+
         Transform closestItem = null;
-        float minDistance = float.MaxValue;
+        float minItemDist = float.MaxValue;
+
+        Transform closestInteract = null;
+        float minInteractDist = float.MaxValue;
 
         isNearBreakableRock = false;
 
@@ -1052,34 +1063,33 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             if (hit.TryGetComponent<Interactable>(out var interactable))
             {
                 if (hit.GetComponent<BreakableRock>() != null) isNearBreakableRock = true;
-
                 if (!interactable.CanInteract(this)) continue;
 
                 float dist = Vector2.Distance(transform.position, hit.transform.position);
-                if (dist < minDistance)
+                if (dist < minInteractDist)
                 {
-                    minDistance = dist;
-                    closestItem = hit.transform;
+                    minInteractDist = dist;
+                    closestInteract = hit.transform;
                 }
             }
             else if (hit.TryGetComponent<ThrowAbleItem>(out var throwableItem))
             {
-                if (isBird)
+                if (isBird && HeldItemName.ToString() == "" && !throwableItem.AlreadyThrow)
                 {
-                    if (throwableItem.AlreadyThrow || HeldItemName.ToString() != "") continue;
-
                     float dist = Vector2.Distance(transform.position, hit.transform.position);
-                    if (dist < minDistance)
+                    if (dist < minItemDist)
                     {
-                        minDistance = dist;
+                        minItemDist = dist;
                         closestItem = hit.transform;
                     }
                 }
             }
         }
 
-        if (closestItem != null && PlayerInterface.Instance != null)
-            PlayerInterface.Instance.ShowInteract(closestItem);
+        Transform target = (closestItem != null) ? closestItem : closestInteract;
+
+        if (target != null && PlayerInterface.Instance != null)
+            PlayerInterface.Instance.ShowInteract(target);
         else if (PlayerInterface.Instance != null)
             PlayerInterface.Instance.HideInteract();
     }
