@@ -48,9 +48,18 @@ public class OffScreenIndicator : NetworkBehaviour
         if (indicatorUI != null) indicatorUI.gameObject.SetActive(false);
     }
 
+    private bool IsGameReadySafe()
+    {
+        var gm = GameManager.Instance;
+        return gm != null
+            && gm.Object != null
+            && gm.Object.IsValid
+            && gm.IsGameReady;
+    }
+
     private void Update()
     {
-        if (GameManager.Instance == null || !GameManager.Instance.IsGameReady) return;
+        if (!IsGameReadySafe()) return;
 
         if (!IsTargetValid())
         {
@@ -69,12 +78,26 @@ public class OffScreenIndicator : NetworkBehaviour
 
     private void LateUpdate()
     {
+        if (!IsGameReadySafe())
+        {
+            if (indicatorUI != null && indicatorUI.gameObject.activeSelf)
+                indicatorUI.gameObject.SetActive(false);
+            return;
+        }
+
         if (mainCam == null || !mainCam.gameObject.activeInHierarchy)
         {
             mainCam = CameraCharacter.LocalCamera;
+
+            if (mainCam == null)
+            {
+                if (indicatorUI != null && indicatorUI.gameObject.activeSelf)
+                    indicatorUI.gameObject.SetActive(false);
+                return;
+            }
         }
 
-        if (GameManager.Instance == null || !GameManager.Instance.IsGameReady)
+        if (!IsTargetValid())
         {
             if (indicatorUI != null && indicatorUI.gameObject.activeSelf)
                 indicatorUI.gameObject.SetActive(false);
@@ -101,12 +124,12 @@ public class OffScreenIndicator : NetworkBehaviour
             Vector3 clampedPos = screenPos;
             clampedPos.x = Mathf.Clamp(clampedPos.x, edgePadding, Screen.width - edgePadding);
             clampedPos.y = Mathf.Clamp(clampedPos.y, edgePadding, Screen.height - edgePadding);
+
             indicatorUI.position = clampedPos;
 
             if (arrowPivot != null)
             {
                 float angle = Mathf.Atan2(directionToTarget.y, directionToTarget.x) * Mathf.Rad2Deg;
-
                 arrowPivot.rotation = Quaternion.Euler(0, 0, angle);
             }
         }

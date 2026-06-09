@@ -428,10 +428,4 @@ public class SessionManager : SingletonNetwork<SessionManager>
     }
     #endregion
 
-    #region Utility
-    public void SelfDestory()
-    {
-        Destroy(this.gameObject);
-    }
-    #endregion
 }

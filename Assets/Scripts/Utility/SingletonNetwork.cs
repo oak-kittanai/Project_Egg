@@ -50,4 +50,9 @@ public class SingletonNetwork<T> : NetworkBehaviour where T : NetworkBehaviour
             SessionHub.Instance.Setup();
         }
     }
+
+    protected virtual void OnDestroy()
+    {
+        if (instance == this) instance = null;
+    }
 }

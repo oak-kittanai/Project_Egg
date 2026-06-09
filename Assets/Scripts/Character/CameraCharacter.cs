@@ -31,7 +31,8 @@ public class CameraCharacter : MonoBehaviour
 
         if (LocalCamera != null && LocalCamera.gameObject != gameObject)
         {
-            Debug.LogWarning("[Camera] Replacing existing LocalCamera");
+            Debug.LogWarning("[Camera] Destroying old leftover camera");
+            Destroy(LocalCamera.gameObject);
         }
 
         isLocalCamera = true;

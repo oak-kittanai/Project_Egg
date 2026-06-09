@@ -98,6 +98,7 @@ public class GameManager : SingletonNetwork<GameManager>
         CheckMapLoading();
     }
 
+
     #region Network
 
     public void GetNetworkRunner(NetworkRunner networkRunner)
@@ -294,14 +295,32 @@ public class GameManager : SingletonNetwork<GameManager>
 
     public async void BackToSessionScene()
     {
+        CleanupPersistentGameplayObjects();
+
         if (Runner != null)
         {
             Debug.Log("GameManager: Shutting down NetworkRunner...");
             await Runner.Shutdown();
         }
 
-        Debug.Log("GameManager: Loading SessionScene...");
-        UnityEngine.SceneManagement.SceneManager.LoadScene("SessionScene");
+        SceneManager.LoadScene("SessionScene");
+    }
+
+    private void CleanupPersistentGameplayObjects()
+    {
+        if (CameraCharacter.LocalCamera != null)
+            Destroy(CameraCharacter.LocalCamera.transform.root.gameObject);
+
+        DestroyByName("CoreManagerSceneHop");
+        DestroyByName("PlayerInterfaceCanvas");
+        if (SessionManager.Instance != null)
+            Destroy(SessionManager.Instance.gameObject);
+    }
+
+    private void DestroyByName(string objName)
+    {
+        GameObject obj = GameObject.Find(objName);
+        if (obj != null) Destroy(obj);
     }
 
     #region GameSetting

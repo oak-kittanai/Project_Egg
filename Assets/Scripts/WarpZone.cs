@@ -6,6 +6,7 @@ public class WarpZone : NetworkBehaviour
 {
     [Header("Warp Settings")]
     [SerializeField] string nextSceneBuildString;
+    [SerializeField] bool returnToSession = false;
 
     [Header("Check Player")]
     [Networked] bool playerBird { get; set; }
@@ -59,10 +60,22 @@ public class WarpZone : NetworkBehaviour
 
     private async Task ExecuteWarp()
     {
+        if (returnToSession)
+        {
+            RPC_ReturnToSession();
+            return;
+        }
+
         GameManager.Instance.ResetLoadingStateForNextLevel();
         GameManager.Instance.ShowGlobalLoadingScreen();
-
         Debug.Log($"Host is warping everyone to Scene: {nextSceneBuildString}");
         await GameManager.Instance.LoadNextLevel(nextSceneBuildString);
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_ReturnToSession()
+    {
+        GameManager.Instance.ShowGlobalLoadingScreen();
+        GameManager.Instance.BackToSessionScene();
     }
 }

@@ -242,6 +242,8 @@ public class MenuController : NetworkBehaviour
         }
     }
 
+    private bool _isQuitting = false;
+
     private void OnClickQuit()
     {
         RPC_QuitGame();
@@ -250,18 +252,22 @@ public class MenuController : NetworkBehaviour
     [Rpc(RpcSources.All, RpcTargets.All)]
     private void RPC_QuitGame()
     {
-        GameManager.Instance?.ResetAllSkillUnlocks();
+        if (_isQuitting) return;
+        _isQuitting = true;
+
+        if (HasStateAuthority)
+            GameManager.Instance?.ResetAllSkillUnlocks();
+
         StartCoroutine(QuitSequence());
     }
 
     private System.Collections.IEnumerator QuitSequence()
     {
-        UnityEngine.SceneManagement.SceneManager.LoadScene("SessionScene");
-
+        yield return null;
         yield return null;
 
-        if (SessionManager.Instance != null)
-            SessionManager.Instance.ReStartNetworkRunner();
+        if (GameManager.Instance != null)
+            GameManager.Instance.BackToSessionScene();
     }
 
     #region Menu Control
