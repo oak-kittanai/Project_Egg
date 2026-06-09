@@ -75,6 +75,11 @@ public class BreakableRock : NetworkBehaviour, Interactable
     public void ChangeSprite()
     {
         if (coll != null) coll.enabled = false;
+
+        if (spriteRenderer != null)
+        {
+            spriteRenderer.sprite = alreadyBreakRock;
+        }
     }
 
     public void SpawnItem()
