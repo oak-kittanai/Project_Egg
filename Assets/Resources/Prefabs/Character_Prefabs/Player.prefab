@@ -2075,7 +2075,6 @@ GameObject:
   - component: {fileID: 4453805492448230122}
   - component: {fileID: 3864613986048667308}
   - component: {fileID: 1343375671234220939}
-  - component: {fileID: 3469555761141617029}
   m_Layer: 0
   m_Name: PlayerCamera
   m_TagString: Camera
@@ -2213,30 +2212,6 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 65536
   littleBitOffset: 2
---- !u!114 &3469555761141617029
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7536769481680919600}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c88f5cead0c0b2a4eb05b5900433f8d1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.2D.Runtime::UnityEngine.Rendering.Universal.PixelPerfectCamera
-  m_ComponentVersion: 1
-  m_AssetsPPU: 96
-  m_RefResolutionX: 1366
-  m_RefResolutionY: 768
-  m_CropFrame: 3
-  m_GridSnapping: 1
-  m_FilterMode: 0
-  m_UpscaleRT: 0
-  m_PixelSnapping: 0
-  m_CropFrameX: 0
-  m_CropFrameY: 0
-  m_StretchFill: 0
 --- !u!1 &7548102190230661385
 GameObject:
   m_ObjectHideFlags: 0

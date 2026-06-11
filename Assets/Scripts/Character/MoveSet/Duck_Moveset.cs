@@ -261,6 +261,12 @@ public class Duck_Moveset : MovementCharacter
     {
         if (!isDiveUnlocked) return;
 
+        if (onDiving && currentWater == null)
+        {
+            EndDiveLogic();
+            return;
+        }
+
         if (IsBeingCarried)
         {
             if (onDiving) EndDiveLogic();
