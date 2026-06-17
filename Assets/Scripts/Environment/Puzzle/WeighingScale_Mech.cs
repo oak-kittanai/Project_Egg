@@ -202,11 +202,8 @@ public class WeighingScale_Mech : NetworkBehaviour
 
     private bool IsValidItemConfig(Collider2D item)
     {
-        MovementCharacter[] players = item.GetComponentsInParent<MovementCharacter>();
-        foreach (var p in players)
-        {
-            if (p.enabled) return true;
-        }
+        if (item.GetComponentInParent<Duck_Moveset>() != null) return true;
+        if (item.GetComponentInParent<Bird_Moveset>() != null) return true;
 
         PuzzleItem pItem = item.GetComponentInParent<PuzzleItem>();
         if (pItem != null)
@@ -232,26 +229,14 @@ public class WeighingScale_Mech : NetworkBehaviour
 
         foreach (var item in items)
         {
-            MovementCharacter[] players = item.GetComponentsInParent<MovementCharacter>();
-            bool foundPlayer = false;
-
-            foreach (var player in players)
+            MovementCharacter player = item.GetComponentInParent<Duck_Moveset>() as MovementCharacter
+                                    ?? item.GetComponentInParent<Bird_Moveset>() as MovementCharacter;
+            bool foundPlayer = player != null;
+            if (foundPlayer && !processedObjects.Contains(player.gameObject))
             {
-                if (player.enabled)
-                {
-                    if (processedObjects.Contains(player.gameObject))
-                    {
-                        foundPlayer = true;
-                        break;
-                    }
-                    processedObjects.Add(player.gameObject);
-
-                    if (player is Duck_Moveset) total += 130f;
-                    else if (player is Bird_Moveset) total += 100f;
-
-                    foundPlayer = true;
-                    break;
-                }
+                processedObjects.Add(player.gameObject);
+                if (player is Duck_Moveset) total += 130f;
+                else if (player is Bird_Moveset) total += 100f;
             }
 
             if (foundPlayer) continue;

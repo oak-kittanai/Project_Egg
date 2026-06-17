@@ -1,17 +1,21 @@
-﻿using System.Collections;
+using System.Collections;
+using TMPro;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class TutorialUIManager : MonoBehaviour
 {
     public static TutorialUIManager Instance;
 
-    [Header("UI Elements")]
-    public GameObject tutorialPanel;
-    public Image tutorialImageSlot;
+    [Header("Tutorial UI Elements")]
+    [SerializeField] private GameObject tutorialPanel;
+    [SerializeField] private Image      backgroundFrame;
+    [SerializeField] private Image      tutorialImage;
+    [SerializeField] private TMP_Text   headerText;
+    [SerializeField] private TMP_Text   descText;
+    [SerializeField] private Slider     closeBar;
 
-    private Coroutine hideCoroutine;
+    private Coroutine _autoCloseCoroutine;
 
     private void Awake()
     {
@@ -21,10 +25,7 @@ public class TutorialUIManager : MonoBehaviour
             DontDestroyOnLoad(gameObject.transform.root.gameObject);
 
             GameObject canvas = GameObject.Find("Canvas");
-            if (canvas != null)
-            {
-                RegisterCanvas(canvas);
-            }
+            if (canvas != null) RegisterCanvas(canvas);
         }
         else
         {
@@ -35,49 +36,68 @@ public class TutorialUIManager : MonoBehaviour
     public void RegisterCanvas(GameObject canvas)
     {
         var panel = canvas.transform.Find("TutorialPanel");
-        if (panel == null) { Debug.LogWarning("TutorialPanel not found"); return; }
+        if (panel == null) { Debug.LogWarning("TutorialPanel not found in Canvas"); return; }
 
         tutorialPanel = panel.gameObject;
-        tutorialImageSlot = tutorialPanel.transform.Find("TutorialSlot").GetComponent<Image>();
-        Debug.Log("TutorialManager Success Load UI");
+
+        var bg = panel.Find("BackgroundFrame");
+        if (bg != null) backgroundFrame = bg.GetComponent<Image>();
+
+        var img = panel.Find("tutorialImage");
+        if (img != null) tutorialImage = img.GetComponent<Image>();
+
+        var header = panel.Find("Header");
+        if (header != null) headerText = header.GetComponent<TMP_Text>();
+
+        var desc = panel.Find("Desc");
+        if (desc != null) descText = desc.GetComponent<TMP_Text>();
+
+        var bar = panel.Find("CloseBar");
+        if (bar != null) closeBar = bar.GetComponent<Slider>();
+
+        Debug.Log("TutorialUIManager: canvas registered");
     }
 
-    public void ShowTutorial(Sprite spriteToShow, Vector2 customSize, float duration = 5f)
+    public void ShowTutorial(TutorialData data)
     {
-        if (spriteToShow != null && tutorialPanel != null)
-        {
-            if (hideCoroutine != null) StopCoroutine(hideCoroutine);
+        if (data == null || tutorialPanel == null) return;
 
-            tutorialImageSlot.sprite = spriteToShow;
+        if (tutorialImage != null)  tutorialImage.sprite = data.tutorialSprite;
+        if (headerText != null)     headerText.text      = data.header;
+        if (descText != null)       descText.text        = data.desc;
 
-            RectTransform imgRect = tutorialImageSlot.GetComponent<RectTransform>();
-            if (imgRect != null)
-            {
-                imgRect.sizeDelta = customSize;
-            }
+        tutorialPanel.SetActive(true);
 
-            tutorialPanel.SetActive(true);
-
-            hideCoroutine = StartCoroutine(HideAfterDelay(duration));
-        }
+        if (_autoCloseCoroutine != null) StopCoroutine(_autoCloseCoroutine);
+        _autoCloseCoroutine = StartCoroutine(AutoClose(data.displayDuration));
     }
 
     public void HideTutorial()
     {
-        if (hideCoroutine != null) StopCoroutine(hideCoroutine);
+        if (_autoCloseCoroutine != null) StopCoroutine(_autoCloseCoroutine);
+        _autoCloseCoroutine = null;
 
         if (tutorialPanel != null) tutorialPanel.SetActive(false);
     }
 
-    private IEnumerator HideAfterDelay(float delay)
+    private IEnumerator AutoClose(float duration)
     {
-        yield return new WaitForSeconds(delay);
-
-        if (tutorialPanel != null)
+        if (duration <= 0f)
         {
-            tutorialPanel.SetActive(false);
+            HideTutorial();
+            yield break;
         }
 
-        hideCoroutine = null;
+        float elapsed = 0f;
+        if (closeBar != null) closeBar.value = 1f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            if (closeBar != null) closeBar.value = 1f - (elapsed / duration);
+            yield return null;
+        }
+
+        HideTutorial();
     }
 }

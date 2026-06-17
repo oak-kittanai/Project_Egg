@@ -8,7 +8,8 @@ public class CenterHost : SingletonNetwork<CenterHost>
     [Header("Spawning")]
     [SerializeField] Vector2 HostSpawnPos;
     [SerializeField] Vector2 ClientSpawnPos;
-    [SerializeField] NetworkObject PlayerPrefab;
+    public NetworkObject BirdPrefab;
+    public NetworkObject DuckPrefab;
 
     [Header("Set Player")] // has Access to go everywhere
     [SerializeField] NetworkRunner hostRunner;
@@ -84,7 +85,7 @@ public class CenterHost : SingletonNetwork<CenterHost>
         }
     }
 
-    public void AddComponent(NetworkRunner runner, INetworkStructure iNetStruct, NetworkObject playerObject)
+    public void AddComponent(NetworkRunner runner, INetworkStructure iNetStruct, NetworkObject birdPrefab, NetworkObject duckPrefab)
     {
         if (runner.IsServer)
         {
@@ -96,10 +97,8 @@ public class CenterHost : SingletonNetwork<CenterHost>
             clientRunner = runner;
         }
 
-        if (playerObject != null)
-        {
-            PlayerPrefab = playerObject;
-        }
+        if (birdPrefab != null) BirdPrefab = birdPrefab;
+        if (duckPrefab != null) DuckPrefab = duckPrefab;
     }
 
     public void CheckComponentPlayer(PlayerRef player)
@@ -115,35 +114,8 @@ public class CenterHost : SingletonNetwork<CenterHost>
             Debug.LogError("can't find PlayerRef of client");
         }
 
-        if (player == hostPlayer)
-        {
-            if (PlayerPrefab == null)
-            {
-                Debug.LogWarning("can't find NetworkObject of host");
-                TryReComponent(ref PlayerPrefab);
-                if (PlayerPrefab == null)
-                {
-                    Debug.LogWarning("can't get NetworkObject of host");
-                    return;
-                }
-                else
-                {
-                    if (PlayerPrefab != null)
-                    {
-                        StartCoroutine(WaitForSecToSpawn(player));
-                    }
-                }
-            }
-            else
-            {
-                Debug.Log("Host Player Ready to spawn");
-            }
-        }
-
-        if (player == clientPlayer)
-        {
-            Debug.Log("Client Player Ready to spawn");
-        }
+        if (player == hostPlayer) Debug.Log("Host Player Ready to spawn");
+        if (player == clientPlayer) Debug.Log("Client Player Ready to spawn");
     }
 
     #endregion
@@ -160,11 +132,12 @@ public class CenterHost : SingletonNetwork<CenterHost>
         if (isHost) currentHost = Type;
         else currentClient = Type;
 
+        NetworkObject prefabToSpawn = (Type == characterType.Bird) ? BirdPrefab : DuckPrefab;
         Vector2 spawnPos = isHost ? HostSpawnPos : ClientSpawnPos;
 
         if (hostRunner != null)
         {
-            NetworkObject playerObj = hostRunner.Spawn(PlayerPrefab, spawnPos, Quaternion.identity, player, (runner, obj) =>
+            NetworkObject playerObj = hostRunner.Spawn(prefabToSpawn, spawnPos, Quaternion.identity, player, (runner, obj) =>
             {
                 CharacterStats playerStats = obj.GetComponent<CharacterStats>();
                 if (playerStats != null)

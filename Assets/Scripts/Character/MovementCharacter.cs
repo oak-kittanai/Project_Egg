@@ -195,9 +195,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     {
         bool isThisCharacterBird = (stats != null && stats.skinType == characterType.Bird);
 
-        if (isThisCharacterBird && this is Duck_Moveset) { this.enabled = false; return; }
-        if (!isThisCharacterBird && this.GetType().Name == "Bird_Moveset") { this.enabled = false; return; }
-
         if (cAnimation != null) cAnimation.InitializeMovement(this);
 
         if (HasStateAuthority)
@@ -313,8 +310,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             }
         }
 
-        bool isMenuOpen = MenuController.Instance != null && MenuController.Instance.Object != null
-        && MenuController.Instance.Object.IsValid && MenuController.Instance.Runner != null && MenuController.Instance.IsMenuOpen;
+        bool isMenuOpen = GameManager.Instance != null && GameManager.Instance.IsPaused;
 
         if (HasStateAuthority || HasInputAuthority) CheckGround();
 
@@ -413,6 +409,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         {
             if (HasInputAuthority && PlayerInterface.Instance != null)
                 PlayerInterface.Instance.HideNote();
+            TutorialUIManager.Instance?.HideTutorial();
         }
         _wasTabPressed = input.Keyboard_Tab;
     }

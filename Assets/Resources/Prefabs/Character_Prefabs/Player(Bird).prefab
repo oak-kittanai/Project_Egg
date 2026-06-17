@@ -659,7 +659,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7827371518752826412}
-  - component: {fileID: 2792661054029248767}
   - component: {fileID: 6373651154092321298}
   - component: {fileID: 843996908277204990}
   - component: {fileID: 2584528282019055188}
@@ -667,13 +666,12 @@ GameObject:
   - component: {fileID: 4217623029068874858}
   - component: {fileID: 3711502725299142497}
   - component: {fileID: 1019386123444590845}
-  - component: {fileID: 2326915062844445405}
   - component: {fileID: -4954465623273972117}
   - component: {fileID: 7183814836345501160}
   - component: {fileID: 6610451460623370308}
   - component: {fileID: 5187318988612769457}
   m_Layer: 7
-  m_Name: Player
+  m_Name: Player(Bird)
   m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -698,137 +696,6 @@ Transform:
   - {fileID: 6854471763443873901}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2792661054029248767
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5009953336907088200}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cc8c7372b06429744bb6f85c3b13fe8a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Duck_Moveset
-  stats: {fileID: 2584528282019055188}
-  cAnimation: {fileID: 5951920606050262536}
-  rb2D: {fileID: 0}
-  coll2D: {fileID: 0}
-  localGUI: {fileID: 843996908277204990}
-  spriteRenderer: {fileID: 3464039886670934113}
-  jumpSoundClip: {fileID: 8300000, guid: 89bfe5baebba4b5458ae67985ad462a0, type: 3}
-  landingSoundClip: {fileID: 8300000, guid: 89bfe5baebba4b5458ae67985ad462a0, type: 3}
-  dmgSoundClip: {fileID: 8300000, guid: 51ca9d2c0dd2f3b4d82b97237be54bdb, type: 3}
-  dieSoundClip: {fileID: 8300000, guid: ed2bed66dc78a3746bb6f9528917fcc2, type: 3}
-  respawnSoundClip: {fileID: 8300000, guid: bfe3c54a697abbe41bbf14f7e2180144, type: 3}
-  movementAudioSource: {fileID: 7183814836345501160}
-  walkSoundClip: {fileID: 8300000, guid: 9c1f85ad404d5dd4f9d13b12ba96e02b, type: 3}
-  swimSoundClip: {fileID: 0}
-  _isBird: 0
-  visualTransform: {fileID: 0}
-  _IsGrounded: 0
-  _isWaterSurface: 0
-  _IsInAir: 0
-  _MoveInput: {x: 0, y: 0}
-  _isFloating: 0
-  isMoveAble: 0
-  _resetAnimation: 0
-  _isJumping: 0
-  JumpCooldownTimer: 1
-  isSpeedoptional: 0
-  normalGravity: 2
-  heavyGravity: 5.5
-  maxGravity: 16
-  _IsFalling: 0
-  _FallingBusy: 0
-  isOptional: 0
-  optionalGravity: 0
-  accelerationSpeedOptional: 0.6
-  decelerationSpeedOptional: 3
-  optionalMaxSpeed: 1
-  _characterMaxHealth: 5
-  _currentHealth: 0
-  _isDead: 0
-  respawnCooldown: 2.5
-  canbeRespawn: 1
-  _IsHeadUnderwater: 0
-  _IsBodyOnWater: 0
-  headOffset: 0.2
-  bodyOffset: -0.2
-  nearGroundDistance: 1.5
-  currentWater: {fileID: 1954370135117116909, guid: b33f250204d54704d8bed00ffe60fbbf, type: 3}
-  _stilldrowning: 0
-  _CarrierId:
-    Raw: 0
-  _IsBeingCarried: 0
-  _IsInteractBusy: 0
-  betweenCarryPosition: 0.7
-  normalCollider: {fileID: 1019386123444590845}
-  carryCollider: {fileID: 2326915062844445405}
-  zeroFiction: {fileID: 0}
-  localIsBeingCarriedPredict: 0
-  localCarrierIdPredict:
-    Raw: 0
-  _isEPressed: 0
-  rayDistance: 0.55
-  interactRadius: 0.8
-  playerInteractRadius: 0.7
-  invincibleDuration: 1.5
-  _damageFlash: {fileID: 0}
-  duck_Color: {r: 0, g: 0.4745098, b: 1, a: 0}
-  bird_Color: {r: 1, g: 0.54901963, b: 0, a: 0}
-  climbSpeed: 3
-  climbableMask:
-    serializedVersion: 2
-    m_Bits: 131072
-  _isInClimbZone: 0
-  _isClimbing: 0
-  _jumpedFromClimb: 0
-  _HeldItemName:
-    _length: 0
-    _data:
-      Data: 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-  isNearBreakableRock: 0
-  dropFrontOffset: 0.6
-  dropUpOffset: 0.5
-  dropBlockLayer:
-    serializedVersion: 2
-    m_Bits: 512
-  __canThrowItem: 0
-  __wasEscPressed: 0
-  lifeCycle: {fileID: 0}
-  drivingSoundClip: {fileID: 0}
-  stopDrivingSoundClip: {fileID: 0}
-  pickupSoundClip: {fileID: 0}
-  dropSoundClip: {fileID: 0}
-  _isJumpAble: 0
-  waterJumpCooldown: 2
-  throwForceX: 7
-  throwForceY: 7
-  swimSpeed: 10
-  swimAcceleration: 4
-  swimDeceleration: 4
-  swimMaxSpeed: 5
-  divingTime: 8
-  divePhase: 0.5
-  emergencyAcceleration: 1.1
-  _onDiving:
-    _value: 0
-  _emergencySwimBool: 0
-  _emergencyToggle: 0
-  emergencySwimTimer: 2
-  __wasEPressed: 0
-  __wasFPressed: 0
-  __wasJumpPressed: 0
-  floatOffset: 0.11
-  _CarriedFriendId:
-    Raw: 0
-  _IsCarry:
-    _value: 0
-  _isDiveUnlocked:
-    _value: 0
-  _isSmashUnlocked:
-    _value: 0
 --- !u!114 &6373651154092321298
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -895,7 +762,7 @@ MonoBehaviour:
   _IsInteractBusy: 0
   betweenCarryPosition: 0.7
   normalCollider: {fileID: 1019386123444590845}
-  carryCollider: {fileID: 2326915062844445405}
+  carryCollider: {fileID: 0}
   zeroFiction: {fileID: 0}
   localIsBeingCarriedPredict: 0
   localCarrierIdPredict:
@@ -1018,12 +885,11 @@ MonoBehaviour:
   m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
-  SortKey: 73483203
+  SortKey: 3689349943
   ObjectInterest: 1
   Flags: 262145
   NestedObjects: []
   NetworkedBehaviours:
-  - {fileID: 2792661054029248767}
   - {fileID: 6373651154092321298}
   - {fileID: 2584528282019055188}
   - {fileID: 3711502725299142497}
@@ -1116,43 +982,6 @@ CapsuleCollider2D:
   m_CompositeOrder: 0
   m_Offset: {x: -0.029501198, y: 0.002748339}
   m_Size: {x: 0.6493287, y: 0.83}
-  m_Direction: 0
---- !u!70 &2326915062844445405
-CapsuleCollider2D:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5009953336907088200}
-  m_Enabled: 0
-  serializedVersion: 3
-  m_Density: 1
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_ForceSendLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ForceReceiveLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ContactCaptureLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_CallbackLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_IsTrigger: 0
-  m_UsedByEffector: 0
-  m_CompositeOperation: 0
-  m_CompositeOrder: 0
-  m_Offset: {x: -0.029501198, y: 0.33811086}
-  m_Size: {x: 0.6493287, y: 1.5007249}
   m_Direction: 0
 --- !u!82 &-4954465623273972117
 AudioSource:
@@ -2328,7 +2157,7 @@ SpriteRenderer:
   m_SortingLayerID: 506285829
   m_SortingLayer: 7
   m_SortingOrder: 1
-  m_Sprite: {fileID: 6389554935151001346, guid: 2efcded88a0f3a44cadf1bb7429c7850, type: 3}
+  m_Sprite: {fileID: -4789109195253231553, guid: b2a4daf0ede2a1a48ac6a6a6b5276657, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0

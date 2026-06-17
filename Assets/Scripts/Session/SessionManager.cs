@@ -17,8 +17,17 @@ public enum SessionState
     CharacterSelect
 }
 
-public class SessionManager : SingletonNetwork<SessionManager>
+public class SessionManager : MonoBehaviour
 {
+    public static SessionManager Instance { get; private set; }
+
+    private void Awake()
+    {
+        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
+        Instance = this;
+        Setup();
+    }
+
     #region Variables & Data Structures
     [Header("Session State")]
     public SessionState currentState;
@@ -36,8 +45,6 @@ public class SessionManager : SingletonNetwork<SessionManager>
     [SerializeField] NetworkObject shipType;
 
     public NetworkRunner networkRunner;
-    [NetworkPrefab] public NetworkObject CenterHostObject;
-    [NetworkPrefab] public NetworkObject PlayerPrefabs;
 
     [SerializeField] string SceneToPlay;
 
@@ -52,10 +59,8 @@ public class SessionManager : SingletonNetwork<SessionManager>
         public PlayerRef playerRef;
     }
 
-    [Header("GameManager")]
-    [NetworkPrefab] public NetworkObject GameManagerPrefabs;
-    [SerializeField] public NetworkObject GM;
-    [SerializeField] public GameManager gameManager;
+    [Header("Game Session Data")]
+    [SerializeField] GameSessionData gameSessionData;
 
     [Header("UI System")]
     [SerializeField] public GameObject globalLoadingScreen;
@@ -327,52 +332,22 @@ public class SessionManager : SingletonNetwork<SessionManager>
         await networkRunner.LoadScene(sceneName, LoadSceneMode.Single);
     }
 
-    public async void StartGame()
+    public void StartGame()
     {
         _isAlreadyInRoom = false;
 
-        ShowLoadingScreen(true);
+        if (gameSessionData != null && CharacterTypeShip.Instance != null)
+        {
+            gameSessionData.hostType   = CharacterTypeShip.Instance.currentHost;
+            gameSessionData.clientType = CharacterTypeShip.Instance.currentClient;
+        }
 
+        SessionHub.Instance.DesetButton();
+        ShowLoadingScreen(true);
         if (GlobalLoadingManager.Instance != null) GlobalLoadingManager.Instance.ShowLoading();
 
         if (networkRunner.IsServer)
-        {
-            await LoadStartGame(SceneToPlay);
-            _isAlreadyInRoom = false;
-
-            INetworkStructure networkStructure = networkRunner.GetComponent<INetworkStructure>();
-
-            NetworkObject CHObject = networkRunner.Spawn(CenterHostObject);
-            CenterHost CH = CHObject.GetComponent<CenterHost>();
-            CH.AddComponent(networkRunner, networkStructure, PlayerPrefabs);
-
-            GM = networkRunner.Spawn(GameManagerPrefabs);
-            gameManager = GM.GetComponent<GameManager>();
-            gameManager.GetNetworkRunner(networkRunner);
-
-            foreach (PlayersData player in Players)
-            {
-                NetworkRunner playerRun = player.runner;
-                PlayerRef playerRef = player.playerRef;
-
-                if (RuntimeUpdate.Instance != null)
-                {
-                    if (playerRef == playerRun.LocalPlayer)
-                    {
-                        CH.SpawnPlayer(playerRef, CharacterTypeShip.Instance.currentHost, true);
-                    }
-                    else
-                    {
-                        CH.SpawnPlayer(playerRef, CharacterTypeShip.Instance.currentClient, false);
-                    }
-                }
-                else
-                {
-                    Debug.Log("runtime is null");
-                }
-            }
-        }
-        SessionHub.Instance.DesetButton();
+            _ = LoadStartGame(SceneToPlay);
     }
     #endregion
 
@@ -421,7 +396,6 @@ public class SessionManager : SingletonNetwork<SessionManager>
 
         runTime = null;
         shipType = null;
-        GM = null;
         Players.Clear();
 
         AddRunner();

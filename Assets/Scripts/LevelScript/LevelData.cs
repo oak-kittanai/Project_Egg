@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Video;
@@ -43,6 +44,7 @@ public class LevelData : MonoBehaviour
     public bool isDivingShow, isMovingShow, isCarryShow;
     [SerializeField] Image tutorialSlot;
     public TutorialData[] tutorials;
+    [HideInInspector] public List<TutorialData> seenTutorials = new List<TutorialData>();
 
     private void Awake()
     {
@@ -62,8 +64,9 @@ public class LevelData : MonoBehaviour
         {
             if (tut.tutorialName == requestedName)
             {
-                TutorialUIManager.Instance?.ShowTutorial(
-                    tut.tutorialSprite, tut.RectTransform, tut.displayDuration);
+                if (!seenTutorials.Contains(tut))
+                    seenTutorials.Add(tut);
+                TutorialUIManager.Instance?.ShowTutorial(tut);
                 return;
             }
         }
@@ -79,4 +82,6 @@ public class TutorialData
     public Vector2 RectTransform;
     public Sprite tutorialSprite;
     public float displayDuration = 5f;
+    public string header;
+    [TextArea] public string desc;
 }

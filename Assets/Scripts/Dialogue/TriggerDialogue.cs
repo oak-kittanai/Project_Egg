@@ -33,37 +33,34 @@ public class TriggerDialogue : NetworkBehaviour
         if (!HasStateAuthority) return;
         if (isOneTimeTrigger && hasTriggeredLocal) return;
 
-        MovementCharacter[] allCharacterMovement = other.GetComponents<MovementCharacter>();
-
-        foreach (var character in allCharacterMovement)
+        if (!other.CompareTag("Player")) return;
+        MovementCharacter character = other.GetComponent<Bird_Moveset>() as MovementCharacter
+                                   ?? other.GetComponent<Duck_Moveset>() as MovementCharacter;
+        if (character != null)
         {
-            if (character.enabled && other.CompareTag("Player"))
+            if (skillToUnlock != MovementCharacter.SkillType.None)
             {
-                if (skillToUnlock != MovementCharacter.SkillType.None)
+                if (doubleCharacterSkillUnlock)
                 {
-                    if (doubleCharacterSkillUnlock)
-                    {
-                        RPC_UnlockSkillsBoth(character);
-                        PersistSkillUnlock(skillToUnlock);
-                        PersistSkillUnlock(skillToUnlock2);
-                    }
-                    else
-                    {
-                        character.RPC_UnlockSkill(skillToUnlock);
-                        PersistSkillUnlock(skillToUnlock);
-                    }
-                }
-
-                if (differentCharacterDialogue)
-                {
-                    if (character.isBird) RPC_TriggerDialogueNetwork(1, birdIndex);
-                    else RPC_TriggerDialogueNetwork(2, duckIndex);
+                    RPC_UnlockSkillsBoth(character);
+                    PersistSkillUnlock(skillToUnlock);
+                    PersistSkillUnlock(skillToUnlock2);
                 }
                 else
                 {
-                    RPC_TriggerDialogueNetwork(0, normalIndex);
+                    character.RPC_UnlockSkill(skillToUnlock);
+                    PersistSkillUnlock(skillToUnlock);
                 }
-                break;
+            }
+
+            if (differentCharacterDialogue)
+            {
+                if (character.isBird) RPC_TriggerDialogueNetwork(1, birdIndex);
+                else RPC_TriggerDialogueNetwork(2, duckIndex);
+            }
+            else
+            {
+                RPC_TriggerDialogueNetwork(0, normalIndex);
             }
         }
     }
@@ -119,12 +116,9 @@ public class TriggerDialogue : NetworkBehaviour
         MovementCharacter[] allPlayers = FindObjectsByType<MovementCharacter>(FindObjectsSortMode.None);
         foreach (var p in allPlayers)
         {
-            if (p.enabled)
-            {
-                p.RPC_UnlockSkill(skillToUnlock);
-                if (skillToUnlock2 != MovementCharacter.SkillType.None)
-                    p.RPC_UnlockSkill(skillToUnlock2);
-            }
+            p.RPC_UnlockSkill(skillToUnlock);
+            if (skillToUnlock2 != MovementCharacter.SkillType.None)
+                p.RPC_UnlockSkill(skillToUnlock2);
         }
         PersistSkillUnlock(skillToUnlock);
         if (skillToUnlock2 != MovementCharacter.SkillType.None)

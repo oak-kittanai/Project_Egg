@@ -117,6 +117,7 @@ public class MenuController : NetworkBehaviour
         {
             IsMenuOpen = true;
             ClearAllVotes();
+            if (GameManager.Instance != null) GameManager.Instance.IsPaused = true;
         }
     }
 
@@ -185,11 +186,13 @@ public class MenuController : NetworkBehaviour
         {
             IsMenuOpen = false;
             ClearAllVotes();
+            if (GameManager.Instance != null) GameManager.Instance.IsPaused = false;
         }
         else if (resetCount >= activePlayers)
         {
             IsMenuOpen = false;
             ClearAllVotes();
+            if (GameManager.Instance != null) GameManager.Instance.IsPaused = false;
 
             ResetAllPlayersFromMenu();
         }
@@ -301,6 +304,16 @@ public class MenuController : NetworkBehaviour
         }
 
         Debug.Log("[GameManager] Reset all players from menu");
+    }
+
+    // Called from PauseMenu "ดู tutorial ย้อนหลัง" button — game is already paused while menu is open
+    public void ShowTutorialReview(int index = 0)
+    {
+        if (LevelData.Instance == null || TutorialUIManager.Instance == null) return;
+        var seen = LevelData.Instance.seenTutorials;
+        if (seen == null || seen.Count == 0) return;
+        int clamped = Mathf.Clamp(index, 0, seen.Count - 1);
+        TutorialUIManager.Instance.ShowTutorial(seen[clamped]);
     }
 
     #endregion

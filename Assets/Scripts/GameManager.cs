@@ -47,6 +47,15 @@ public class GameManager : SingletonNetwork<GameManager>
     private GameObject currentLoadingUI;
     private bool allowCloseUI = false;
 
+    [Header("Pause")]
+    [Networked] public NetworkBool IsPaused { get; set; }
+
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    public void SetPause_RPC(bool pause)
+    {
+        IsPaused = pause;
+    }
+
     [Networked] public bool gameOver { get; set; }
     [Networked] public int TeamBlueKeys { get; set; }
     [Networked] public int TeamOrangeKeys { get; set; }
@@ -167,9 +176,6 @@ public class GameManager : SingletonNetwork<GameManager>
         }
     }
 
-    [Header("Player Spawner (Same as CenterHost)")]
-    [SerializeField] NetworkObject PlayerPrefab;
-
     public void SpawnPlayersForNewScene()
     {
         if (!HasStateAuthority) return;
@@ -191,13 +197,14 @@ public class GameManager : SingletonNetwork<GameManager>
                 ? CenterHost.Instance.currentHost
                 : CenterHost.Instance.currentClient;
 
-            Runner.Spawn(PlayerPrefab, spawnPos, Quaternion.identity, playerRef, (runner, obj) =>
+            NetworkObject prefabToSpawn = (type == characterType.Bird)
+                ? CenterHost.Instance.BirdPrefab
+                : CenterHost.Instance.DuckPrefab;
+
+            Runner.Spawn(prefabToSpawn, spawnPos, Quaternion.identity, playerRef, (runner, obj) =>
             {
                 CharacterStats playerStats = obj.GetComponent<CharacterStats>();
-                if (playerStats != null)
-                {
-                    playerStats.skinType = type;
-                }
+                if (playerStats != null) playerStats.skinType = type;
                 obj.name = $"Spawned_{type}";
             });
         }

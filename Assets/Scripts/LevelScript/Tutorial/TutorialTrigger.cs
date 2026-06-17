@@ -44,16 +44,12 @@ public class TutorialTrigger : MonoBehaviour
             if (other.CompareTag("Player"))
             {
 
-                var allMCs = other.GetComponents<MovementCharacter>();
-
-                foreach (var mc in allMCs)
+                MovementCharacter mc = other.GetComponent<Bird_Moveset>() as MovementCharacter
+                                    ?? other.GetComponent<Duck_Moveset>() as MovementCharacter;
+                if (mc != null && mc.HasInputAuthority)
                 {
-                    if (mc != null && mc.enabled && mc.HasInputAuthority)
-                    {
-                        foundLocalPlayer = true;
-                        localPlayerMC = mc;
-                        break;
-                    }
+                    foundLocalPlayer = true;
+                    localPlayerMC = mc;
                 }
             }
 

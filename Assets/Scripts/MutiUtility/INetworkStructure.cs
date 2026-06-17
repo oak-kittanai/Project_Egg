@@ -161,12 +161,15 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
 
     public void OnSceneLoadDone(NetworkRunner runner)
     {
-
+        GameBootstrapper bootstrapper = FindFirstObjectByType<GameBootstrapper>();
+        if (bootstrapper != null)
+            bootstrapper.Bootstrap(runner);
     }
 
     public void OnSceneLoadStart(NetworkRunner runner)
     {
-
+        if (GlobalLoadingManager.Instance != null)
+            GlobalLoadingManager.Instance.ShowLoading();
     }
 
     #endregion

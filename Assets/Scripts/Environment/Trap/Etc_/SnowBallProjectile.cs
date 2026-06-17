@@ -54,7 +54,7 @@ public class SnowBallProjectile : NetworkBehaviour
             foreach (MovementCharacter character in allPlayers)
             {
 
-                if (character == null || !character.enabled || character.isDead) continue;
+                if (character == null || character.isDead) continue;
 
                 float distance = Vector2.Distance(transform.position, character.transform.position);
 

@@ -47,16 +47,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CenterHost
   HostSpawnPos: {x: -22, y: -12}
   ClientSpawnPos: {x: -22, y: -13}
-  PlayerPrefab: {fileID: 0}
+  BirdPrefab: {fileID: 6866875988248065551, guid: 9a9c2f4720e2cfb46bdb291fd8424153, type: 3}
+  DuckPrefab: {fileID: 6866875988248065551, guid: 4a21928bbd567594bb193592dd20431f, type: 3}
   hostRunner: {fileID: 0}
   netStructure: {fileID: 0}
   hostStats: {fileID: 0}
   clientRunner: {fileID: 0}
   clientStats: {fileID: 0}
   _RemoveOldObj: 0
+  _currentHost: 0
+  _currentClient: 0
   canvasPrefab: {fileID: 8707019487019327968, guid: 295c8402bdc86c54b9d8e9489b2b686f, type: 3}
   coreManagerPrefab: {fileID: 6220470830134951863, guid: d1f11188d278f98459741540fcff5596, type: 3}
-  networkMenuControllerPrefab: {fileID: 5228571391162681140, guid: 94ec73eb37818bf4d9b395a040ad16ba, type: 3}
 --- !u!114 &7825853430673868469
 MonoBehaviour:
   m_ObjectHideFlags: 0
