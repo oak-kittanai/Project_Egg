@@ -103,6 +103,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     private bool _wasTabPressed;
 
+    [HideInInspector] public Vector2 platformVelocity;
+
     [Header("Interaction & Physics")]
     public float rayDistance = 1.2f;
     public float interactRadius = 1.5f;
@@ -314,6 +316,16 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
         if (HasStateAuthority || HasInputAuthority) CheckGround();
 
+        if (IsGrounded && platformVelocity.y != 0 && !effectivelyCarried)
+        {
+            Vector2 vel = rb2D.linearVelocity;
+            if (platformVelocity.y > 0)
+                vel.y = Mathf.Max(vel.y, platformVelocity.y);
+            else
+                vel.y = Mathf.Min(vel.y, platformVelocity.y);
+            rb2D.linearVelocity = vel;
+        }
+
         // Test
 
         bool wasInZone = isInClimbZone;
@@ -379,6 +391,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         }
 
         OnFixedUpdateSpecific();
+        platformVelocity = Vector2.zero;
     }
 
     #endregion
@@ -425,7 +438,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     private void HandleMovement(NetworkInputData input)
     {
-        float targetSpeed = input.horizontal * stats.maxSpeed;
+        float targetSpeed = (input.horizontal * stats.maxSpeed) + platformVelocity.x;
         float currentSpeed = rb2D.linearVelocity.x;
         float accelRate = isSpeedoptional
             ? (Mathf.Abs(targetSpeed) > 0.01f ? accelerationSpeedOptional : decelerationSpeedOptional)

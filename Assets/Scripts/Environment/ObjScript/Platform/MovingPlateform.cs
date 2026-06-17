@@ -37,6 +37,7 @@ public class MovingPlateform : NetworkBehaviour
         else newPosition.x += movementOffset;
 
         Vector3 deltaMovement = newPosition - transform.position;
+        Vector2 platVel = (Vector2)deltaMovement / (float)Runner.DeltaTime;
 
         rb.MovePosition(newPosition);
 
@@ -63,13 +64,7 @@ public class MovingPlateform : NetworkBehaviour
                 if (player.rb2D != null)
                 {
                     player.rb2D.position += (Vector2)deltaMovement;
-
-                    if (isVertical && deltaMovement.y < 0)
-                    {
-                        Vector2 vel = player.rb2D.linearVelocity;
-                        if (vel.y > 0) vel.y = 0;
-                        player.rb2D.linearVelocity = vel;
-                    }
+                    player.platformVelocity = platVel;
                 }
             }
         }
