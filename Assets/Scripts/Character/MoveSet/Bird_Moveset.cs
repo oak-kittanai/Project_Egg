@@ -121,7 +121,7 @@ public class Bird_Moveset : MovementCharacter
             }
         }
 
-        HandleDrowning();
+        if (!isMenuOpen) HandleDrowning();
     }
 
     private void HandleDrowning()

@@ -316,7 +316,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
         if (HasStateAuthority || HasInputAuthority) CheckGround();
 
-        if (IsGrounded && platformVelocity.y != 0 && !effectivelyCarried)
+        if (IsGrounded && platformVelocity.y != 0 && !effectivelyCarried && !isMenuOpen)
         {
             Vector2 vel = rb2D.linearVelocity;
             if (platformVelocity.y > 0)
@@ -341,10 +341,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         {
             if (isMenuOpen)
             {
-                if (IsGrounded && !isJumping)
-                {
-                    rb2D.linearVelocity = new Vector2(0f, rb2D.linearVelocity.y);
-                }
                 cAnimation.UpdateAnimationController(Vector2.zero);
 
                 HandleEtcInput(input);
@@ -391,6 +387,13 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         }
 
         OnFixedUpdateSpecific();
+
+        if (isMenuOpen)
+        {
+            rb2D.linearVelocity = Vector2.zero;
+            rb2D.gravityScale = 0f;
+        }
+
         platformVelocity = Vector2.zero;
     }
 
@@ -679,6 +682,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                 rb2D.linearDamping = 0f;
             }
         }
+
+        platformVelocity = Vector2.zero;
 
         if (this is Duck_Moveset duckSelf)
         {

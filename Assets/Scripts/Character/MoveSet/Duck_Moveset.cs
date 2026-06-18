@@ -142,7 +142,7 @@ public class Duck_Moveset : MovementCharacter
             isJumpingUp = false;
         }
 
-        HandleBuoyancy();
+        if (!isMenuOpen) HandleBuoyancy();
     }
 
     private void HandleJumpOffWater()
@@ -178,15 +178,11 @@ public class Duck_Moveset : MovementCharacter
             {
                 if (hit.gameObject == gameObject) continue;
 
-                MovementCharacter[] allCharacters = hit.GetComponents<MovementCharacter>();
-
-                foreach (var character in allCharacters)
+                Bird_Moveset birdToCarry = hit.GetComponent<Bird_Moveset>();
+                if (birdToCarry != null)
                 {
-                    if (character.enabled == true)
-                    {
-                        PickupFriend(character);
-                        return;
-                    }
+                    PickupFriend(birdToCarry);
+                    return;
                 }
             }
         }
@@ -215,24 +211,20 @@ public class Duck_Moveset : MovementCharacter
     {
         if (Runner.TryFindObject(CarriedFriendId, out var obj))
         {
-            MovementCharacter[] allCharacters = obj.GetComponents<MovementCharacter>();
-            foreach (var friend in allCharacters)
+            Bird_Moveset friend = obj.GetComponent<Bird_Moveset>();
+            if (friend != null)
             {
-                if (friend.enabled)
-                {
-                    float throwDir = cAnimation.FlipX ? 1f : -1f;
+                float throwDir = cAnimation.FlipX ? 1f : -1f;
 
-                    Vector2 throwSpawnPos = (Vector2)friend.transform.position;
+                Vector2 throwSpawnPos = (Vector2)friend.transform.position;
 
-                    friend.localIsBeingCarriedPredict = false;
-                    if (friend.rb2D != null) friend.rb2D.bodyType = RigidbodyType2D.Dynamic;
-                    if (friend.coll2D != null) friend.coll2D.isTrigger = false;
-                    if (carryCollider != null && friend.coll2D != null) Physics2D.IgnoreCollision(carryCollider, friend.coll2D, false);
-                    if (normalCollider != null && friend.coll2D != null) Physics2D.IgnoreCollision(normalCollider, friend.coll2D, false);
+                friend.localIsBeingCarriedPredict = false;
+                if (friend.rb2D != null) friend.rb2D.bodyType = RigidbodyType2D.Dynamic;
+                if (friend.coll2D != null) friend.coll2D.isTrigger = false;
+                if (carryCollider != null && friend.coll2D != null) Physics2D.IgnoreCollision(carryCollider, friend.coll2D, false);
+                if (normalCollider != null && friend.coll2D != null) Physics2D.IgnoreCollision(normalCollider, friend.coll2D, false);
 
-                    friend.RPC_UpdateCarry(false, Object.Id, throwFriend, throwDir, throwForceX, throwForceY, throwSpawnPos);
-                    break;
-                }
+                friend.RPC_UpdateCarry(false, Object.Id, throwFriend, throwDir, throwForceX, throwForceY, throwSpawnPos);
             }
         }
         if (normalCollider != null) normalCollider.enabled = true;
