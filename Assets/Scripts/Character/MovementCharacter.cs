@@ -1,9 +1,10 @@
-﻿using Fusion;
+using Fusion;
 using UnityEngine;
 using Fusion.Addons.Physics;
 
 public class MovementCharacter : NetworkBehaviour, IDamageable
 {
+    #region References
     [Header("References")]
     [SerializeField] public CharacterStats stats;
     [SerializeField] public CharacterAnimation cAnimation;
@@ -11,8 +12,9 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [SerializeField] public Collider2D coll2D;
     [SerializeField] public PlayerGUI localGUI;
     [SerializeField] public SpriteRenderer spriteRenderer;
+    #endregion
 
-    //SOUND
+    #region Audio
     [Header("Audio System")]
     [SerializeField] public AudioClip jumpSoundClip;
     [SerializeField] public AudioClip landingSoundClip;
@@ -24,15 +26,20 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [SerializeField] public AudioSource movementAudioSource;
     [SerializeField] public AudioClip walkSoundClip;
     [SerializeField] public AudioClip swimSoundClip;
+    #endregion
 
-
+    #region Identity
     [Networked, OnChangedRender(nameof(OnCharacterTypeChanged))]
     public bool isBird { get; set; }
+    #endregion
 
+    #region Visual
     [Header("Visual")]
     [SerializeField] public Transform visualTransform;
     private int originalSortingOrder;
+    #endregion
 
+    #region Movement State
     [Header("Movement Settings")]
     [Networked] public bool IsGrounded { get; set; }
     [Networked] public bool isWaterSurface { get; set; }
@@ -43,10 +50,30 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     [Networked] public bool resetAnimation { get; set; }
     [Networked] public bool isJumping { get; set; }
+    #endregion
 
+    #region Jump Physics
     [Networked] private TickTimer JumpCooldown { get; set; }
     [SerializeField] private float JumpCooldownTimer = 2f;
 
+    [Header("Jump - Cut")]
+    [Tooltip("ตัวคูณ gravity ตอนปล่อยปุ่มกระโดดเร็ว (ระหว่างลอยขึ้น ไม่ใกล้ apex)")]
+    [SerializeField] private float jumpCutMultiplier = 2f;
+
+    [Header("Jump - Apex Hang")]
+    [Tooltip("ช่วง velocity.y (บวก/ลบ) ที่ถือว่าใกล้จุดสูงสุดของอาร์คกระโดด")]
+    [SerializeField] private float apexThreshold = 1f;
+    [Tooltip("ตัวคูณ gravity ตอนอยู่ในช่วงใกล้ apex (ค่าน้อย = ลอยค้างนานขึ้น)")]
+    [SerializeField] private float apexGravityMultiplier = 0.5f;
+
+    [Header("Jump - Head Bump")]
+    [Tooltip("ระยะ raycast ขึ้นด้านบนเพื่อเช็คว่าหัวชนเพดาน")]
+    [SerializeField] private float headBumpCheckDistance = 0.3f;
+    [Tooltip("velocity.y ที่บังคับใส่ทันทีเมื่อหัวชนเพดาน (ค่าลบ = ร่วงทันที)")]
+    [SerializeField] private float headBumpDownwardVelocity = -2f;
+    #endregion
+
+    #region Gravity & Falling
     [Header("Gravity Settings")]
     [SerializeField] public bool isSpeedoptional;
     [SerializeField] public float normalGravity = 3.5f;
@@ -63,7 +90,9 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [SerializeField] public float accelerationSpeedOptional = 0.6f;
     [SerializeField] public float decelerationSpeedOptional = 3f;
     [SerializeField] public float optionalMaxSpeed = 1f;
+    #endregion
 
+    #region Health & Respawn
     [Header("Health & Respawn")]
     [Networked] public int characterMaxHealth { get; set; }
     [Networked, OnChangedRender(nameof(OnHealthChanged))] public int currentHealth { get; set; }
@@ -72,7 +101,9 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [Networked] TickTimer respawnTimer { get; set; }
     [SerializeField] float respawnCooldown = 3f;
     [SerializeField] bool canbeRespawn = true;
+    #endregion
 
+    #region Water Settings
     [Header("Water Setting")]
     [Networked] public bool IsHeadUnderwater { get; set; }
     [Networked] public bool IsBodyOnWater { get; set; }
@@ -81,7 +112,9 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [SerializeField] public float nearGroundDistance = 0.63f;
     [SerializeField] public NetworkInteractableWater currentWater;
     [Networked] public bool stilldrowning { get; set; }
+    #endregion
 
+    #region Passenger / Carry System
     [Header("Passenger System")]
     [Networked] public NetworkId CarrierId { get; set; }
     [Networked] public bool IsBeingCarried { get; set; }
@@ -102,31 +135,43 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [SerializeField] public bool _isEPressed;
 
     private bool _wasTabPressed;
+    #endregion
 
+    #region Platform Interaction
     [HideInInspector] public Vector2 platformVelocity;
+    #endregion
 
+    #region Interaction & Physics
     [Header("Interaction & Physics")]
     public float rayDistance = 1.2f;
     public float interactRadius = 1.5f;
     public float playerInteractRadius = 1f;
+    #endregion
 
+    #region I-Frames & Effects
     [Header("I-Frames & Effects")]
     [Networked] private TickTimer InvincibleTimer { get; set; }
     [SerializeField] private float invincibleDuration = 1.5f;
     [SerializeField] private DamageFlash _damageFlash;
     [SerializeField] public Color duck_Color;
     [SerializeField] public Color bird_Color;
+    #endregion
 
+    #region Climbing
     [Header("Climbing")]
     [SerializeField] float climbSpeed = 2f;
     [SerializeField] LayerMask climbableMask;
     [Networked] public bool isInClimbZone { get; set; }
     [Networked] public bool isClimbing { get; set; }
     [Networked] public bool jumpedFromClimb { get; set; }
+    #endregion
 
+    #region Skills
     // UnlockableSkills
     public enum SkillType { None, Duck_Dive, Duck_Smash, Bird_Fly, Bird_Throw }
+    #endregion
 
+    #region Inventory & Drop
     [Header("Inventory System (1 Slot)")]
     [Networked, OnChangedRender(nameof(OnHeldItemChanged))]
     public NetworkString<_32> HeldItemName { get; set; }
@@ -139,30 +184,19 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [SerializeField] private float dropUpOffset = 0.5f;
     [SerializeField] private LayerMask dropBlockLayer;
 
-    public void OnHeldItemChanged()
-    {
-        string itemName = HeldItemName.ToString();
-
-        if (HasInputAuthority && PlayerInterface.Instance != null
-            && GameManager.Instance != null && GameManager.Instance.IsGameReady)
-        {
-            if (string.IsNullOrEmpty(itemName))
-                PlayerInterface.Instance.HideItemOverlay();
-            else
-                PlayerInterface.Instance.ShowItemOverlay(itemName);
-        }
-
-        _canThrowItem = (itemName == "Rock");
-    }
-
     // Throw System
     [Networked] public bool _canThrowItem { get; set; }
+    #endregion
 
+    #region Etc
     [Header("Etc")]
     [Networked] public bool _wasEscPressed { get; set; }
+    #endregion
 
+    #region LifeCycle Effect
     [Header("LifeCycle Effect")]
     [SerializeField] public LifeCycle lifeCycle;
+    #endregion
 
     private void Awake()
     {
@@ -378,6 +412,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                     {
                         HandleMovement(input);
                         HandleJump(input);
+                        HandleJumpPhysics(input);
                     }
                     if (!IsInteractBusy) HandleInteraction(input);
                     HandleEtcInput(input);
@@ -397,9 +432,43 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         platformVelocity = Vector2.zero;
     }
 
+    public override void Render()
+    {
+        if (HasInputAuthority) CheckInteractable();
+
+        bool effectivelyCarried = IsBeingCarried || localIsBeingCarriedPredict;
+        NetworkId effectiveCarrierId = IsBeingCarried ? CarrierId : localCarrierIdPredict;
+
+        if (effectivelyCarried
+            && Runner.TryFindObject(effectiveCarrierId, out var duckObj)
+            && duckObj.TryGetComponent<MovementCharacter>(out var duckMC))
+        {
+            if (spriteRenderer != null) spriteRenderer.sortingOrder = originalSortingOrder - 1;
+
+            if (visualTransform != null && duckMC.visualTransform != null)
+            {
+                visualTransform.position = duckMC.visualTransform.position
+                                           + Vector3.up * betweenCarryPosition;
+                _wasVisuallyCarried = true;
+            }
+        }
+        else
+        {
+            if (spriteRenderer != null) spriteRenderer.sortingOrder = originalSortingOrder;
+
+            if (_wasVisuallyCarried && visualTransform != null)
+            {
+                visualTransform.localPosition = Vector3.zero;
+                _wasVisuallyCarried = false;
+            }
+        }
+
+        ManageMovementSounds();
+    }
+
     #endregion
 
-    #region CharacterSystem
+    #region Menu & Etc Input
 
     private void HandleEtcInput(NetworkInputData input)
     {
@@ -439,6 +508,10 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         }
     }
 
+    #endregion
+
+    #region Movement
+
     private void HandleMovement(NetworkInputData input)
     {
         float targetSpeed = (input.horizontal * stats.maxSpeed) + platformVelocity.x;
@@ -451,6 +524,10 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         rb2D.AddForce(Vector2.right * (speedDif * accelRate));
         cAnimation.UpdateAnimationController(new Vector2(input.horizontal, rb2D.linearVelocity.y));
     }
+
+    #endregion
+
+    #region Jump System
 
     protected virtual void HandleJump(NetworkInputData input)
     {
@@ -476,6 +553,107 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             if (cAnimation != null && !isCarrying) cAnimation.JumpAnimation();
         }
     }
+
+    private void HandleJumpPhysics(NetworkInputData input)
+    {
+        if (!isJumping) return;
+
+        if (CheckHeadBump()) return;
+
+        if (Mathf.Abs(rb2D.linearVelocity.y) <= apexThreshold)
+        {
+            ApplyApexHang();
+        }
+        else if (rb2D.linearVelocity.y > apexThreshold && !input.KeybindJump)
+        {
+            ApplyJumpCut();
+        }
+        else
+        {
+            rb2D.gravityScale = normalGravity;
+        }
+    }
+
+    private bool CheckHeadBump()
+    {
+        LayerMask mask = LayerMask.GetMask("Ground", "Platform");
+        if (!Physics2D.Raycast(transform.position, Vector2.up, headBumpCheckDistance, mask))
+            return false;
+
+        isJumping = false;
+        rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, headBumpDownwardVelocity);
+        resetAnimation = false;
+        if (cAnimation != null) cAnimation.FallingAndFloatAnimation(true, false);
+        return true;
+    }
+
+    private void ApplyApexHang()
+    {
+        rb2D.gravityScale = normalGravity * apexGravityMultiplier;
+    }
+
+    private void ApplyJumpCut()
+    {
+        rb2D.gravityScale = normalGravity * jumpCutMultiplier;
+    }
+
+    #endregion
+
+    #region Climb System
+
+    private bool CheckInClimbZone()
+    {
+        Collider2D[] hits = Physics2D.OverlapBoxAll(
+            transform.position,
+            new Vector2(0.5f, 1f),
+            0f,
+            climbableMask
+        );
+
+        foreach (var hit in hits)
+        {
+            if (hit.GetComponent<IClimbable>() != null
+             || hit.GetComponentInParent<IClimbable>() != null)
+                return true;
+        }
+        return false;
+    }
+
+    private void EnterClimbState()
+    {
+        if (isClimbing) return;
+        isClimbing = true;
+        IsGrounded = false;
+        isJumping = false;
+        rb2D.gravityScale = 0f;
+        rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, 0f);
+    }
+
+    private void ExitClimbState()
+    {
+        if (!isClimbing) return;
+        isClimbing = false;
+        isMoveAble = true;
+        rb2D.gravityScale = normalGravity;
+    }
+
+    private void ClimbJump()
+    {
+        isJumping = true;
+        rb2D.linearVelocity = Vector2.zero;
+        rb2D.AddForce(Vector2.up * stats.s_jumpForce, ForceMode2D.Impulse);
+        IsGrounded = false;
+        resetAnimation = false;
+        JumpCooldown = TickTimer.CreateFromSeconds(Runner, JumpCooldownTimer);
+
+        if (HasInputAuthority && jumpSoundClip != null)
+            AudioManager.Instance?.PlayClipAtPosition(jumpSoundClip, transform.position);
+        if (cAnimation != null && !isCarrying) cAnimation.JumpAnimation();
+    }
+
+    #endregion
+
+    #region Interaction
 
     private void HandleInteraction(NetworkInputData input)
     {
@@ -521,6 +699,10 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         _isEPressed = input.KeybindInteract;
     }
 
+    #endregion
+
+    #region Health & Damage
+
     public void TakeDamage(int dmg, float knockbackForce, Vector2 vec)
     {
         if (isDead || !InvincibleTimer.ExpiredOrNotRunning(Runner)) return;
@@ -549,6 +731,10 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             InvincibleTimer = TickTimer.CreateFromSeconds(Runner, invincibleDuration);
         }
     }
+
+    #endregion
+
+    #region Death & Respawn
 
     [Rpc(RpcSources.All, RpcTargets.All)]
     public virtual void DeathMechanic_RPC(bool isPrimaryDeath)
@@ -750,58 +936,89 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         }
     }
 
-    #region Climb System
-    private bool CheckInClimbZone()
+    [Rpc(RpcSources.All, RpcTargets.All)]
+    public void RPC_PlayRespawnSound()
     {
-        Collider2D[] hits = Physics2D.OverlapBoxAll(
-            transform.position,
-            new Vector2(0.5f, 1f),
-            0f,
-            climbableMask
-        );
-
-        foreach (var hit in hits)
+        if (respawnSoundClip != null)
         {
-            if (hit.GetComponent<IClimbable>() != null
-             || hit.GetComponentInParent<IClimbable>() != null)
-                return true;
+            AudioManager.Instance?.PlayClipAtPosition(respawnSoundClip, transform.position);
         }
-        return false;
     }
 
-    private void EnterClimbState()
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    public void RPC_PlayDieSound()
     {
-        if (isClimbing) return;
-        isClimbing = true;
-        IsGrounded = false;
-        isJumping = false;
-        rb2D.gravityScale = 0f;
-        rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, 0f);
+        if (dieSoundClip != null)
+            AudioManager.Instance?.PlayClipAtPosition(dieSoundClip, transform.position);
     }
 
-    private void ExitClimbState()
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    public void RPC_ResetPlayer()
     {
-        if (!isClimbing) return;
-        isClimbing = false;
+        if (!HasStateAuthority) return;
+        DoResetToSpawn();
+    }
+
+    private void DoResetToSpawn()
+    {
+        // ── Reset state ──
+        isDead = false;
+        currentHealth = characterMaxHealth;
+        stilldrowning = false;
+        IsHeadUnderwater = false;
+        isWaterSurface = false;
+        IsFalling = false;
+        FallingBusy = false;
+
+        // ── Reset movement modifiers ──
         isMoveAble = true;
-        rb2D.gravityScale = normalGravity;
+        isOptional = false;
+        isSpeedoptional = false;
+        isClimbing = false;
+        isInClimbZone = false;
+        jumpedFromClimb = false;
+        isJumping = false;
+
+        if (cAnimation != null) cAnimation.ClearAnimationLock();
+
+        // ── cancel carry ──
+        if (IsBeingCarried)
+        {
+            if (Runner.TryFindObject(CarrierId, out var carrierObj)
+                && carrierObj.TryGetComponent<Duck_Moveset>(out var duck))
+            {
+                duck.DropFriend(false);
+            }
+            RPC_UpdateCarry(false, default);
+        }
+        else if (isCarrying)
+        {
+            ((Duck_Moveset)this).DropFriend(false);
+        }
+
+        if (GameManager.Instance != null)
+        {
+            Vector3 newPos = GameManager.Instance.GetRespawnPosition();
+            if (TryGetComponent<NetworkRigidbody2D>(out var netRb))
+                netRb.Teleport(newPos, transform.rotation);
+            else
+            {
+                transform.position = newPos;
+                if (rb2D != null) rb2D.position = newPos;
+            }
+        }
+
+        RPC_PlayFriendDeathEffect();
+
+        RPC_OnRespawned();
     }
 
-    private void ClimbJump()
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    public void RPC_PlayFriendDeathEffect()
     {
-        isJumping = true;
-        rb2D.linearVelocity = Vector2.zero;
-        rb2D.AddForce(Vector2.up * stats.s_jumpForce, ForceMode2D.Impulse);
-        IsGrounded = false;
-        resetAnimation = false;
-        JumpCooldown = TickTimer.CreateFromSeconds(Runner, JumpCooldownTimer);
-
-        if (HasInputAuthority && jumpSoundClip != null)
-            AudioManager.Instance?.PlayClipAtPosition(jumpSoundClip, transform.position);
-        if (cAnimation != null && !isCarrying) cAnimation.JumpAnimation();
+        if (lifeCycle != null) lifeCycle.PlayOnFriendDeath();
     }
 
-    #endregion
     #endregion
 
     #region CarrySystem
@@ -902,6 +1119,22 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         {
             PlayerInterface.Instance.UpdateProfileUI(isBird);
         }
+    }
+
+    public void OnHeldItemChanged()
+    {
+        string itemName = HeldItemName.ToString();
+
+        if (HasInputAuthority && PlayerInterface.Instance != null
+            && GameManager.Instance != null && GameManager.Instance.IsGameReady)
+        {
+            if (string.IsNullOrEmpty(itemName))
+                PlayerInterface.Instance.HideItemOverlay();
+            else
+                PlayerInterface.Instance.ShowItemOverlay(itemName);
+        }
+
+        _canThrowItem = (itemName == "Rock");
     }
 
     #endregion
@@ -1175,130 +1408,12 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     #endregion
 
-    public override void Render()
-    {
-        if (HasInputAuthority) CheckInteractable();
-
-        bool effectivelyCarried = IsBeingCarried || localIsBeingCarriedPredict;
-        NetworkId effectiveCarrierId = IsBeingCarried ? CarrierId : localCarrierIdPredict;
-
-        if (effectivelyCarried
-            && Runner.TryFindObject(effectiveCarrierId, out var duckObj)
-            && duckObj.TryGetComponent<MovementCharacter>(out var duckMC))
-        {
-            if (spriteRenderer != null) spriteRenderer.sortingOrder = originalSortingOrder - 1;
-
-            if (visualTransform != null && duckMC.visualTransform != null)
-            {
-                visualTransform.position = duckMC.visualTransform.position
-                                           + Vector3.up * betweenCarryPosition;
-                _wasVisuallyCarried = true;
-            }
-        }
-        else
-        {
-            if (spriteRenderer != null) spriteRenderer.sortingOrder = originalSortingOrder;
-
-            if (_wasVisuallyCarried && visualTransform != null)
-            {
-                visualTransform.localPosition = Vector3.zero;
-                _wasVisuallyCarried = false;
-            }
-        }
-
-        ManageMovementSounds();
-    }
-
-    [Rpc(RpcSources.All, RpcTargets.All)]
-    public void RPC_PlayRespawnSound()
-    {
-        if (respawnSoundClip != null)
-        {
-            AudioManager.Instance?.PlayClipAtPosition(respawnSoundClip, transform.position);
-        }
-    }
-    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    public void RPC_PlayDieSound()
-    {
-        if (dieSoundClip != null)
-            AudioManager.Instance?.PlayClipAtPosition(dieSoundClip, transform.position);
-    }
-
-    #region resetForce
-
-    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    public void RPC_ResetPlayer()
-    {
-        if (!HasStateAuthority) return;
-        DoResetToSpawn();
-    }
-
-    private void DoResetToSpawn()
-    {
-        // ── Reset state ──
-        isDead = false;
-        currentHealth = characterMaxHealth;
-        stilldrowning = false;
-        IsHeadUnderwater = false;
-        isWaterSurface = false;
-        IsFalling = false;
-        FallingBusy = false;
-
-        // ── Reset movement modifiers ──
-        isMoveAble = true;
-        isOptional = false;
-        isSpeedoptional = false;
-        isClimbing = false;
-        isInClimbZone = false;
-        jumpedFromClimb = false;
-        isJumping = false;
-
-        if (cAnimation != null) cAnimation.ClearAnimationLock();
-
-        // ── cancel carry ──
-        if (IsBeingCarried)
-        {
-            if (Runner.TryFindObject(CarrierId, out var carrierObj)
-                && carrierObj.TryGetComponent<Duck_Moveset>(out var duck))
-            {
-                duck.DropFriend(false);
-            }
-            RPC_UpdateCarry(false, default);
-        }
-        else if (isCarrying)
-        {
-            ((Duck_Moveset)this).DropFriend(false);
-        }
-
-        if (GameManager.Instance != null)
-        {
-            Vector3 newPos = GameManager.Instance.GetRespawnPosition();
-            if (TryGetComponent<NetworkRigidbody2D>(out var netRb))
-                netRb.Teleport(newPos, transform.rotation);
-            else
-            {
-                transform.position = newPos;
-                if (rb2D != null) rb2D.position = newPos;
-            }
-        }
-
-        RPC_PlayFriendDeathEffect();
-
-        RPC_OnRespawned();
-    }
-
-    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    public void RPC_PlayFriendDeathEffect()
-    {
-        if (lifeCycle != null) lifeCycle.PlayOnFriendDeath();
-    }
-    #endregion
-
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.blue; Gizmos.DrawRay(transform.position, Vector2.down * rayDistance);
         Gizmos.color = Color.cyan; Gizmos.DrawRay((Vector2)transform.position + Vector2.right * 0.5f, Vector2.down * (rayDistance + nearGroundDistance));
         Gizmos.color = Color.red; Gizmos.DrawWireSphere(transform.position, interactRadius);
         Gizmos.color = Color.yellow; Gizmos.DrawWireSphere(transform.position, playerInteractRadius);
+        Gizmos.color = Color.magenta; Gizmos.DrawRay(transform.position, Vector2.up * headBumpCheckDistance);
     }
 }
