@@ -509,7 +509,7 @@ public class Duck_Moveset : MovementCharacter
             {
                 isOptional = false;
                 isSpeedoptional = false;
-                rb2D.gravityScale = normalGravity;
+                if (!IsInAir) rb2D.gravityScale = normalGravity;
             }
         }
     }
