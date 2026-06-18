@@ -103,6 +103,14 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [SerializeField] bool canbeRespawn = true;
     #endregion
 
+    #region Drowning Damage
+    [Header("Drowning Damage")]
+    [SerializeField] private int drowningDamagePerTick = 1;
+    [SerializeField] private float drowningDamageInterval = 1f;
+    [Networked] private TickTimer DrowningDamageTimer { get; set; }
+    [Networked] private bool isDrowningDamageActive { get; set; }
+    #endregion
+
     #region Water Settings
     [Header("Water Setting")]
     [Networked] public bool IsHeadUnderwater { get; set; }
@@ -732,6 +740,31 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         }
     }
 
+    protected void StartDrowningDamage()
+    {
+        if (!HasStateAuthority || isDrowningDamageActive || isDead) return;
+        isDrowningDamageActive = true;
+        DrowningDamageTimer = TickTimer.CreateFromSeconds(Runner, drowningDamageInterval);
+    }
+
+    protected void StopDrowningDamage()
+    {
+        if (!HasStateAuthority || !isDrowningDamageActive) return;
+        isDrowningDamageActive = false;
+        DrowningDamageTimer = TickTimer.None;
+    }
+
+    protected void TickDrowningDamage()
+    {
+        if (!HasStateAuthority || !isDrowningDamageActive || isDead) return;
+        if (DrowningDamageTimer.Expired(Runner))
+        {
+            RPC_TakeDamage(drowningDamagePerTick, 0f, Vector2.zero);
+            if (!isDead)
+                DrowningDamageTimer = TickTimer.CreateFromSeconds(Runner, drowningDamageInterval);
+        }
+    }
+
     #endregion
 
     #region Death & Respawn
@@ -819,6 +852,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             isWaterSurface = false;
             IsFalling = false;
             FallingBusy = false;
+            isDrowningDamageActive = false;
+            DrowningDamageTimer = TickTimer.None;
 
             isMoveAble = true;
             isOptional = false;
@@ -888,6 +923,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             IsBeingCarried = false;
             CarrierId = default;
             IsInteractBusy = false;
+            isDrowningDamageActive = false;
+            DrowningDamageTimer = TickTimer.None;
         }
 
         if (cAnimation != null) cAnimation.ReturnToBlendAnimation();
@@ -969,6 +1006,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         isWaterSurface = false;
         IsFalling = false;
         FallingBusy = false;
+        isDrowningDamageActive = false;
+        DrowningDamageTimer = TickTimer.None;
 
         // ── Reset movement modifiers ──
         isMoveAble = true;

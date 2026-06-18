@@ -142,7 +142,13 @@ public class Duck_Moveset : MovementCharacter
             isJumpingUp = false;
         }
 
-        if (!isMenuOpen) HandleBuoyancy();
+        if (!isMenuOpen)
+        {
+            HandleBuoyancy();
+
+            if (!stilldrowning) StopDrowningDamage();
+            TickDrowningDamage();
+        }
     }
 
     private void HandleJumpOffWater()
@@ -466,15 +472,10 @@ public class Duck_Moveset : MovementCharacter
 
     public void TimeUp()
     {
-        if (!stilldrowning)
+        EndDiveLogic();
+        if (stilldrowning)
         {
-            EndDiveLogic();
-        }
-        else
-        {
-            EndDiveLogic();
-            DeathMechanic_RPC(true);
-            Debug.Log("Dead");
+            StartDrowningDamage();
         }
     }
 

@@ -165,7 +165,7 @@ public class Bird_Moveset : MovementCharacter
                 if (DrownTimer.Expired(Runner) && HasStateAuthority)
                 {
                     startTimer = false;
-                    DeathMechanic_RPC(true);
+                    StartDrowningDamage();
                 }
             }
         }
@@ -179,7 +179,11 @@ public class Bird_Moveset : MovementCharacter
                 DrownTimer = TickTimer.None;
                 startTimer = false;
             }
+
+            StopDrowningDamage();
         }
+
+        TickDrowningDamage();
     }
 
     private void StartDrowningTimer()
