@@ -88,13 +88,6 @@ public class GameManager : SingletonNetwork<GameManager>
         LevelData levelData = FindFirstObjectByType<LevelData>();
         SetupLevelData(levelData);
         Debug.Log("[GameManager] LevelData setup complete");
-
-        if (HasStateAuthority)
-        {
-            yield return null;
-
-            SpawnPlayersForNewScene();
-        }
     }
 
     public void MapAllPlayersFinishedLoading()

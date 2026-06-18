@@ -36,6 +36,13 @@ public class GameBootstrapper : MonoBehaviour
         GameManager.Instance.GetNetworkRunner(runner);
 
         // Step 3: Spawn Players — Canvas is ready, loading screen covers them
+        MovementCharacter[] existingPlayers = FindObjectsByType<MovementCharacter>(FindObjectsSortMode.None);
+        if (existingPlayers.Length > 0)
+        {
+            Debug.Log("[GameBootstrapper] Players already exist. Skip spawning.");
+            yield break;
+        }
+
         characterType hostType   = sessionData != null ? sessionData.hostType   : characterType.Duck;
         characterType clientType = sessionData != null ? sessionData.clientType : characterType.Bird;
 
