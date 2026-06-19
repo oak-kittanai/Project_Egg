@@ -106,6 +106,12 @@ public class SessionHub : SingletonNetwork<SessionHub>
     #endregion
 
     #region Initialization & State Management
+    protected override void Awake()
+    {
+        base.Awake();
+        Instance.Setup();
+    }
+
     public void Setup()
     {
         // Lobby

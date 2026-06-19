@@ -33,16 +33,6 @@ public class SingletonNetwork<T> : NetworkBehaviour where T : NetworkBehaviour
         {
             Destroy(gameObject);
         }
-
-        if (Instance is CenterHost)
-        {
-            CenterHost.instance.GetRunner();
-        }
-
-        if (Instance is SessionHub)
-        {
-            SessionHub.Instance.Setup();
-        }
     }
 
     protected virtual void OnDestroy()

@@ -30,6 +30,12 @@ public class CenterHost : SingletonNetwork<CenterHost>
     [SerializeField] private GameObject canvasPrefab;
     [SerializeField] private GameObject coreManagerPrefab;
 
+    protected override void Awake()
+    {
+        base.Awake();
+        Instance.GetRunner();
+    }
+
     public void GetRunner()
     {
         if (hostRunner != null)

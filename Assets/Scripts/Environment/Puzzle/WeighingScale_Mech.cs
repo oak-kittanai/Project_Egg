@@ -69,8 +69,6 @@ public class WeighingScale_Mech : NetworkBehaviour
     [SerializeField] TMP_Text showTextWeight_L;
     [SerializeField] TMP_Text showTextWeight_R;
 
-    string birdName = "Bird", duckName = "Duck";
-
     [Networked] public int CurrentPhaseIndex { get; set; }
     [Networked] public NetworkBool IsWaitingNextPhase { get; set; }
     [Networked] private TickTimer PhaseTimer { get; set; }
