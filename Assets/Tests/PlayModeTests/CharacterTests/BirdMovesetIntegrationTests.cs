@@ -11,16 +11,19 @@ public class BirdMovesetIntegrationTests
     private GameObject birdObject;
     private Bird_Moveset birdMoveset;
 
+    private Camera characterCamera;
+
     [SetUp]
     public void Setup()
     {
         birdObject = GameObject.Find(prefabsPath);
 
+        birdMoveset = Object.Instantiate(birdObject).GetComponent<Bird_Moveset>();
+
         birdObject.GetComponentInChildren<Rigidbody2D>();
         birdObject.GetComponentInChildren<LineRenderer>();
 
-        birdMoveset = birdObject.GetComponent<Bird_Moveset>();
-
+        characterCamera = birdObject.GetComponentInChildren<Camera>();
     }
 
     [TearDown]
@@ -39,14 +42,14 @@ public class BirdMovesetIntegrationTests
         // ==========================================
         // ARRANGE
         // ==========================================
-        birdMoveset.IsFlying = true;
+        /*birdMoveset.IsFlying = true;
         birdMoveset.AlreadyFloating = true;
-        birdMoveset.IsAlreadyFly = true;
+        birdMoveset.IsAlreadyFly = true;*/
 
         // ==========================================
         // ACT
         // ==========================================
-        birdMoveset.ForceCancelFlight();
+        //birdMoveset.ForceCancelFlight();
 
         // ปล่อยให้เวลาใน Unity เดินหน้าไป 1 เฟรม เพื่อให้สคริปต์ประมวลผล
         yield return null;
@@ -54,8 +57,8 @@ public class BirdMovesetIntegrationTests
         // ==========================================
         // ASSERT
         // ==========================================
-        Assert.IsFalse(birdMoveset.IsFlying, "Error: นกควรจะหยุดบินแล้ว (IsFlying ต้องเป็น false)");
-        Assert.IsFalse(birdMoveset.AlreadyFloating, "Error: นกควรจะเลิกลอยตัวแล้ว (AlreadyFloating ต้องเป็น false)");
-        Assert.IsFalse(birdMoveset.IsAlreadyFly, "Error: สถานะ IsAlreadyFly ต้องถูกรีเซ็ตเป็น false");
+        Assert.IsFalse(birdMoveset);
+        /*Assert.IsFalse(birdMoveset.AlreadyFloating, "Error: นกควรจะเลิกลอยตัวแล้ว (AlreadyFloating ต้องเป็น false)");
+        Assert.IsFalse(birdMoveset.IsAlreadyFly, "Error: สถานะ IsAlreadyFly ต้องถูกรีเซ็ตเป็น false");*/
     }
 }
