@@ -2,7 +2,7 @@
 using System;
 using UnityEngine;
 
-public class Bird_Moveset : MovementCharacter
+public class Bird_Moveset : MovementCharacter, IstunAble
 {
     [Header("Bird Settings")]
     [SerializeField] float normalFlyTime = 5f;
@@ -42,7 +42,7 @@ public class Bird_Moveset : MovementCharacter
     [Networked] public bool _prepareToThrow { get; set; }
 
     [SerializeField] float projectileSpeed;
-    [SerializeField] Transform throwPoint;
+    [SerializeField] public Transform throwPoint;
     // Line
     [SerializeField] LineRenderer lineRenderer;
     [SerializeField] int lineCounts;
@@ -62,6 +62,11 @@ public class Bird_Moveset : MovementCharacter
 
         if (rb2D != null) defaultMaterial = rb2D.sharedMaterial;
         if (lineRenderer == null) lineRenderer = GetComponent<LineRenderer>();
+    }
+
+    public void TriggerStun()
+    {
+        ApplyStun();
     }
 
     protected override void OnFixedUpdateSpecific()
@@ -430,6 +435,13 @@ public class Bird_Moveset : MovementCharacter
 
     #region ThrowLogic
 
+    public bool testMock_CanThrowItem = false;
+
+    public void MockSetup_CanThrowItem(bool canThrow)
+    {
+        testMock_CanThrowItem = canThrow;
+    }
+
     public void HandleThrowLogic(NetworkInputData input)
     {
         bool isPrepareThrowPressed = input.KeybindThrowItem && !_wasisThrowItemPressed;
@@ -486,7 +498,7 @@ public class Bird_Moveset : MovementCharacter
         }
     }
 
-    private void ExecuteThrow()
+    public void ExecuteThrow()
     {
         Vector2 throwPos = throwPoint.position;
         Vector2 direction = throwPoint.right;
