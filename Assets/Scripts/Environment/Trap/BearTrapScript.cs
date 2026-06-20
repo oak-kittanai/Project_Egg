@@ -32,7 +32,6 @@ public class BearTrapScript : NetworkBehaviour
         if (!IsTriggered && other.CompareTag("Player") && CooldownTimer.ExpiredOrNotRunning(Runner))
         {
             IsTriggered = true;
-            RPC_PlayShootSound();
             HasPlayedFX = false;
             DelayTimer = TickTimer.CreateFromSeconds(Runner, delayBeforeSnap);
             CooldownTimer = TickTimer.CreateFromSeconds(Runner, cooldownTime);
@@ -103,6 +102,12 @@ public class BearTrapScript : NetworkBehaviour
             audioSource.PlayOneShot(bearTrapSoundClip);
         }
     }
+
+    public void SetReturnTrigger()
+    {
+        RPC_PlayShootSound();
+    }
+
     public override void Render()
     {
             trapAnimator.SetBool("Trigger", IsTriggered);
