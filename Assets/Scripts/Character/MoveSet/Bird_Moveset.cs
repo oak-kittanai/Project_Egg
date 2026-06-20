@@ -503,7 +503,12 @@ public class Bird_Moveset : MovementCharacter, IstunAble
         Vector2 throwPos = throwPoint.position;
         Vector2 direction = throwPoint.right;
 
-        GameManager.Instance.ProjectileSpawn(throwAblePrefab, throwPos, direction, throwPoint.rotation, projectileSpeed);
+        NetworkObject spawnedRock = GameManager.Instance.ProjectileSpawn(throwAblePrefab, throwPos, direction, throwPoint.rotation, projectileSpeed);
+        if (spawnedRock != null && spawnedRock.TryGetComponent<RockObject>(out var rockObj))
+        {
+            rockObj.ThrowerId = Object.Id;
+        }
+
         if (HasInputAuthority && throwSoundClip != null)
         {
             AudioManager.Instance?.PlayClipAtPosition(throwSoundClip, transform.position);

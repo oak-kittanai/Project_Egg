@@ -20,6 +20,7 @@ public class RockObject : NetworkBehaviour, ThrowAbleItem
 
     [SerializeField] bool isLethal = true;
     [Networked] public bool AlreadyThrow { get; set; }
+    [Networked] public NetworkId ThrowerId { get; set; }
 
     private void Awake()
     {
@@ -67,6 +68,9 @@ public class RockObject : NetworkBehaviour, ThrowAbleItem
             foreach (var hit in collision.contacts)
             {
                 if (hit.collider.gameObject == gameObject) continue;
+
+                NetworkObject hitNetObj = hit.collider.GetComponent<NetworkObject>();
+                if (hitNetObj != null && hitNetObj.Id == ThrowerId) continue; // ข้ามคนปา ไม่ให้โดนตัวเอง
 
                 BaseMonster[] allMonsterObject = hit.collider.GetComponents<BaseMonster>();
                 bool hitSomething = false;
