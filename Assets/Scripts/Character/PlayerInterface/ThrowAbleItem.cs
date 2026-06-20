@@ -7,4 +7,6 @@ interface ThrowAbleItem
     void PickupItem_RPC(MovementCharacter player);
 
     bool PickupItem();
+
+    bool IsStationary();
 }

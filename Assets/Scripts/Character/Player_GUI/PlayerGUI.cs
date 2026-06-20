@@ -113,4 +113,17 @@ public class PlayerGUI : MonoBehaviour
         isTrackingFlight = false;
         if (flightBar != null) flightBar.gameObject.SetActive(false);
     }
+
+    [Header("Stun Icon")]
+    public GameObject stunIcon;
+
+    public void ShowStunIcon()
+    {
+        if (stunIcon != null) stunIcon.SetActive(true);
+    }
+
+    public void HideStunIcon()
+    {
+        if (stunIcon != null) stunIcon.SetActive(false);
+    }
 }

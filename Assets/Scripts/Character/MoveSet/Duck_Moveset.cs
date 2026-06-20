@@ -1,7 +1,7 @@
 ﻿using Fusion;
 using UnityEngine;
 
-public class Duck_Moveset : MovementCharacter
+public class Duck_Moveset : MovementCharacter, IstunAble
 {
     [Header("Duck Setting")]
     [Networked] bool ReadyToDive { get; set; }
@@ -67,6 +67,11 @@ public class Duck_Moveset : MovementCharacter
     public override void Spawned()
     {
         base.Spawned();
+    }
+
+    public void TriggerStun()
+    {
+        ApplyStun();
     }
 
     protected override void OnFixedUpdateSpecific()

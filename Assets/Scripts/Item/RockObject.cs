@@ -69,10 +69,23 @@ public class RockObject : NetworkBehaviour, ThrowAbleItem
                 if (hit.collider.gameObject == gameObject) continue;
 
                 BaseMonster[] allMonsterObject = hit.collider.GetComponents<BaseMonster>();
+                bool hitSomething = false;
 
                 foreach (var monster in allMonsterObject)
                 {
                     monster.InstantKill();
+                    hitSomething = true;
+                    break;
+                }
+
+                if (!hitSomething && hit.collider.TryGetComponent<IstunAble>(out var stunnable))
+                {
+                    stunnable.TriggerStun();
+                    hitSomething = true;
+                }
+
+                if (hitSomething)
+                {
                     isLethal = false;
                     rb2D.linearVelocity = Vector2.zero;
                     break;
@@ -126,5 +139,10 @@ public class RockObject : NetworkBehaviour, ThrowAbleItem
     public bool PickupItem()
     {
         return true;
+    }
+
+    public bool IsStationary()
+    {
+        return rb2D != null && rb2D.linearVelocity.sqrMagnitude <= 0.0001f;
     }
 }

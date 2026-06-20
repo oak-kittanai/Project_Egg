@@ -25,6 +25,8 @@ public class CharacterAnimation : NetworkBehaviour
 
     [Networked] public TickTimer AnimationTimer { get; set; }
 
+    [Networked] public bool isFrozen { get; set; }
+
     [Header("Controller Setting")]
     [SerializeField] public RuntimeAnimatorController DuckController;
     [SerializeField] public RuntimeAnimatorController BirdController;
@@ -122,6 +124,8 @@ public class CharacterAnimation : NetworkBehaviour
 
     private void PlayAnimationNetworked(string stateName)
     {
+        if (isFrozen) return;
+
         if (!HasState(stateName))
         {
             Debug.Log($"can't find {stateName}");
@@ -144,6 +148,8 @@ public class CharacterAnimation : NetworkBehaviour
     {
         if (Runner != null) AnimationTimer = TickTimer.None;
     }
+
+    public void SetFrozen(bool frozen) => isFrozen = frozen;
 
     private void PlayAnimationSafeLocal(string stateName)
     {
