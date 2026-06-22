@@ -116,10 +116,15 @@ public class PlayerGUI : MonoBehaviour
 
     [Header("Stun Icon")]
     public GameObject stunIcon;
+    public Image stunImage;
+    public Sprite stunSprite;
+    public Animator stunAnimator;
 
     public void ShowStunIcon()
     {
         if (stunIcon != null) stunIcon.SetActive(true);
+        if (stunImage != null && stunSprite != null) stunImage.sprite = stunSprite;
+        if (stunAnimator != null) stunAnimator.Play("Stun");
     }
 
     public void HideStunIcon()
