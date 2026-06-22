@@ -733,6 +733,11 @@ MonoBehaviour:
   _resetAnimation: 0
   _isJumping: 0
   JumpCooldownTimer: 1
+  jumpCutMultiplier: 2
+  apexThreshold: 1
+  apexGravityMultiplier: 0.5
+  headBumpCheckDistance: 0.3
+  headBumpDownwardVelocity: -2
   isSpeedoptional: 0
   normalGravity: 2
   heavyGravity: 5.5
@@ -749,6 +754,10 @@ MonoBehaviour:
   _isDead: 0
   respawnCooldown: 2.5
   canbeRespawn: 1
+  drowningDamagePerTick: 1
+  drowningDamageInterval: 1
+  stunDuration: 1.5
+  _isStunned: 0
   _IsHeadUnderwater: 0
   _IsBodyOnWater: 0
   headOffset: 0.2
@@ -768,6 +777,7 @@ MonoBehaviour:
   localCarrierIdPredict:
     Raw: 0
   _isEPressed: 0
+  platformVelocity: {x: 0, y: 0}
   rayDistance: 0.55
   interactRadius: 0.8
   playerInteractRadius: 1
@@ -826,6 +836,7 @@ MonoBehaviour:
     _value: 0
   _isThrowUnlocked:
     _value: 0
+  testMock_CanThrowItem: 0
 --- !u!114 &843996908277204990
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -852,6 +863,7 @@ MonoBehaviour:
   fullBubbleSprite: {fileID: -1371404781168527079, guid: 921a17d8c16996f44b8dbc031acec8e9, type: 3}
   emptyBubbleSprite: {fileID: 1140728906013252903, guid: 83752bd8881af3f4f9f6e762e0e17c2d, type: 3}
   flightBar: {fileID: 2105744653899822010}
+  stunIcon: {fileID: 0}
 --- !u!114 &2584528282019055188
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1601,7 +1613,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5983992789265127599}
   - component: {fileID: 4634795394724478210}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Line
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1904,7 +1916,7 @@ GameObject:
   - component: {fileID: 4453805492448230122}
   - component: {fileID: 3864613986048667308}
   - component: {fileID: 1343375671234220939}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: PlayerCamera
   m_TagString: Camera
   m_Icon: {fileID: 0}
@@ -2260,6 +2272,7 @@ MonoBehaviour:
     _length: 0
     _data:
       Data: 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+  _isFrozen: 0
   DuckController: {fileID: 9100000, guid: 3a25e75ec6f1e1e4bbd8cabc82fe2aed, type: 2}
   BirdController: {fileID: 9100000, guid: 20e63ec707dbb4d40933af1bae28547a, type: 2}
   currentSkin: 0

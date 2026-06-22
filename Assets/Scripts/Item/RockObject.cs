@@ -70,7 +70,13 @@ public class RockObject : NetworkBehaviour, ThrowAbleItem
                 if (hit.collider.gameObject == gameObject) continue;
 
                 NetworkObject hitNetObj = hit.collider.GetComponent<NetworkObject>();
-                if (hitNetObj != null && hitNetObj.Id == ThrowerId) continue; // ข้ามคนปา ไม่ให้โดนตัวเอง
+                if (hitNetObj != null && hitNetObj.Id == ThrowerId)
+                {
+                    Debug.Log($"[Rock] ข้าม {hit.collider.name} เพราะเป็นคนปาเอง (ThrowerId={ThrowerId})");
+                    continue; // ข้ามคนปา ไม่ให้โดนตัวเอง
+                }
+
+                Debug.Log($"[Rock] ชน {hit.collider.name} (layer={LayerMask.LayerToName(hit.collider.gameObject.layer)})");
 
                 BaseMonster[] allMonsterObject = hit.collider.GetComponents<BaseMonster>();
                 bool hitSomething = false;
@@ -79,6 +85,7 @@ public class RockObject : NetworkBehaviour, ThrowAbleItem
                 {
                     monster.InstantKill();
                     hitSomething = true;
+                    Debug.Log($"[Rock] ฆ่ามอนสเตอร์ {hit.collider.name}");
                     break;
                 }
 
@@ -86,6 +93,11 @@ public class RockObject : NetworkBehaviour, ThrowAbleItem
                 {
                     stunnable.TriggerStun();
                     hitSomething = true;
+                    Debug.Log($"[Rock] เรียก TriggerStun() ให้ {hit.collider.name}");
+                }
+                else if (!hitSomething)
+                {
+                    Debug.Log($"[Rock] {hit.collider.name} ไม่มี BaseMonster และไม่มี IstunAble — หินจะไม่ทำอะไรกับมัน");
                 }
 
                 if (hitSomething)
