@@ -2,6 +2,7 @@
 using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.EventSystems;
 
 public class MenuController : NetworkBehaviour
 {
@@ -148,6 +149,9 @@ public class MenuController : NetworkBehaviour
                 PlayerInterface.Instance.resumePlayerCheckText.text = $"0/{activePlayers}";
             if (PlayerInterface.Instance.resetPlayerCheckText)
                 PlayerInterface.Instance.resetPlayerCheckText.text = $"0/{activePlayers}";
+
+            if (EventSystem.current != null && PlayerInterface.Instance.resumeButton != null)
+                EventSystem.current.SetSelectedGameObject(PlayerInterface.Instance.resumeButton.gameObject);
         }
 
         if (!IsMenuOpen && PlayerInterface.Instance?.settingPanelObj != null)
@@ -217,12 +221,18 @@ public class MenuController : NetworkBehaviour
     {
         if (pauseMenuPanel != null) pauseMenuPanel.SetActive(false);
         if (PlayerInterface.Instance.settingPanelObj != null) PlayerInterface.Instance.settingPanelObj.SetActive(true);
+
+        if (EventSystem.current != null && PlayerInterface.Instance.musicSlider != null)
+            EventSystem.current.SetSelectedGameObject(PlayerInterface.Instance.musicSlider.gameObject);
     }
 
     private void OnClickCloseSetting()
     {
         if (PlayerInterface.Instance.settingPanelObj != null) PlayerInterface.Instance.settingPanelObj.SetActive(false);
         if (pauseMenuPanel != null) pauseMenuPanel.SetActive(true);
+
+        if (EventSystem.current != null && PlayerInterface.Instance.resumeButton != null)
+            EventSystem.current.SetSelectedGameObject(PlayerInterface.Instance.resumeButton.gameObject);
     }
 
     private void OnMusicVolumeChanged(float value)

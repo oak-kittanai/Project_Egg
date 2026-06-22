@@ -110,7 +110,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TutorialUIManager
   tutorialPanel: {fileID: 0}
-  tutorialImageSlot: {fileID: 0}
+  backgroundFrame: {fileID: 0}
+  tutorialImage: {fileID: 0}
+  headerText: {fileID: 0}
+  descText: {fileID: 0}
+  closeBar: {fileID: 0}
 --- !u!1 &955453888170725607
 GameObject:
   m_ObjectHideFlags: 0
@@ -208,6 +212,9 @@ MonoBehaviour:
   videoLoadingPlayer: {fileID: 0}
   skipButton: {fileID: 0}
   skipPlayerCheckText: {fileID: 0}
+  itemOverlayObj: {fileID: 0}
+  itemPic: {fileID: 0}
+  gameSettings: {fileID: 0}
 --- !u!1 &6220470830134951863
 GameObject:
   m_ObjectHideFlags: 0
@@ -254,6 +261,7 @@ GameObject:
   - component: {fileID: 3882408969473256871}
   - component: {fileID: 1398257926816626135}
   - component: {fileID: 2677436925094275301}
+  - component: {fileID: 8078153846612785717}
   m_Layer: 0
   m_Name: EventSystem
   m_TagString: Untagged
@@ -322,6 +330,20 @@ MonoBehaviour:
   m_PointerBehavior: 0
   m_CursorLockBehavior: 0
   m_ScrollDeltaPerTick: 6
+--- !u!114 &8078153846612785717
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8576490544974094534}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b29996127c710284b9eb31e820526e3d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MainGame.Core::UIKeyboardNavigator
+  repeatDelay: 0.4
+  repeatRate: 0.1
 --- !u!1001 &798801418423467426
 PrefabInstance:
   m_ObjectHideFlags: 0
