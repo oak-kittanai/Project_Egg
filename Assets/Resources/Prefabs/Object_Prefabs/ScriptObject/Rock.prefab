@@ -81,8 +81,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: -2132795965
+  m_SortingLayer: 12
   m_SortingOrder: 2
   m_Sprite: {fileID: 3452003437791708593, guid: bbe18f2924e24bb42b856824ee6fd5ca, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -162,6 +162,8 @@ MonoBehaviour:
   selfPos: {x: 0, y: 0, z: 0}
   isLethal: 1
   _AlreadyThrow: 0
+  _ThrowerId:
+    Raw: 0
 --- !u!114 &5283567399167749245
 MonoBehaviour:
   m_ObjectHideFlags: 0

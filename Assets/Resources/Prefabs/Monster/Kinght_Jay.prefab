@@ -219,6 +219,7 @@ GameObject:
   - component: {fileID: 2444014362476851839}
   - component: {fileID: 1756195056505730648}
   - component: {fileID: 502953181593214582}
+  - component: {fileID: 5904133322047155362}
   m_Layer: 0
   m_Name: Kinght_Jay
   m_TagString: Monster
@@ -374,6 +375,18 @@ MonoBehaviour:
   despawnDelay: 0.3
   canRespawn: 1
   respawnTime: 8
+--- !u!210 &5904133322047155362
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7982048727846197004}
+  m_Enabled: 1
+  m_SortingLayerID: 1282379345
+  m_SortingLayer: 10
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
 --- !u!1 &8005734353801774666
 GameObject:
   m_ObjectHideFlags: 0
