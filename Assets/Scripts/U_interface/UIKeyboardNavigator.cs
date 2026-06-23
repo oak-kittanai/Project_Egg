@@ -23,14 +23,10 @@ public class UIKeyboardNavigator : MonoBehaviour
         var inputModule = GetComponent<InputSystemUIInputModule>();
         if (inputModule != null)
         {
-            // ปิด keyboard/gamepad action ในตัวของ Unity เอง เพราะ UIKeyboardNavigator คุม WASD/Enter เองทั้งหมดแล้ว
-            // ถ้าไม่ปิด จะมี 2 ระบบฟัง Enter ซ้อนกัน ทำให้กด 1 ครั้งเท่ากับ Submit 2 รอบ (บั๊ก "กดทะลุปุ่มถัดไป")
-            // หมายเหตุ: ถ้าจะเพิ่ม Controller ในอนาคต ให้พิจารณาลบโค้ด poll คีย์บอร์ดในไฟล์นี้ทิ้ง
-            // แล้วผูก Navigate/Submit/Cancel ผ่าน Input Actions asset ของ InputSystemUIInputModule แทน
             inputModule.move = null;
             inputModule.submit = null;
             inputModule.cancel = null;
-            inputModule.deselectOnBackgroundClick = false; // กันคลิกพื้นที่ว่าง (เช่นคลิกเข้าจอเกมเพื่อโฟกัส) แล้ว selection หายไปเลย
+            inputModule.deselectOnBackgroundClick = false;
         }
 
         if (GetComponent<SelectionHighlightFollower>() == null)
