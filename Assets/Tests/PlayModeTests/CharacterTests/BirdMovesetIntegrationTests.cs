@@ -1,6 +1,7 @@
 using System.Collections;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.TestTools;
 using Fusion;
 using Assert = NUnit.Framework.Assert;
@@ -147,5 +148,102 @@ public class BirdMovesetIntegrationTests
         // ขั้น 4: เป็ดต้องติดตั้นจากการถูกหินชน (ผ่าน RockObject.OnCollisionEnter2D -> IstunAble.TriggerStun() -> ApplyStun())
         Assert.IsTrue(duckMoveset.isStunned, "ปาหินจริงแล้ว แต่เป็ดไม่ติด Stun!");
         Assert.IsFalse(birdMoveset._canThrowItem, "ปาไปแล้ว กระสุนหินต้องหมด");
+    }
+
+    [UnityTest]
+    public IEnumerator ShowStunIcon_OnLocalPlayer_ActivatesIconAndPlaysAnimation()
+    {
+        // ทดสอบ PlayerGUI ที่ wire ไว้จริงบน prefab Player(Duck) (StunAni: Image + Animator)
+        PlayerGUI gui = duckMoveset.localGUI;
+        Assert.IsNotNull(gui, "Duck ต้องมี PlayerGUI (localGUI) ติดอยู่");
+        Assert.IsNotNull(gui.stunIcon, "ต้อง wire stunIcon (StunAni) ใน Inspector ของ Player(Duck) ก่อน");
+        Assert.IsNotNull(gui.stunAnimator, "ต้อง wire stunAnimator ใน Inspector ของ Player(Duck) ก่อน");
+
+        gui.HideStunIcon();
+        yield return null;
+        Assert.IsFalse(gui.stunIcon.activeSelf, "ก่อนเรียก ShowStunIcon ต้องยังไม่โชว์");
+
+        gui.ShowStunIcon();
+        yield return null;
+
+        Assert.IsTrue(gui.stunIcon.activeSelf, "ShowStunIcon ต้อง SetActive(true) ให้ stunIcon");
+
+        yield return new WaitForSeconds(0.1f); // ให้ Animator เข้า state สัก frame
+
+        var stateInfo = gui.stunAnimator.GetCurrentAnimatorStateInfo(0);
+        Debug.Log($"[DIAG] Stun Animator state length={stateInfo.length}, normalizedTime={stateInfo.normalizedTime}");
+        Assert.Greater(stateInfo.length, 0f,
+            "Animator ต้องมี state กำลังเล่นอยู่จริงหลังเรียก Play(\"Stun\") — ถ้า length=0 แปลว่า Controller ไม่มี state ชื่อ \"Stun\"");
+
+        gui.HideStunIcon();
+    }
+
+    [UnityTest]
+    public IEnumerator ShowMiniDialogue_OnLocalPlayer_ActivatesContainer()
+    {
+        // เส้นทางเดียวกับที่ TriggerDialogue (isSubDialogue=true) เรียกผ่าน ShowSubDialogueOnLocalPlayer
+        PlayerGUI gui = duckMoveset.localGUI;
+        Assert.IsNotNull(gui.miniDialogueContainer, "ต้อง wire miniDialogueContainer (MiniDialogue) ใน Inspector ของ Player(Duck) ก่อน");
+
+        var lineJson = new TextAsset("{\"lines\":[{\"speaker\":\"Duck\",\"thai\":\"ทดสอบ\",\"eng\":\"Test line\"}]}");
+        var config = new DialogueConfig { isThaiLanguage = false, effect = TextEffectType.None, JsonFile = lineJson };
+
+        gui.HideMiniDialogue();
+        yield return null;
+        Assert.IsFalse(gui.miniDialogueContainer.activeSelf, "ก่อนเรียก ShowMiniDialogue ต้องยังไม่โชว์");
+
+        gui.ShowMiniDialogue(new DialogueConfig[] { config });
+        yield return null;
+
+        Assert.IsTrue(gui.miniDialogueContainer.activeSelf,
+            "ShowMiniDialogue ต้องเปิด miniDialogueContainer — เส้นทางเดียวกับที่ TriggerDialogue.RPC_TriggerSubDialogueNetwork เรียกผ่าน ShowSubDialogueOnLocalPlayer");
+
+        gui.HideMiniDialogue();
+    }
+
+    [UnityTest]
+    public IEnumerator StartDialogueSequence_ActivatesMainDialoguePanel()
+    {
+        // เส้นทางเดียวกับที่ TriggerDialogue (isSubDialogue=false) เรียกผ่าน RPC_TriggerDialogueNetwork
+        // หมายเหตุ: DialogueHUB/DialogueManager.Awake() เซ็ต Instance = this แบบไม่มีเงื่อนไขอยู่แล้ว
+        // (ไม่เหมือน TutorialUIManager ที่กันซ้ำ) จึงไม่ต้องเคลียร์ Instance เองก่อนสร้างใหม่
+
+        var canvasGO = new GameObject("Canvas", typeof(RectTransform));
+        var dialogueGO = new GameObject("Dialogue", typeof(RectTransform));
+        dialogueGO.transform.SetParent(canvasGO.transform);
+
+        var miraBoxGO = new GameObject("MiraBox", typeof(RectTransform));
+        miraBoxGO.transform.SetParent(dialogueGO.transform);
+
+        var nextGO = new GameObject("NextButton", typeof(RectTransform));
+        nextGO.transform.SetParent(dialogueGO.transform);
+        nextGO.AddComponent<Button>();
+
+        var prevGO = new GameObject("PrevButton", typeof(RectTransform));
+        prevGO.transform.SetParent(dialogueGO.transform);
+        prevGO.AddComponent<Button>();
+
+        dialogueGO.SetActive(false);
+
+        var hubGO = new GameObject("DialogueHUB");
+        hubGO.AddComponent<DialogueHUB>();
+        DialogueHUB.Instance.FindUIReferences();
+
+        var managerGO = new GameObject("DialogueManager");
+        var manager = managerGO.AddComponent<DialogueManager>();
+
+        var lineJson = new TextAsset("{\"lines\":[{\"speaker\":\"\",\"thai\":\"ทดสอบ\",\"eng\":\"Test line\"}]}");
+        var config = new DialogueConfig { NameofSpeaker = "Mira", isThaiLanguage = false, effect = TextEffectType.None, JsonFile = lineJson };
+
+        manager.StartDialogueSequence(new DialogueConfig[] { config });
+        yield return null;
+
+        Assert.IsTrue(dialogueGO.activeSelf,
+            "StartDialogueSequence ต้องเปิด Dialogue panel ผ่าน DialogueHUB.DisplayLine — เส้นทางเดียวกับที่ TriggerDialogue.RPC_TriggerDialogueNetwork เรียก");
+        Assert.IsTrue(miraBoxGO.activeSelf, "Speaker เป็น \"Mira\" ต้องเปิด MiraBox ด้วย");
+
+        Object.Destroy(canvasGO);
+        Object.Destroy(hubGO);
+        Object.Destroy(managerGO);
     }
 }
