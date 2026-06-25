@@ -4,6 +4,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.Video;
+using UnityEngine.EventSystems;
 
 public class CutsceneManager : NetworkBehaviour
 {
@@ -125,6 +126,9 @@ public class CutsceneManager : NetworkBehaviour
         PlayerInterface.Instance.SetSkipButtonActive(true);
         PlayerInterface.Instance.skipButton.interactable = true;
         UpdateVoteUI();
+
+        if (EventSystem.current != null)
+            EventSystem.current.SetSelectedGameObject(PlayerInterface.Instance.skipButton.gameObject);
     }
 
     private void HookVideoEvents()
@@ -198,6 +202,9 @@ public class CutsceneManager : NetworkBehaviour
             PlayerInterface.Instance.StopIntroCutscene();
             PlayerInterface.Instance.SetSkipButtonActive(false);
             PlayerInterface.Instance.PlayLoadingVideo();
+
+            if (EventSystem.current != null)
+                EventSystem.current.SetSelectedGameObject(null);
         }
 
         if (HasStateAuthority)

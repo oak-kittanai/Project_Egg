@@ -4,11 +4,40 @@ using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 public class SessionHub : SingletonNetwork<SessionHub>
 {
     #region Variables & UI Components
     [SerializeField] public NetworkRunner networkRunner;
+
+    [Header("Keyboard Navigation - Default Selection")]
+    [SerializeField] Selectable defaultSelected_MainMenu;
+    [SerializeField] Selectable defaultSelected_Lobby;
+    [SerializeField] Selectable defaultSelected_Join;
+    [SerializeField] Selectable defaultSelected_Session;
+    [SerializeField] Selectable defaultSelected_Setting;
+
+    private void SetDefaultSelection(Selectable selectable)
+    {
+        if (EventSystem.current == null)
+        {
+            Debug.LogWarning("[SessionHub] SetDefaultSelection ข้าม: EventSystem.current เป็น null");
+            return;
+        }
+        if (selectable == null)
+        {
+            Debug.LogWarning("[SessionHub] SetDefaultSelection ข้าม: selectable ที่ส่งมาเป็น null (ลืม assign field ใน Inspector?)");
+            return;
+        }
+        if (!selectable.gameObject.activeInHierarchy)
+        {
+            Debug.LogWarning($"[SessionHub] SetDefaultSelection: {selectable.name} ยัง inactive อยู่ตอนเรียก — selection อาจไม่ติด");
+        }
+
+        EventSystem.current.SetSelectedGameObject(selectable.gameObject);
+        Debug.Log($"[SessionHub] Selected: {selectable.name} (currentSelectedGameObject ตอนนี้ = {EventSystem.current.currentSelectedGameObject?.name})");
+    }
 
     [Header("Session State")]
     public SessionState currentState;
@@ -187,8 +216,13 @@ public class SessionHub : SingletonNetwork<SessionHub>
     {
         if (SessionManager.Instance != null)
         {
+            Debug.Log($"[SessionHub] Subscribed to SessionManager. currentState ตอนนี้ = {SessionManager.Instance.currentState}");
             SessionManager.Instance.OnStateChanged += HandleStateChanged;
             HandleStateChanged(SessionManager.Instance.currentState);
+        }
+        else
+        {
+            Debug.LogWarning("[SessionHub] SessionManager.Instance เป็น null ตอน Start — จะไม่มี state event ใดๆเข้ามาเลย");
         }
     }
 
@@ -260,6 +294,7 @@ public class SessionHub : SingletonNetwork<SessionHub>
 
         SetMainButtonOff(true);
         ToggleUIElements(lobbyElements, true);
+        SetDefaultSelection(defaultSelected_Lobby);
     }
 
     public void OpenMainMenuUI()
@@ -268,6 +303,7 @@ public class SessionHub : SingletonNetwork<SessionHub>
         if (backgroundShared != null) backgroundShared.SetActive(false);
         ResetMenuButtons();
         ToggleUIElements(mainMenuElements, true);
+        SetDefaultSelection(defaultSelected_MainMenu);
     }
 
     public void OpenJoinUI()
@@ -277,6 +313,7 @@ public class SessionHub : SingletonNetwork<SessionHub>
         if (backgroundShared != null) backgroundShared.SetActive(true);
         ToggleUIElements(joinSessionElements, true);
         if (_JoinRoomButton != null) _JoinRoomButton.interactable = true;
+        SetDefaultSelection(defaultSelected_Join);
     }
 
     public void OpenSessionUI()
@@ -294,6 +331,7 @@ public class SessionHub : SingletonNetwork<SessionHub>
         }
 
         if (_leaveButton != null) { _leaveButton.gameObject.SetActive(true); _leaveButton.interactable = true; }
+        SetDefaultSelection(defaultSelected_Session);
     }
     #endregion
 
@@ -741,6 +779,7 @@ public class SessionHub : SingletonNetwork<SessionHub>
         HideAllPanels();
         if (backgroundShared != null) backgroundShared.SetActive(false);
         ToggleUIElements(settingElements, true);
+        SetDefaultSelection(defaultSelected_Setting);
     }
     private void OnMusicVolumeChanged(float value)
     {

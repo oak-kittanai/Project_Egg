@@ -111,6 +111,13 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [Networked] private bool isDrowningDamageActive { get; set; }
     #endregion
 
+    #region Stun
+    [Header("Stun")]
+    [SerializeField] private float stunDuration = 1.5f;
+    [Networked] private TickTimer StunTimer { get; set; }
+    [Networked, OnChangedRender(nameof(OnStunStateChanged))] public bool isStunned { get; set; }
+    #endregion
+
     #region Water Settings
     [Header("Water Setting")]
     [Networked] public bool IsHeadUnderwater { get; set; }
@@ -172,6 +179,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [Networked] public bool isInClimbZone { get; set; }
     [Networked] public bool isClimbing { get; set; }
     [Networked] public bool jumpedFromClimb { get; set; }
+
+    private bool wasMenuOpenLastTick = false;
     #endregion
 
     #region Skills
@@ -355,8 +364,12 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         }
 
         bool isMenuOpen = GameManager.Instance != null && GameManager.Instance.IsPaused;
+        bool wasMenuOpenBeforeThisTick = wasMenuOpenLastTick;
+        wasMenuOpenLastTick = isMenuOpen;
 
         if (HasStateAuthority || HasInputAuthority) CheckGround();
+
+        TickStun();
 
         if (IsGrounded && platformVelocity.y != 0 && !effectivelyCarried && !isMenuOpen)
         {
@@ -435,6 +448,10 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         {
             rb2D.linearVelocity = Vector2.zero;
             rb2D.gravityScale = 0f;
+        }
+        else if (wasMenuOpenBeforeThisTick)
+        {
+            rb2D.gravityScale = normalGravity;
         }
 
         platformVelocity = Vector2.zero;
@@ -679,6 +696,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                     if (hit.TryGetComponent<ThrowAbleItem>(out var throwableItem))
                     {
                         if (throwableItem.AlreadyThrow) continue;
+                        if (!throwableItem.IsStationary()) continue;
 
                         cAnimation.InteractAnimation();
                         throwableItem.PickupItem_RPC(this);
@@ -763,6 +781,35 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             if (!isDead)
                 DrowningDamageTimer = TickTimer.CreateFromSeconds(Runner, drowningDamageInterval);
         }
+    }
+
+    protected void ApplyStun()
+    {
+        if (!HasStateAuthority || isStunned) return;
+        isStunned = true;
+        isMoveAble = false;
+        IsInteractBusy = true;
+        if (cAnimation != null) cAnimation.SetFrozen(true);
+        StunTimer = TickTimer.CreateFromSeconds(Runner, stunDuration);
+    }
+
+    private void TickStun()
+    {
+        if (!HasStateAuthority || !isStunned) return;
+        if (StunTimer.Expired(Runner))
+        {
+            isStunned = false;
+            isMoveAble = true;
+            IsInteractBusy = false;
+            if (cAnimation != null) cAnimation.SetFrozen(false);
+        }
+    }
+
+    public void OnStunStateChanged()
+    {
+        if (localGUI == null) return;
+        if (isStunned) localGUI.ShowStunIcon();
+        else localGUI.HideStunIcon();
     }
 
     #endregion
@@ -1361,7 +1408,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             }
             else if (hit.TryGetComponent<ThrowAbleItem>(out var throwableItem))
             {
-                if (isBird && HeldItemName.ToString() == "" && !throwableItem.AlreadyThrow)
+                if (isBird && HeldItemName.ToString() == "" && !throwableItem.AlreadyThrow && throwableItem.IsStationary())
                 {
                     float dist = Vector2.Distance(transform.position, hit.transform.position);
                     if (dist < minItemDist)

@@ -80,8 +80,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: -2132795965
+  m_SortingLayer: 13
   m_SortingOrder: 1
   m_Sprite: {fileID: 380291502196500599, guid: a3fe2c39faa9d48449c02ff92bb0136f, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -115,8 +115,8 @@ MonoBehaviour:
   dropAmount: 1
   canDrop: 1
   isPlayerSpecific: 0
+  alreadyBreakRock: {fileID: 1332146552397012346, guid: 48974da408326b940af76b43e5bcb0c9, type: 3}
   animator: {fileID: -5427681617278280416}
-  breakDuration: 1.01
 --- !u!114 &8435920208396272353
 MonoBehaviour:
   m_ObjectHideFlags: 0

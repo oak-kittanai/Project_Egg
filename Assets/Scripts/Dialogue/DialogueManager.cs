@@ -61,8 +61,7 @@ public class DialogueManager : MonoBehaviour
             }
             else
             {
-                DialogueHUB.Instance.CloseDialogue();
-                AudioManager.Instance.StopBGM();
+                DialogueVoteManager.Instance?.SubmitReady();
             }
         }
     }

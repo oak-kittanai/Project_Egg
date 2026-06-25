@@ -51,11 +51,17 @@ TagManager:
   - 
   - 
   - 
-  - 
+  - CloseBlurEffect
   - BlurEffect
   m_SortingLayers:
   - name: Default
     uniqueID: 0
+    locked: 0
+  - name: BlurLayer
+    uniqueID: 3095075379
+    locked: 0
+  - name: CloseBlur
+    uniqueID: 2212324065
     locked: 0
   - name: WaterLayer
     uniqueID: 79350475
@@ -72,11 +78,20 @@ TagManager:
   - name: Layer5
     uniqueID: 1617743885
     locked: 0
+  - name: DecorationLayer
+    uniqueID: 3090390441
+    locked: 0
   - name: ItemLayer
     uniqueID: 1926427891
     locked: 0
   - name: PlayerLayer
     uniqueID: 506285829
+    locked: 0
+  - name: EnemyLayer
+    uniqueID: 1282379345
+    locked: 0
+  - name: PlatformLayer
+    uniqueID: 2056196309
     locked: 0
   - name: SortingTexture
     uniqueID: 2162171331

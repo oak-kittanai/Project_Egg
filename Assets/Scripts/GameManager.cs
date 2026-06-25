@@ -411,9 +411,9 @@ public class GameManager : SingletonNetwork<GameManager>
         }
     }
 
-    public void ProjectileSpawn(NetworkObject objToSpawn, Vector2 posToSpawn, Vector2 direction, Quaternion rota, float speed)
+    public NetworkObject ProjectileSpawn(NetworkObject objToSpawn, Vector2 posToSpawn, Vector2 direction, Quaternion rota, float speed)
     {
-        if (!HasStateAuthority) return;
+        if (!HasStateAuthority) return null;
 
         Vector3 spawnPos = new Vector3(posToSpawn.x, posToSpawn.y, 0f);
 
@@ -424,6 +424,8 @@ public class GameManager : SingletonNetwork<GameManager>
         {
             rb.linearVelocity = direction * speed;
         }
+
+        return spawnedObj;
     }
 
     public void SpawnDropItem(NetworkObject objToSpawn, Vector2 posToSpawn)

@@ -2,7 +2,7 @@
 using System;
 using UnityEngine;
 
-public class Bird_Moveset : MovementCharacter
+public class Bird_Moveset : MovementCharacter, IstunAble
 {
     [Header("Bird Settings")]
     [SerializeField] float normalFlyTime = 5f;
@@ -42,7 +42,7 @@ public class Bird_Moveset : MovementCharacter
     [Networked] public bool _prepareToThrow { get; set; }
 
     [SerializeField] float projectileSpeed;
-    [SerializeField] Transform throwPoint;
+    [SerializeField] public Transform throwPoint;
     // Line
     [SerializeField] LineRenderer lineRenderer;
     [SerializeField] int lineCounts;
@@ -62,6 +62,11 @@ public class Bird_Moveset : MovementCharacter
 
         if (rb2D != null) defaultMaterial = rb2D.sharedMaterial;
         if (lineRenderer == null) lineRenderer = GetComponent<LineRenderer>();
+    }
+
+    public void TriggerStun()
+    {
+        ApplyStun();
     }
 
     protected override void OnFixedUpdateSpecific()
@@ -486,12 +491,24 @@ public class Bird_Moveset : MovementCharacter
         }
     }
 
-    private void ExecuteThrow()
+    public void ExecuteThrow()
     {
         Vector2 throwPos = throwPoint.position;
         Vector2 direction = throwPoint.right;
 
-        GameManager.Instance.ProjectileSpawn(throwAblePrefab, throwPos, direction, throwPoint.rotation, projectileSpeed);
+        NetworkObject spawnedRock = GameManager.Instance.ProjectileSpawn(throwAblePrefab, throwPos, direction, throwPoint.rotation, projectileSpeed);
+        if (spawnedRock != null && spawnedRock.TryGetComponent<RockObject>(out var rockObj))
+        {
+            rockObj.ThrowerId = Object.Id;
+
+            // กันหินชนตัวคนปาเองทางฟิสิกส์ตรงๆ (แค่ ThrowerId เช็คใน OnCollisionEnter2D ไม่พอ
+            // เพราะ solid collider ยังชนกันได้อยู่ดี ทำให้รู้สึกโดนตัวเอง/มี knockback)
+            if (coll2D != null && spawnedRock.TryGetComponent<Collider2D>(out var rockCollider))
+            {
+                Physics2D.IgnoreCollision(rockCollider, coll2D, true);
+            }
+        }
+
         if (HasInputAuthority && throwSoundClip != null)
         {
             AudioManager.Instance?.PlayClipAtPosition(throwSoundClip, transform.position);

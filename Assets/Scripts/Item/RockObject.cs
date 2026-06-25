@@ -20,6 +20,7 @@ public class RockObject : NetworkBehaviour, ThrowAbleItem
 
     [SerializeField] bool isLethal = true;
     [Networked] public bool AlreadyThrow { get; set; }
+    [Networked] public NetworkId ThrowerId { get; set; }
 
     private void Awake()
     {
@@ -68,11 +69,39 @@ public class RockObject : NetworkBehaviour, ThrowAbleItem
             {
                 if (hit.collider.gameObject == gameObject) continue;
 
+                NetworkObject hitNetObj = hit.collider.GetComponent<NetworkObject>();
+                if (hitNetObj != null && hitNetObj.Id == ThrowerId)
+                {
+                    Debug.Log($"[Rock] ข้าม {hit.collider.name} เพราะเป็นคนปาเอง (ThrowerId={ThrowerId})");
+                    continue; // ข้ามคนปา ไม่ให้โดนตัวเอง
+                }
+
+                Debug.Log($"[Rock] ชน {hit.collider.name} (layer={LayerMask.LayerToName(hit.collider.gameObject.layer)})");
+
                 BaseMonster[] allMonsterObject = hit.collider.GetComponents<BaseMonster>();
+                bool hitSomething = false;
 
                 foreach (var monster in allMonsterObject)
                 {
                     monster.InstantKill();
+                    hitSomething = true;
+                    Debug.Log($"[Rock] ฆ่ามอนสเตอร์ {hit.collider.name}");
+                    break;
+                }
+
+                if (!hitSomething && hit.collider.TryGetComponent<IstunAble>(out var stunnable))
+                {
+                    stunnable.TriggerStun();
+                    hitSomething = true;
+                    Debug.Log($"[Rock] เรียก TriggerStun() ให้ {hit.collider.name}");
+                }
+                else if (!hitSomething)
+                {
+                    Debug.Log($"[Rock] {hit.collider.name} ไม่มี BaseMonster และไม่มี IstunAble — หินจะไม่ทำอะไรกับมัน");
+                }
+
+                if (hitSomething)
+                {
                     isLethal = false;
                     rb2D.linearVelocity = Vector2.zero;
                     break;
@@ -126,5 +155,10 @@ public class RockObject : NetworkBehaviour, ThrowAbleItem
     public bool PickupItem()
     {
         return true;
+    }
+
+    public bool IsStationary()
+    {
+        return rb2D != null && rb2D.linearVelocity.sqrMagnitude <= 0.0001f;
     }
 }

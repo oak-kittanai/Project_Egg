@@ -83,6 +83,8 @@ public class PlayerInterface : MonoBehaviour
     public Button resetButton;
     public TMP_Text resetPlayerCheckText;
 
+    public Button tutorialButton;
+
     [Header("Note Setting")]
     public GameObject noteObj;
     public TMP_Text noteWriterText;
@@ -216,6 +218,7 @@ public class PlayerInterface : MonoBehaviour
             quitButton = settingObj.Find("Quit")?.GetComponent<Button>();
             resetButton = settingObj.Find("Reset")?.GetComponent<Button>();
             resetPlayerCheckText = resetButton?.GetComponentInChildren<TMP_Text>();
+            tutorialButton = settingObj.Find("Tutorial")?.GetComponent<Button>();
         }
 
         // Note

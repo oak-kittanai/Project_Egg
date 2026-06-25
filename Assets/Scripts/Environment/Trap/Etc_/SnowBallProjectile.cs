@@ -8,6 +8,8 @@ public class SnowBallProjectile : NetworkBehaviour
 
     [Header("Snowball Setting")]
     [SerializeField] private float minBounceForce = 2f;
+    [Tooltip("ถ้าความเร็วของหิมะต่ำกว่านี้ (เช่นกลิ้งช้าๆบนพื้น) จะไม่ทำดาเมจผู้เล่นอีก")]
+    [SerializeField] private float minSpeedToDamage = 3f;
 
     [Header("Damage Setting")]
     [SerializeField] private int damageAmount = 1;
@@ -18,21 +20,23 @@ public class SnowBallProjectile : NetworkBehaviour
 
     [Networked] private TickTimer LifeTimer { get; set; }
     private bool hasHitPlayer = false;
+    private Rigidbody2D rb2D;
 
     public override void Spawned()
     {
         Runner.SetIsSimulated(Object, true);
+
+        rb2D = GetComponent<Rigidbody2D>();
 
         if (HasStateAuthority)
         {
             LifeTimer = TickTimer.CreateFromSeconds(Runner, 7f);
             hasHitPlayer = false;
 
-            Rigidbody2D rb = GetComponent<Rigidbody2D>();
-            if (rb != null)
+            if (rb2D != null)
             {
-                rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
-                rb.linearVelocity = transform.right * speed;
+                rb2D.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+                rb2D.linearVelocity = transform.right * speed;
             }
         }
     }
@@ -47,7 +51,9 @@ public class SnowBallProjectile : NetworkBehaviour
             return;
         }
 
-        if (!hasHitPlayer)
+        bool isMovingFastEnough = rb2D != null && rb2D.linearVelocity.magnitude >= minSpeedToDamage;
+
+        if (!hasHitPlayer && isMovingFastEnough)
         {
             MovementCharacter[] allPlayers = FindObjectsByType<MovementCharacter>(FindObjectsSortMode.None);
 

@@ -101,4 +101,9 @@ public class ThrowAble : NetworkBehaviour, ThrowAbleItem
     {
         return true;
     }
+
+    public bool IsStationary()
+    {
+        return rb2D != null && rb2D.linearVelocity.sqrMagnitude <= 0.0001f;
+    }
 }

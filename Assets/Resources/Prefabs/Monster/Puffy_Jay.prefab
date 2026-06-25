@@ -138,6 +138,7 @@ GameObject:
   - component: {fileID: 2582896740433150237}
   - component: {fileID: 8602037207337415990}
   - component: {fileID: 2331478792678697518}
+  - component: {fileID: 8022818198972461986}
   m_Layer: 0
   m_Name: Puffy_Jay
   m_TagString: Monster
@@ -278,6 +279,9 @@ MonoBehaviour:
   playerLayer:
     serializedVersion: 2
     m_Bits: 128
+  obstacleLayer:
+    serializedVersion: 2
+    m_Bits: 0
   detectionRadius: 4
   attackRadius: 3
   _targetPosition: {x: 0, y: 0}
@@ -291,6 +295,18 @@ MonoBehaviour:
   despawnDelay: 0.8
   canRespawn: 1
   respawnTime: 8
+--- !u!210 &8022818198972461986
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6499539228178592822}
+  m_Enabled: 1
+  m_SortingLayerID: 1282379345
+  m_SortingLayer: 10
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
 --- !u!1 &8057634707912623671
 GameObject:
   m_ObjectHideFlags: 0

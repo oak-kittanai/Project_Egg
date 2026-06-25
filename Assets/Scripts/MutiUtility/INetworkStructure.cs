@@ -45,66 +45,58 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
     public void OnInput(NetworkRunner runner, NetworkInput input)
     {
         var data = new NetworkInputData();
-        if (Keyboard.current != null)
+
+        bool tutorialBlocking = TutorialUIManager.Instance != null && TutorialUIManager.Instance.IsTutorialOpen;
+
+        if (!tutorialBlocking)
         {
-            float moveX = 0;
+            bool jump = false, press_F = false, press_E = false, press_ESC = false, press_TAB = false, press_Q = false, press_G = false;
+            Vector2 mousePosition = Vector2.zero;
 
-            if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed)
+            // ---- Keyboard ----
+            float kbMoveX = 0f, kbMoveY = 0f;
+            if (Keyboard.current != null)
             {
-                moveX = -1;
+                if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed) kbMoveX = -1f;
+                if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed) kbMoveX = 1f;
+                if (Keyboard.current.wKey.isPressed || Keyboard.current.upArrowKey.isPressed) kbMoveY = 1f;
+                if (Keyboard.current.sKey.isPressed || Keyboard.current.downArrowKey.isPressed) kbMoveY = -1f;
+
+                if (Keyboard.current.spaceKey.isPressed || Keyboard.current.upArrowKey.isPressed) jump = true;
+                if (Keyboard.current.fKey.isPressed) press_F = true;
+                if (Keyboard.current.eKey.isPressed) press_E = true;
+                if (Keyboard.current.escapeKey.isPressed) press_ESC = true;
+                if (Keyboard.current.tabKey.isPressed) press_TAB = true;
+                if (Keyboard.current.qKey.isPressed) press_Q = true;
+                if (Keyboard.current.gKey.isPressed) press_G = true;
             }
-            if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed)
+
+            // ---- Mouse (อ่านแยกอิสระ ไม่ผูกกับว่ามี Keyboard ไหม) ----
+            if (Mouse.current != null) mousePosition = Mouse.current.position.ReadValue();
+
+            // ---- Gamepad — ปุ่ม bool OR กับ Keyboard ตามปกติ, แกนเดิน Keyboard มีสิทธิ์เหนือกว่าถ้าขัดกัน ----
+            float gpMoveX = 0f, gpMoveY = 0f;
+            if (Gamepad.current != null)
             {
-                moveX = 1;
+                var gp = Gamepad.current;
+
+                if (gp.leftStick.left.isPressed || gp.dpad.left.isPressed) gpMoveX = -1f;
+                if (gp.leftStick.right.isPressed || gp.dpad.right.isPressed) gpMoveX = 1f;
+                if (gp.leftStick.up.isPressed || gp.dpad.up.isPressed) gpMoveY = 1f;
+                if (gp.leftStick.down.isPressed || gp.dpad.down.isPressed) gpMoveY = -1f;
+
+                if (gp.buttonSouth.isPressed) jump = true;       // A = Jump
+                if (gp.rightShoulder.isPressed) { press_F = true; press_Q = true; } // R1 = F (เป็ดดำน้ำ) + Throw (นกปาหิน)
+                if (gp.buttonWest.isPressed) press_E = true;     // X = Interact
+                if (gp.leftShoulder.isPressed) press_G = true;   // L1 = Drop Item
+                if (gp.startButton.isPressed) press_ESC = true;  // Start = ESC (Pause Menu)
+                if (gp.buttonEast.isPressed) press_TAB = true;   // B = Tab (ปิด UI)
             }
 
-            float moveY = 0;
+            // Keyboard ชนะถ้ามีค่า (ไม่ใช่ 0) — ถ้า Keyboard ไม่ได้กดแกนนี้เลย ค่อย fallback ไป Gamepad
+            float moveX = kbMoveX != 0f ? kbMoveX : gpMoveX;
+            float moveY = kbMoveY != 0f ? kbMoveY : gpMoveY;
 
-            if (Keyboard.current.wKey.isPressed || Keyboard.current.upArrowKey.isPressed)
-            {
-                moveY = 1;
-            }
-            if (Keyboard.current.sKey.isPressed || Keyboard.current.downArrowKey.isPressed)
-            {
-                moveY = -1;
-            }
-
-            // Keybinds
-
-            bool jump = false;
-            if (Keyboard.current.spaceKey.isPressed || Keyboard.current.upArrowKey.isPressed) jump = true;
-            else jump = false;
-
-            bool press_F;
-            if (Keyboard.current.fKey.isPressed) press_F = true;
-            else press_F = false;
-
-            bool press_E;
-            if (Keyboard.current.eKey.isPressed) press_E = true;
-            else press_E = false;
-
-            bool press_ESC;
-            if (Keyboard.current.escapeKey.isPressed) press_ESC = true;
-            else press_ESC = false;
-
-            bool press_TAB;
-            if (Keyboard.current.tabKey.isPressed) press_TAB = true;
-            else press_TAB = false;
-
-            Vector2 mousePosition = Mouse.current.position.ReadValue();
-
-            bool press_Q;
-            if (Keyboard.current.qKey.isPressed) press_Q = true;
-            else press_Q = false;
-
-            bool press_G;
-            if (Keyboard.current.gKey.isPressed) press_G = true;
-            else press_G = false;
-
-            data.KeybindThrowItem = press_Q;
-            data.KeybindDropItem = press_G;
-
-            // Data Input
             data.mousePos = mousePosition;
             data.horizontal = moveX;
             data.vertical = moveY;
@@ -113,6 +105,8 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
             data.KeybindInteract = press_E;
             data.Keyboard_ESC = press_ESC;
             data.Keyboard_Tab = press_TAB;
+            data.KeybindThrowItem = press_Q;
+            data.KeybindDropItem = press_G;
         }
 
         input.Set(data);
@@ -234,15 +228,15 @@ public struct NetworkInputData : INetworkInput
 {
     // Input
     public Vector2 mousePos;
-    public float horizontal;
-    public float vertical;
-    public bool KeybindJump;
-    public bool Keyboard_F;
+    public float horizontal; // D-Pad / Left Stick
+    public float vertical; // D-Pad / Left Stick
+    public bool KeybindJump; // A
+    public bool Keyboard_F; // R1
 
-    public bool Keyboard_ESC;
-    public bool Keyboard_Tab;
+    public bool Keyboard_ESC; // Start
+    public bool Keyboard_Tab; // B
 
-    public bool KeybindInteract;
-    public bool KeybindDropItem;
-    public bool KeybindThrowItem;
+    public bool KeybindInteract; // X
+    public bool KeybindDropItem; // L1
+    public bool KeybindThrowItem; // R1
 }

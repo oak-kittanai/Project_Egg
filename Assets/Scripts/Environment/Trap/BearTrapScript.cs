@@ -20,6 +20,9 @@ public class BearTrapScript : NetworkBehaviour
     [SerializeField] Collider2D doDamageColl2D;
     [SerializeField] private Animator trapAnimator;
 
+    // Test
+    public bool isFunctionExecuted;
+
     private void Awake()
     {
         if (doDamageColl2D != null) doDamageColl2D.enabled = false;
@@ -32,7 +35,6 @@ public class BearTrapScript : NetworkBehaviour
         if (!IsTriggered && other.CompareTag("Player") && CooldownTimer.ExpiredOrNotRunning(Runner))
         {
             IsTriggered = true;
-            RPC_PlayShootSound();
             HasPlayedFX = false;
             DelayTimer = TickTimer.CreateFromSeconds(Runner, delayBeforeSnap);
             CooldownTimer = TickTimer.CreateFromSeconds(Runner, cooldownTime);
@@ -103,6 +105,15 @@ public class BearTrapScript : NetworkBehaviour
             audioSource.PlayOneShot(bearTrapSoundClip);
         }
     }
+
+    public void SetReturnTrigger()
+    {
+        if (!HasStateAuthority) return;
+
+        isFunctionExecuted = true;
+        RPC_PlayShootSound();
+    }
+
     public override void Render()
     {
             trapAnimator.SetBool("Trigger", IsTriggered);

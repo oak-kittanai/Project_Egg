@@ -7,6 +7,9 @@ public class TriggerDialogue : NetworkBehaviour
     [SerializeField] bool isOneTimeTrigger = true;
     private bool hasTriggeredLocal = false;
 
+    [Header("Dialogue Type")]
+    [SerializeField] bool isSubDialogue = false;
+
     [SerializeField] bool isPlayWithBGM;
     [SerializeField] bool isEndWithDialogue;
 
@@ -55,12 +58,15 @@ public class TriggerDialogue : NetworkBehaviour
 
             if (differentCharacterDialogue)
             {
-                if (character.isBird) RPC_TriggerDialogueNetwork(1, birdIndex);
-                else RPC_TriggerDialogueNetwork(2, duckIndex);
+                int sequenceType = character.isBird ? 1 : 2;
+                int idx = character.isBird ? birdIndex : duckIndex;
+                if (isSubDialogue) RPC_TriggerSubDialogueNetwork(sequenceType, idx);
+                else RPC_TriggerDialogueNetwork(sequenceType, idx);
             }
             else
             {
-                RPC_TriggerDialogueNetwork(0, normalIndex);
+                if (isSubDialogue) RPC_TriggerSubDialogueNetwork(0, normalIndex);
+                else RPC_TriggerDialogueNetwork(0, normalIndex);
             }
         }
     }
@@ -100,12 +106,15 @@ public class TriggerDialogue : NetworkBehaviour
 
         if (differentCharacterDialogue)
         {
-            if (character.isBird) RPC_TriggerDialogueNetwork(1, birdIndex);
-            else RPC_TriggerDialogueNetwork(2, duckIndex);
+            int sequenceType = character.isBird ? 1 : 2;
+            int idx = character.isBird ? birdIndex : duckIndex;
+            if (isSubDialogue) RPC_TriggerSubDialogueNetwork(sequenceType, idx);
+            else RPC_TriggerDialogueNetwork(sequenceType, idx);
         }
         else
         {
-            RPC_TriggerDialogueNetwork(0, normalIndex);
+            if (isSubDialogue) RPC_TriggerSubDialogueNetwork(0, normalIndex);
+            else RPC_TriggerDialogueNetwork(0, normalIndex);
         }
     }
 
@@ -125,23 +134,29 @@ public class TriggerDialogue : NetworkBehaviour
             PersistSkillUnlock(skillToUnlock2);
     }
 
+    private DialogueConfig[] ResolveSequence(int sequenceType)
+    {
+        if (sequenceType == 0) return dialogueSequence;
+        if (sequenceType == 1) return birdDialogueSequence;
+        if (sequenceType == 2) return duckDialogueSequence;
+        return null;
+    }
+
     [Rpc(RpcSources.All, RpcTargets.All)]
     private void RPC_TriggerDialogueNetwork(int sequenceType, int index)
     {
-        DialogueConfig[] selectedConfig = null;
-
         if (isPlayWithBGM)
         {
             //AudioManager.Instance.PlayBGM("DialogueTheme");
         }
 
-        if (sequenceType == 0) selectedConfig = dialogueSequence;
-        else if (sequenceType == 1) selectedConfig = birdDialogueSequence;
-        else if (sequenceType == 2) selectedConfig = duckDialogueSequence;
+        DialogueConfig[] selectedConfig = ResolveSequence(sequenceType);
 
         if (selectedConfig != null && index < selectedConfig.Length)
         {
             DialogueManager.Instance.StartDialogueSequence(selectedConfig);
+            GameManager.Instance?.SetPause_RPC(true);
+            DialogueVoteManager.Instance?.StartVoteSession();
 
             if (sequenceType == 0) normalIndex = index + 1;
             else if (sequenceType == 1) birdIndex = index + 1;
@@ -157,6 +172,37 @@ public class TriggerDialogue : NetworkBehaviour
                 //AudioManager.Instance.StopBGM();
             }
             Debug.Log("Dialogue End");
+        }
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.All)]
+    private void RPC_TriggerSubDialogueNetwork(int sequenceType, int index)
+    {
+        DialogueConfig[] selectedConfig = ResolveSequence(sequenceType);
+
+        if (selectedConfig != null && index < selectedConfig.Length)
+        {
+            ShowSubDialogueOnLocalPlayer(selectedConfig);
+
+            if (sequenceType == 0) normalIndex = index + 1;
+            else if (sequenceType == 1) birdIndex = index + 1;
+            else if (sequenceType == 2) duckIndex = index + 1;
+
+            isOneTimeTrigger = true;
+            hasTriggeredLocal = true;
+        }
+    }
+
+    private void ShowSubDialogueOnLocalPlayer(DialogueConfig[] sequence)
+    {
+        MovementCharacter[] allPlayers = FindObjectsByType<MovementCharacter>(FindObjectsSortMode.None);
+        foreach (var player in allPlayers)
+        {
+            if (player.HasInputAuthority && player.localGUI != null)
+            {
+                player.localGUI.ShowMiniDialogue(sequence);
+                break;
+            }
         }
     }
 }

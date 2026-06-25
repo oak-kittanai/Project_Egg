@@ -2,6 +2,7 @@
 using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.EventSystems;
 
 public class MenuController : NetworkBehaviour
 {
@@ -70,6 +71,7 @@ public class MenuController : NetworkBehaviour
         PlayerInterface.Instance.settingLeaveButton?.onClick.RemoveAllListeners();
         PlayerInterface.Instance.musicSlider?.onValueChanged.RemoveAllListeners();
         PlayerInterface.Instance.soundSlider?.onValueChanged.RemoveAllListeners();
+        PlayerInterface.Instance.tutorialButton?.onClick.RemoveAllListeners();
     }
 
     private void SetupButtons()
@@ -93,6 +95,9 @@ public class MenuController : NetworkBehaviour
 
         if (PlayerInterface.Instance.settingLeaveButton != null)
             PlayerInterface.Instance.settingLeaveButton.onClick.AddListener(OnClickCloseSetting);
+
+        if (PlayerInterface.Instance.tutorialButton != null)
+            PlayerInterface.Instance.tutorialButton.onClick.AddListener(() => ShowTutorialReview());
 
         if (gameSettings != null)
         {
@@ -148,6 +153,9 @@ public class MenuController : NetworkBehaviour
                 PlayerInterface.Instance.resumePlayerCheckText.text = $"0/{activePlayers}";
             if (PlayerInterface.Instance.resetPlayerCheckText)
                 PlayerInterface.Instance.resetPlayerCheckText.text = $"0/{activePlayers}";
+
+            if (EventSystem.current != null && PlayerInterface.Instance.resumeButton != null)
+                EventSystem.current.SetSelectedGameObject(PlayerInterface.Instance.resumeButton.gameObject);
         }
 
         if (!IsMenuOpen && PlayerInterface.Instance?.settingPanelObj != null)
@@ -217,12 +225,18 @@ public class MenuController : NetworkBehaviour
     {
         if (pauseMenuPanel != null) pauseMenuPanel.SetActive(false);
         if (PlayerInterface.Instance.settingPanelObj != null) PlayerInterface.Instance.settingPanelObj.SetActive(true);
+
+        if (EventSystem.current != null && PlayerInterface.Instance.musicSlider != null)
+            EventSystem.current.SetSelectedGameObject(PlayerInterface.Instance.musicSlider.gameObject);
     }
 
     private void OnClickCloseSetting()
     {
         if (PlayerInterface.Instance.settingPanelObj != null) PlayerInterface.Instance.settingPanelObj.SetActive(false);
         if (pauseMenuPanel != null) pauseMenuPanel.SetActive(true);
+
+        if (EventSystem.current != null && PlayerInterface.Instance.resumeButton != null)
+            EventSystem.current.SetSelectedGameObject(PlayerInterface.Instance.resumeButton.gameObject);
     }
 
     private void OnMusicVolumeChanged(float value)
@@ -310,10 +324,10 @@ public class MenuController : NetworkBehaviour
     public void ShowTutorialReview(int index = 0)
     {
         if (LevelData.Instance == null || TutorialUIManager.Instance == null) return;
-        var seen = LevelData.Instance.seenTutorials;
+        var seen = LevelData.Instance.SeenTutorials;
         if (seen == null || seen.Count == 0) return;
         int clamped = Mathf.Clamp(index, 0, seen.Count - 1);
-        TutorialUIManager.Instance.ShowTutorial(seen[clamped]);
+        TutorialUIManager.Instance.ShowTutorialPanel(seen, clamped, isFirstTimeView: false);
     }
 
     #endregion

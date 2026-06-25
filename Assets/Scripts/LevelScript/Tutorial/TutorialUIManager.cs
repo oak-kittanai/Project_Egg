@@ -1,21 +1,29 @@
 using System.Collections;
-using TMPro;
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 public class TutorialUIManager : MonoBehaviour
 {
     public static TutorialUIManager Instance;
 
-    [Header("Tutorial UI Elements")]
-    [SerializeField] private GameObject tutorialPanel;
-    [SerializeField] private Image      backgroundFrame;
-    [SerializeField] private Image      tutorialImage;
-    [SerializeField] private TMP_Text   headerText;
-    [SerializeField] private TMP_Text   descText;
-    [SerializeField] private Slider     closeBar;
+    public bool IsTutorialOpen => tutorialPanel != null && tutorialPanel.activeSelf;
 
-    private Coroutine _autoCloseCoroutine;
+    [Header("Tutorial Panel")]
+    [SerializeField] private GameObject tutorialPanel;
+    [SerializeField] private Image backgroundFrame;
+    [SerializeField] private Image tutorialImage;
+    [SerializeField] private Button prevButton;
+    [SerializeField] private Button nextButton;
+    [SerializeField] private Slider closeBar;
+    [SerializeField] private GameObject closeHint;
+
+    private List<TutorialData> currentList;
+    private int currentIndex;
+    private bool isCloseLocked;
+    private Coroutine lockCoroutine;
 
     private void Awake()
     {
@@ -33,6 +41,13 @@ public class TutorialUIManager : MonoBehaviour
         }
     }
 
+    private void Update()
+    {
+        if (tutorialPanel == null || !tutorialPanel.activeSelf || isCloseLocked) return;
+        if (Keyboard.current != null && Keyboard.current.tabKey.wasPressedThisFrame)
+            HideTutorial();
+    }
+
     public void RegisterCanvas(GameObject canvas)
     {
         var panel = canvas.transform.Find("TutorialPanel");
@@ -40,64 +55,90 @@ public class TutorialUIManager : MonoBehaviour
 
         tutorialPanel = panel.gameObject;
 
-        var bg = panel.Find("BackgroundFrame");
+        var bg = panel.Find("BackGround");
         if (bg != null) backgroundFrame = bg.GetComponent<Image>();
 
-        var img = panel.Find("tutorialImage");
+        var img = panel.Find("TutorialBackground");
         if (img != null) tutorialImage = img.GetComponent<Image>();
 
-        var header = panel.Find("Header");
-        if (header != null) headerText = header.GetComponent<TMP_Text>();
+        prevButton = panel.Find("PrevButton")?.GetComponent<Button>();
+        nextButton = panel.Find("NextButton")?.GetComponent<Button>();
+        closeBar = panel.Find("SliderTimer")?.GetComponent<Slider>();
+        closeHint = panel.Find("PressTabToClose")?.gameObject;
 
-        var desc = panel.Find("Desc");
-        if (desc != null) descText = desc.GetComponent<TMP_Text>();
-
-        var bar = panel.Find("CloseBar");
-        if (bar != null) closeBar = bar.GetComponent<Slider>();
+        if (prevButton != null) { prevButton.onClick.RemoveAllListeners(); prevButton.onClick.AddListener(ShowPrev); }
+        if (nextButton != null) { nextButton.onClick.RemoveAllListeners(); nextButton.onClick.AddListener(ShowNext); }
 
         Debug.Log("TutorialUIManager: canvas registered");
     }
 
-    public void ShowTutorial(TutorialData data)
+    public void ShowTutorialPanel(List<TutorialData> list, int index, bool isFirstTimeView)
     {
-        if (data == null || tutorialPanel == null) return;
+        if (list == null || list.Count == 0 || tutorialPanel == null) return;
 
-        if (tutorialImage != null)  tutorialImage.sprite = data.tutorialSprite;
-        if (headerText != null)     headerText.text      = data.header;
-        if (descText != null)       descText.text        = data.desc;
-
+        currentList = list;
+        currentIndex = Mathf.Clamp(index, 0, list.Count - 1);
         tutorialPanel.SetActive(true);
 
-        if (_autoCloseCoroutine != null) StopCoroutine(_autoCloseCoroutine);
-        _autoCloseCoroutine = StartCoroutine(AutoClose(data.displayDuration));
+        RenderCurrentPage();
+
+        if (EventSystem.current != null && nextButton != null)
+            EventSystem.current.SetSelectedGameObject(nextButton.gameObject);
+
+        if (lockCoroutine != null) StopCoroutine(lockCoroutine);
+        if (isFirstTimeView) lockCoroutine = StartCoroutine(LockCloseFor(list[currentIndex].displayDuration));
+        else SetLocked(false);
     }
 
     public void HideTutorial()
     {
-        if (_autoCloseCoroutine != null) StopCoroutine(_autoCloseCoroutine);
-        _autoCloseCoroutine = null;
-
+        if (lockCoroutine != null) StopCoroutine(lockCoroutine);
         if (tutorialPanel != null) tutorialPanel.SetActive(false);
     }
 
-    private IEnumerator AutoClose(float duration)
+    public void ShowNext()
     {
-        if (duration <= 0f)
-        {
-            HideTutorial();
-            yield break;
-        }
+        if (currentList == null || currentIndex >= currentList.Count - 1) return;
+        currentIndex++;
+        RenderCurrentPage();
+    }
 
+    public void ShowPrev()
+    {
+        if (currentList == null || currentIndex <= 0) return;
+        currentIndex--;
+        RenderCurrentPage();
+    }
+
+    private void RenderCurrentPage()
+    {
+        TutorialData data = currentList[currentIndex];
+        if (tutorialImage != null) tutorialImage.sprite = data.tutorialSprite;
+
+        if (prevButton != null) prevButton.interactable = currentIndex > 0;
+        if (nextButton != null) nextButton.interactable = currentIndex < currentList.Count - 1;
+    }
+
+    private IEnumerator LockCloseFor(float duration)
+    {
+        SetLocked(true);
         float elapsed = 0f;
-        if (closeBar != null) closeBar.value = 1f;
+        if (closeBar != null) closeBar.value = 0f;
 
         while (elapsed < duration)
         {
             elapsed += Time.deltaTime;
-            if (closeBar != null) closeBar.value = 1f - (elapsed / duration);
+            if (closeBar != null) closeBar.value = elapsed / duration;
             yield return null;
         }
 
-        HideTutorial();
+        SetLocked(false);
+    }
+
+    private void SetLocked(bool locked)
+    {
+        isCloseLocked = locked;
+        if (closeBar != null) closeBar.gameObject.SetActive(locked);
+        if (closeHint != null) closeHint.SetActive(!locked);
     }
 }
