@@ -44,7 +44,8 @@ public class LevelData : MonoBehaviour
     public bool isDivingShow, isMovingShow, isCarryShow;
     [SerializeField] Image tutorialSlot;
     public TutorialData[] tutorials;
-    [HideInInspector] public List<TutorialData> seenTutorials = new List<TutorialData>();
+    [SerializeField] private TutorialProgressSO tutorialProgress;
+    public List<TutorialData> SeenTutorials => tutorialProgress != null ? tutorialProgress.seenTutorials : null;
 
     private void Awake()
     {
@@ -60,13 +61,17 @@ public class LevelData : MonoBehaviour
 
     public void RequestTutorialShow(string requestedName)
     {
+        if (tutorialProgress == null) return;
+
         foreach (var tut in tutorials)
         {
             if (tut.tutorialName == requestedName)
             {
-                if (!seenTutorials.Contains(tut))
-                    seenTutorials.Add(tut);
-                TutorialUIManager.Instance?.ShowTutorial(tut);
+                bool isFirstTime = !tutorialProgress.seenTutorials.Contains(tut);
+                if (isFirstTime) tutorialProgress.seenTutorials.Add(tut);
+
+                int idx = tutorialProgress.seenTutorials.IndexOf(tut);
+                TutorialUIManager.Instance?.ShowTutorialPanel(tutorialProgress.seenTutorials, idx, isFirstTime);
                 return;
             }
         }
@@ -80,8 +85,6 @@ public class TutorialData
 {
     public string tutorialName;
     public Vector2 RectTransform;
+    public float displayDuration = 3f; // เวลา "ล็อคปิดด้วย Tab" ตอนเจอครั้งแรก (ไม่ใช่ auto-close แล้ว)
     public Sprite tutorialSprite;
-    public float displayDuration = 5f;
-    public string header;
-    [TextArea] public string desc;
 }

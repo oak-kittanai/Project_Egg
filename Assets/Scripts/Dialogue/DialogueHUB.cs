@@ -1,12 +1,14 @@
 ﻿using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 public class DialogueHUB : MonoBehaviour
 {
     public static DialogueHUB Instance { get; private set; }
 
     [SerializeField] private GameObject dialogueObject;
+    [SerializeField] private GameObject dialogueBG;
 
     [SerializeField] private GameObject miraBox;
     [SerializeField] private GameObject kaelBox;
@@ -84,6 +86,7 @@ public class DialogueHUB : MonoBehaviour
         }
 
         dialogueObject = dialogueObj.gameObject;
+        dialogueBG = dialogueObj.Find("BG")?.gameObject;
 
         miraBox = dialogueObj.Find("MiraBox")?.gameObject;
         kaelBox = dialogueObj.Find("KaelBox")?.gameObject;
@@ -110,6 +113,7 @@ public class DialogueHUB : MonoBehaviour
         dialogueObject = uiCanvas.transform.Find("Dialogue")?.gameObject;
         if (dialogueObject == null) return;
 
+        dialogueBG = dialogueObject.transform.Find("BG")?.gameObject;
         miraBox = dialogueObject.transform.Find("MiraBox")?.gameObject;
         kaelBox = dialogueObject.transform.Find("KaelBox")?.gameObject;
 
@@ -128,16 +132,21 @@ public class DialogueHUB : MonoBehaviour
         if (dialogueObject == null) { Debug.LogWarning("[DialogueHUB] dialogueObject is null"); return; }
 
         dialogueObject.SetActive(true);
+        if (dialogueBG != null) dialogueBG.SetActive(true);
         if (miraBox != null) miraBox.SetActive(speaker == "Mira");
         if (kaelBox != null) kaelBox.SetActive(speaker == "Kael");
 
         if (speaker == "Mira" && miraAnimator != null) miraAnimator.StartEffect(message, effect);
         else if (speaker == "Kael" && kaelAnimator != null) kaelAnimator.StartEffect(message, effect);
+
+        if (EventSystem.current != null && nextButton != null)
+            EventSystem.current.SetSelectedGameObject(nextButton.gameObject);
     }
 
     public void CloseDialogue()
     {
         if (dialogueObject != null) dialogueObject.SetActive(false);
+        if (dialogueBG != null) dialogueBG.SetActive(false);
         if (miraBox != null) miraBox.SetActive(false);
         if (kaelBox != null) kaelBox.SetActive(false);
     }

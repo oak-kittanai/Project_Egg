@@ -179,6 +179,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [Networked] public bool isInClimbZone { get; set; }
     [Networked] public bool isClimbing { get; set; }
     [Networked] public bool jumpedFromClimb { get; set; }
+
+    private bool wasMenuOpenLastTick = false;
     #endregion
 
     #region Skills
@@ -362,6 +364,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         }
 
         bool isMenuOpen = GameManager.Instance != null && GameManager.Instance.IsPaused;
+        bool wasMenuOpenBeforeThisTick = wasMenuOpenLastTick;
+        wasMenuOpenLastTick = isMenuOpen;
 
         if (HasStateAuthority || HasInputAuthority) CheckGround();
 
@@ -444,6 +448,10 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         {
             rb2D.linearVelocity = Vector2.zero;
             rb2D.gravityScale = 0f;
+        }
+        else if (wasMenuOpenBeforeThisTick)
+        {
+            rb2D.gravityScale = normalGravity;
         }
 
         platformVelocity = Vector2.zero;

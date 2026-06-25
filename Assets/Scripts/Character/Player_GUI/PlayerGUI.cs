@@ -1,5 +1,7 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 using Fusion;
 
 public class PlayerGUI : MonoBehaviour
@@ -116,19 +118,64 @@ public class PlayerGUI : MonoBehaviour
 
     [Header("Stun Icon")]
     public GameObject stunIcon;
-    public Image stunImage;
-    public Sprite stunSprite;
     public Animator stunAnimator;
 
     public void ShowStunIcon()
     {
         if (stunIcon != null) stunIcon.SetActive(true);
-        if (stunImage != null && stunSprite != null) stunImage.sprite = stunSprite;
         if (stunAnimator != null) stunAnimator.Play("Stun");
     }
 
     public void HideStunIcon()
     {
         if (stunIcon != null) stunIcon.SetActive(false);
+    }
+
+    [Header("Mini Dialogue")]
+    public GameObject miniDialogueContainer;
+    public Image miniDialogueBg;
+    public TMP_Text miniDialogueText;
+    public CustomTextGen miniTextAnimator;
+    [SerializeField] private float secondsPerLine = 3f;
+
+    private Coroutine miniDialogueCoroutine;
+
+    public void ShowMiniDialogue(DialogueConfig[] sequence)
+    {
+        if (miniDialogueContainer == null || sequence == null || sequence.Length == 0) return;
+
+        if (miniDialogueCoroutine != null) StopCoroutine(miniDialogueCoroutine);
+        miniDialogueCoroutine = StartCoroutine(PlayMiniDialogueSequence(sequence));
+    }
+
+    private IEnumerator PlayMiniDialogueSequence(DialogueConfig[] sequence)
+    {
+        miniDialogueContainer.SetActive(true);
+
+        foreach (DialogueConfig config in sequence)
+        {
+            DialogueData data = JsonReader.Read(config.JsonFile);
+            if (data?.lines == null) continue;
+
+            foreach (DialogueLine line in data.lines)
+            {
+                string text = config.isThaiLanguage ? line.thai : line.eng;
+                string speakerLabel = string.IsNullOrEmpty(line.speaker) ? "" : $"{line.speaker}: ";
+
+                if (miniTextAnimator != null) miniTextAnimator.StartEffect(speakerLabel + text, config.effect);
+                else if (miniDialogueText != null) miniDialogueText.text = speakerLabel + text;
+
+                yield return new WaitForSeconds(secondsPerLine);
+            }
+        }
+
+        HideMiniDialogue();
+        miniDialogueCoroutine = null;
+    }
+
+    public void HideMiniDialogue()
+    {
+        if (miniDialogueCoroutine != null) { StopCoroutine(miniDialogueCoroutine); miniDialogueCoroutine = null; }
+        if (miniDialogueContainer != null) miniDialogueContainer.SetActive(false);
     }
 }

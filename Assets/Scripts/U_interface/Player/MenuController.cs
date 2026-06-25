@@ -71,6 +71,7 @@ public class MenuController : NetworkBehaviour
         PlayerInterface.Instance.settingLeaveButton?.onClick.RemoveAllListeners();
         PlayerInterface.Instance.musicSlider?.onValueChanged.RemoveAllListeners();
         PlayerInterface.Instance.soundSlider?.onValueChanged.RemoveAllListeners();
+        PlayerInterface.Instance.tutorialButton?.onClick.RemoveAllListeners();
     }
 
     private void SetupButtons()
@@ -94,6 +95,9 @@ public class MenuController : NetworkBehaviour
 
         if (PlayerInterface.Instance.settingLeaveButton != null)
             PlayerInterface.Instance.settingLeaveButton.onClick.AddListener(OnClickCloseSetting);
+
+        if (PlayerInterface.Instance.tutorialButton != null)
+            PlayerInterface.Instance.tutorialButton.onClick.AddListener(() => ShowTutorialReview());
 
         if (gameSettings != null)
         {
@@ -320,10 +324,10 @@ public class MenuController : NetworkBehaviour
     public void ShowTutorialReview(int index = 0)
     {
         if (LevelData.Instance == null || TutorialUIManager.Instance == null) return;
-        var seen = LevelData.Instance.seenTutorials;
+        var seen = LevelData.Instance.SeenTutorials;
         if (seen == null || seen.Count == 0) return;
         int clamped = Mathf.Clamp(index, 0, seen.Count - 1);
-        TutorialUIManager.Instance.ShowTutorial(seen[clamped]);
+        TutorialUIManager.Instance.ShowTutorialPanel(seen, clamped, isFirstTimeView: false);
     }
 
     #endregion

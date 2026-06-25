@@ -45,7 +45,10 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
     public void OnInput(NetworkRunner runner, NetworkInput input)
     {
         var data = new NetworkInputData();
-        if (Keyboard.current != null)
+
+        bool tutorialBlocking = TutorialUIManager.Instance != null && TutorialUIManager.Instance.IsTutorialOpen;
+
+        if (Keyboard.current != null && !tutorialBlocking)
         {
             float moveX = 0;
 

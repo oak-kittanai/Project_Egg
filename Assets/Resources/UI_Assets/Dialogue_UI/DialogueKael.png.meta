@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 6d96fc4bc229626419c236a2e25655fd
+guid: a713ab7423dbf57418a698d18f9db130
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -8086870343930840176
-    second: E skill friend_0
+      213: 7343746345225081305
+    second: DialogueKael_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -37,7 +37,7 @@ TextureImporter:
   maxTextureSize: 2048
   textureSettings:
     serializedVersion: 2
-    filterMode: 1
+    filterMode: 0
     aniso: 1
     mipBias: 0
     wrapU: 1
@@ -51,7 +51,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 100
+  spritePixelsToUnits: 64
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -72,10 +72,10 @@ TextureImporter:
   platformSettings:
   - serializedVersion: 4
     buildTarget: DefaultTexturePlatform
-    maxTextureSize: 2048
+    maxTextureSize: 4096
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 1
+    textureCompression: 0
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -139,13 +139,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: E skill friend_0
+      name: DialogueKael_0
       rect:
         serializedVersion: 2
-        x: 34
+        x: 176
         y: 0
-        width: 891
-        height: 109
+        width: 1624
+        height: 1006
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -154,8 +154,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 09b7c5da44aa5cf80800000000000000
-      internalID: -8086870343930840176
+      spriteID: 9d1d6b3646a3ae560800000000000000
+      internalID: 7343746345225081305
       vertices: []
       indices: 
       edges: []
@@ -174,7 +174,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      E skill friend_0: -8086870343930840176
+      DialogueKael_0: 7343746345225081305
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
