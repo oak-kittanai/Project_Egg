@@ -164,7 +164,7 @@ public class GameManager : SingletonNetwork<GameManager>
 
         if (HasStateAuthority)
         {
-            loadingSceneCooldown = data.introClip != null ? 1f : 4f;
+            loadingSceneCooldown = !string.IsNullOrEmpty(data.cutsceneFolderName) ? 1f : 4f;
             PlayerReadyTimeoutTimer = TickTimer.CreateFromSeconds(Runner, playerReadyTimeout);
         }
     }

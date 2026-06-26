@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.Video;
 
 public class LevelData : MonoBehaviour
 {
@@ -14,8 +13,6 @@ public class LevelData : MonoBehaviour
     public CheckPoint[] levelCheckPoints;
 
     [Header("Intro Cutscene Setting")]
-    public VideoClip introClip;
-
     public string cutsceneFolderName = "";
 
     public string cutsceneFileName = "Cutscene1.mp4";

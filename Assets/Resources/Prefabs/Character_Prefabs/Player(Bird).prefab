@@ -1380,7 +1380,7 @@ Transform:
   m_GameObject: {fileID: 5009953336907088200}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -8.40003, y: -15.53024, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1.0042187, y: 1.0042187, z: 1.0042187}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1562,7 +1562,6 @@ MonoBehaviour:
   miniDialogueBg: {fileID: 1550333851545931263}
   miniDialogueText: {fileID: 2258744695235068118}
   miniTextAnimator: {fileID: 7001742975661028492}
-  secondsPerLine: 3
 --- !u!114 &2584528282019055188
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2360,8 +2359,8 @@ LineRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: -2132795965
+  m_SortingLayer: 14
   m_SortingOrder: 10
   m_Positions:
   - {x: 0, y: 0, z: 0}

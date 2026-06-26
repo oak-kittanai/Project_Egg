@@ -1,5 +1,6 @@
 using Fusion;
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public enum AttackDirection
@@ -41,6 +42,8 @@ public class BaseMonster : NetworkBehaviour
     [Networked] public Vector2 targetPosition { get; set; }
     [Networked] public NetworkBool hasSpotPlayer { get; set; }
 
+    private readonly HashSet<MovementCharacter> playersInRange = new HashSet<MovementCharacter>();
+
     [Header("HitBox System")]
     [SerializeField] public Transform hitBoxPivot;
     [SerializeField] public GameObject hitBox;
@@ -62,6 +65,20 @@ public class BaseMonster : NetworkBehaviour
         MonsterSpecificUpdate();
     }
 
+    public void NotifyRadarTriggerEnter(Collider2D other)
+    {
+        if (!HasStateAuthority) return;
+        if (other.TryGetComponent<MovementCharacter>(out var player))
+            playersInRange.Add(player);
+    }
+
+    public void NotifyRadarTriggerExit(Collider2D other)
+    {
+        if (!HasStateAuthority) return;
+        if (other.TryGetComponent<MovementCharacter>(out var player))
+            playersInRange.Remove(player);
+    }
+
     private void OnStateChangedCallback()
     {
         OnStateChanged?.Invoke(currentAttackDirectionState);
@@ -79,17 +96,17 @@ public class BaseMonster : NetworkBehaviour
 
     public void PlayerRadar()
     {
-        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, detectionRadius, playerLayer);
+        playersInRange.RemoveWhere(p => p == null || !p.enabled);
+
         bool foundPlayer = false;
 
-        foreach (var hit in hits)
+        foreach (var player in playersInRange)
         {
-            if (!hit.TryGetComponent<MovementCharacter>(out _)) continue;
-            Vector2 dirToPlayer = (hit.transform.position - transform.position).normalized;
-            float distToPlayer = Vector2.Distance(transform.position, hit.transform.position);
+            Vector2 dirToPlayer = (player.transform.position - transform.position).normalized;
+            float distToPlayer = Vector2.Distance(transform.position, player.transform.position);
             RaycastHit2D hitObstacle = Physics2D.Raycast(transform.position, dirToPlayer, distToPlayer, obstacleLayer);
             if (hitObstacle.collider != null) continue;
-            targetPosition = hit.transform.position;
+            targetPosition = player.transform.position;
             hasSpotPlayer = true;
             foundPlayer = true;
             break;

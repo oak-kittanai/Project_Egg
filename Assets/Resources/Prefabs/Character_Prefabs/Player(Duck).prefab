@@ -780,7 +780,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 506285829
-  m_SortingLayer: 10
+  m_SortingLayer: 11
   m_SortingOrder: 6
   m_Sprite: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -842,7 +842,7 @@ Transform:
   m_GameObject: {fileID: 5009953336907088200}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -8.40003, y: -15.53024, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1.0042187, y: 1.0042187, z: 1.0042187}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1020,14 +1020,11 @@ MonoBehaviour:
   emptyBubbleSprite: {fileID: 1140728906013252903, guid: 83752bd8881af3f4f9f6e762e0e17c2d, type: 3}
   flightBar: {fileID: 0}
   stunIcon: {fileID: 9090832409008196182}
-  stunImage: {fileID: 4193212129295649319}
-  stunSprite: {fileID: 0}
   stunAnimator: {fileID: 635967193781755548}
   miniDialogueContainer: {fileID: 8376669236049688962}
   miniDialogueBg: {fileID: 8561083815030835392}
   miniDialogueText: {fileID: 2040129483290427446}
   miniTextAnimator: {fileID: 7970606845597199479}
-  secondsPerLine: 3
 --- !u!114 &2584528282019055188
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2409,7 +2406,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 506285829
-  m_SortingLayer: 10
+  m_SortingLayer: 11
   m_SortingOrder: 1
   m_Sprite: {fileID: 6389554935151001346, guid: 2efcded88a0f3a44cadf1bb7429c7850, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
