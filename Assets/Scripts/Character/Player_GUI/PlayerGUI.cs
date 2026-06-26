@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Fusion;
@@ -30,6 +29,8 @@ public class PlayerGUI : MonoBehaviour
     private void Awake()
     {
         if (flightBar != null) flightBar.gameObject.SetActive(false);
+        if (stunIcon != null) stunIcon.SetActive(false);
+        if (miniDialogueContainer != null) miniDialogueContainer.SetActive(false);
     }
 
     public void SetCharacterType(bool bird)
@@ -136,46 +137,21 @@ public class PlayerGUI : MonoBehaviour
     public Image miniDialogueBg;
     public TMP_Text miniDialogueText;
     public CustomTextGen miniTextAnimator;
-    [SerializeField] private float secondsPerLine = 3f;
 
-    private Coroutine miniDialogueCoroutine;
-
-    public void ShowMiniDialogue(DialogueConfig[] sequence)
+    // แสดงแค่บรรทัดเดียว — จังหวะ/ลำดับสลับ speaker คุมจาก TriggerDialogue (เพราะต้องสลับโชว์คนละตัวละคร)
+    public void ShowMiniDialogueLine(string speaker, string text, TextEffectType effect)
     {
-        if (miniDialogueContainer == null || sequence == null || sequence.Length == 0) return;
+        if (miniDialogueContainer == null) return;
 
-        if (miniDialogueCoroutine != null) StopCoroutine(miniDialogueCoroutine);
-        miniDialogueCoroutine = StartCoroutine(PlayMiniDialogueSequence(sequence));
-    }
-
-    private IEnumerator PlayMiniDialogueSequence(DialogueConfig[] sequence)
-    {
         miniDialogueContainer.SetActive(true);
+        string speakerLabel = string.IsNullOrEmpty(speaker) ? "" : $"{speaker}: ";
 
-        foreach (DialogueConfig config in sequence)
-        {
-            DialogueData data = JsonReader.Read(config.JsonFile);
-            if (data?.lines == null) continue;
-
-            foreach (DialogueLine line in data.lines)
-            {
-                string text = config.isThaiLanguage ? line.thai : line.eng;
-                string speakerLabel = string.IsNullOrEmpty(line.speaker) ? "" : $"{line.speaker}: ";
-
-                if (miniTextAnimator != null) miniTextAnimator.StartEffect(speakerLabel + text, config.effect);
-                else if (miniDialogueText != null) miniDialogueText.text = speakerLabel + text;
-
-                yield return new WaitForSeconds(secondsPerLine);
-            }
-        }
-
-        HideMiniDialogue();
-        miniDialogueCoroutine = null;
+        if (miniTextAnimator != null) miniTextAnimator.StartEffect(speakerLabel + text, effect);
+        else if (miniDialogueText != null) miniDialogueText.text = speakerLabel + text;
     }
 
     public void HideMiniDialogue()
     {
-        if (miniDialogueCoroutine != null) { StopCoroutine(miniDialogueCoroutine); miniDialogueCoroutine = null; }
         if (miniDialogueContainer != null) miniDialogueContainer.SetActive(false);
     }
 }

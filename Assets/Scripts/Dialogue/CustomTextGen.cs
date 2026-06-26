@@ -4,7 +4,7 @@ using DG.Tweening;
 
 public class CustomTextGen : MonoBehaviour
 {
-    [SerializeField] private TMP_Text textLabel;
+    [SerializeField] private TextMeshProUGUI textLabel;
     private Tween currentTween;
 
     public void StartEffect(string message, TextEffectType effect)

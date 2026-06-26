@@ -47,8 +47,9 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
         var data = new NetworkInputData();
 
         bool tutorialBlocking = TutorialUIManager.Instance != null && TutorialUIManager.Instance.IsTutorialOpen;
+        bool dialogueBlocking = DialogueManager.IsDialogueOpen;
 
-        if (!tutorialBlocking)
+        if (!tutorialBlocking && !dialogueBlocking)
         {
             bool jump = false, press_F = false, press_E = false, press_ESC = false, press_TAB = false, press_Q = false, press_G = false;
             Vector2 mousePosition = Vector2.zero;

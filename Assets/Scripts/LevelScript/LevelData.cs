@@ -75,6 +75,8 @@ public class LevelData : MonoBehaviour
                 return;
             }
         }
+
+        Debug.LogWarning($"LevelData: no tutorial named '{requestedName}' found");
     }
 
     public void RequestTutorialHide() => TutorialUIManager.Instance?.HideTutorial();

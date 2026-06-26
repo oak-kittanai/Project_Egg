@@ -123,12 +123,17 @@ public class TutorialUIManager : MonoBehaviour
     {
         SetLocked(true);
         float elapsed = 0f;
-        if (closeBar != null) closeBar.value = 0f;
+        if (closeBar != null)
+        {
+            closeBar.minValue = 0f;
+            closeBar.maxValue = duration;
+            closeBar.value = 0f;
+        }
 
         while (elapsed < duration)
         {
             elapsed += Time.deltaTime;
-            if (closeBar != null) closeBar.value = elapsed / duration;
+            if (closeBar != null) closeBar.value = elapsed;
             yield return null;
         }
 

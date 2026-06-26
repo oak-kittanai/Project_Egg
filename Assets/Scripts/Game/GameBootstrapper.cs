@@ -7,6 +7,7 @@ public class GameBootstrapper : MonoBehaviour
     [SerializeField] private GameSessionData sessionData;
     [NetworkPrefab][SerializeField] private NetworkObject centerHostPrefab;
     [NetworkPrefab][SerializeField] private NetworkObject gameManagerPrefab;
+    [NetworkPrefab][SerializeField] private NetworkObject dialogueVoteManagerPrefab;
     [NetworkPrefab][SerializeField] private NetworkObject birdPrefab;
     [NetworkPrefab][SerializeField] private NetworkObject duckPrefab;
 
@@ -34,6 +35,9 @@ public class GameBootstrapper : MonoBehaviour
         yield return new WaitUntil(() => GameManager.Instance != null);
 
         GameManager.Instance.GetNetworkRunner(runner);
+
+        // Step 2.5: Spawn DialogueVoteManager (votes-to-close ของ Dialogue)
+        runner.Spawn(dialogueVoteManagerPrefab);
 
         // Step 3: Spawn Players — Canvas is ready, loading screen covers them
         MovementCharacter[] existingPlayers = FindObjectsByType<MovementCharacter>(FindObjectsSortMode.None);

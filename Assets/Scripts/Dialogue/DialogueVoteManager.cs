@@ -70,9 +70,8 @@ public class DialogueVoteManager : NetworkBehaviour
     private void RPC_CloseDialogueAll()
     {
         isDialogueActive = false;
-        DialogueHUB.Instance?.CloseDialogue();
+        DialogueManager.Instance?.CloseDialogue();
         AudioManager.Instance?.StopBGM();
-        GameManager.Instance?.SetPause_RPC(false);
     }
 
     private void OnDestroy()

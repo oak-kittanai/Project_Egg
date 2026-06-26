@@ -155,7 +155,6 @@ public class TriggerDialogue : NetworkBehaviour
         if (selectedConfig != null && index < selectedConfig.Length)
         {
             DialogueManager.Instance.StartDialogueSequence(selectedConfig);
-            GameManager.Instance?.SetPause_RPC(true);
             DialogueVoteManager.Instance?.StartVoteSession();
 
             if (sequenceType == 0) normalIndex = index + 1;
@@ -195,14 +194,9 @@ public class TriggerDialogue : NetworkBehaviour
 
     private void ShowSubDialogueOnLocalPlayer(DialogueConfig[] sequence)
     {
-        MovementCharacter[] allPlayers = FindObjectsByType<MovementCharacter>(FindObjectsSortMode.None);
-        foreach (var player in allPlayers)
-        {
-            if (player.HasInputAuthority && player.localGUI != null)
-            {
-                player.localGUI.ShowMiniDialogue(sequence);
-                break;
-            }
-        }
+        // ส่งให้ MiniDialogueManager คุมจังหวะ/ลำดับสลับ speaker เอง (รันบนทุก client เหมือนกัน
+        // เพราะ RPC เป็น RpcTargets.All) — Manager จะหาตัวละครที่ชื่อตรงกับ Speaker ของแต่ละบรรทัด
+        // แล้วโชว์ popup เหนือหัวตัวละครนั้นจริงๆ ไม่ใช่โชว์ทั้ง sequence บนตัวละครของผู้กดอย่างเดียว
+        MiniDialogueManager.Instance?.PlayMiniDialogueSequence(sequence);
     }
 }

@@ -181,22 +181,20 @@ public class BirdMovesetIntegrationTests
     [UnityTest]
     public IEnumerator ShowMiniDialogue_OnLocalPlayer_ActivatesContainer()
     {
-        // เส้นทางเดียวกับที่ TriggerDialogue (isSubDialogue=true) เรียกผ่าน ShowSubDialogueOnLocalPlayer
+        // เส้นทางเดียวกับที่ TriggerDialogue (isSubDialogue=true) เรียกผ่าน ShowMiniDialogueLine ทีละบรรทัด
+        // (จังหวะ/ลำดับสลับ speaker ทดสอบแยกในระดับ TriggerDialogue ไม่ใช่ที่นี่)
         PlayerGUI gui = duckMoveset.localGUI;
         Assert.IsNotNull(gui.miniDialogueContainer, "ต้อง wire miniDialogueContainer (MiniDialogue) ใน Inspector ของ Player(Duck) ก่อน");
 
-        var lineJson = new TextAsset("{\"lines\":[{\"speaker\":\"Duck\",\"thai\":\"ทดสอบ\",\"eng\":\"Test line\"}]}");
-        var config = new DialogueConfig { isThaiLanguage = false, effect = TextEffectType.None, JsonFile = lineJson };
-
         gui.HideMiniDialogue();
         yield return null;
-        Assert.IsFalse(gui.miniDialogueContainer.activeSelf, "ก่อนเรียก ShowMiniDialogue ต้องยังไม่โชว์");
+        Assert.IsFalse(gui.miniDialogueContainer.activeSelf, "ก่อนเรียก ShowMiniDialogueLine ต้องยังไม่โชว์");
 
-        gui.ShowMiniDialogue(new DialogueConfig[] { config });
+        gui.ShowMiniDialogueLine("Duck", "Test line", TextEffectType.None);
         yield return null;
 
         Assert.IsTrue(gui.miniDialogueContainer.activeSelf,
-            "ShowMiniDialogue ต้องเปิด miniDialogueContainer — เส้นทางเดียวกับที่ TriggerDialogue.RPC_TriggerSubDialogueNetwork เรียกผ่าน ShowSubDialogueOnLocalPlayer");
+            "ShowMiniDialogueLine ต้องเปิด miniDialogueContainer — เส้นทางเดียวกับที่ TriggerDialogue.RPC_TriggerSubDialogueNetwork เรียกผ่าน PlayMiniDialogueAcrossCharacters");
 
         gui.HideMiniDialogue();
     }

@@ -97,6 +97,8 @@ public class DialogueHUB : MonoBehaviour
         nextButton = dialogueObj.Find("NextButton")?.GetComponent<Button>();
         prevButton = dialogueObj.Find("PrevButton")?.GetComponent<Button>();
 
+        CloseDialogue(); // ปิดไว้ก่อนตั้งแต่เริ่ม จนกว่าจะมี DisplayLine จริง
+
         return dialogueObject != null;
     }
 
@@ -122,6 +124,8 @@ public class DialogueHUB : MonoBehaviour
 
         nextButton = dialogueObject.transform.Find("NextButton")?.GetComponent<Button>();
         prevButton = dialogueObject.transform.Find("PrevButton")?.GetComponent<Button>();
+
+        CloseDialogue(); // ปิดไว้ก่อนตั้งแต่เริ่ม จนกว่าจะมี DisplayLine จริง
 
         SetButton();
         Debug.Log("[DialogueHUB] Found UI in Scene Canvas");

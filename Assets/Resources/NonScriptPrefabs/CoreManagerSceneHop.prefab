@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 6125466112139819949}
   - component: {fileID: 3452291523774972290}
   - component: {fileID: 5387408252529931685}
+  - component: {fileID: 1000000189774355}
   m_Layer: 0
   m_Name: DialogueManager
   m_TagString: Untagged
@@ -65,6 +66,19 @@ MonoBehaviour:
   kaelAnimator: {fileID: 0}
   nextButton: {fileID: 0}
   prevButton: {fileID: 0}
+--- !u!114 &1000000189774355
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 227334174846758600}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c81beae0bf69bc4364656a081437840b, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::MiniDialogueManager
+  secondsPerLine: 3
 --- !u!1 &579555359250714727
 GameObject:
   m_ObjectHideFlags: 0

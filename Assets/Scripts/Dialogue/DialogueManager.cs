@@ -6,6 +6,10 @@ public class DialogueManager : MonoBehaviour
 {
     public static DialogueManager Instance { get; private set; }
 
+    // เช็คจาก INetworkStructure.OnInput() เพื่อปิดการรับ input ของ user ระหว่าง Dialogue เปิดอยู่
+    // (ปิดแค่ input ไม่แตะ GameManager.IsPaused เพื่อไม่ให้ไป freeze gravity/physics ทั้งตัว)
+    public static bool IsDialogueOpen { get; private set; }
+
     private List<DialogueLine> lines = new List<DialogueLine>();
     private DialogueConfig currentHeader;
 
@@ -24,10 +28,17 @@ public class DialogueManager : MonoBehaviour
     {
         if (sequence == null || sequence.Length == 0) return;
 
+        IsDialogueOpen = true;
         currentSequence = sequence;
         currentConfigIndex = 0;
 
         LoadConfig(currentSequence[currentConfigIndex]);
+    }
+
+    public void CloseDialogue()
+    {
+        IsDialogueOpen = false;
+        DialogueHUB.Instance?.CloseDialogue();
     }
 
     private void LoadConfig(DialogueConfig config)
