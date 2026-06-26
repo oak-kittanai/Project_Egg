@@ -32,15 +32,7 @@ public class CutsceneManager : NetworkBehaviour
     {
         yield return new WaitUntil(() => LevelData.Instance != null);
         yield return new WaitUntil(() => PlayerInterface.Instance != null);
-
-#if UNITY_WEBGL && !UNITY_EDITOR
-    yield return new WaitUntil(() => PlayerInterface.Instance.introVideoPlayer != null);
-#else
-        if (LevelData.Instance.introClip != null)
-        {
-            yield return new WaitUntil(() => PlayerInterface.Instance.introVideoPlayer != null);
-        }
-#endif
+        yield return new WaitUntil(() => PlayerInterface.Instance.introVideoPlayer != null);
 
         yield return null;
         Setup();
@@ -60,24 +52,9 @@ public class CutsceneManager : NetworkBehaviour
             return;
         }
 
-        var data = LevelData.Instance;
-
-#if UNITY_WEBGL && !UNITY_EDITOR
-    // WebGL build → ใช้ไฟล์จาก StreamingAssets
-    Debug.Log("[CutsceneManager] Platform: WebGL → StreamingAssets file");
-    SetupAndPlayCutsceneFromFile();
-#else
-        if (data.introClip != null)
-        {
-            Debug.Log("[CutsceneManager] Platform: Standalone → VideoClip");
-            SetupAndPlayCutsceneFromClip(data.introClip);
-        }
-        else
-        {
-            Debug.Log("[CutsceneManager] No introClip → loading only");
-            PlayLoadingOnly();
-        }
-#endif
+        // เล่นจากไฟล์ใน StreamingAssets เสมอ (ไม่ฝัง VideoClip ขนาดใหญ่ไว้ใน scene/Resources)
+        // ถ้าไม่มีไฟล์คัตซีนสำหรับฉากนี้จริง ๆ OnVideoError จะ skip คัตซีนให้เอง
+        SetupAndPlayCutsceneFromFile();
     }
 
     private void PlayLoadingOnly()
@@ -90,15 +67,7 @@ public class CutsceneManager : NetworkBehaviour
         NotifyMapReady();
     }
 
-    // ==== Mode 1: VideoClip (in-build) ====
-    private void SetupAndPlayCutsceneFromClip(VideoClip clip)
-    {
-        SetupSkipButton();
-        PlayerInterface.Instance.PlayIntroCutscene(clip);
-        HookVideoEvents();
-    }
-
-    // ==== Mode 2: StreamingAssets file ====
+    // ==== StreamingAssets file ====
     private void SetupAndPlayCutsceneFromFile()
     {
         string folderName = LevelData.Instance.cutsceneFolderName;

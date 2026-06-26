@@ -39,6 +39,10 @@ public class NetworkInteractableWater : NetworkBehaviour
     private int[] topVertexIndices;
     private const int NUM_Y_VERTICES = 2;
 
+    private const int SplashPoolSize = 6;
+    private ParticleSystem[] splashPool;
+    private int splashPoolIndex;
+
     [System.Serializable]
     public class WaterPoint
     {
@@ -59,6 +63,20 @@ public class NetworkInteractableWater : NetworkBehaviour
 
         if (edgeCollider) edgeCollider.isTrigger = true;
         if (boxCollider) boxCollider.isTrigger = true;
+
+        CreateSplashPool();
+    }
+
+    private void CreateSplashPool()
+    {
+        if (splashParticles == null) return;
+
+        splashPool = new ParticleSystem[SplashPoolSize];
+        for (int i = 0; i < SplashPoolSize; i++)
+        {
+            splashPool[i] = Instantiate(splashParticles, transform.position, Quaternion.identity, transform);
+            splashPool[i].Stop();
+        }
     }
 
     public void Splash(Vector3 position, float velocity)
@@ -74,12 +92,19 @@ public class NetworkInteractableWater : NetworkBehaviour
         if (Runner == null || !Runner.IsRunning) return;
 
         ApplySplashPhysics(position, velocity);
+        PlaySplashEffect(position);
+    }
 
-        if (splashParticles != null)
-        {
-            ParticleSystem effect = Instantiate(splashParticles, position, Quaternion.identity);
-            Destroy(effect.gameObject, effect.main.duration);
-        }
+    private void PlaySplashEffect(Vector3 position)
+    {
+        if (splashPool == null || splashPool.Length == 0) return;
+
+        ParticleSystem effect = splashPool[splashPoolIndex];
+        splashPoolIndex = (splashPoolIndex + 1) % splashPool.Length;
+
+        effect.transform.position = position;
+        effect.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        effect.Play();
     }
 
     private void ApplySplashPhysics(Vector3 position, float velocity)

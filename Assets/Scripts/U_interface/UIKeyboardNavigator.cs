@@ -37,7 +37,7 @@ public class UIKeyboardNavigator : MonoBehaviour
 
     private void Update()
     {
-        if (EventSystem.current == null || Keyboard.current == null) return;
+        if (EventSystem.current == null) return;
 
         GameObject selected = EventSystem.current.currentSelectedGameObject;
 
@@ -58,7 +58,9 @@ public class UIKeyboardNavigator : MonoBehaviour
 
     private void HandleSubmit(GameObject selected)
     {
-        if (!Keyboard.current.enterKey.wasPressedThisFrame && !Keyboard.current.spaceKey.wasPressedThisFrame) return;
+        bool kbSubmit = Keyboard.current != null && (Keyboard.current.enterKey.wasPressedThisFrame || Keyboard.current.spaceKey.wasPressedThisFrame);
+        bool gpSubmit = Gamepad.current != null && Gamepad.current.buttonSouth.wasPressedThisFrame;
+        if (!kbSubmit && !gpSubmit) return;
 
         if (selected != null)
             ExecuteEvents.Execute(selected, new BaseEventData(EventSystem.current), ExecuteEvents.submitHandler);
@@ -67,10 +69,22 @@ public class UIKeyboardNavigator : MonoBehaviour
     private void HandleMove(GameObject selected)
     {
         Vector2 moveDir = Vector2.zero;
-        if (Keyboard.current.wKey.isPressed || Keyboard.current.upArrowKey.isPressed) moveDir.y = 1;
-        else if (Keyboard.current.sKey.isPressed || Keyboard.current.downArrowKey.isPressed) moveDir.y = -1;
-        else if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed) moveDir.x = 1;
-        else if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed) moveDir.x = -1;
+        if (Keyboard.current != null)
+        {
+            if (Keyboard.current.wKey.isPressed || Keyboard.current.upArrowKey.isPressed) moveDir.y = 1;
+            else if (Keyboard.current.sKey.isPressed || Keyboard.current.downArrowKey.isPressed) moveDir.y = -1;
+            else if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed) moveDir.x = 1;
+            else if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed) moveDir.x = -1;
+        }
+
+        if (moveDir == Vector2.zero && Gamepad.current != null)
+        {
+            var gp = Gamepad.current;
+            if (gp.leftStick.up.isPressed || gp.dpad.up.isPressed) moveDir.y = 1;
+            else if (gp.leftStick.down.isPressed || gp.dpad.down.isPressed) moveDir.y = -1;
+            else if (gp.leftStick.right.isPressed || gp.dpad.right.isPressed) moveDir.x = 1;
+            else if (gp.leftStick.left.isPressed || gp.dpad.left.isPressed) moveDir.x = -1;
+        }
 
         if (moveDir == Vector2.zero) { nextMoveTime = 0f; return; }
         if (Time.unscaledTime < nextMoveTime) return;

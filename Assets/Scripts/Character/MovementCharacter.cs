@@ -356,7 +356,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             if (coll2D != null && !coll2D.isTrigger) coll2D.isTrigger = true;
             isMoveAble = false;
 
-            if ((HasStateAuthority || HasInputAuthority) && Runner.TryFindObject(effectiveCarrierId, out var duckObj) && duckObj.TryGetComponent<Rigidbody2D>(out var duckRb))
+            if (Runner.TryFindObject(effectiveCarrierId, out var duckObj) && duckObj.TryGetComponent<Rigidbody2D>(out var duckRb))
             {
                 Vector2 targetPos = duckRb.position + Vector2.up * betweenCarryPosition;
                 rb2D.MovePosition(targetPos);

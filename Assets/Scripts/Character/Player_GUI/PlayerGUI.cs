@@ -16,6 +16,7 @@ public class PlayerGUI : MonoBehaviour
 
     private TickTimer activeOxygenTimer;
     private bool isTrackingOxygen = false;
+    private bool oxygenDepleted = false;
     private int maxBubbles;
 
     private int lastBubblesCount = -1;
@@ -52,15 +53,22 @@ public class PlayerGUI : MonoBehaviour
 
         if (isTrackingOxygen && activeRunner != null)
         {
-            float remainingTime = activeOxygenTimer.RemainingTime(activeRunner) ?? 0f;
-            int currentBubbles = Mathf.CeilToInt(remainingTime);
-
-            UpdateOxygenBubbles(currentBubbles);
-
-            if (remainingTime <= 0f)
+            if (oxygenDepleted)
             {
-                isTrackingOxygen = false;
                 UpdateOxygenBubbles(0);
+            }
+            else
+            {
+                float remainingTime = activeOxygenTimer.RemainingTime(activeRunner) ?? 0f;
+                int currentBubbles = Mathf.CeilToInt(remainingTime);
+
+                UpdateOxygenBubbles(currentBubbles);
+
+                if (remainingTime <= 0f)
+                {
+                    oxygenDepleted = true;
+                    UpdateOxygenBubbles(0);
+                }
             }
         }
     }
@@ -73,6 +81,7 @@ public class PlayerGUI : MonoBehaviour
         activeRunner = runner;
         maxBubbles = maxAir;
         isTrackingOxygen = true;
+        oxygenDepleted = false;
 
         lastBubblesCount = -1;
 
@@ -82,6 +91,7 @@ public class PlayerGUI : MonoBehaviour
     public void StopOxygenTracking()
     {
         isTrackingOxygen = false;
+        oxygenDepleted = false;
         if (oxygenContainer != null) oxygenContainer.SetActive(false);
     }
 

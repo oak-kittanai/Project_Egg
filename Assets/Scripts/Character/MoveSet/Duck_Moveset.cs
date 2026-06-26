@@ -270,6 +270,12 @@ public class Duck_Moveset : MovementCharacter, IstunAble
             return;
         }
 
+        if (onDiving && !IsBodyOnWater)
+        {
+            EndDiveLogic();
+            return;
+        }
+
         if (IsBeingCarried)
         {
             if (onDiving) EndDiveLogic();
@@ -509,14 +515,11 @@ public class Duck_Moveset : MovementCharacter, IstunAble
 
             rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, difference * 10f);
         }
-        else if (currentWater == null || isJumpingUp || (!IsBodyOnWater && onDiving) || isBeingLiftedByBird || stilldrowning)
+        else if (!onDiving)
         {
-            if (!onDiving)
-            {
-                isOptional = false;
-                isSpeedoptional = false;
-                if (!IsInAir) rb2D.gravityScale = normalGravity;
-            }
+            isOptional = false;
+            isSpeedoptional = false;
+            if (!IsInAir) rb2D.gravityScale = normalGravity;
         }
     }
 

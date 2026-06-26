@@ -501,21 +501,6 @@ public class PlayerInterface : MonoBehaviour
         ShowLoadingScreen(false);
     }
 
-    public void PlayIntroCutscene(VideoClip clip)
-    {
-        ShowLoadingScreen(true);
-
-        if (videoLoadingPlayer != null)
-            videoLoadingPlayer.enabled = false;
-
-        if (introVideoPlayer != null && clip != null)
-        {
-            introVideoPlayer.source = VideoSource.VideoClip;
-            introVideoPlayer.clip = clip;
-            PrepareThenPlayWithVolume(introVideoPlayer);
-        }
-    }
-
     public void StopIntroCutscene()
     {
         if (_prepareTimeoutCo != null) { StopCoroutine(_prepareTimeoutCo); _prepareTimeoutCo = null; }

@@ -291,10 +291,22 @@ public class WeighingScale_Mech : NetworkBehaviour
         }
     }
 
+    private float _lastShownLeftWeight = float.NaN;
+    private float _lastShownRightWeight = float.NaN;
+
     public void UpdateHUD()
     {
-        if (showTextWeight_L != null) showTextWeight_L.text = $"{itemOnLeftWeight}Rm";
-        if (showTextWeight_R != null) showTextWeight_R.text = $"{itemOnRightWeight}Rm";
+        if (showTextWeight_L != null && itemOnLeftWeight != _lastShownLeftWeight)
+        {
+            _lastShownLeftWeight = itemOnLeftWeight;
+            showTextWeight_L.text = $"{itemOnLeftWeight}Rm";
+        }
+
+        if (showTextWeight_R != null && itemOnRightWeight != _lastShownRightWeight)
+        {
+            _lastShownRightWeight = itemOnRightWeight;
+            showTextWeight_R.text = $"{itemOnRightWeight}Rm";
+        }
     }
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
