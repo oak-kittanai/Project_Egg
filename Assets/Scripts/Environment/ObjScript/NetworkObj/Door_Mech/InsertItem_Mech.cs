@@ -69,10 +69,6 @@ public class InsertItem_Mech : NetworkBehaviour, Interactable
             insertedAny = true;
         }
 
-        if (!insertedAny)
-        {
-            Debug.Log("You don't have any Stones");
-        }
     }
 
     public bool CanInteract(MovementCharacter player)

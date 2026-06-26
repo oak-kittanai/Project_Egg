@@ -109,7 +109,6 @@ public class CenterHost : SingletonNetwork<CenterHost>
 
     public void CheckComponentPlayer(PlayerRef player)
     {
-        Debug.Log("Access to check componenet, player is : " + player);
         if (hostPlayer == null)
         {
             Debug.LogError("can't find PlayerRef of host");
@@ -120,8 +119,6 @@ public class CenterHost : SingletonNetwork<CenterHost>
             Debug.LogError("can't find PlayerRef of client");
         }
 
-        if (player == hostPlayer) Debug.Log("Host Player Ready to spawn");
-        if (player == clientPlayer) Debug.Log("Client Player Ready to spawn");
     }
 
     #endregion
@@ -152,7 +149,6 @@ public class CenterHost : SingletonNetwork<CenterHost>
                 }
 
                 obj.name = $"{Type}";
-                Debug.Log($"Initialized Network Data for: {obj.name}");
             });
 
             hostRunner.SetPlayerObject(player, playerObj);

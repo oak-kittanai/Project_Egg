@@ -34,9 +34,6 @@ public class MoveableRock : NetworkBehaviour , MoveableObject
             Vector2 direction = (pos - seltTrans).normalized;
             Vector2 knockbackDir = -direction * knockbackForce;
 
-            Debug.Log("coll pos is : " + pos);
-            Debug.Log("transform pos is : " + transform.position);
-
             rb2D.AddForce(knockbackDir, ForceMode2D.Force);
         }
     }

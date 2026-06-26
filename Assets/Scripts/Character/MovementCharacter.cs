@@ -48,7 +48,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [Networked] public bool isFloating { get; set; }
     [SerializeField] public bool isMoveAble = true;
 
-    [Networked] public bool resetAnimation { get; set; }
+    public bool resetAnimation;
     [Networked] public bool isJumping { get; set; }
     #endregion
 
@@ -207,7 +207,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     #region Etc
     [Header("Etc")]
-    [Networked] public bool _wasEscPressed { get; set; }
+    public bool _wasEscPressed;
     #endregion
 
     #region LifeCycle Effect
@@ -700,7 +700,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
                         cAnimation.InteractAnimation();
                         throwableItem.PickupItem_RPC(this);
-                        Debug.Log($"Try to pickup the item : {hit.name}");
                         _isEPressed = input.KeybindInteract;
                         return;
                     }
@@ -717,7 +716,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
                     cAnimation.InteractAnimation();
                     interactable.Interact(this);
-                    Debug.Log($"Try to Interact with {hit.name}");
                     break;
                 }
             }
@@ -827,7 +825,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
         if (!isPrimaryDeath && lifeCycle != null)
         {
-            Debug.Log($"[LifeCycle] ▶ PlayOnFriendDeath on {gameObject.name}");
             lifeCycle.PlayOnFriendDeath();
         }
 
@@ -1130,10 +1127,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         {
             if (HasStateAuthority)
             {
-                Debug.Log($"[DROP] Bird rb2D.position ปัจจุบัน: {rb2D.position}");
-                Debug.Log($"[DROP] throwSpawnPos ที่ได้รับ: {throwSpawnPos}");
-                Debug.Log($"[DROP] Duck position: {(Runner.TryFindObject(carrierId, out var d) && d.TryGetComponent<Rigidbody2D>(out var dr) ? dr.position.ToString() : "NOT FOUND")}");
-
                 Vector2 dropPos;
                 if (throwSpawnPos != default)
                 {

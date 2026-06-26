@@ -27,8 +27,6 @@ public class WarpZone : NetworkBehaviour
                 if (character.isBird) playerBird = true;
                 else playerDuck = true;
 
-                Debug.Log($"Warp Status -> Bird: {playerBird} | Duck: {playerDuck}");
-
                 if (playerBird && playerDuck)
                 {
                     isWarping = true;
@@ -52,7 +50,6 @@ public class WarpZone : NetworkBehaviour
                 if (character.isBird) playerBird = false;
                 else playerDuck = false;
 
-                Debug.Log($"Someone left. Warp Status -> Bird: {playerBird} | Duck: {playerDuck}");
                 break;
             }
         }
@@ -68,7 +65,6 @@ public class WarpZone : NetworkBehaviour
 
         GameManager.Instance.ResetLoadingStateForNextLevel();
         GameManager.Instance.ShowGlobalLoadingScreen();
-        Debug.Log($"Host is warping everyone to Scene: {nextSceneBuildString}");
         await GameManager.Instance.LoadNextLevel(nextSceneBuildString);
     }
 

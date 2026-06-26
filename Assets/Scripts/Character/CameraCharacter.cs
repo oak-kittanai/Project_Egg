@@ -75,7 +75,6 @@ public class CameraCharacter : MonoBehaviour
     private void OnSceneChanged(Scene current, Scene next)
     {
         onCameraTranslate = null;
-        Debug.Log("[Camera] Scene changed, cleared Parallax delegate.");
     }
 
     private void LateUpdate()

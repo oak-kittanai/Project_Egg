@@ -316,8 +316,6 @@ public class MenuController : NetworkBehaviour
 
             p.RPC_ResetPlayer();
         }
-
-        Debug.Log("[GameManager] Reset all players from menu");
     }
 
     // Called from PauseMenu "ดู tutorial ย้อนหลัง" button — game is already paused while menu is open

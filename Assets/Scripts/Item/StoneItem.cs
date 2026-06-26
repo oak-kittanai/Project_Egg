@@ -13,8 +13,6 @@ public class StoneItem : NetworkBehaviour, Interactable
         GameManager.Instance.RPC_RequestAddStone(isOrangeStone);
 
         GameManager.Instance.RequestDespawn(Object);
-
-        Debug.Log($"Picked up {(isOrangeStone ? "Orange" : "Blue")} Stone!");
     }
 
     public void Interact(MovementCharacter player)

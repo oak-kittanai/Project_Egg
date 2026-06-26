@@ -43,7 +43,6 @@ public class GameBootstrapper : MonoBehaviour
         MovementCharacter[] existingPlayers = FindObjectsByType<MovementCharacter>(FindObjectsSortMode.None);
         if (existingPlayers.Length > 0)
         {
-            Debug.Log("[GameBootstrapper] Players already exist. Skip spawning.");
             yield break;
         }
 

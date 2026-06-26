@@ -87,7 +87,6 @@ public class GameManager : SingletonNetwork<GameManager>
 
         LevelData levelData = FindFirstObjectByType<LevelData>();
         SetupLevelData(levelData);
-        Debug.Log("[GameManager] LevelData setup complete");
     }
 
     public void MapAllPlayersFinishedLoading()
@@ -96,7 +95,6 @@ public class GameManager : SingletonNetwork<GameManager>
 
         int playerCount = Runner.ActivePlayers.Count();
         MapsLoadedCount += playerCount;
-        Debug.Log($"[GameManager] MapAllPlayersFinishedLoading +{playerCount} → {MapsLoadedCount}");
         CheckMapLoading();
     }
 
@@ -130,7 +128,6 @@ public class GameManager : SingletonNetwork<GameManager>
             {
                 IsGameReady = true;
                 LoadingSceneTimer = TickTimer.None;
-                Debug.Log("[GameManager] Game Start!");
                 ResetAllPlayersToSpawn();
             }
         }
@@ -150,7 +147,6 @@ public class GameManager : SingletonNetwork<GameManager>
         if (!activePlayers.Contains(player))
         {
             activePlayers.Add(player);
-            Debug.Log($"[GameManager] Player {player.Object.Id} Has Joined");
         }
     }
     public void SetupLevelData(LevelData data)
@@ -176,7 +172,6 @@ public class GameManager : SingletonNetwork<GameManager>
         MovementCharacter[] existingPlayers = FindObjectsByType<MovementCharacter>(FindObjectsSortMode.None);
         if (existingPlayers.Length > 0)
         {
-            Debug.Log("[GameManager] Players already exist. Skip spawning.");
             return;
         }
 
@@ -251,11 +246,9 @@ public class GameManager : SingletonNetwork<GameManager>
 
     private void CheckMapLoading()
     {
-        Debug.Log($"[GameManager] CheckMapLoading — count: {MapsLoadedCount}/2, done: {isLoadMapDone}");
         if (MapsLoadedCount >= 2 && !isLoadMapDone)
         {
             isLoadMapDone = true;
-            Debug.Log("[GameManager] Map Ready!");
             CheckGameStart();
         }
     }
@@ -265,13 +258,11 @@ public class GameManager : SingletonNetwork<GameManager>
         if (PlayersReadyCount >= 2 && !isPlayerReady)
         {
             isPlayerReady = true;
-            Debug.Log("Player Ready");
         }
 
         if (isPlayerReady && isLoadMapDone && !IsGameReady && !LoadingSceneTimer.IsRunning)
         {
             LoadingSceneTimer = TickTimer.CreateFromSeconds(Runner, loadingSceneCooldown);
-            Debug.Log($"Both Ready! Starting Delay Timer {loadingSceneCooldown}");
         }
     }
 
@@ -279,8 +270,6 @@ public class GameManager : SingletonNetwork<GameManager>
     {
         if (HasStateAuthority)
         {
-            Debug.Log("Try Resetting all players");
-
             MovementCharacter[] allPlayers = FindObjectsByType<MovementCharacter>(FindObjectsSortMode.None);
 
             foreach (var player in allPlayers)
@@ -299,7 +288,6 @@ public class GameManager : SingletonNetwork<GameManager>
 
         if (Runner != null)
         {
-            Debug.Log("GameManager: Shutting down NetworkRunner...");
             await Runner.Shutdown();
         }
 
@@ -335,7 +323,6 @@ public class GameManager : SingletonNetwork<GameManager>
         if (HasStateAuthority)
         {
             respawnPos = newPos;
-            Debug.Log($"Checkpoint try to update new Pos: {newPos}");
         }
         else
         {
@@ -347,7 +334,6 @@ public class GameManager : SingletonNetwork<GameManager>
     private void RPC_UpdateRespawnPos(Vector3 newPos)
     {
         respawnPos = newPos;
-        Debug.Log($"Host confirm Checkpoint update new Pos: {newPos}");
     }
 
     #endregion
@@ -476,7 +462,6 @@ public class GameManager : SingletonNetwork<GameManager>
         if (prefabToSpawn != null)
         {
             SpawnDropItem(prefabToSpawn, dropPosition);
-            Debug.Log($"[GameManager] Successfully spawned dropped item: {itemName}");
         }
         else
         {
@@ -590,7 +575,6 @@ public class GameManager : SingletonNetwork<GameManager>
             if (QuestIsBar && QuestCurrentProgress >= QuestMaxProgress)
             {
                 IsQuestActive = false;
-                Debug.Log("Quest Completed!");
             }
         }
         else RPC_AddQuestProgress(amount);
@@ -612,8 +596,6 @@ public class GameManager : SingletonNetwork<GameManager>
             QuestIsBar = false;
             QuestMaxProgress = 0;
             QuestCurrentProgress = 0;
-
-            Debug.Log("Quest has been reset!");
         }
         else
         {

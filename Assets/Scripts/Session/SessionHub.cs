@@ -36,7 +36,6 @@ public class SessionHub : SingletonNetwork<SessionHub>
         }
 
         EventSystem.current.SetSelectedGameObject(selectable.gameObject);
-        Debug.Log($"[SessionHub] Selected: {selectable.name} (currentSelectedGameObject ตอนนี้ = {EventSystem.current.currentSelectedGameObject?.name})");
     }
 
     [Header("Session State")]
@@ -219,7 +218,6 @@ public class SessionHub : SingletonNetwork<SessionHub>
     {
         if (SessionManager.Instance != null)
         {
-            Debug.Log($"[SessionHub] Subscribed to SessionManager. currentState ตอนนี้ = {SessionManager.Instance.currentState}");
             SessionManager.Instance.OnStateChanged += HandleStateChanged;
             HandleStateChanged(SessionManager.Instance.currentState);
         }
@@ -242,7 +240,6 @@ public class SessionHub : SingletonNetwork<SessionHub>
 
     private void HandleStateChanged(SessionState newState)
     {
-        Debug.Log($"Current State : {newState}");
         currentState = newState;
 
         switch (newState)
@@ -704,11 +701,6 @@ public class SessionHub : SingletonNetwork<SessionHub>
         if (!string.IsNullOrEmpty(key))
         {
             _sessionKey = key;
-            Debug.Log($"Create session Key : {_sessionKey}");
-        }
-        else
-        {
-            Debug.Log("Session key is : Null");
         }
     }
 
@@ -717,11 +709,6 @@ public class SessionHub : SingletonNetwork<SessionHub>
         if (AlreadyJoin)
         {
             GUIUtility.systemCopyBuffer = _sessionKey;
-            Debug.Log($"Copied to clipboard: {_sessionKey}");
-        }
-        else
-        {
-            Debug.Log("No code to copy");
         }
     }
 

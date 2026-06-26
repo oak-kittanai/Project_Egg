@@ -11,7 +11,6 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
 
     public void OnConnectedToServer(NetworkRunner runner)
     {
-        Debug.Log("Connect Success");
     }
 
     public void OnDisconnectedFromServer(NetworkRunner runner, NetDisconnectReason reason)
@@ -23,7 +22,6 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
     {
         if (SessionManager.Instance != null)
         {
-            Debug.Log("Session not null");
             SessionManager.Instance.DisconnedFromServer();
         }
     }
@@ -141,13 +139,10 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
                 SessionHub.Instance.SetupButtonOnline(false);
             }
         }
-
-        Debug.Log($"Player has {player.PlayerId} Joined the session");
     }
 
     public void OnPlayerLeft(NetworkRunner runner, PlayerRef player)
     {
-        Debug.Log("Player has Disconnect");
     }
 
         #endregion
@@ -177,11 +172,6 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
         {
             SessionManager.Instance.UpdatePlayerCount(runner);
             SessionHub.Instance.UpdateList(sessionList.Count);
-            Debug.Log("Found room: " + sessionList[0].Name);
-        }
-        else
-        {
-            Debug.Log("No room found");
         }
     }
 

@@ -27,9 +27,9 @@ public class Bird_Moveset : MovementCharacter, IstunAble
 
 
     [Header("Pressed")]
-    [Networked] public bool _wasJumpPressed { get; set; }
-    [Networked] public bool _wasPrepareThrowPressed { get; set; }
-    [Networked] public bool _wasisThrowItemPressed { get; set; }
+    public bool _wasJumpPressed;
+    public bool _wasPrepareThrowPressed;
+    public bool _wasisThrowItemPressed;
 
     // Drowning
     [Networked] private TickTimer DrownTimer { get; set; }
@@ -402,8 +402,6 @@ public class Bird_Moveset : MovementCharacter, IstunAble
                 if (duck.carryCollider != null) duck.carryCollider.sharedMaterial = zeroFrictionMaterial;
             }
         }
-
-        Debug.Log($"Bird Flying! Duration: {duration}s");
     }
 
     private void StopFlying()
@@ -487,7 +485,6 @@ public class Bird_Moveset : MovementCharacter, IstunAble
         if (cAnimation != null)
         {
             cAnimation.ThrowAnimation();
-            Debug.Log("Try Smash Animation");
         }
     }
 

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Fusion;
 using UnityEngine;
 
@@ -25,18 +26,33 @@ public class Turret_Shooter : NetworkBehaviour
 
     [Networked] private TickTimer FireTimer { get; set; }
 
+    private readonly HashSet<Collider2D> collidersInRange = new HashSet<Collider2D>();
+
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        if (!HasStateAuthority) return;
+        collidersInRange.Add(other);
+    }
+
+    private void OnTriggerExit2D(Collider2D other)
+    {
+        if (!HasStateAuthority) return;
+        collidersInRange.Remove(other);
+    }
+
     public override void FixedUpdateNetwork()
     {
         if (!HasStateAuthority) return;
 
         Vector2 originPos = firePoint != null ? (Vector2)firePoint.position : (Vector2)transform.position;
-        Collider2D[] hits = Physics2D.OverlapCircleAll(originPos, detectionRadius, playerLayer);
 
         Vector2? targetPosToShoot = null;
         float minDistance = float.MaxValue;
 
-        foreach (var hit in hits)
+        foreach (var hit in collidersInRange)
         {
+            if (hit == null) continue;
+
             MovementCharacter character = hit.GetComponentInParent<MovementCharacter>();
             if (character == null) character = hit.GetComponentInChildren<MovementCharacter>();
 

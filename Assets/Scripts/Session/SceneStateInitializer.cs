@@ -12,7 +12,6 @@ public class SceneStateInitializer : MonoBehaviour
 
         if (SessionManager.Instance != null)
         {
-            Debug.Log($"Success Load into Scene State : {targetState}");
             SessionManager.Instance.ChangeState(targetState);
         }
         else

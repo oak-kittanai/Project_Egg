@@ -48,9 +48,9 @@ public class Duck_Moveset : MovementCharacter, IstunAble
     [Networked] private TickTimer DiveTimer { get; set; }
 
     [Header("Etc")]
-    [Networked] public bool _wasEPressed { get; set; }
-    [Networked] public bool _wasFPressed { get; set; }
-    [Networked] public bool _wasJumpPressed { get; set; }
+    public bool _wasEPressed;
+    public bool _wasFPressed;
+    public bool _wasJumpPressed;
 
     [Header("Floating Settings")]
     [SerializeField] private float floatOffset = -0.2f;
@@ -297,10 +297,6 @@ public class Duck_Moveset : MovementCharacter, IstunAble
             {
                 StartDiveLogic();
             }
-            else
-            {
-                Debug.Log("can't dive because carried bird");
-            }
         }
 
         if (onDiving && !emergencySwimBool)
@@ -366,7 +362,6 @@ public class Duck_Moveset : MovementCharacter, IstunAble
         emergencyToggle = true;
 
         DiveTimer = TickTimer.CreateFromSeconds(Runner, divingTime);
-        Debug.Log($"Duck Diving! Duration: {divingTime}s");
     }
 
     public void OnDivingStateChanged()
@@ -466,7 +461,6 @@ public class Duck_Moveset : MovementCharacter, IstunAble
                 }
 
                 EndDiveLogic();
-                Debug.Log("Reach the surface");
             }
         }
     }
@@ -477,7 +471,6 @@ public class Duck_Moveset : MovementCharacter, IstunAble
         if (cAnimation != null)
         {
             cAnimation.SmashAnimation();
-            Debug.Log("Try Smash Animation");
         }
     }
 

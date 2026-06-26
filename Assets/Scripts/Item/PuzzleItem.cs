@@ -73,7 +73,6 @@ public class PuzzleItem : NetworkBehaviour, Interactable
     {
         if (player.HeldItemName.ToString() != "")
         {
-            Debug.Log("hand full can't pick");
             return;
         }
         PickupPuzzleItem_RPC(player);
@@ -91,7 +90,6 @@ public class PuzzleItem : NetworkBehaviour, Interactable
         {
             player.HeldItemName = itemName;
             GameManager.Instance.RequestDespawn(selfNet);
-            Debug.Log($"{player.name} pick {itemName}");
         }
     }
 }

@@ -114,7 +114,6 @@ public class SessionManager : MonoBehaviour
         if (players != null)
         {
             Players.Remove(players);
-            Debug.Log($"Remove player :{players.playerNum}");
         }
     }
 
@@ -128,7 +127,6 @@ public class SessionManager : MonoBehaviour
         };
 
         Players.Add(newPlayers);
-        Debug.Log($"Player added: {player.PlayerId} and add {runner}");
     }
 
     public void UpdatePlayerCount(NetworkRunner runner)
@@ -178,7 +176,6 @@ public class SessionManager : MonoBehaviour
             if (!string.IsNullOrEmpty(_sessionKey))
             {
                 SessionHub.Instance.GetKey(_sessionKey);
-                Debug.Log($"Create session Key : {_sessionKey}");
             }
 
             ChangeState(SessionState.CharacterSelect);
@@ -228,7 +225,6 @@ public class SessionManager : MonoBehaviour
 
     public async Task<bool> StartSession(NetworkRunner runner, string sessionKey)
     {
-        Debug.Log("Starting Host Session...");
         if (runner == null) return false;
 
         _isAlreadyInRoom = true;
@@ -253,7 +249,6 @@ public class SessionManager : MonoBehaviour
         }
 
         SessionHub.Instance.ShowDebugText("Success Create Session");
-        Debug.Log("Start session Successfully");
 
         runTime = runner.Spawn(runtimeUpdate);
         if (runTime != null && runTime.TryGetComponent<RuntimeUpdate>(out var rtUpdate))
@@ -308,7 +303,6 @@ public class SessionManager : MonoBehaviour
         SessionHub.Instance.ShowDebugText("Success Joining Session");
         SessionHub.Instance.DoneJoin();
         SessionHub.Instance.GetKey(_sessionKey);
-        Debug.Log("Successfully joined");
     }
 
     private string GenerateSessionCode(int length = 6)
@@ -354,14 +348,12 @@ public class SessionManager : MonoBehaviour
     #region Network Runner Management
     public void AddRunner()
     {
-        Debug.Log("Add runner");
         networkRunner = Instantiate(runnerPrefab).GetComponent<NetworkRunner>();
         INetworkStructure structure = networkRunner.GetComponent<INetworkStructure>();
         SessionHub.Instance.networkRunner = networkRunner.GetComponent<NetworkRunner>();
         if (structure != null)
         {
             networkRunner.AddCallbacks(structure);
-            Debug.Log("success add Callbacks");
         }
         else Debug.Log("can't find INetworkStructure");
 
@@ -369,18 +361,12 @@ public class SessionManager : MonoBehaviour
         {
             Debug.LogError("can't find runner Prefab");
         }
-        else
-        {
-            Debug.Log("create runner");
-        }
     }
 
     public async void ReStartNetworkRunner()
     {
-        Debug.Log("StartRestart runner");
         if (networkRunner != null)
         {
-            Debug.Log("Shutting down runner...");
             await networkRunner.Shutdown();
 
             if (networkRunner.gameObject != null)
@@ -389,7 +375,6 @@ public class SessionManager : MonoBehaviour
             }
 
             networkRunner = null;
-            Debug.Log("Runner shutdown complete");
 
             await Task.Delay(200);
         }

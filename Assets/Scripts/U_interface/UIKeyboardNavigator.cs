@@ -33,19 +33,12 @@ public class UIKeyboardNavigator : MonoBehaviour
             gameObject.AddComponent<SelectionHighlightFollower>();
     }
 
-    private GameObject lastLoggedSelection;
 
     private void Update()
     {
         if (EventSystem.current == null) return;
 
         GameObject selected = EventSystem.current.currentSelectedGameObject;
-
-        if (selected != lastLoggedSelection)
-        {
-            lastLoggedSelection = selected;
-            Debug.Log($"[UIKeyboardNavigator] ตอนนี้เลือกอยู่ที่: {(selected != null ? selected.name : "ไม่มี (null)")}");
-        }
 
         // ถ้ากำลังพิมพ์อยู่ในกล่อง input (เช่นช่อง Enter Room Code) ห้าม intercept WASD
         // ปล่อยให้ field จัดการคีย์บอร์ดเองทั้งหมด (พิมพ์ตัวอักษร w/a/s/d ได้ปกติ, arrow เลื่อน caret)

@@ -139,8 +139,6 @@ public class DashMonster : NetworkBehaviour
                 Vector2 knockbackDir = (player.transform.position - transform.position).normalized;
 
                 player.TakeDamage(damage, knockbackForce, knockbackDir);
-
-                Debug.Log($"Monster hit {player.name}! Damage dealt: {damage}");
             }
         }
     }

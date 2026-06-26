@@ -29,8 +29,6 @@ public class DoDamage : NetworkBehaviour
                             character.TakeDamage(damageAmount, knockbackForce, knockbackDirection);
                         }
                     }
-
-                    Debug.Log($"Do damage To {character.name}: - {damageAmount} hp");
                 }
             }
         }

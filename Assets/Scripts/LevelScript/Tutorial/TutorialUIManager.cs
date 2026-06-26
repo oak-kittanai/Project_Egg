@@ -68,8 +68,6 @@ public class TutorialUIManager : MonoBehaviour
 
         if (prevButton != null) { prevButton.onClick.RemoveAllListeners(); prevButton.onClick.AddListener(ShowPrev); }
         if (nextButton != null) { nextButton.onClick.RemoveAllListeners(); nextButton.onClick.AddListener(ShowNext); }
-
-        Debug.Log("TutorialUIManager: canvas registered");
     }
 
     public void ShowTutorialPanel(List<TutorialData> list, int index, bool isFirstTimeView)

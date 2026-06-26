@@ -67,7 +67,6 @@ public class DialogueHUB : MonoBehaviour
 
         if (foundFromRoot)
         {
-            Debug.Log("[DialogueHUB] found UI in Persistent Canvas");
             SetButton();
             return;
         }
@@ -128,7 +127,6 @@ public class DialogueHUB : MonoBehaviour
         CloseDialogue(); // ปิดไว้ก่อนตั้งแต่เริ่ม จนกว่าจะมี DisplayLine จริง
 
         SetButton();
-        Debug.Log("[DialogueHUB] Found UI in Scene Canvas");
     }
 
     public void DisplayLine(string speaker, string message, TextEffectType effect)

@@ -289,12 +289,9 @@ public class PlayerInterface : MonoBehaviour
             gameSettings = Resources.Load<GameSettingsSO>("GameSettings");
             if (gameSettings == null)
                 Debug.LogError("[PlayerInterface] GameSettings NOT found in Resources folder!");
-            else
-                Debug.Log("[PlayerInterface] GameSettings loaded from Resources");
         }
 
         HideQuestUI();
-        Debug.Log("[PlayerInterface] RegisterCanvas success");
         if (MenuController.Instance != null) MenuController.Instance.RefreshButtons();
     }
 
@@ -533,7 +530,6 @@ public class PlayerInterface : MonoBehaviour
         }
 
         float vol = Mathf.Clamp01(gameSettings.musicVolume / 100f);
-        Debug.Log($"[PlayerInterface] Apply video volume: {vol} (musicVolume={gameSettings.musicVolume}, mode={vp.audioOutputMode})");
 
         if (vp.audioOutputMode == VideoAudioOutputMode.Direct)
         {
@@ -580,8 +576,6 @@ public class PlayerInterface : MonoBehaviour
         player.url = videoPath;
 
         PrepareThenPlayWithVolume(player);
-
-        Debug.Log($"[PlayerInterface] Playing video from: {videoPath}");
     }
 
     /// <summary>

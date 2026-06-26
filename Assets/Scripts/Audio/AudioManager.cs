@@ -63,7 +63,6 @@ public class AudioManager : MonoBehaviour
         if (bgmObj != null)
         {
             bgmSource = bgmObj.GetComponent<AudioSource>();
-            Debug.Log($"[AudioManager] found BGM_Player in: {scene.name}");
             UpdateBGMVolumeRealtime();
         }
         else
@@ -193,7 +192,6 @@ public class AudioManager : MonoBehaviour
 
         UpdateBGMVolumeRealtime();
         bgmSource.Play();
-        Debug.Log($"[AudioManager] Playing BGM: {name}");
     }
 
     public void UpdateBGMVolumeRealtime()

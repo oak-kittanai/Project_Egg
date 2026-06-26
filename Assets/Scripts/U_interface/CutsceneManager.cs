@@ -78,8 +78,6 @@ public class CutsceneManager : NetworkBehaviour
         if (string.IsNullOrEmpty(fileName))
             fileName = "Cutscene1.mp4";
 
-        Debug.Log($"[CutsceneManager] Loading: StreamingAssets/{folderName}/{fileName}");
-
         SetupSkipButton();
         PlayerInterface.Instance.PlayIntroCutsceneFromFile(folderName, fileName);
         HookVideoEvents();
@@ -184,7 +182,6 @@ public class CutsceneManager : NetworkBehaviour
 
     private void NotifyMapReady()
     {
-        Debug.Log($"[CutsceneManager] NotifyMapReady (HasAuth: {HasStateAuthority})");
         GameManager.Instance?.MapFinishedLoading();
     }
 

@@ -191,8 +191,6 @@ public class JellyfishTrap : NetworkBehaviour
                     Vector2 knockbackDirection = new Vector2(pushDirectionX, 0.5f).normalized;
 
                     character.TakeDamage(damageAmount, knockbackForce, knockbackDirection);
-
-                    Debug.Log($"Do damage To {character.name}: - {damageAmount} hp");
                 }
             }
         }

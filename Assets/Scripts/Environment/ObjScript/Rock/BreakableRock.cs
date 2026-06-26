@@ -44,10 +44,6 @@ public class BreakableRock : NetworkBehaviour, Interactable
             duck.PlayHitAnimation_RPC();
             RPC_BreakRock();
         }
-        else
-        {
-            Debug.Log("Interact failed: Not a duck or smash skill is locked.");
-        }
     }
 
     [Rpc(RpcSources.All, RpcTargets.All)]

@@ -84,7 +84,6 @@ public class ThrowAble : NetworkBehaviour, ThrowAbleItem
 
         if (player.HeldItemName.ToString() != "")
         {
-            Debug.Log("hand full can't pick");
             return;
         }
 
@@ -93,7 +92,6 @@ public class ThrowAble : NetworkBehaviour, ThrowAbleItem
             player.HeldItemName = itemName;
 
             GameManager.Instance.RequestDespawn(selfNet);
-            Debug.Log($"{player.name} pick {itemName}");
         }
     }
 
