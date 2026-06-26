@@ -19,6 +19,10 @@ public class CharacterAnimation : NetworkBehaviour
 
     private string _lastLocalState = "";
 
+    [SerializeField] private float animBlendSpeed = 12f;
+    private float _smoothAnimX;
+    private float _smoothAnimY;
+
     [SerializeField] public bool Carrying => movement != null && movement.isCarrying;
     [SerializeField] public bool BeingCarried => movement != null && movement.IsBeingCarried;
     [SerializeField] public bool isBird => movement != null && movement.isBird;
@@ -64,8 +68,11 @@ public class CharacterAnimation : NetworkBehaviour
 
         if (animator != null)
         {
-            if (HasParameter("X")) animator.SetFloat("X", AnimX);
-            if (HasParameter("Y")) animator.SetFloat("Y", AnimY);
+            _smoothAnimX = Mathf.MoveTowards(_smoothAnimX, AnimX, animBlendSpeed * Time.deltaTime);
+            _smoothAnimY = Mathf.MoveTowards(_smoothAnimY, AnimY, animBlendSpeed * Time.deltaTime);
+
+            if (HasParameter("X")) animator.SetFloat("X", _smoothAnimX);
+            if (HasParameter("Y")) animator.SetFloat("Y", _smoothAnimY);
 
             if (CurrentAnimState.Value != string.Empty)
             {

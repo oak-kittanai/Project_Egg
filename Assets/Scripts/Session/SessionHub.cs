@@ -139,6 +139,9 @@ public class SessionHub : SingletonNetwork<SessionHub>
     {
         base.Awake();
         Instance.Setup();
+
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
     }
 
     public void Setup()
@@ -232,6 +235,9 @@ public class SessionHub : SingletonNetwork<SessionHub>
         {
             SessionManager.Instance.OnStateChanged -= HandleStateChanged;
         }
+
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
 
     private void HandleStateChanged(SessionState newState)
