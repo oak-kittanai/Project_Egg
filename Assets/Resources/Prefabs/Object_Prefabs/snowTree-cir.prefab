@@ -10,7 +10,6 @@ GameObject:
   m_Component:
   - component: {fileID: 9127692520414982689}
   - component: {fileID: 687059127847529489}
-  - component: {fileID: 400781288834429284}
   m_Layer: 0
   m_Name: snowTree-cir
   m_TagString: Untagged
@@ -91,65 +90,3 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &400781288834429284
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 316067040334038463}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7db70e0ea77f5ac47a8f4565a9406397, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.2D.Runtime::UnityEngine.Rendering.Universal.ShadowCaster2D
-  m_ShadowGroup: 0
-  m_Priority: -2
-  m_ComponentVersion: 5
-  m_HasRenderer: 1
-  m_UseRendererSilhouette: 1
-  m_CastsShadows: 1
-  m_SelfShadows: 0
-  m_AlphaCutoff: 0.1
-  m_ApplyToSortingLayers: 00000000331a7bb8e162dd830dd06c60cbcaba048139d317b590b61559663c23a99d33b8f3f4d272ef9ca99b054f2d1e518e6f4cd5108f7ac31de0805f963a1755ca6612297d3f22e910de31
-  m_ShapePath:
-  - {x: -0.7973604, y: 0.72521544, z: 0}
-  - {x: -0.74800813, y: 1.4195969, z: 0}
-  - {x: -0.47592026, y: 1.6504579, z: 0}
-  - {x: -0.71502787, y: 1.6504579, z: 0}
-  - {x: -0.8409507, y: 1.9530396, z: 0}
-  - {x: -0.73167217, y: 2.2709422, z: 0}
-  - {x: -0.3602407, y: 2.790702, z: 0}
-  - {x: 0.5681796, y: 2.6883829, z: 0}
-  - {x: 0.6206658, y: 1.996749, z: 0}
-  - {x: 0.7443411, y: 1.8071134, z: 0}
-  - {x: 0.8103016, y: 1.2464514, z: 0}
-  - {x: 0.75258684, y: 1.0733057, z: 0}
-  - {x: 0.513482, y: 1.0238354, z: 0}
-  - {x: 0.49228972, y: 0.67385375, z: 0}
-  m_ShapePathHash: -139744878
-  m_InstanceId: 0
-  m_ShadowShape2DComponent: {fileID: 0}
-  m_ShadowShape2DProvider:
-    rid: -2
-  m_ShadowCastingSource: 1
-  m_ShadowMesh:
-    m_Mesh: {fileID: 0}
-    m_LocalBounds:
-      m_Center: {x: -0.015324593, y: 1.732278, z: 0}
-      m_Extent: {x: 0.82562613, y: 1.0584242, z: 0}
-    m_EdgeProcessing: 1
-    m_TrimEdge: 0.1
-    m_FlipX: 0
-    m_FlipY: 0
-    m_InitialTrim: 0.1
-  m_CastingOption: 1
-  m_PreviousTrimEdge: 0.1
-  m_PreviousEdgeProcessing: 1
-  m_PreviousShadowCastingSource: 1
-  m_PreviousShadowShape2DSource: {fileID: 687059127847529489}
-  references:
-    version: 2
-    RefIds:
-    - rid: -2
-      type: {class: , ns: , asm: }

@@ -10,11 +10,12 @@ public class Interact_Door : NetworkBehaviour
     [SerializeField] float distance;
     [SerializeField] bool isVertical = true;
 
+    [Networked] public NetworkBool IsOpen { get; set; }
+
     private Vector3 startPosition;
     private Vector3 endPosition;
-    private Vector3 targetPosition;
 
-    void Start()
+    public override void Spawned()
     {
         startPosition = transform.position;
 
@@ -22,29 +23,23 @@ public class Interact_Door : NetworkBehaviour
             endPosition = startPosition + new Vector3(0, distance, 0);
         else
             endPosition = startPosition + new Vector3(distance, 0, 0);
-
-        targetPosition = startPosition;
     }
 
-    void Update()
+    public override void Render()
     {
+        Vector3 targetPosition = IsOpen ? endPosition : startPosition;
         transform.position = Vector3.MoveTowards(transform.position, targetPosition, speed * Time.deltaTime);
     }
 
     public void SetDoorState(bool open)
     {
-        targetPosition = open ? endPosition : startPosition;
+        if (HasStateAuthority) IsOpen = open;
+        else RPC_SetDoorState(open);
     }
 
-    private void OnCollisionEnter2D(Collision2D collision)
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    private void RPC_SetDoorState(NetworkBool open)
     {
-        if (collision.gameObject.CompareTag("Player"))
-            collision.transform.SetParent(transform);
-    }
-
-    private void OnCollisionExit2D(Collision2D collision)
-    {
-        if (collision.gameObject.CompareTag("Player"))
-            collision.transform.SetParent(null);
+        IsOpen = open;
     }
 }

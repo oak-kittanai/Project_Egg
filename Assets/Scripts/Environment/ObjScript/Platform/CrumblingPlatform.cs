@@ -13,6 +13,8 @@ public class CrumblingPlatform : NetworkBehaviour
     [SerializeField] float respawnTime = 3.0f;
     [Tooltip("ความแรงในการสั่นก่อนพัง")]
     [SerializeField] float shakeIntensity = 0.05f;
+    [Tooltip("ความเร็วในการสั่น")]
+    [SerializeField] float shakeFrequency = 25f;
 
     [Networked] public PlatformState CurrentState { get; set; }
     [Networked] private TickTimer StateTimer { get; set; }
@@ -101,7 +103,9 @@ public class CrumblingPlatform : NetworkBehaviour
 
         if (CurrentState == PlatformState.Shaking)
         {
-            transform.position = originalPos + (Vector3)Random.insideUnitCircle * shakeIntensity;
+            float t = (float)Runner.SimulationTime * shakeFrequency;
+            Vector3 shakeOffset = new Vector3(Mathf.Sin(t), Mathf.Cos(t * 1.3f), 0f) * shakeIntensity;
+            transform.position = originalPos + shakeOffset;
         }
     }
 }

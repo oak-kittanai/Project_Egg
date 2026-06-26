@@ -10,7 +10,6 @@ GameObject:
   m_Component:
   - component: {fileID: 5923316009397028551}
   - component: {fileID: 6247768295314649147}
-  - component: {fileID: 6167244803460470962}
   m_Layer: 0
   m_Name: snowTree-Tri
   m_TagString: Untagged
@@ -91,69 +90,3 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &6167244803460470962
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2652421694554481760}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7db70e0ea77f5ac47a8f4565a9406397, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.2D.Runtime::UnityEngine.Rendering.Universal.ShadowCaster2D
-  m_ShadowGroup: 0
-  m_Priority: 0
-  m_ComponentVersion: 5
-  m_HasRenderer: 1
-  m_UseRendererSilhouette: 1
-  m_CastsShadows: 1
-  m_SelfShadows: 0
-  m_AlphaCutoff: 0.1
-  m_ApplyToSortingLayers: 00000000c31de0805f963a1755ca6612
-  m_ShapePath:
-  - {x: -0.77130634, y: 0.18995646, z: 0}
-  - {x: -0.5109015, y: 0.5922842, z: 0}
-  - {x: -0.88251954, y: 0.65318185, z: 0}
-  - {x: -0.45124134, y: 1.0815028, z: 0}
-  - {x: -0.8309252, y: 1.176182, z: 0}
-  - {x: -0.3319189, y: 1.6303822, z: 0}
-  - {x: -0.7067277, y: 1.621875, z: 0}
-  - {x: -0.21259643, y: 2.1196008, z: 0}
-  - {x: -0.5200135, y: 2.1653779, z: 0}
-  - {x: -0.07772404, y: 2.7781434, z: 0}
-  - {x: 0.061037995, y: 2.735108, z: 0}
-  - {x: 0.60245067, y: 2.0694163, z: 0}
-  - {x: 0.5533785, y: 1.8064024, z: 0}
-  - {x: 0.7610994, y: 1.4679303, z: 0}
-  - {x: 0.43174008, y: 1.4633319, z: 0}
-  - {x: 0.7388685, y: 1.0052085, z: 0}
-  - {x: 0.8851624, y: 0.56841993, z: 0}
-  - {x: 0.89709395, y: 0.16272645, z: 0}
-  m_ShapePathHash: 1908710060
-  m_InstanceId: 0
-  m_ShadowShape2DComponent: {fileID: 0}
-  m_ShadowShape2DProvider:
-    rid: -2
-  m_ShadowCastingSource: 1
-  m_ShadowMesh:
-    m_Mesh: {fileID: 0}
-    m_LocalBounds:
-      m_Center: {x: 0.0072872043, y: 1.4704349, z: 0}
-      m_Extent: {x: 0.88980675, y: 1.3077085, z: 0}
-    m_EdgeProcessing: 1
-    m_TrimEdge: 0.2
-    m_FlipX: 0
-    m_FlipY: 0
-    m_InitialTrim: 0
-  m_CastingOption: 1
-  m_PreviousTrimEdge: 0.2
-  m_PreviousEdgeProcessing: 1
-  m_PreviousShadowCastingSource: 1
-  m_PreviousShadowShape2DSource: {fileID: 0}
-  references:
-    version: 2
-    RefIds:
-    - rid: -2
-      type: {class: , ns: , asm: }
