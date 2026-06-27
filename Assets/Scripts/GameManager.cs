@@ -414,16 +414,25 @@ public class GameManager : SingletonNetwork<GameManager>
         return spawnedObj;
     }
 
-    public void SpawnDropItem(NetworkObject objToSpawn, Vector2 posToSpawn)
+    public void SpawnDropItem(NetworkObject objToSpawn, Vector2 posToSpawn, MovementCharacter breaker = null)
     {
         if (!HasStateAuthority) return;
 
-        NetworkObject objIte = Runner.Spawn(objToSpawn, posToSpawn);
+        Vector2 spawnOffset = posToSpawn + Vector2.up * 0.25f;
+        NetworkObject objIte = Runner.Spawn(objToSpawn, spawnOffset);
 
         Rigidbody2D rb = objIte.GetComponent<Rigidbody2D>();
         if (rb != null)
         {
-            rb.AddForce(Vector2.up * 0.5f, ForceMode2D.Impulse);
+            rb.AddForce(Vector2.up * 2.5f, ForceMode2D.Impulse);
+        }
+
+        // กันของที่ดรอปออกมาชนตัวคนที่ทำให้มันดรอปทางฟิสิกส์ตรงๆ (เช่น หินตกใส่หัวเป็ดหลังทุบ)
+        if (breaker != null && objIte.TryGetComponent<Collider2D>(out var spawnedCollider))
+        {
+            if (breaker.coll2D != null) Physics2D.IgnoreCollision(spawnedCollider, breaker.coll2D, true);
+            if (breaker.normalCollider != null) Physics2D.IgnoreCollision(spawnedCollider, breaker.normalCollider, true);
+            if (breaker.carryCollider != null) Physics2D.IgnoreCollision(spawnedCollider, breaker.carryCollider, true);
         }
     }
 

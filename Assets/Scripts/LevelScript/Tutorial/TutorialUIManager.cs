@@ -44,7 +44,10 @@ public class TutorialUIManager : MonoBehaviour
     private void Update()
     {
         if (tutorialPanel == null || !tutorialPanel.activeSelf || isCloseLocked) return;
-        if (Keyboard.current != null && Keyboard.current.tabKey.wasPressedThisFrame)
+
+        bool closeFromKeyboard = Keyboard.current != null && Keyboard.current.tabKey.wasPressedThisFrame;
+        bool closeFromGamepad = Gamepad.current != null && Gamepad.current.buttonEast.wasPressedThisFrame;
+        if (closeFromKeyboard || closeFromGamepad)
             HideTutorial();
     }
 
@@ -80,9 +83,6 @@ public class TutorialUIManager : MonoBehaviour
 
         RenderCurrentPage();
 
-        if (EventSystem.current != null && nextButton != null)
-            EventSystem.current.SetSelectedGameObject(nextButton.gameObject);
-
         if (lockCoroutine != null) StopCoroutine(lockCoroutine);
         if (isFirstTimeView) lockCoroutine = StartCoroutine(LockCloseFor(list[currentIndex].displayDuration));
         else SetLocked(false);
@@ -92,6 +92,12 @@ public class TutorialUIManager : MonoBehaviour
     {
         if (lockCoroutine != null) StopCoroutine(lockCoroutine);
         if (tutorialPanel != null) tutorialPanel.SetActive(false);
+
+        if (MenuController.Instance != null && MenuController.Instance.IsMenuOpen
+            && EventSystem.current != null && PlayerInterface.Instance?.resumeButton != null)
+        {
+            EventSystem.current.SetSelectedGameObject(PlayerInterface.Instance.resumeButton.gameObject);
+        }
     }
 
     public void ShowNext()
@@ -115,6 +121,14 @@ public class TutorialUIManager : MonoBehaviour
 
         if (prevButton != null) prevButton.interactable = currentIndex > 0;
         if (nextButton != null) nextButton.interactable = currentIndex < currentList.Count - 1;
+
+        if (EventSystem.current != null)
+        {
+            if (nextButton != null && nextButton.interactable)
+                EventSystem.current.SetSelectedGameObject(nextButton.gameObject);
+            else if (prevButton != null && prevButton.interactable)
+                EventSystem.current.SetSelectedGameObject(prevButton.gameObject);
+        }
     }
 
     private IEnumerator LockCloseFor(float duration)

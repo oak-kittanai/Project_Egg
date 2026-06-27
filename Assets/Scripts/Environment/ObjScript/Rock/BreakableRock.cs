@@ -18,6 +18,8 @@ public class BreakableRock : NetworkBehaviour, Interactable
     [SerializeField] Sprite alreadyBreakRock;
     [SerializeField] Animator animator;
 
+    private Duck_Moveset lastBreaker;
+
     private void Awake()
     {
         if (selfNet == null) selfNet = GetComponent<NetworkObject>();
@@ -41,6 +43,7 @@ public class BreakableRock : NetworkBehaviour, Interactable
 
         if (player is Duck_Moveset duck && duck.isSmashUnlocked)
         {
+            lastBreaker = duck;
             duck.PlayHitAnimation_RPC();
             RPC_BreakRock();
         }
@@ -81,6 +84,6 @@ public class BreakableRock : NetworkBehaviour, Interactable
     public void SpawnItem()
     {
         if (!HasStateAuthority) return;
-        GameManager.Instance.SpawnDropItem(itemToDrop, transform.position);
+        GameManager.Instance.SpawnDropItem(itemToDrop, transform.position, lastBreaker);
     }
 }

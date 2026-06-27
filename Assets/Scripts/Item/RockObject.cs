@@ -94,7 +94,12 @@ public class RockObject : NetworkBehaviour, ThrowAbleItem
                 if (hitSomething)
                 {
                     isLethal = false;
+
+                    Vector2 pushDir = ((Vector2)rb2D.position - (Vector2)hit.collider.bounds.center).normalized;
+                    if (pushDir.sqrMagnitude < 0.01f) pushDir = hit.normal;
                     rb2D.linearVelocity = Vector2.zero;
+                    rb2D.AddForce(pushDir * 3f, ForceMode2D.Impulse);
+
                     break;
                 }
             }

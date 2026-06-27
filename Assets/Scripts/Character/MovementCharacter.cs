@@ -461,6 +461,20 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     {
         if (HasInputAuthority) CheckInteractable();
 
+        ManageMovementSounds();
+    }
+
+    // The carried visual-follow must be the LAST transform writer of the frame.
+    // Fusion's NetworkRigidbody2D render-interpolation writes the same visualTransform
+    // (it's the InterpolationTarget) and runs AFTER MovementCharacter.Render(), so doing
+    // the follow in Render() loses the race and the proxy jitters. LateUpdate runs after
+    // Fusion's render phase, so our predicted-carrier follow wins → no jitter.
+    private void LateUpdate()
+    {
+        if (Object == null || !Object.IsValid || Runner == null) return;
+
+        ReconcileCarryPrediction();
+
         bool effectivelyCarried = IsBeingCarried || localIsBeingCarriedPredict;
         NetworkId effectiveCarrierId = IsBeingCarried ? CarrierId : localCarrierIdPredict;
 
@@ -487,8 +501,30 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                 _wasVisuallyCarried = false;
             }
         }
+    }
 
-        ManageMovementSounds();
+    // Self-heal an orphaned carry prediction. localIsBeingCarriedPredict bridges the latency
+    // between the Client initiating a carry and the authoritative IsBeingCarried replicating.
+    // If the authoritative state says "not carried" AND the predicted carrier no longer claims
+    // this character, the prediction is stale (e.g. a fast pickup->drop whose predicted carrier
+    // state was rolled back) — clear it so the phantom-on-head can't persist. Runs on proxies
+    // too (the Bird is a pure proxy on the Client, so only LateUpdate executes for it there).
+    private void ReconcileCarryPrediction()
+    {
+        if (!localIsBeingCarriedPredict || IsBeingCarried) return;
+
+        bool carrierStillClaims =
+            Runner.TryFindObject(localCarrierIdPredict, out var carrierObj)
+            && carrierObj.TryGetComponent<Duck_Moveset>(out var carrierDuck)
+            && carrierDuck.IsCarry
+            && carrierDuck.CarriedFriendId == Object.Id;
+
+        if (!carrierStillClaims)
+        {
+            localIsBeingCarriedPredict = false;
+            localCarrierIdPredict = default;
+            if (coll2D != null) coll2D.isTrigger = false;
+        }
     }
 
     #endregion

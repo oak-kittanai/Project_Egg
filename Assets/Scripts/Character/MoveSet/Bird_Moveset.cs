@@ -218,11 +218,9 @@ public class Bird_Moveset : MovementCharacter, IstunAble
 
         if (HasStateAuthority)
         {
-            IsFlying = false;
-            FlightTimer = TickTimer.None;
+            ForceCancelFlight();
 
             FallingBusy = false;
-            AlreadyFloating = false;
             isOptional = false;
             IsAlreadyFly = false;
         }
@@ -326,7 +324,7 @@ public class Bird_Moveset : MovementCharacter, IstunAble
                 }
                 else
                 {
-                    if (Runner.TryFindObject(CarrierId, out var carrierObj) && carrierObj.TryGetComponent<MovementCharacter>(out var duck))
+                    if (HasStateAuthority && Runner.TryFindObject(CarrierId, out var carrierObj) && carrierObj.TryGetComponent<MovementCharacter>(out var duck))
                     {
                         duck.rb2D.linearVelocity = new Vector2(duck.rb2D.linearVelocity.x, stats.s_flySpeed);
                     }
@@ -382,6 +380,8 @@ public class Bird_Moveset : MovementCharacter, IstunAble
 
     private void StartFlying()
     {
+        if (!HasStateAuthority) return;
+
         IsFlying = true;
         isJumping = false;
 
