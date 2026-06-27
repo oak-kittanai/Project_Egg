@@ -153,7 +153,9 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     #endregion
 
     #region Platform Interaction
-    [HideInInspector] public Vector2 platformVelocity;
+    // moving platform ที่ยืนอยู่ตอนนี้ + ตำแหน่งล่าสุดของมัน (ไว้คำนวณ delta แล้ว follow แนวนอน)
+    private Transform currentPlatform;
+    private Vector3 lastPlatformPos;
     #endregion
 
     #region Interaction & Physics
@@ -371,14 +373,13 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
         TickStun();
 
-        if (IsGrounded && platformVelocity.y != 0 && !effectivelyCarried && !isMenuOpen)
+        // ติดหนึบกับ moving platform แนวนอน (player follow เองจาก transform ที่ sync แล้ว)
+        // แนวตั้งปล่อยให้ kinematic collision จัดการ — กัน double-count ที่เคยทำให้โดนผลักลง
+        if (IsGrounded && currentPlatform != null && !effectivelyCarried && !isMenuOpen)
         {
-            Vector2 vel = rb2D.linearVelocity;
-            if (platformVelocity.y > 0)
-                vel.y = Mathf.Max(vel.y, platformVelocity.y);
-            else
-                vel.y = Mathf.Min(vel.y, platformVelocity.y);
-            rb2D.linearVelocity = vel;
+            Vector3 cur = currentPlatform.position;
+            rb2D.position += new Vector2(cur.x - lastPlatformPos.x, 0f);
+            lastPlatformPos = cur;
         }
 
         // Test
@@ -453,8 +454,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         {
             rb2D.gravityScale = normalGravity;
         }
-
-        platformVelocity = Vector2.zero;
     }
 
     public override void Render()
@@ -575,7 +574,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     private void HandleMovement(NetworkInputData input)
     {
-        float targetSpeed = (input.horizontal * stats.maxSpeed) + platformVelocity.x;
+        float targetSpeed = input.horizontal * stats.maxSpeed;
         float currentSpeed = rb2D.linearVelocity.x;
         float accelRate = isSpeedoptional
             ? (Mathf.Abs(targetSpeed) > 0.01f ? accelerationSpeedOptional : decelerationSpeedOptional)
@@ -984,8 +983,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             }
         }
 
-        platformVelocity = Vector2.zero;
-
         if (this is Duck_Moveset duckSelf)
         {
             if (normalCollider != null) normalCollider.enabled = true;
@@ -1286,8 +1283,19 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             LayerMask mask = LayerMask.GetMask("Ground", "Platform");
             LayerMask waterMask = LayerMask.GetMask("Water");
 
-            bool hitGround = Physics2D.Raycast(transform.position, Vector2.down, rayDistance, mask);
+            RaycastHit2D groundHit = Physics2D.Raycast(transform.position, Vector2.down, rayDistance, mask);
+            bool hitGround = groundHit.collider != null;
             isNearGround = Physics2D.Raycast(transform.position, Vector2.down, rayDistance + nearGroundDistance, mask);
+
+            // จับว่ายืนอยู่บน moving platform ไหม (ไว้ follow แนวนอน)
+            Transform plat = null;
+            if (groundHit.collider != null && groundHit.collider.GetComponentInParent<IRideablePlatform>() is Component pc)
+                plat = pc.transform;
+            if (plat != currentPlatform)
+            {
+                currentPlatform = plat;
+                if (currentPlatform != null) lastPlatformPos = currentPlatform.position; // กันกระโดดตอนเพิ่งเหยียบ
+            }
 
             Vector2 headPosition = (Vector2)transform.position + (Vector2.up * headOffset);
             Vector2 bodyPosition = (Vector2)transform.position + (Vector2.up * bodyOffset);

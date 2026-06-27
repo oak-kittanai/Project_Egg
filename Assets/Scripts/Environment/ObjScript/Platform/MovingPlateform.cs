@@ -1,21 +1,14 @@
 using Fusion;
 using UnityEngine;
-using System.Collections.Generic;
 
-public class MovingPlateform : NetworkBehaviour
+public class MovingPlateform : NetworkBehaviour, IRideablePlatform
 {
     [SerializeField] float speed = 1.5f;
     [SerializeField] float distance = 4f;
     [SerializeField] bool isVertical;
 
-    [Header("Player Detect")]
-    [SerializeField] private Vector2 boxSize = new Vector2(2f, 0.5f);
-    [SerializeField] private Vector2 boxOffset = new Vector2(0f, 0.5f);
-
     private Vector3 startPosition;
     private Rigidbody2D rb;
-
-    private Collider2D[] hitResults = new Collider2D[10];
 
     public override void Spawned()
     {
@@ -28,6 +21,8 @@ public class MovingPlateform : NetworkBehaviour
 
     public override void FixedUpdateNetwork()
     {
+        // แค่ขยับตัวเอง — ผู้เล่นที่ยืนอยู่บนจะ follow เองผ่าน IRideablePlatform
+        // (รับน้ำหนักแนวตั้งจาก kinematic collision, ส่วนแนวนอน player ตามใน MovementCharacter)
         float sineValue = (Mathf.Sin((float)Runner.SimulationTime * speed) + 1f) / 2f;
         float movementOffset = sineValue * distance;
 
@@ -36,38 +31,7 @@ public class MovingPlateform : NetworkBehaviour
         if (isVertical) newPosition.y += movementOffset;
         else newPosition.x += movementOffset;
 
-        Vector3 deltaMovement = newPosition - transform.position;
-        Vector2 platVel = (Vector2)deltaMovement / (float)Runner.DeltaTime;
-
         rb.MovePosition(newPosition);
-
-        Vector2 checkPos = (Vector2)transform.position + boxOffset;
-
-        int hitCount = Runner.GetPhysicsScene2D().OverlapBox(
-            checkPos,
-            boxSize,
-            0, 
-            hitResults,
-            LayerMask.GetMask("Player")
-        );
-
-        List<MovementCharacter> processedPlayers = new List<MovementCharacter>();
-
-        for (int i = 0; i < hitCount; i++)
-        {
-            var hit = hitResults[i];
-            if (hit != null && hit.TryGetComponent<MovementCharacter>(out var player))
-            {
-                if (processedPlayers.Contains(player)) continue;
-                processedPlayers.Add(player);
-
-                if (player.rb2D != null)
-                {
-                    player.rb2D.position += (Vector2)deltaMovement;
-                    player.platformVelocity = platVel;
-                }
-            }
-        }
     }
 
     private void OnDrawGizmosSelected()
@@ -82,9 +46,5 @@ public class MovingPlateform : NetworkBehaviour
         Gizmos.DrawLine(currentStart, endPosition);
         Gizmos.DrawSphere(currentStart, 0.1f);
         Gizmos.DrawSphere(endPosition, 0.1f);
-
-        Gizmos.color = new Color(0f, 1f, 0f, 0.4f);
-        Vector3 gizmoPos = Application.isPlaying ? transform.position + (Vector3)boxOffset : currentStart + (Vector3)boxOffset;
-        Gizmos.DrawCube(gizmoPos, boxSize);
     }
 }

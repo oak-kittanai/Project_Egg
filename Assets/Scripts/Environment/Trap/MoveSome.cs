@@ -1,7 +1,7 @@
 using Fusion;
 using UnityEngine;
 
-public class MoveSome : NetworkBehaviour
+public class MoveSome : NetworkBehaviour, IRideablePlatform
 {
     [Header("Move State")]
     [SerializeField] float speed = 1.5f;
