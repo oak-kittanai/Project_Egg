@@ -54,6 +54,10 @@ public class LevelData : MonoBehaviour
         yield return new WaitUntil(() => GameManager.Instance != null);
         yield return new WaitUntil(() => GameManager.Instance.Object != null && GameManager.Instance.Object.IsValid);
         GameManager.Instance.SetupLevelData(this);
+
+        // ปักหมุด SO ไว้กับ TutorialUIManager (DontDestroyOnLoad) ตั้งแต่ฉากแรก
+        // -> ข้อมูล tutorial ที่ปลดแล้วจำได้ข้ามฉาก
+        TutorialUIManager.Instance?.RegisterProgress(tutorialProgress);
     }
 
     public void RequestTutorialShow(string requestedName)

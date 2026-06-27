@@ -321,8 +321,13 @@ public class MenuController : NetworkBehaviour
     // Called from PauseMenu "ดู tutorial ย้อนหลัง" button — game is already paused while menu is open
     public void ShowTutorialReview(int index = 0)
     {
-        if (LevelData.Instance == null || TutorialUIManager.Instance == null) return;
-        var seen = LevelData.Instance.SeenTutorials;
+        if (TutorialUIManager.Instance == null) return;
+
+        // อ่านจาก manager ที่ DontDestroyOnLoad (จำข้ามฉากได้) — fallback ไป LevelData เผื่อยังไม่ register
+        var seen = TutorialUIManager.Instance.SeenTutorials;
+        if ((seen == null || seen.Count == 0) && LevelData.Instance != null)
+            seen = LevelData.Instance.SeenTutorials;
+
         if (seen == null || seen.Count == 0) return;
         int clamped = Mathf.Clamp(index, 0, seen.Count - 1);
         TutorialUIManager.Instance.ShowTutorialPanel(seen, clamped, isFirstTimeView: false);

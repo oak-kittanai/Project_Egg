@@ -25,6 +25,21 @@ public class TutorialUIManager : MonoBehaviour
     private bool isCloseLocked;
     private Coroutine lockCoroutine;
 
+    // เก็บ TutorialProgressSO ไว้กับ manager ที่ DontDestroyOnLoad -> ข้อมูล "ปลดแล้ว"
+    // ไม่ถูก unload ตอนเปลี่ยนฉาก (จำได้ตลอดรอบเล่น)
+    private TutorialProgressSO progress;
+    public List<TutorialData> SeenTutorials => progress != null ? progress.seenTutorials : null;
+
+    public void RegisterProgress(TutorialProgressSO so)
+    {
+        if (so == null) return;
+        if (progress == null)
+        {
+            progress = so;
+            progress.seenTutorials.Clear(); // เริ่มรอบเล่นใหม่ให้สดเสมอ (กันค้างจาก play session ก่อนใน editor)
+        }
+    }
+
     private void Awake()
     {
         if (Instance == null)
