@@ -50,6 +50,14 @@ public class GameManager : SingletonNetwork<GameManager>
     [Header("Pause")]
     [Networked] public NetworkBool IsPaused { get; set; }
 
+    // จุดเดียวที่ระบบ gameplay ทุกตัวเช็คว่า "ควร freeze ไหม"
+    // freeze เมื่อ: เปิด PauseMenu (IsPaused, networked) หรือ Dialogue หลัก หรือ Tutorial
+    // (MiniDialogue ไม่นับ เพราะใช้คนละ manager ไม่ได้ set DialogueManager.IsDialogueOpen)
+    public bool IsGameplayFrozen =>
+        (bool)IsPaused
+        || DialogueManager.IsDialogueOpen
+        || (TutorialUIManager.Instance != null && TutorialUIManager.Instance.IsTutorialOpen);
+
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
     public void SetPause_RPC(bool pause)
     {

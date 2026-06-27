@@ -32,6 +32,8 @@ public class MoveSome : NetworkBehaviour
 
     public override void FixedUpdateNetwork()
     {
+        if (GameManager.Instance != null && GameManager.Instance.IsGameplayFrozen) return; // freeze ตอน pause/dialogue/tutorial
+
         if (HasStateAuthority)
         {
             float sineValue = (Mathf.Sin((float)Runner.SimulationTime * speed) + 1f) / 2f;

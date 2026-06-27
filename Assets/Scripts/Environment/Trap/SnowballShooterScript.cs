@@ -44,6 +44,7 @@ public class SnowballShooterTrap : NetworkBehaviour
     public override void FixedUpdateNetwork()
     {
         if (!HasStateAuthority || !IsActive) return;
+        if (GameManager.Instance != null && GameManager.Instance.IsGameplayFrozen) return; // freeze ตอน pause/dialogue/tutorial
 
         ValidateOrFindTarget();
 

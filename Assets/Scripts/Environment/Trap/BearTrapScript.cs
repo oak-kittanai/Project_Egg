@@ -44,6 +44,7 @@ public class BearTrapScript : NetworkBehaviour
     public override void FixedUpdateNetwork()
     {
         if (!HasStateAuthority) return;
+        if (GameManager.Instance != null && GameManager.Instance.IsGameplayFrozen) return; // freeze ตอน pause/dialogue/tutorial
 
         if (IsTriggered && !HasPlayedFX && DelayTimer.Expired(Runner))
         {

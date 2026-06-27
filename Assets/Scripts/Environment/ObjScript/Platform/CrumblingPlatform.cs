@@ -37,6 +37,12 @@ public class CrumblingPlatform : NetworkBehaviour
     {
         originalPos = transform.position;
         lastState = CurrentState;
+
+        // ตั้ง collider + sprite ให้ตรงกับ state ปัจจุบันตั้งแต่ spawn (รองรับคนเข้าทีหลัง
+        // ที่ platform อาจพังไปแล้ว) — boxCollider.enabled เป็น state ของแต่ละเครื่อง ไม่ได้ sync อัตโนมัติ
+        bool solid = CurrentState != PlatformState.Broken;
+        if (boxCollider != null) boxCollider.enabled = solid;
+        if (sr != null) sr.enabled = solid;
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
@@ -89,6 +95,9 @@ public class CrumblingPlatform : NetworkBehaviour
             {
                 if (animator != null) animator.SetTrigger("Break");
                 if (sr != null) sr.enabled = false;
+                // ปิด collider บน "ทุก peer" ไม่ใช่แค่ state authority — ไม่งั้นฝั่ง client
+                // ที่ไม่ได้รัน BreakPlatform() จะยังชนพื้นที่พังไปแล้ว (collider ไม่ sync ข้ามเครื่อง)
+                if (boxCollider != null) boxCollider.enabled = false;
 
                 transform.position = originalPos;
             }
@@ -96,6 +105,7 @@ public class CrumblingPlatform : NetworkBehaviour
             {
                 if (animator != null) animator.SetTrigger("Reset");
                 if (sr != null) sr.enabled = true;
+                if (boxCollider != null) boxCollider.enabled = true;
             }
 
             lastState = CurrentState;

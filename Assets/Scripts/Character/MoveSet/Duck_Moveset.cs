@@ -22,6 +22,9 @@ public class Duck_Moveset : MovementCharacter, IstunAble
     [Header("Carry setting")]
     [SerializeField] public float throwForceX = 4f;
     [SerializeField] public float throwForceY = 4f;
+    [Tooltip("time (sec) delay carry")]
+    [SerializeField] private float pickupCooldown = 1f;
+    [Networked] private TickTimer PickupCooldownTimer { get; set; }
 
     [Header("Dive Settings")]
     [SerializeField] float swimSpeed = 5f;
@@ -67,6 +70,28 @@ public class Duck_Moveset : MovementCharacter, IstunAble
     public override void Spawned()
     {
         base.Spawned();
+    }
+
+    public override void RPC_OnRespawned()
+    {
+        base.RPC_OnRespawned();
+
+        // เคลียร์ state ดำน้ำ/ลอยน้ำที่ base ไม่ได้รีเซ็ต — กันค่าค้างหลังตายแบบจมน้ำ
+        // (onDiving/onDivingControl ค้าง -> HandleWaterLogic/HandleBuoyancy ใส่ค่าลอยน้ำกลับ
+        //  (isSpeedoptional=true, gravityScale=0) -> เกิดใหม่แล้วยกนก เป็ดลื่น/วิ่งเร็วเหมือนยังอยู่ในน้ำ)
+        isOptional = false;
+        isSpeedoptional = false;
+
+        if (HasStateAuthority)
+        {
+            onDiving = false;
+            onDivingControl = false;
+            emergencySwimBool = false;
+            emergencyToggle = true;
+            ReadyToDive = true;
+            DiveTimer = TickTimer.None;
+            EmergencyTimer = TickTimer.None;
+        }
     }
 
     public void TriggerStun()
@@ -184,6 +209,9 @@ public class Duck_Moveset : MovementCharacter, IstunAble
                 return;
             }
 
+            // ติด cooldown หลังพึ่งปล่อยนก — ยังยกใหม่ไม่ได้ (แต่ปล่อยข้างบนไม่ติด cooldown)
+            if (!PickupCooldownTimer.ExpiredOrNotRunning(Runner)) return;
+
             Collider2D[] hitsPlayer = Physics2D.OverlapCircleAll(transform.position, playerInteractRadius);
             foreach (var hit in hitsPlayer)
             {
@@ -243,6 +271,8 @@ public class Duck_Moveset : MovementCharacter, IstunAble
         IsCarry = false;
         CarriedFriendId = default;
         resetAnimation = true;
+
+        PickupCooldownTimer = TickTimer.CreateFromSeconds(Runner, pickupCooldown);
     }
 
     public void OnCarryStateChanged()

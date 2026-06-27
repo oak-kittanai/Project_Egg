@@ -28,6 +28,20 @@ public class BreakableRock : NetworkBehaviour, Interactable
         if (coll == null) coll = GetComponent<Collider2D>();
     }
 
+    public override void Spawned()
+    {
+        if (isBroken)
+        {
+            DisableCollider();
+            ChangeSprite();
+        }
+        else if (animator != null)
+        {
+            // เผื่อ object ถูก reuse/pool กลับมาในสภาพ animator ถูกปิดค้างจากครั้งก่อน
+            animator.enabled = true;
+        }
+    }
+
     public bool CanInteract(MovementCharacter player)
     {
         if (player is Duck_Moveset duck && canDrop && duck.isSmashUnlocked)
@@ -68,17 +82,25 @@ public class BreakableRock : NetworkBehaviour, Interactable
 
     public void OnRockBroken()
     {
-        ChangeSprite();
+        DisableCollider();
     }
 
-    public void ChangeSprite()
+    private void DisableCollider()
     {
         if (coll != null) coll.enabled = false;
+    }
 
+    // เปลี่ยน sprite อย่างเดียว — เรียกจาก Animation Event ตอน clip จบ (และจาก Spawned สำหรับคนเข้าทีหลัง)
+    public void ChangeSprite()
+    {
         if (spriteRenderer != null)
         {
             spriteRenderer.sprite = alreadyBreakRock;
         }
+
+        // หินแตกเป็นสถานะสุดท้ายแบบ static — ปิด Animator ไม่ให้ break clip วนกลับมาขับ sprite
+        // เฟรมแรก (Rock-Sheet_0) ทับ Rockdrop ที่เพิ่ง set (ต้นเหตุที่ "จบ animation แล้วกลับเป็น sprite แรก")
+        if (animator != null) animator.enabled = false;
     }
 
     public void SpawnItem()

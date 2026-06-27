@@ -43,6 +43,7 @@ public class Turret_Shooter : NetworkBehaviour
     public override void FixedUpdateNetwork()
     {
         if (!HasStateAuthority) return;
+        if (GameManager.Instance != null && GameManager.Instance.IsGameplayFrozen) return; // freeze ตอน pause/dialogue/tutorial
 
         Vector2 originPos = firePoint != null ? (Vector2)firePoint.position : (Vector2)transform.position;
 

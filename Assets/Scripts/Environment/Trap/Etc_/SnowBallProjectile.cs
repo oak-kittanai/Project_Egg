@@ -22,6 +22,12 @@ public class SnowBallProjectile : NetworkBehaviour
     private bool hasHitPlayer = false;
     private Rigidbody2D rb2D;
 
+    // freeze ตอน pause: เก็บค่าความเร็ว/แรงโน้มถ่วงไว้ แล้วหยุดนิ่ง คืนค่าเมื่อเล่นต่อ
+    private bool _frozen;
+    private Vector2 _frozenVel;
+    private float _frozenAng;
+    private float _frozenGravity;
+
     public override void Spawned()
     {
         Runner.SetIsSimulated(Object, true);
@@ -44,6 +50,28 @@ public class SnowBallProjectile : NetworkBehaviour
     public override void FixedUpdateNetwork()
     {
         if (!HasStateAuthority) return;
+
+        if (GameManager.Instance != null && GameManager.Instance.IsGameplayFrozen)
+        {
+            if (!_frozen && rb2D != null)
+            {
+                _frozenVel = rb2D.linearVelocity;
+                _frozenAng = rb2D.angularVelocity;
+                _frozenGravity = rb2D.gravityScale;
+                rb2D.linearVelocity = Vector2.zero;
+                rb2D.angularVelocity = 0f;
+                rb2D.gravityScale = 0f;
+                _frozen = true;
+            }
+            return;
+        }
+        if (_frozen && rb2D != null)
+        {
+            rb2D.linearVelocity = _frozenVel;
+            rb2D.angularVelocity = _frozenAng;
+            rb2D.gravityScale = _frozenGravity;
+            _frozen = false;
+        }
 
         if (LifeTimer.Expired(Runner))
         {

@@ -31,6 +31,7 @@ public class DoDamgeClear : NetworkBehaviour
     public override void FixedUpdateNetwork()
     {
         if (!HasStateAuthority) return;
+        if (GameManager.Instance != null && GameManager.Instance.IsGameplayFrozen) return; // freeze ตอน pause/dialogue/tutorial
 
         if (IsTriggered && ClearTimer.Expired(Runner))
         {

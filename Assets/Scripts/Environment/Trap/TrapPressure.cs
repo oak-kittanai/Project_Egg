@@ -76,6 +76,7 @@ public class TrapPressure : NetworkBehaviour
     #region FixedUpdateNetwork 
     public override void FixedUpdateNetwork()
     {
+        if (GameManager.Instance != null && GameManager.Instance.IsGameplayFrozen) return; // freeze ตอน pause/dialogue/tutorial
         if (!_isActive) return;
 
         int hitCount = Runner.GetPhysicsScene2D().OverlapBox(

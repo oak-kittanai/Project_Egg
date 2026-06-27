@@ -108,7 +108,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [SerializeField] private int drowningDamagePerTick = 1;
     [SerializeField] private float drowningDamageInterval = 1f;
     [Networked] private TickTimer DrowningDamageTimer { get; set; }
-    [Networked] private bool isDrowningDamageActive { get; set; }
+    [Networked] protected bool isDrowningDamageActive { get; set; }
     #endregion
 
     #region Stun

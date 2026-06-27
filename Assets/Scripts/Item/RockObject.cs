@@ -22,11 +22,49 @@ public class RockObject : NetworkBehaviour, ThrowAbleItem
     [Networked] public bool AlreadyThrow { get; set; }
     [Networked] public NetworkId ThrowerId { get; set; }
 
+    [Header("Stun")]
+    [Tooltip("rock must move faster than this to stun the duck (prevents slow rocks from stunning)")]
+    [SerializeField] float stunVelocityThreshold = 3f;
+
+    // freeze ตอน pause: เก็บค่าความเร็ว/แรงโน้มถ่วงไว้ แล้วหยุดนิ่ง คืนค่าเมื่อเล่นต่อ
+    private bool _frozen;
+    private Vector2 _frozenVel;
+    private float _frozenAng;
+    private float _frozenGravity;
+
     private void Awake()
     {
         if (selfNet == null) selfNet = GetComponent<NetworkObject>();
         if (rb2D == null) rb2D = GetComponent<Rigidbody2D>();
         if (spriteRenderer == null) spriteRenderer = GetComponent<SpriteRenderer>();
+    }
+
+    public override void FixedUpdateNetwork()
+    {
+        if (!HasStateAuthority || rb2D == null) return;
+
+        // freeze ตอน pause/dialogue/tutorial — หยุดหินที่กำลังลอย/ปาอยู่ คืนค่าเมื่อเล่นต่อ
+        if (GameManager.Instance != null && GameManager.Instance.IsGameplayFrozen)
+        {
+            if (!_frozen)
+            {
+                _frozenVel = rb2D.linearVelocity;
+                _frozenAng = rb2D.angularVelocity;
+                _frozenGravity = rb2D.gravityScale;
+                rb2D.linearVelocity = Vector2.zero;
+                rb2D.angularVelocity = 0f;
+                rb2D.gravityScale = 0f;
+                _frozen = true;
+            }
+            return;
+        }
+        if (_frozen)
+        {
+            rb2D.linearVelocity = _frozenVel;
+            rb2D.angularVelocity = _frozenAng;
+            rb2D.gravityScale = _frozenGravity;
+            _frozen = false;
+        }
     }
 
     public override void Spawned()
@@ -63,8 +101,15 @@ public class RockObject : NetworkBehaviour, ThrowAbleItem
     {
         if (!HasStateAuthority) return;
 
-        if (isLethal)
+        // หินจะมีผล (kill monster / stun เป็ด) ได้เฉพาะหินที่ "ถูกปา" เท่านั้น
+        // หินที่ drop จากการทุบ (ไม่มี ThrowerId) จะไม่ทำอะไรใครเลย
+        bool wasThrown = ThrowerId.IsValid;
+
+        if (isLethal && wasThrown)
         {
+            // stun เป็ดได้ก็ต่อเมื่อหินยังเคลื่อนที่เร็วพอ (กันหินที่ขยับช้าๆ stun)
+            bool fastEnough = rb2D.linearVelocity.magnitude >= stunVelocityThreshold;
+
             foreach (var hit in collision.contacts)
             {
                 if (hit.collider.gameObject == gameObject) continue;
@@ -85,7 +130,10 @@ public class RockObject : NetworkBehaviour, ThrowAbleItem
                     break;
                 }
 
-                if (!hitSomething && hit.collider.TryGetComponent<IstunAble>(out var stunnable))
+                // stun ได้แค่เป็ดเท่านั้น และต้องเร็วพอ
+                if (!hitSomething && fastEnough
+                    && hit.collider.TryGetComponent<IstunAble>(out var stunnable)
+                    && stunnable is Duck_Moveset)
                 {
                     stunnable.TriggerStun();
                     hitSomething = true;

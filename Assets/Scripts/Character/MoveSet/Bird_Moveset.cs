@@ -41,6 +41,12 @@ public class Bird_Moveset : MovementCharacter, IstunAble
     [SerializeField] public NetworkObject throwAblePrefab;
     [Networked] public bool _prepareToThrow { get; set; }
 
+    // หน่วงปล่อยหินให้ตรงจังหวะเหวี่ยงของ animation (deterministic ผ่าน TickTimer ไม่ใช่ Animation Event)
+    [Networked] bool _isReleasingThrow { get; set; }
+    [Networked] TickTimer ThrowReleaseTimer { get; set; }
+    [Tooltip("หน่วงเวลา (วินาที) ตั้งแต่กดยืนยันปา จนหินหลุดมือ ให้ตรงเฟรมเหวี่ยงของ animation")]
+    [SerializeField] float throwReleaseDelay = 0.35f;
+
     [SerializeField] float projectileSpeed;
     [SerializeField] public Transform throwPoint;
     // Line
@@ -161,11 +167,13 @@ public class Bird_Moveset : MovementCharacter, IstunAble
                 rb2D.linearDamping = 3f;
             }
 
-            if (!startTimer)
+            // เริ่มจับเวลา oxygen ครั้งเดียวตอนเข้าจมน้ำ — พอ oxygen หมดเข้าเฟส damage แล้ว
+            // อย่า restart timer อีก (ไม่งั้น oxygen visual จะเด้งกลับมาเต็มทั้งที่ยังจมอยู่)
+            if (!startTimer && !isDrowningDamageActive)
             {
                 if (HasStateAuthority) StartDrowningTimer();
             }
-            else
+            else if (startTimer)
             {
                 if (DrownTimer.Expired(Runner) && HasStateAuthority)
                 {
@@ -256,6 +264,10 @@ public class Bird_Moveset : MovementCharacter, IstunAble
         FallingBusy = false;
         startTimer = false;
         DrownTimer = TickTimer.None;
+
+        _prepareToThrow = false;
+        _isReleasingThrow = false;
+        ThrowReleaseTimer = TickTimer.None;
 
         if (rb2D != null)
         {
@@ -437,6 +449,21 @@ public class Bird_Moveset : MovementCharacter, IstunAble
     {
         bool isPrepareThrowPressed = input.KeybindThrowItem && !_wasisThrowItemPressed;
 
+        // อยู่ช่วง windup (กดยืนยันแล้ว กำลังรอหินหลุดมือ) — ล็อกการเคลื่อนที่ รอ timer แล้วค่อย spawn
+        if (_isReleasingThrow)
+        {
+            isMoveAble = false;
+            IsInteractBusy = true;
+
+            if (ThrowReleaseTimer.Expired(Runner))
+            {
+                ExecuteThrow();
+            }
+
+            _wasisThrowItemPressed = input.KeybindThrowItem;
+            return;
+        }
+
         if (_prepareToThrow)
         {
             if (Mathf.Abs(input.horizontal) > 0.1f || input.KeybindJump)
@@ -457,8 +484,7 @@ public class Bird_Moveset : MovementCharacter, IstunAble
                 }
                 else
                 {
-                    PlayThrowAnimation_RPC();
-                    ExecuteThrow();
+                    StartThrowRelease();
                 }
             }
             else
@@ -486,6 +512,17 @@ public class Bird_Moveset : MovementCharacter, IstunAble
         {
             cAnimation.ThrowAnimation();
         }
+    }
+
+    // กดยืนยันปา: เริ่มเล่น animation เหวี่ยง + ล็อกทิศเล็ง แล้วหน่วง spawn ด้วย TickTimer
+    // (หินจะหลุดมือใน ExecuteThrow เมื่อ timer หมด — ดู windup ใน HandleThrowLogic)
+    private void StartThrowRelease()
+    {
+        _prepareToThrow = false;
+        _isReleasingThrow = true;
+        ThrowReleaseTimer = TickTimer.CreateFromSeconds(Runner, throwReleaseDelay);
+
+        PlayThrowAnimation_RPC();
     }
 
     public void ExecuteThrow()
@@ -521,9 +558,18 @@ public class Bird_Moveset : MovementCharacter, IstunAble
     {
         isMoveAble = true;
         _prepareToThrow = false;
+        _isReleasingThrow = false;
+        ThrowReleaseTimer = TickTimer.None;
         IsInteractBusy = false;
 
-        if (cAnimation != null) cAnimation.ReturnToBlendAnimation();
+        if (cAnimation != null)
+        {
+            // เคลียร์ lock ของ throw animation (ThrowAnimation ล็อก 1.43s) ก่อน
+            // ไม่งั้น ReturnToBlendAnimation จะถูกบล็อกด้วย guard ของ AnimationTimer
+            // -> เดินทันทีหลังปาแล้ว animation ค้างที่ state "Throwing" (ดูเหมือนยืนเฉยๆ)
+            cAnimation.ClearAnimationLock();
+            cAnimation.ReturnToBlendAnimation();
+        }
 
         throwPoint.localRotation = Quaternion.identity;
     }

@@ -44,6 +44,7 @@ public class RollingLogTrap : NetworkBehaviour
     public override void FixedUpdateNetwork()
     {
         if (!HasStateAuthority) return;
+        if (GameManager.Instance != null && GameManager.Instance.IsGameplayFrozen) return; // freeze ตอน pause/dialogue/tutorial
 
         Vector2 targetPos = MovingToPoint2 ? p2Pos : p1Pos;
         CurrentPosition = Vector2.MoveTowards(CurrentPosition, targetPos, moveSpeed * Runner.DeltaTime);
