@@ -1,4 +1,6 @@
+using System;
 using System.Collections;
+using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
@@ -30,6 +32,11 @@ public class MovingPlatformIntegrationTests
         runner = runnerObj.AddComponent<NetworkRunner>();
         runner.ProvideInput = false;
         var sceneManager = runnerObj.AddComponent<NetworkSceneManagerDefault>();
+
+        // ต้องมี RunnerSimulatePhysics2D ที่ตั้งค่าตรงกับเกม (prefab NetworkRunner) ก่อน StartGame
+        // ไม่งั้น Fusion auto-add แบบ default แล้ว physics ของแพไม่ถูก step ในซีนที่ player raycast
+        // -> CheckGround หาแพไม่เจอ -> IsGrounded เป็น false ตลอด
+        AddGamePhysicsRunner(runnerObj);
 
         var startTask = runner.StartGame(new StartGameArgs
         {
@@ -66,12 +73,43 @@ public class MovingPlatformIntegrationTests
         {
             runner.Shutdown();
             yield return new WaitUntil(() => runner.IsShutdown);
-            Object.DestroyImmediate(runner.gameObject);
+            UnityEngine.Object.DestroyImmediate(runner.gameObject);
         }
         playerObj = platObj = gmObj = null;
     }
 
     // ───────────────────────── helpers ─────────────────────────
+
+    // เพิ่ม RunnerSimulatePhysics2D ผ่าน reflection (เลี่ยงการอ้าง assembly Fusion.Addons.Physics ตรงๆ ใน asmdef)
+    // ตั้งค่าให้ตรงกับ prefab NetworkRunner ของเกม
+    private static void AddGamePhysicsRunner(GameObject runnerObj)
+    {
+        Type physType = AppDomain.CurrentDomain.GetAssemblies()
+            .Select(a => a.GetType("Fusion.Addons.Physics.RunnerSimulatePhysics2D"))
+            .FirstOrDefault(t => t != null);
+        Assert.IsNotNull(physType, "หา type Fusion.Addons.Physics.RunnerSimulatePhysics2D ไม่เจอ");
+
+        var phys = runnerObj.AddComponent(physType);
+        SetField(phys, "_physicsAuthority", 2);
+        SetField(phys, "_physicsTiming", 3);
+        SetField(phys, "ClientPhysicsSimulation", 3);
+        SetField(phys, "DeltaTimeMultiplier", 1f);
+        SetField(phys, "SetUnityFixedTimestep", true);
+    }
+
+    // set field แบบ enum-safe (รองรับทั้ง enum, int, float, bool)
+    private static void SetField(object obj, string field, object intLikeValue)
+    {
+        var t = obj.GetType();
+        FieldInfo f = null;
+        while (f == null && t != null) { f = t.GetField(field, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance); t = t.BaseType; }
+        if (f == null) { Debug.LogWarning($"[Test] หา field '{field}' บน {obj.GetType().Name} ไม่เจอ (ข้าม)"); return; }
+
+        object value = f.FieldType.IsEnum
+            ? Enum.ToObject(f.FieldType, Convert.ToInt32(intLikeValue))
+            : Convert.ChangeType(intLikeValue, f.FieldType);
+        f.SetValue(obj, value);
+    }
 
     private static void ForceGameReady()
     {
@@ -139,8 +177,10 @@ public class MovingPlatformIntegrationTests
         MovementCharacter player = SpawnDuckAt(pPos + Vector3.up * 1.0f);
         player.rb2D.constraints |= RigidbodyConstraints2D.FreezePositionY;
 
-        for (int i = 0; i < 12; i++) { ForceGameReady(); yield return null; } // teleport + settle
+        for (int i = 0; i < 20; i++) { ForceGameReady(); yield return null; } // teleport + settle
 
+        Debug.Log($"[DIAG] setup: platformPos={platObj.transform.position} (start was {pPos}) " +
+                  $"playerPos={player.transform.position} grounded={player.IsGrounded} gameReady={GameManager.Instance.IsGameReady}");
         Assert.IsTrue(player.IsGrounded, "ผู้เล่นควร grounded (raycast เจอแพด้านล่าง)");
         Transform detected = GetPrivate<Transform>(player, "currentPlatform");
         Assert.AreEqual(platObj.transform, detected, "currentPlatform ต้องเป็นแพที่ยืนอยู่");

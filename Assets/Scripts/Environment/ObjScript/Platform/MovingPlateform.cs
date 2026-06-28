@@ -10,6 +10,9 @@ public class MovingPlateform : NetworkBehaviour, IRideablePlatform
     private Vector3 startPosition;
     private Rigidbody2D rb;
 
+    // ผิวแพไม่มี friction -> ไม่ลากผู้เล่นซ้อนกับ follow (กันการสไลด์)
+    private static PhysicsMaterial2D s_zeroFriction;
+
     public override void Spawned()
     {
         startPosition = transform.position;
@@ -17,6 +20,16 @@ public class MovingPlateform : NetworkBehaviour, IRideablePlatform
 
         rb.bodyType = RigidbodyType2D.Kinematic;
         rb.useFullKinematicContacts = true;
+
+        ApplyZeroFriction(GetComponent<Collider2D>());
+    }
+
+    private static void ApplyZeroFriction(Collider2D col)
+    {
+        if (col == null) return;
+        if (s_zeroFriction == null)
+            s_zeroFriction = new PhysicsMaterial2D("PlatformZeroFriction") { friction = 0f, bounciness = 0f };
+        col.sharedMaterial = s_zeroFriction;
     }
 
     public override void FixedUpdateNetwork()
