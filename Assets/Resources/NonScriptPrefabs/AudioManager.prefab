@@ -156,7 +156,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5ddd8269169b7904bbed2f6dc9bbde1a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AudioManager
-  soundBGMList: []
+  soundBGMList:
+  - soundName: FirstBGM
+    clip: {fileID: 8300000, guid: 83824432d6545844c9131ddb9fd5f78f, type: 3}
   playerSoundList:
   - soundName: DuckReceiveDamage
     clip: {fileID: 8300000, guid: 51ca9d2c0dd2f3b4d82b97237be54bdb, type: 3}

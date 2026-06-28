@@ -55,6 +55,10 @@ public class AudioManager : MonoBehaviour
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         FindAudioComponents(scene);
+
+        // เริ่ม BGM เมื่อเข้าซีนที่มี BGM_Player (เช่น Scene 1) — เดิม PlayBGM ถูกเรียกแค่ใน Start()
+        // ตอนอยู่ใน core scene ที่ยังไม่มี BGM_Player เลยไม่เคยเล่นในเกมจริง (PlayBGM idempotent อยู่แล้ว)
+        if (bgmSource != null) PlayBGM("FirstBGM");
     }
 
     private void FindAudioComponents(Scene scene)
