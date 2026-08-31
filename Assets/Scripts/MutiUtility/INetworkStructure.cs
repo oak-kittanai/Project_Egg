@@ -16,13 +16,23 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
     public void OnDisconnectedFromServer(NetworkRunner runner, NetDisconnectReason reason)
     {
         Debug.Log($"Fusion: Disconnected from server reason + : {reason}");
+
+        // อยู่ในเกมแล้ว host หลุด -> ปิด runner ตัวเอง (จะวิ่งเข้า OnShutdown -> ReturnToSession)
+        if (SessionManager.Instance == null && runner != null && runner.IsRunning)
+            runner.Shutdown();
     }
 
     public void OnShutdown(NetworkRunner runner, ShutdownReason shutdownReason)
     {
         if (SessionManager.Instance != null)
         {
+            // อยู่หน้า menu/lobby -> รีเซ็ตสถานะ lobby ตามเดิม
             SessionManager.Instance.DisconnedFromServer();
+        }
+        else
+        {
+            // อยู่ในเกม (runner ปิด ไม่ว่าจะกดออกเองหรืออีกฝั่งหลุด) -> กลับหน้า session
+            GameManager.ReturnToSession();
         }
     }
 
@@ -143,6 +153,9 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
 
     public void OnPlayerLeft(NetworkRunner runner, PlayerRef player)
     {
+        // co-op 2 คน: ถ้าอยู่ในเกมแล้วอีกคนออก -> ออกทั้งคู่ (ปิด runner -> OnShutdown -> ReturnToSession)
+        if (SessionManager.Instance == null && runner != null && runner.IsRunning)
+            runner.Shutdown();
     }
 
         #endregion

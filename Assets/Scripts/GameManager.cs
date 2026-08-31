@@ -290,30 +290,40 @@ public class GameManager : SingletonNetwork<GameManager>
         }
     }
 
+    private static bool _returningToSession;
+
     public async void BackToSessionScene()
     {
-        CleanupPersistentGameplayObjects();
-
-        if (Runner != null)
-        {
-            await Runner.Shutdown();
-        }
-
-        SceneManager.LoadScene("SessionScene");
+        // ปิด runner ของตัวเอง -> OnShutdown จะพา ReturnToSession ให้
+        // (อีกฝั่งจะ detect disconnect แล้ว ReturnToSession ตามเองผ่าน INetworkStructure)
+        if (Runner != null) await Runner.Shutdown();
+        else ReturnToSession();
     }
 
-    private void CleanupPersistentGameplayObjects()
+    // จุดเดียวที่ทุก leave path เรียก (กดออกเอง / host หลุด / client หลุด) แบบ idempotent
+    // ไม่อ่าน networked object ที่กำลังตาย
+    public static void ReturnToSession()
     {
+        if (_returningToSession) return;
+        _returningToSession = true;
+
         if (CameraCharacter.LocalCamera != null)
             Destroy(CameraCharacter.LocalCamera.transform.root.gameObject);
 
         DestroyByName("CoreManagerSceneHop");
         DestroyByName("PlayerInterfaceCanvas");
-        if (SessionManager.Instance != null)
-            Destroy(SessionManager.Instance.gameObject);
+
+        // ทิ้ง SessionHub ตัวที่ค้างจากรอบก่อน (DontDestroyOnLoad) ให้ scene ใหม่สร้างใหม่ + wire ปุ่มสด
+        // (ไม่งั้นปุ่ม Play/Host/Join ในหน้า session ใหม่จะไม่มี listener -> กดไม่ติด ต้องรีสตาร์ทเกม)
+        if (SessionHub.Instance != null) Destroy(SessionHub.Instance.gameObject);
+
+        SceneManager.LoadScene("SessionScene");
     }
 
-    private void DestroyByName(string objName)
+    // เรียกตอน SessionScene โหลดเสร็จ (จาก SessionManager.Awake) เพื่อรีเซ็ต guard ให้ leave รอบหน้าทำงาน
+    public static void ResetReturnGuard() => _returningToSession = false;
+
+    private static void DestroyByName(string objName)
     {
         GameObject obj = GameObject.Find(objName);
         if (obj != null) Destroy(obj);

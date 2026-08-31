@@ -25,6 +25,7 @@ public class SessionManager : MonoBehaviour
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
+        GameManager.ResetReturnGuard(); // SessionScene โหลดใหม่ -> รีเซ็ต guard ให้ leave รอบหน้าทำงาน
         Setup();
     }
 
