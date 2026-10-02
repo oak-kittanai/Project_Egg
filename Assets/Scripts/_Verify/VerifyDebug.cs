@@ -59,8 +59,10 @@ public class VerifyDebugKeys : MonoBehaviour
         var go = new GameObject("[VERIFY] DebugKeys");
         DontDestroyOnLoad(go);
         go.AddComponent<VerifyDebugKeys>();
-        VerifyLog.Log("DebugKeys ready (F7 = to Passel Key, F8 = into warp, F9 = force lobby, F10 = drop connection)");
+        VerifyLog.Log("DebugKeys ready (F6 = log marker, F7 = to Passel Key, F8 = into warp, F9 = force lobby, F10 = drop connection)");
     }
+
+    private static int _markCount;
 
     private void OnEnable() => SceneManager.sceneLoaded += OnSceneLoaded;
     private void OnDisable() => SceneManager.sceneLoaded -= OnSceneLoaded;
@@ -83,6 +85,11 @@ public class VerifyDebugKeys : MonoBehaviour
         var kb = Keyboard.current;
         if (kb == null) return;
 
+        if (kb.f6Key.wasPressedThisFrame)
+        {
+            _markCount++;
+            VerifyLog.Log($"========== MARK {_markCount} ========== | {VerifyLog.Statics()} | rootCanvases: {VerifyLog.RootCanvases()}");
+        }
         if (kb.f7Key.wasPressedThisFrame) TeleportToPasselKey();
         if (kb.f8Key.wasPressedThisFrame) StartCoroutine(WarpBothPlayers());
         if (kb.f9Key.wasPressedThisFrame) ForceReturnToLobby();
