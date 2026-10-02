@@ -16,6 +16,7 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
     public void OnDisconnectedFromServer(NetworkRunner runner, NetDisconnectReason reason)
     {
         Debug.Log($"Fusion: Disconnected from server reason + : {reason}");
+        VerifyLog.Log($"OnDisconnectedFromServer reason={reason} SessionManager.Instance null={SessionManager.Instance == null} runnerRunning={runner != null && runner.IsRunning} -> willShutdown={SessionManager.Instance == null && runner != null && runner.IsRunning}"); // TEMP verify C-1
 
         // อยู่ในเกมแล้ว host หลุด -> ปิด runner ตัวเอง (จะวิ่งเข้า OnShutdown -> ReturnToSession)
         if (SessionManager.Instance == null && runner != null && runner.IsRunning)
@@ -24,6 +25,8 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
 
     public void OnShutdown(NetworkRunner runner, ShutdownReason shutdownReason)
     {
+        VerifyLog.Log($"OnShutdown reason={shutdownReason} SessionManager.Instance null={SessionManager.Instance == null} -> branch={(SessionManager.Instance != null ? "LOBBY (DisconnedFromServer, no scene load)" : "IN-GAME (ReturnToSession)")}"); // TEMP verify C-1
+
         if (SessionManager.Instance != null)
         {
             // อยู่หน้า menu/lobby -> รีเซ็ตสถานะ lobby ตามเดิม
@@ -50,12 +53,21 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
 
     #region Input
 
+    private static float _verifyNextInputLog; // TEMP verify H-2
+
     public void OnInput(NetworkRunner runner, NetworkInput input)
     {
         var data = new NetworkInputData();
 
         bool tutorialBlocking = TutorialUIManager.Instance != null && TutorialUIManager.Instance.IsTutorialOpen;
         bool dialogueBlocking = DialogueManager.IsDialogueOpen;
+
+        // TEMP verify H-2: report (max once per second) while gameplay input is being dropped
+        if ((tutorialBlocking || dialogueBlocking) && Time.unscaledTime >= _verifyNextInputLog)
+        {
+            _verifyNextInputLog = Time.unscaledTime + 1f;
+            VerifyLog.Log($"OnInput BLOCKED dialogueBlocking={dialogueBlocking} tutorialBlocking={tutorialBlocking}");
+        }
 
         if (!tutorialBlocking && !dialogueBlocking)
         {
@@ -153,6 +165,8 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
 
     public void OnPlayerLeft(NetworkRunner runner, PlayerRef player)
     {
+        VerifyLog.Log($"OnPlayerLeft player={player} SessionManager.Instance null={SessionManager.Instance == null} runnerRunning={runner != null && runner.IsRunning} -> willShutdown={SessionManager.Instance == null && runner != null && runner.IsRunning}"); // TEMP verify C-1
+
         // co-op 2 คน: ถ้าอยู่ในเกมแล้วอีกคนออก -> ออกทั้งคู่ (ปิด runner -> OnShutdown -> ReturnToSession)
         if (SessionManager.Instance == null && runner != null && runner.IsRunning)
             runner.Shutdown();

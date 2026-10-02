@@ -28,9 +28,11 @@ public class SingletonNetwork<T> : NetworkBehaviour where T : NetworkBehaviour
         {
             instance = this as T;
             DontDestroyOnLoad(gameObject);
+            VerifyLog.Log($"SingletonNetwork<{typeof(T).Name}> created '{name}' (DontDestroyOnLoad)"); // TEMP verify M-2
         }
         else
         {
+            VerifyLog.Log($"SingletonNetwork<{typeof(T).Name}> DUPLICATE '{name}' -> Destroy(gameObject) (existing='{instance.name}')"); // TEMP verify M-2
             Destroy(gameObject);
         }
     }
