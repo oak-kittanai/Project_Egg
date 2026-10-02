@@ -15,6 +15,8 @@ public class CrumblingPlatform : NetworkBehaviour
     [SerializeField] float shakeIntensity = 0.05f;
     [Tooltip("ความเร็วในการสั่น")]
     [SerializeField] float shakeFrequency = 25f;
+    [Tooltip("ความยาวท่าแตก (วินาที) — sprite จะถูกซ่อนหลังเล่นจบ")]
+    [SerializeField] float breakAnimDuration = 0.875f;
 
     [Networked] public PlatformState CurrentState { get; set; }
     [Networked] private TickTimer StateTimer { get; set; }
@@ -25,6 +27,7 @@ public class CrumblingPlatform : NetworkBehaviour
 
     private PlatformState lastState;
     private Vector3 originalPos;
+    private float hideSpriteAtTime = -1f;
 
     private void Awake()
     {
@@ -93,8 +96,10 @@ public class CrumblingPlatform : NetworkBehaviour
         {
             if (CurrentState == PlatformState.Broken)
             {
-                if (animator != null) animator.SetTrigger("Break");
-                if (sr != null) sr.enabled = false;
+                // เล่นท่าแตกให้เห็นก่อน แล้วค่อยซ่อน sprite เมื่อ clip จบ
+                // (เดิมซ่อนทันทีพร้อมสั่งเล่น จึงไม่เห็นท่าแตก แต่ไปเห็นเฟรมแตกค้างตอนโผล่กลับมา)
+                if (animator != null) animator.Play("Platform_Break", 0, 0f);
+                hideSpriteAtTime = Time.time + breakAnimDuration;
                 // ปิด collider บน "ทุก peer" ไม่ใช่แค่ state authority — ไม่งั้นฝั่ง client
                 // ที่ไม่ได้รัน BreakPlatform() จะยังชนพื้นที่พังไปแล้ว (collider ไม่ sync ข้ามเครื่อง)
                 if (boxCollider != null) boxCollider.enabled = false;
@@ -103,12 +108,19 @@ public class CrumblingPlatform : NetworkBehaviour
             }
             else if (CurrentState == PlatformState.Idle)
             {
-                if (animator != null) animator.SetTrigger("Reset");
+                hideSpriteAtTime = -1f;
+                if (animator != null) animator.Play("Platform_Idle", 0, 0f);
                 if (sr != null) sr.enabled = true;
                 if (boxCollider != null) boxCollider.enabled = true;
             }
 
             lastState = CurrentState;
+        }
+
+        if (hideSpriteAtTime >= 0f && Time.time >= hideSpriteAtTime)
+        {
+            hideSpriteAtTime = -1f;
+            if (CurrentState == PlatformState.Broken && sr != null) sr.enabled = false;
         }
 
         if (CurrentState == PlatformState.Shaking)
