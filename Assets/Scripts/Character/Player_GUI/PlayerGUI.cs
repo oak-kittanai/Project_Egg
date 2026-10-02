@@ -85,6 +85,15 @@ public class PlayerGUI : MonoBehaviour
 
         lastBubblesCount = -1;
 
+        // แสดงช่องฟองเท่าจำนวน oxygen สูงสุดของตัวละคร (นก 6, เป็ด 8) ไม่ให้มีช่องว่างเกินมาตั้งแต่ต้น
+        if (oxygenBubbles != null)
+        {
+            for (int i = 0; i < oxygenBubbles.Length; i++)
+            {
+                if (oxygenBubbles[i] != null) oxygenBubbles[i].gameObject.SetActive(i < maxBubbles);
+            }
+        }
+
         UpdateOxygenBubbles(maxBubbles);
     }
 
