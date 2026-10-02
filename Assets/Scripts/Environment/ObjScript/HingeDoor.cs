@@ -45,7 +45,7 @@ public class HingeDoor : NetworkBehaviour
 
     public override void Render()
     {
-        transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.Euler(0, 0, CurrentAngle), Runner.DeltaTime * 15f);
+        transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.Euler(0, 0, CurrentAngle), Time.deltaTime * 15f);
     }
 
     public void SetDoorState(bool open)
