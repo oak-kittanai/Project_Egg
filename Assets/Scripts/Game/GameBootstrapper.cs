@@ -22,6 +22,9 @@ public class GameBootstrapper : MonoBehaviour
 
         INetworkStructure netStructure = runner.GetComponent<INetworkStructure>();
 
+        // TEMP verify M-2
+        VerifyLog.Log($"GameBootstrapper start: CenterHost exists={CenterHost.Instance != null} GameManager exists={GameManager.Instance != null} players={FindObjectsByType<MovementCharacter>(FindObjectsSortMode.None).Length}");
+
         // Step 1: Spawn CenterHost, wait for Spawned() to run (creates Canvas + PlayerInterface)
         runner.Spawn(centerHostPrefab);
         yield return new WaitUntil(() => CenterHost.Instance != null);

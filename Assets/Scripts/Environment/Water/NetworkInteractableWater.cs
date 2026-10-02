@@ -87,9 +87,11 @@ public class NetworkInteractableWater : NetworkBehaviour
     }
 
     [Rpc(RpcSources.All, RpcTargets.All)]
-    public void RPC_TriggerSplash(Vector3 position, float velocity)
+    public void RPC_TriggerSplash(Vector3 position, float velocity, RpcInfo info = default) // TEMP verify H-4: RpcInfo added for logging
     {
         if (Runner == null || !Runner.IsRunning) return;
+
+        VerifyLog.Log($"RPC_TriggerSplash water='{name}' vel={velocity:F2} source={info.Source} invokeLocal={info.IsInvokeLocal} rpcTick={info.Tick} runnerTick={Runner.Tick}");
 
         ApplySplashPhysics(position, velocity);
         PlaySplashEffect(position);
