@@ -18,6 +18,10 @@ public class CameraCharacter : MonoBehaviour
     private Vector3 offset;
     private bool isLocalCamera = false;
 
+    // AudioListener ของผู้เล่น local — ตามกล้อง เพราะ SFX เป็นเสียง 3D (AudioManager: ได้ยินไม่เกิน 20 หน่วย)
+    // listener ที่วางนิ่งในด่าน (UI_Camera) อยู่ไกลจากผู้เล่นเกือบทั้งด่าน ทำให้เกมเงียบ
+    private AudioListener localListener;
+
     [Header("Boundary System")]
     [SerializeField] private LayerMask outOfBoundLayer;
 
@@ -49,6 +53,26 @@ public class CameraCharacter : MonoBehaviour
 
         if (ParallaxBackground.Instance != null)
             ParallaxBackground.Instance.SetCamera(this);
+
+        ClaimAudioListener();
+    }
+
+    private void ClaimAudioListener()
+    {
+        // ปิด listener ตัวอื่นก่อน (กัน warning ว่ามี AudioListener 2 ตัว)
+        foreach (var listener in FindObjectsByType<AudioListener>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (listener != localListener) listener.enabled = false;
+        }
+
+        if (localListener == null)
+        {
+            GameObject listenerObj = new GameObject("LocalAudioListener");
+            listenerObj.transform.SetParent(transform, false);
+            localListener = listenerObj.AddComponent<AudioListener>();
+        }
+
+        localListener.enabled = true;
     }
 
     public void DisableForRemote()
@@ -75,6 +99,9 @@ public class CameraCharacter : MonoBehaviour
     private void OnSceneChanged(Scene current, Scene next)
     {
         onCameraTranslate = null;
+
+        // ด่านใหม่มี AudioListener ของตัวเองติดมาด้วย — ปิดแล้วใช้ตัวของกล้อง local ต่อ
+        ClaimAudioListener();
     }
 
     private void LateUpdate()
@@ -102,6 +129,10 @@ public class CameraCharacter : MonoBehaviour
         }
 
         transform.position = smoothed;
+
+        // วาง listener ที่ระนาบ z ของตัวละคร (กล้องอยู่ห่างออกมาในแกน z ทำให้เสียงเบาลงโดยไม่จำเป็น)
+        if (localListener != null)
+            localListener.transform.position = new Vector3(smoothed.x, smoothed.y, target.position.z);
 
         if (transform.position.x != oldPosition)
         {

@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 public class SelectionHighlightFollower : MonoBehaviour
@@ -13,7 +14,10 @@ public class SelectionHighlightFollower : MonoBehaviour
 
     private void LateUpdate()
     {
-        var selected = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
+        // แสดง highlight เฉพาะตอนมี gamepad เสียบอยู่ (เสียบ/ถอดระหว่างเล่นมีผลทันที)
+        bool gamepadConnected = Gamepad.all.Count > 0;
+
+        var selected = gamepadConnected && EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
         if (selected != null && !selected.activeInHierarchy) selected = null;
 
         if (selected != currentSelected)

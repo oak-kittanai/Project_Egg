@@ -224,6 +224,9 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         if (coll2D == null) coll2D = GetComponent<Collider2D>();
         if (localGUI == null) localGUI = GetComponent<PlayerGUI>();
 
+        // กันผู้เล่นถูกแรงดัน (เช่นเครื่องพ่นลม) ดันทะลุ collider พื้นที่เป็นเส้นขอบ
+        if (rb2D != null) rb2D.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+
         if (cAnimation == null) cAnimation = GetComponentInChildren<CharacterAnimation>();
         if (_damageFlash == null) _damageFlash = GetComponentInChildren<DamageFlash>();
         if (spriteRenderer == null) spriteRenderer = GetComponentInChildren<SpriteRenderer>();
