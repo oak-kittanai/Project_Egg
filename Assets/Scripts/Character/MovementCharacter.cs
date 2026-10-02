@@ -661,17 +661,22 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     #region Climb System
 
+    // ใช้ซ้ำทุก tick (รวม tick ที่ client ย้อนคำนวณ) แทน OverlapBoxAll ที่จอง array ใหม่ทุกครั้ง
+    private readonly Collider2D[] climbHits = new Collider2D[8];
+
     private bool CheckInClimbZone()
     {
-        Collider2D[] hits = Physics2D.OverlapBoxAll(
+        int hitCount = Runner.GetPhysicsScene2D().OverlapBox(
             transform.position,
             new Vector2(0.5f, 1f),
             0f,
+            climbHits,
             climbableMask
         );
 
-        foreach (var hit in hits)
+        for (int i = 0; i < hitCount; i++)
         {
+            var hit = climbHits[i];
             if (hit.GetComponent<IClimbable>() != null
              || hit.GetComponentInParent<IClimbable>() != null)
                 return true;

@@ -22,6 +22,9 @@ public class SnowBallProjectile : NetworkBehaviour
     private bool hasHitPlayer = false;
     private Rigidbody2D rb2D;
 
+    // หาผู้เล่นครั้งเดียวตอน spawn แทนการค้นทั้ง scene ทุก tick
+    private MovementCharacter[] players;
+
     // freeze ตอน pause: เก็บค่าความเร็ว/แรงโน้มถ่วงไว้ แล้วหยุดนิ่ง คืนค่าเมื่อเล่นต่อ
     private bool _frozen;
     private Vector2 _frozenVel;
@@ -38,6 +41,7 @@ public class SnowBallProjectile : NetworkBehaviour
         {
             LifeTimer = TickTimer.CreateFromSeconds(Runner, 7f);
             hasHitPlayer = false;
+            players = FindObjectsByType<MovementCharacter>(FindObjectsSortMode.None);
 
             if (rb2D != null)
             {
@@ -81,14 +85,12 @@ public class SnowBallProjectile : NetworkBehaviour
 
         bool isMovingFastEnough = rb2D != null && rb2D.linearVelocity.magnitude >= minSpeedToDamage;
 
-        if (!hasHitPlayer && isMovingFastEnough)
+        if (!hasHitPlayer && isMovingFastEnough && players != null)
         {
-            MovementCharacter[] allPlayers = FindObjectsByType<MovementCharacter>(FindObjectsSortMode.None);
-
-            foreach (MovementCharacter character in allPlayers)
+            foreach (MovementCharacter character in players)
             {
 
-                if (character == null || character.isDead) continue;
+                if (character == null || !character.gameObject.activeInHierarchy || character.isDead) continue;
 
                 float distance = Vector2.Distance(transform.position, character.transform.position);
 
