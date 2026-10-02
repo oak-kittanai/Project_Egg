@@ -83,6 +83,28 @@ public class CharacterAnimation : NetworkBehaviour
                 }
             }
         }
+
+        VerifyLogCarryState();
+    }
+
+    // TEMP — branch test/all only. DO NOT MERGE.
+    // FB-8: log ท่าของเป็ดทุกครั้งที่ (state, แบกอยู่, แตะพื้น) เปลี่ยน ระหว่างแบก/เพิ่งวาง — ใช้ดูว่ามีช่วงแบกแต่ไม่เป็นท่ายกหรือไม่
+    private string _verifyCarryKey;
+    private bool _verifyWasCarrying;
+
+    private void VerifyLogCarryState()
+    {
+        if (currentSkin != characterType.Duck || movement == null) return;
+
+        bool carrying = Carrying;
+        if (!carrying && !_verifyWasCarrying) return;
+        _verifyWasCarrying = carrying;
+
+        string key = $"{CurrentAnimState.Value}|{carrying}|{movement.IsGrounded}";
+        if (key == _verifyCarryKey) return;
+        _verifyCarryKey = key;
+
+        VerifyLog.Log($"FB8 duck anim t={Time.time:F2} state={CurrentAnimState.Value} carrying={carrying} grounded={movement.IsGrounded} inputAuth={HasInputAuthority}");
     }
 
     public void UpdateSkin(characterType skin)
