@@ -54,6 +54,14 @@ public class BaseMonster : NetworkBehaviour
         if (animator == null) animator = GetComponentInChildren<Animator>();
         if (spriteRenderer == null) spriteRenderer = GetComponentInChildren<SpriteRenderer>();
         if (col == null) col = GetComponent<Collider2D>();
+
+        // ฝั่ง client ตำแหน่งมอนมาจาก netPos ใน Render() — ไม่ให้ physics ในเครื่องขยับมอนเอง (โดนผู้เล่นชนแล้วไหลค้าง)
+        if (!HasStateAuthority && rb2D != null)
+        {
+            rb2D.bodyType = RigidbodyType2D.Kinematic;
+            rb2D.linearVelocity = Vector2.zero;
+            rb2D.angularVelocity = 0f;
+        }
     }
 
     public override void FixedUpdateNetwork()

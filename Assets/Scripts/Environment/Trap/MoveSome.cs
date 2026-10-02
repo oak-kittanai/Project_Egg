@@ -73,7 +73,7 @@ public class MoveSome : NetworkBehaviour, IRideablePlatform
 
     public override void Render()
     {
-        transform.position = Vector3.Lerp(transform.position, CurrentPosition, Runner.DeltaTime * 15f);
+        transform.position = Vector3.Lerp(transform.position, CurrentPosition, Time.deltaTime * 15f);
     }
 
     private void OnDrawGizmosSelected()

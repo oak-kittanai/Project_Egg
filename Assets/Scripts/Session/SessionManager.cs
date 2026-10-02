@@ -25,6 +25,10 @@ public class SessionManager : MonoBehaviour
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
+#if !UNITY_WEBGL
+        // quality เริ่มต้นปิด vSync -> FPS ไม่จำกัด กิน CPU/GPU เต็มจน simulation ของ Fusion สะดุด (WebGL ปล่อยให้ browser คุมเอง)
+        Application.targetFrameRate = 60;
+#endif
         GameManager.ResetReturnGuard(); // SessionScene โหลดใหม่ -> รีเซ็ต guard ให้ leave รอบหน้าทำงาน
         Setup();
     }

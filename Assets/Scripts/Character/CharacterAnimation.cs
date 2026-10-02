@@ -133,11 +133,8 @@ public class CharacterAnimation : NetworkBehaviour
     {
         if (isFrozen) return;
 
-        if (!HasState(stateName))
-        {
-            Debug.Log($"can't find {stateName}");
-            return;
-        }
+        // ไม่ log ตรงนี้: ถูกเรียกทุก tick (รวม tick ที่ client ย้อนคำนวณ) — state ที่ยังไม่มีใน controller เช่น Falling_carry จะ spam log จนเครื่องหน่วง
+        if (!HasState(stateName)) return;
 
         if (HasStateAuthority || HasInputAuthority)
         {

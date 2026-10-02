@@ -22,8 +22,13 @@ public class TrapPressure : NetworkBehaviour
 
     private List<MovementCharacter> playersInTrap = new List<MovementCharacter>();
 
+    // ใช้ซ้ำทุก tick แทนการ new/GetMask ใหม่ (ลด GC)
+    private readonly List<MovementCharacter> processedPlayers = new List<MovementCharacter>();
+    private int playerMask;
+
     public void Awake()
     {
+        playerMask = LayerMask.GetMask("Player");
         if (anim == null) anim = GetComponent<Animator>();
         //defaultDirection = transform.up; เอาทิศ transform.up ของ Obj
     }
@@ -84,10 +89,10 @@ public class TrapPressure : NetworkBehaviour
             transform.localScale,
             0,
             hitResults,
-            LayerMask.GetMask("Player")
+            playerMask
         );
 
-        List<MovementCharacter> processedPlayers = new List<MovementCharacter>();
+        processedPlayers.Clear();
 
         for (int i = 0; i < hitCount; i++)
         {

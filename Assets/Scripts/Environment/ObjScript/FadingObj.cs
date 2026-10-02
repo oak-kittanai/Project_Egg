@@ -51,7 +51,7 @@ public class FadeWhenPlayerInside : NetworkBehaviour
         float target = (PlayersInside > 0) ? targetAlpha : originalAlpha;
 
         Color currentColor = spriteRenderer.color;
-        currentColor.a = Mathf.Lerp(currentColor.a, target, Runner.DeltaTime * fadeSpeed);
+        currentColor.a = Mathf.Lerp(currentColor.a, target, Time.deltaTime * fadeSpeed);
         spriteRenderer.color = currentColor;
     }
 }
