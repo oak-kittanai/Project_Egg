@@ -28,24 +28,33 @@ public class NetworkStatsHotkey : MonoBehaviour
         go.AddComponent<NetworkStatsHotkey>();
     }
 
+    private bool _showConnectionInfo;
+    private GUIStyle _labelStyle;
+
     private void Update()
     {
         if (Keyboard.current != null && Keyboard.current.f11Key.wasPressedThisFrame)
-            Toggle();
+            _showConnectionInfo = Toggle();
     }
 
-    private static void Toggle()
+    private static NetworkRunner FindRunningRunner()
     {
-        NetworkRunner runner = null;
         foreach (var r in NetworkRunner.Instances)
         {
-            if (r != null && r.IsRunning) { runner = r; break; }
+            if (r != null && r.IsRunning) return r;
         }
+        return null;
+    }
+
+    // คืนค่า true ถ้าแผงเปิดอยู่หลังกด
+    private static bool Toggle()
+    {
+        NetworkRunner runner = FindRunningRunner();
 
         if (runner == null)
         {
             Debug.Log("[NetStats] F11: no running NetworkRunner (start or join a session first)");
-            return;
+            return false;
         }
 
         if (!runner.TryGetComponent<FusionStatistics>(out var stats))
@@ -54,8 +63,46 @@ public class NetworkStatsHotkey : MonoBehaviour
             SelectDefaultStats(stats);
         }
 
-        if (stats.IsPanelActive) stats.DestroyStatisticsPanel();
-        else stats.SetupStatisticsPanel();
+        if (stats.IsPanelActive)
+        {
+            stats.DestroyStatisticsPanel();
+            return false;
+        }
+
+        stats.SetupStatisticsPanel();
+        return true;
+    }
+
+    // ต่อตรง (Direct) หรือผ่าน relay ของ Photon — ผ่าน relay ping จะสูงกว่า เป็นสาเหตุ lag ที่แก้ในโค้ดไม่ได้
+    private void OnGUI()
+    {
+        if (!_showConnectionInfo) return;
+
+        NetworkRunner runner = FindRunningRunner();
+        if (runner == null) { _showConnectionInfo = false; return; }
+
+        if (_labelStyle == null)
+        {
+            _labelStyle = new GUIStyle(GUI.skin.box) { alignment = TextAnchor.UpperLeft, fontSize = 14 };
+            _labelStyle.normal.textColor = Color.white;
+        }
+
+        string text;
+        if (runner.IsServer)
+        {
+            text = "Host";
+            foreach (var player in runner.ActivePlayers)
+            {
+                if (player == runner.LocalPlayer) continue;
+                text += $"\nClient {player.PlayerId}: {runner.GetPlayerConnectionType(player)} | RTT {runner.GetPlayerRtt(player) * 1000.0:0} ms";
+            }
+        }
+        else
+        {
+            text = $"Client: {runner.CurrentConnectionType} | RTT {runner.GetPlayerRtt(runner.LocalPlayer) * 1000.0:0} ms";
+        }
+
+        GUI.Label(new Rect(10, 10, 320, 60), text, _labelStyle);
     }
 
     // Fusion ไม่มี API สาธารณะสำหรับเลือกค่าที่แสดง — ตั้ง field ที่ serialize อยู่ก่อนสร้างแผง
