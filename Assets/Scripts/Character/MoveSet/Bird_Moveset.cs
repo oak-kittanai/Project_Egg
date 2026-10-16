@@ -240,9 +240,9 @@ public class Bird_Moveset : MovementCharacter, IstunAble
         DrownTimer = TickTimer.None;
     }
 
-    public override void RPC_OnRespawned()
+    public override void OnRespawned()
     {
-        base.RPC_OnRespawned();
+        base.OnRespawned();
 
         IsFlying = false;
         IsAlreadyFly = false;

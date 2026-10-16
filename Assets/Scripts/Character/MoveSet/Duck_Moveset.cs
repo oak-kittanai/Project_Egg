@@ -67,9 +67,9 @@ public class Duck_Moveset : MovementCharacter, IstunAble
         base.Spawned();
     }
 
-    public override void RPC_OnRespawned()
+    public override void OnRespawned()
     {
-        base.RPC_OnRespawned();
+        base.OnRespawned();
 
         // เคลียร์ state ดำน้ำ/ลอยน้ำที่ base ไม่ได้รีเซ็ต — กันค่าค้างหลังตายแบบจมน้ำ
         // (onDiving/onDivingControl ค้าง -> HandleWaterLogic/HandleBuoyancy ใส่ค่าลอยน้ำกลับ

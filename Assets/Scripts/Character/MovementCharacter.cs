@@ -98,6 +98,12 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [Networked, OnChangedRender(nameof(OnHealthChanged))] public int currentHealth { get; set; }
     [Networked] public bool isDead { get; set; }
 
+    // ตาย/เกิดใหม่ sync ด้วย state แทน RPC (LP-3): host เพิ่มตัวนับ แล้วทุกเครื่องทำภาพ เสียง UI และฟิสิกส์ของตัวเองตอนค่าเปลี่ยน
+    [Networked] public NetworkBool IsPrimaryDeath { get; set; }
+    [Networked, OnChangedRender(nameof(OnDeathCountChanged))] private byte DeathCount { get; set; }
+    [Networked, OnChangedRender(nameof(OnRespawnCountChanged))] private byte RespawnCount { get; set; }
+    [Networked] private NetworkBool LastRespawnWasReset { get; set; }
+
     [Networked] TickTimer respawnTimer { get; set; }
     [SerializeField] float respawnCooldown = 3f;
     [SerializeField] bool canbeRespawn = true;
@@ -844,7 +850,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         if (currentHealth <= 0)
         {
             isMoveAble = false;
-            DeathMechanic_RPC(true);
+            DeathMechanic(true);
         }
         else
         {
@@ -908,8 +914,26 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     #region Death & Respawn
 
-    [Rpc(RpcSources.All, RpcTargets.All)]
-    public virtual void DeathMechanic_RPC(bool isPrimaryDeath)
+    // host: เริ่มการตาย — เดิม DeathMechanic_RPC ยิงไปทุกเครื่องแล้วทุกเครื่องรัน CharacterDie เอง
+    // (รวมถึง client ส่ง RPC_UpdateCarry ซ้ำ) ตอนนี้ host ตัดสินที่เดียว เครื่องอื่นตามจาก DeathCount
+    public virtual void DeathMechanic(bool isPrimaryDeath)
+    {
+        if (!HasStateAuthority || isDead) return;
+
+        IsPrimaryDeath = isPrimaryDeath;
+        DeathCount++;
+        CharacterDie(isPrimaryDeath);
+        ApplyDeathLocal();
+    }
+
+    public void OnDeathCountChanged()
+    {
+        if (HasStateAuthority) return; // host ทำไปแล้วใน DeathMechanic
+        ApplyDeathLocal();
+    }
+
+    // ภาพ เสียง UI และฟิสิกส์ของเครื่องตัวเองตอนตาย
+    private void ApplyDeathLocal()
     {
         if (localGUI != null)
         {
@@ -917,23 +941,23 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             localGUI.StopFlightBar();
         }
 
-        if (!isPrimaryDeath && lifeCycle != null)
+        if (!IsPrimaryDeath && lifeCycle != null)
         {
             lifeCycle.PlayOnFriendDeath();
         }
 
-        CharacterDie(isPrimaryDeath);
+        if (dieSoundClip != null)
+            AudioManager.Instance?.PlayClipAtPosition(dieSoundClip, transform.position);
+
+        rb2D.linearVelocity = Vector2.zero;
+        rb2D.simulated = false;
     }
 
+    // host เท่านั้น (เรียกจาก DeathMechanic)
     public virtual void CharacterDie(bool isPrimaryDeath)
     {
         if (isDead) return;
         isDead = true;
-
-        if (HasStateAuthority)
-        {
-            RPC_PlayDieSound();
-        }
 
         if (IsBeingCarried)
         {
@@ -948,9 +972,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             ((Duck_Moveset)this).DropFriend(true);
         }
 
-        rb2D.linearVelocity = Vector2.zero;
-        rb2D.simulated = false;
-
         if (cAnimation != null)
         {
             if (isPrimaryDeath)
@@ -959,12 +980,12 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             }
         }
 
-        if (HasStateAuthority && canbeRespawn)
+        if (canbeRespawn)
         {
             respawnTimer = TickTimer.CreateFromSeconds(Runner, respawnCooldown);
         }
 
-        if (HasStateAuthority && isPrimaryDeath)
+        if (isPrimaryDeath)
         {
             MovementCharacter[] allPlayers = FindObjectsByType<MovementCharacter>(FindObjectsSortMode.None);
 
@@ -974,7 +995,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                 if (partner == this) continue;
                 if (partner.isDead) continue;
 
-                partner.DeathMechanic_RPC(false);
+                partner.DeathMechanic(false);
             }
         }
     }
@@ -1017,12 +1038,27 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                 }
             }
 
-            RPC_OnRespawned();
+            LastRespawnWasReset = false;
+            RespawnCount++;
+            ApplyRespawnLocal();
         }
     }
 
-    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    public virtual void RPC_OnRespawned()
+    public void OnRespawnCountChanged()
+    {
+        if (HasStateAuthority) return; // host ทำไปแล้วใน Respawn / DoResetToSpawn
+        ApplyRespawnLocal();
+    }
+
+    private void ApplyRespawnLocal()
+    {
+        // รีเซ็ตจากเมนู (DoResetToSpawn) เล่นเอฟเฟกต์เพื่อนตายก่อนเหมือนเดิม
+        if (LastRespawnWasReset && lifeCycle != null) lifeCycle.PlayOnFriendDeath();
+        OnRespawned();
+    }
+
+    // ทุกเครื่องรันตอนเกิดใหม่ (host เรียกตรง, เครื่องอื่นจาก RespawnCount) — เดิมเป็น RPC_OnRespawned
+    public virtual void OnRespawned()
     {
         isMoveAble = true;
 
@@ -1075,52 +1111,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         }
 
         if (lifeCycle != null) lifeCycle.PlayOnRespawn();
-    }
-
-    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    public void RPC_ForceClientTeleport(Vector3 newPos)
-    {
-        isMoveAble = true;
-        isOptional = false;
-        isSpeedoptional = false;
-
-        transform.position = newPos;
-
-        if (rb2D != null)
-        {
-            rb2D.simulated = true;
-            rb2D.gravityScale = normalGravity;
-            rb2D.position = newPos;
-            rb2D.linearVelocity = Vector2.zero;
-            rb2D.angularVelocity = 0f;
-        }
-
-        if (TryGetComponent<NetworkRigidbody2D>(out var netRb))
-        {
-            netRb.Teleport(newPos, transform.rotation);
-        }
-
-        if (visualTransform != null)
-        {
-            visualTransform.position = newPos;
-            visualTransform.localPosition = Vector3.zero;
-        }
-    }
-
-    [Rpc(RpcSources.All, RpcTargets.All)]
-    public void RPC_PlayRespawnSound()
-    {
-        if (respawnSoundClip != null)
-        {
-            AudioManager.Instance?.PlayClipAtPosition(respawnSoundClip, transform.position);
-        }
-    }
-
-    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    public void RPC_PlayDieSound()
-    {
-        if (dieSoundClip != null)
-            AudioManager.Instance?.PlayClipAtPosition(dieSoundClip, transform.position);
     }
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
@@ -1181,15 +1171,9 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             }
         }
 
-        RPC_PlayFriendDeathEffect();
-
-        RPC_OnRespawned();
-    }
-
-    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    public void RPC_PlayFriendDeathEffect()
-    {
-        if (lifeCycle != null) lifeCycle.PlayOnFriendDeath();
+        LastRespawnWasReset = true;
+        RespawnCount++;
+        ApplyRespawnLocal();
     }
 
     #endregion
