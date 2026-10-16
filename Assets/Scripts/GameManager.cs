@@ -317,6 +317,14 @@ public class GameManager : SingletonNetwork<GameManager>
         _returningToSession = true;
         IsInGameplay = false;
 
+        // state ที่อยู่ข้ามรอบ (static / DontDestroyOnLoad) — ล้างทุกเส้นทางออก ไม่ใช่แค่ Quit ผ่านเมนู
+        PlayerInterface._birdFlyUnlocked = false;   // M-4
+        PlayerInterface._birdThrowUnlocked = false;
+        PlayerInterface._duckDiveUnlocked = false;
+        PlayerInterface._duckSmashUnlocked = false;
+        DialogueManager.ResetForNewSession();       // H-2
+        if (TutorialUIManager.Instance != null) TutorialUIManager.Instance.HideTutorial();
+
         if (CameraCharacter.LocalCamera != null)
             Destroy(CameraCharacter.LocalCamera.transform.root.gameObject);
 

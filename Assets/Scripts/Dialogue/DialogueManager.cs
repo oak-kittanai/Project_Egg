@@ -41,6 +41,14 @@ public class DialogueManager : MonoBehaviour
         DialogueHUB.Instance?.CloseDialogue();
     }
 
+    // เรียกตอนกลับ lobby (GameManager.ReturnToSession) — IsDialogueOpen เป็น static ถ้าออกเกมตอน dialogue เปิดอยู่
+    // ค่าจะค้างเป็น true แล้ว OnInput ส่ง input ว่างตลอดในรอบถัดไป (H-2)
+    public static void ResetForNewSession()
+    {
+        IsDialogueOpen = false;
+        DialogueHUB.Instance?.CloseDialogue();
+    }
+
     private void LoadConfig(DialogueConfig config)
     {
         currentHeader = config;
