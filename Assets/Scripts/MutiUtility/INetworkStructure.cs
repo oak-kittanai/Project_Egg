@@ -18,21 +18,23 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
         Debug.Log($"Fusion: Disconnected from server reason + : {reason}");
 
         // อยู่ในเกมแล้ว host หลุด -> ปิด runner ตัวเอง (จะวิ่งเข้า OnShutdown -> ReturnToSession)
-        if (SessionManager.Instance == null && runner != null && runner.IsRunning)
+        if (GameManager.IsInGameplay && runner != null && runner.IsRunning)
             runner.Shutdown();
     }
 
     public void OnShutdown(NetworkRunner runner, ShutdownReason shutdownReason)
     {
-        if (SessionManager.Instance != null)
+        Debug.Log($"Fusion: Shutdown reason: {shutdownReason} | inGameplay={GameManager.IsInGameplay}");
+
+        if (GameManager.IsInGameplay)
+        {
+            // อยู่ในเกม (runner ปิด ไม่ว่าจะกดออกเอง เข้าประตูสุดท้าย หรืออีกฝั่งหลุด) -> กลับหน้า session
+            GameManager.ReturnToSession();
+        }
+        else if (SessionManager.Instance != null)
         {
             // อยู่หน้า menu/lobby -> รีเซ็ตสถานะ lobby ตามเดิม
             SessionManager.Instance.DisconnedFromServer();
-        }
-        else
-        {
-            // อยู่ในเกม (runner ปิด ไม่ว่าจะกดออกเองหรืออีกฝั่งหลุด) -> กลับหน้า session
-            GameManager.ReturnToSession();
         }
     }
 
@@ -154,7 +156,7 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
     public void OnPlayerLeft(NetworkRunner runner, PlayerRef player)
     {
         // co-op 2 คน: ถ้าอยู่ในเกมแล้วอีกคนออก -> ออกทั้งคู่ (ปิด runner -> OnShutdown -> ReturnToSession)
-        if (SessionManager.Instance == null && runner != null && runner.IsRunning)
+        if (GameManager.IsInGameplay && runner != null && runner.IsRunning)
             runner.Shutdown();
     }
 
@@ -171,6 +173,9 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
 
     public void OnSceneLoadStart(NetworkRunner runner)
     {
+        // Fusion โหลด scene เฉพาะด่าน (lobby โหลดด้วย SceneManager ใน GameManager.ReturnToSession) -> นับว่าเข้าเกมแล้ว
+        GameManager.MarkInGameplay();
+
         if (GlobalLoadingManager.Instance != null)
             GlobalLoadingManager.Instance.ShowLoading();
     }
