@@ -498,6 +498,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                                            + Vector3.up * betweenCarryPosition;
                 _wasVisuallyCarried = true;
             }
+
+            ResetCorrectionSmoothing();
         }
         else
         {
@@ -508,8 +510,63 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                 visualTransform.localPosition = Vector3.zero;
                 _wasVisuallyCarried = false;
             }
+
+            SmoothPredictionCorrection();
         }
     }
+
+    #region Correction Smoothing (LP-2)
+    // ตัวละครของเราฝั่ง client: ถ้าทำนายผิดแล้วถูก host แก้ ภาพจะกระโดดไปตำแหน่งใหม่ทันที (NetworkRigidbody2D ไม่มีระบบเกลี่ย)
+    // เก็บส่วนที่กระโดดเกินความเร็วปกติไว้เป็นค่าเหลื่อม แล้วค่อย ๆ ลดลง -> ภาพไหลไปตำแหน่งที่ถูกแทนการดีด
+    private const float CorrectionDecayTime = 0.1f;     // ค่าเหลื่อมลดลงเหลือ ~37% ทุก 0.1 วิ
+    private const float MaxRenderSpeed = 30f;           // หน่วย/วินาที — ขยับเร็วกว่านี้ในเฟรมเดียวถือว่าเป็นการแก้ตำแหน่ง
+    private const float CorrectionTeleportDistance = 2f; // กระโดดไกลกว่านี้ = วาร์ป/เกิดใหม่ ไม่เกลี่ย
+
+    private Vector3 _correctionOffset;
+    private Vector3 _lastRenderTarget;
+    private Vector3 _lastWrittenVisual;
+    private bool _hasLastRenderTarget;
+
+    private void SmoothPredictionCorrection()
+    {
+        if (visualTransform == null || !HasInputAuthority || isDead || Time.deltaTime <= 0f)
+        {
+            ResetCorrectionSmoothing();
+            return;
+        }
+
+        // ตำแหน่งที่ NetworkRigidbody2D เพิ่งเขียน — ถ้าเฟรมนี้ไม่ได้เขียน (ค่ายังเป็นที่เราเขียนไว้) ใช้ตำแหน่งจริงของเฟรมก่อน
+        Vector3 current = visualTransform.position;
+        Vector3 target = (_hasLastRenderTarget && current == _lastWrittenVisual) ? _lastRenderTarget : current;
+
+        if (_hasLastRenderTarget)
+        {
+            Vector3 delta = target - _lastRenderTarget;
+            float distance = delta.magnitude;
+            float maxStep = MaxRenderSpeed * Time.deltaTime;
+
+            if (distance > CorrectionTeleportDistance)
+                _correctionOffset = Vector3.zero;
+            else if (distance > maxStep)
+                _correctionOffset -= delta * (1f - maxStep / distance);
+        }
+
+        _correctionOffset *= Mathf.Exp(-Time.deltaTime / CorrectionDecayTime);
+        if (_correctionOffset.sqrMagnitude < 0.000001f) _correctionOffset = Vector3.zero;
+
+        _lastRenderTarget = target;
+        _hasLastRenderTarget = true;
+
+        _lastWrittenVisual = target + _correctionOffset;
+        visualTransform.position = _lastWrittenVisual;
+    }
+
+    private void ResetCorrectionSmoothing()
+    {
+        _correctionOffset = Vector3.zero;
+        _hasLastRenderTarget = false;
+    }
+    #endregion
 
     // Self-heal an orphaned carry prediction. localIsBeingCarriedPredict bridges the latency
     // between the Client initiating a carry and the authoritative IsBeingCarried replicating.
