@@ -370,10 +370,10 @@ public class Bird_Moveset : MovementCharacter, IstunAble
         rb2D.gravityScale = normalGravity;
     }
 
+    // host และ client ที่คุมนกตัวนี้ (input authority) เริ่มบินพร้อมกันได้ — ค่าที่เขียนเป็น networked ทั้งหมด
+    // (เดิม return ถ้าไม่ใช่ host ทำให้ฝั่ง client บินช้ากว่ากดแล้วดีดตามทีหลัง — NJ-8)
     private void StartFlying()
     {
-        if (!HasStateAuthority) return;
-
         IsFlying = true;
         isJumping = false;
 
