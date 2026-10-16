@@ -84,6 +84,7 @@ public class CharacterAnimation : NetworkBehaviour
         if (HasParameter("Y")) animator.SetFloat("Y", _smoothAnimY);
 
         string state = ResolveState(targetX != 0f);
+        VerifyLogCarryState(state);
         if (string.IsNullOrEmpty(state)) return;
 
         // ท่าครั้งเดียวที่สั่งซ้ำ (เช่นกด E ติดกัน) ต้องเล่นใหม่ตั้งแต่ต้น
@@ -96,6 +97,26 @@ public class CharacterAnimation : NetworkBehaviour
             PlayAnimationSafeLocal(state, restartAction);
             _lastLocalState = state;
         }
+    }
+
+    // TEMP — branch test/all2 only. DO NOT MERGE.
+    // FB-8: log ท่าที่เลือกของเป็ดทุกครั้งที่ (ท่า, แบกอยู่, แตะพื้น) เปลี่ยน ระหว่างแบก/เพิ่งวาง
+    private string _verifyCarryKey;
+    private bool _verifyWasCarrying;
+
+    private void VerifyLogCarryState(string state)
+    {
+        if (currentSkin != characterType.Duck || movement == null) return;
+
+        bool carrying = Carrying;
+        if (!carrying && !_verifyWasCarrying) return;
+        _verifyWasCarrying = carrying;
+
+        string key = $"{state}|{carrying}|{movement.IsGrounded}";
+        if (key == _verifyCarryKey) return;
+        _verifyCarryKey = key;
+
+        VerifyLog.Log($"FB8 duck anim t={Time.time:F2} state={state} carrying={carrying} grounded={movement.IsGrounded} vy={_visualVelocity.y:F1} inputAuth={HasInputAuthority}");
     }
 
     private void UpdateVisualVelocity()
