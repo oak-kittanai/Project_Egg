@@ -30,7 +30,13 @@ public class PlayerGUI : MonoBehaviour
     private void Awake()
     {
         if (flightBar != null) flightBar.gameObject.SetActive(false);
-        if (stunIcon != null) stunIcon.SetActive(false);
+        if (stunIcon != null)
+        {
+            stunRect = stunIcon.transform as RectTransform;
+            if (stunRect != null) stunBaseX = Mathf.Abs(stunRect.anchoredPosition.x);
+            characterSprite = stunIcon.GetComponentInParent<SpriteRenderer>(true);
+            stunIcon.SetActive(false);
+        }
         if (miniDialogueContainer != null) miniDialogueContainer.SetActive(false);
     }
 
@@ -44,6 +50,8 @@ public class PlayerGUI : MonoBehaviour
 
     private void Update()
     {
+        if (stunIcon != null && stunIcon.activeSelf) AlignStunIcon();
+
         if (isTrackingFlight && activeRunner != null)
         {
             float remainingTime = activeFlightTimer.RemainingTime(activeRunner) ?? 0f;
@@ -140,10 +148,26 @@ public class PlayerGUI : MonoBehaviour
     public GameObject stunIcon;
     public Animator stunAnimator;
 
+    private RectTransform stunRect;
+    private SpriteRenderer characterSprite;
+    private float stunBaseX;
+
     public void ShowStunIcon()
     {
         if (stunIcon != null) stunIcon.SetActive(true);
         if (stunAnimator != null) stunAnimator.Play("Stun");
+        AlignStunIcon();
+    }
+
+    // ไอคอนอยู่เหนือหัว: ใน prefab วางไว้ตอนหันซ้าย (flipX = false) — sprite มี pivot กลาง
+    // หันขวาหัวจึงย้ายไปอีกฝั่งเท่ากัน -> กลับค่า x ตามทิศหัน (FB2-5 เดิมไอคอนค้างฝั่งซ้ายเสมอ)
+    private void AlignStunIcon()
+    {
+        if (stunRect == null) return;
+
+        float x = (characterSprite != null && characterSprite.flipX) ? stunBaseX : -stunBaseX;
+        Vector2 pos = stunRect.anchoredPosition;
+        if (pos.x != x) stunRect.anchoredPosition = new Vector2(x, pos.y);
     }
 
     public void HideStunIcon()

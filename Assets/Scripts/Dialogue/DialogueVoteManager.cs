@@ -17,6 +17,28 @@ public class DialogueVoteManager : NetworkBehaviour
         Instance = this;
     }
 
+    // บอกสถานะโหวตในกล่อง dialogue (FB2-6): ต้องพร้อมครบทุกคนถึงจะปิด แต่เดิมไม่มีอะไรบอกว่ารอใครอยู่
+    // อ่านจาก HostReady/ClientReady ที่ sync อยู่แล้ว — ข้อความภาษาอังกฤษตาม dialogue ในเกม (font ไม่มีตัวไทย)
+    private const string WaitingForPartnerText = "Waiting for partner... (1/2)";
+    private const string PartnerReadyText = "Partner is ready (1/2)";
+
+    public override void Render()
+    {
+        if (Instance != this || DialogueHUB.Instance == null) return;
+
+        string status = null;
+        if (isDialogueActive)
+        {
+            bool localReady = HasStateAuthority ? HostReady : ClientReady;
+            bool partnerReady = HasStateAuthority ? ClientReady : HostReady;
+
+            if (localReady && !partnerReady) status = WaitingForPartnerText;
+            else if (partnerReady && !localReady) status = PartnerReadyText;
+        }
+
+        DialogueHUB.Instance.SetVoteStatus(status);
+    }
+
     private void Update()
     {
         if (!isDialogueActive) return;

@@ -6,6 +6,8 @@ public class BearTrapScript : NetworkBehaviour
     [Header("Trap Settings")]
     [SerializeField] private float delayBeforeSnap = 0.5f;
     [SerializeField] private float cooldownTime = 2.4f;
+    [Tooltip("เวลาที่ collider ดาเมจเปิดตอนงับ (วินาที) — หลังจากนั้นกับดักที่หุบอยู่ไม่ทำดาเมจ")]
+    [SerializeField] private float damageWindow = 0.15f;
     [SerializeField] private ParticleSystem damageParticles;
 
     [Header("Audio Setting")]
@@ -16,6 +18,7 @@ public class BearTrapScript : NetworkBehaviour
     [Networked] private TickTimer DelayTimer { get; set; }
     [Networked] private NetworkBool IsTriggered { get; set; }
     [Networked] private NetworkBool HasPlayedFX { get; set; }
+    [Networked] private TickTimer DamageWindowTimer { get; set; }
 
     [SerializeField] Collider2D doDamageColl2D;
     [SerializeField] private Animator trapAnimator;
@@ -52,7 +55,9 @@ public class BearTrapScript : NetworkBehaviour
 
             if (doDamageColl2D != null)
             {
+                // เปิดดาเมจแค่ช่วงงับ (เดิมเปิดค้างจนหมด cooldown — เดินเข้ากับดักที่หุบอยู่ก็โดน)
                 doDamageColl2D.enabled = true;
+                DamageWindowTimer = TickTimer.CreateFromSeconds(Runner, damageWindow);
 
                 ContactFilter2D filter = new ContactFilter2D();
                 filter.SetLayerMask(LayerMask.GetMask("Player"));
@@ -67,12 +72,19 @@ public class BearTrapScript : NetworkBehaviour
             }
         }
 
+        if (DamageWindowTimer.Expired(Runner))
+        {
+            DamageWindowTimer = TickTimer.None;
+            if (doDamageColl2D != null) doDamageColl2D.enabled = false;
+        }
+
         // รีเซ็ต
         if (IsTriggered && CooldownTimer.Expired(Runner))
         {
             IsTriggered = false;
             HasPlayedFX = false;
             DelayTimer = TickTimer.None;
+            DamageWindowTimer = TickTimer.None;
 
             if (doDamageColl2D != null)
             {

@@ -316,6 +316,10 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         JumpCooldown = TickTimer.CreateFromSeconds(Runner, JumpCooldownTimer);
 
         if (GameManager.Instance != null) GameManager.Instance.RegisterPlayer(this);
+
+        // เดินทะลุตัวมอน (มอนที่ spawn ทีหลังจัดการเองใน BaseMonster.Spawned)
+        foreach (var monster in FindObjectsByType<BaseMonster>(FindObjectsSortMode.None))
+            BaseMonster.IgnorePlayerCollision(monster, this);
         if (localGUI != null) localGUI.SetCharacterType(isThisCharacterBird);
 
         if (HasInputAuthority)

@@ -26,6 +26,13 @@ public class RockObject : NetworkBehaviour, ThrowAbleItem
     [Tooltip("rock must move faster than this to stun the duck (prevents slow rocks from stunning)")]
     [SerializeField] float stunVelocityThreshold = 3f;
 
+    // หินที่ถูกปาและยังเร็วพอจะ stun -> ชนผู้เล่นได้ (layer ThrowAbleProjectile)
+    // หินที่วางอยู่/ช้าแล้ว -> ItemDrop ไม่ชนผู้เล่น (ยังชนพื้นและตัวมอน, กด E เก็บได้เหมือนเดิม)
+    // เดิมหินวางอยู่ชนผู้เล่นเสมอ: ยืนบนหินแล้วหินกลิ้ง/ถูกแก้ตำแหน่งตลอด ตัวละครกระตุก (FB2-2)
+    [Networked] private NetworkBool IsDangerous { get; set; }
+    private int projectileLayer = -1;
+    private int restingLayer = -1;
+
     // freeze ตอน pause: เก็บค่าความเร็ว/แรงโน้มถ่วงไว้ แล้วหยุดนิ่ง คืนค่าเมื่อเล่นต่อ
     private bool _frozen;
     private Vector2 _frozenVel;
@@ -37,6 +44,20 @@ public class RockObject : NetworkBehaviour, ThrowAbleItem
         if (selfNet == null) selfNet = GetComponent<NetworkObject>();
         if (rb2D == null) rb2D = GetComponent<Rigidbody2D>();
         if (spriteRenderer == null) spriteRenderer = GetComponent<SpriteRenderer>();
+
+        projectileLayer = LayerMask.NameToLayer("ThrowAbleProjectile");
+        restingLayer = LayerMask.NameToLayer("ItemDrop");
+    }
+
+    private void ApplyCollisionLayer()
+    {
+        int layer = IsDangerous ? projectileLayer : restingLayer;
+        if (layer >= 0 && gameObject.layer != layer) gameObject.layer = layer;
+    }
+
+    public override void Render()
+    {
+        ApplyCollisionLayer();
     }
 
     public override void FixedUpdateNetwork()
@@ -65,6 +86,9 @@ public class RockObject : NetworkBehaviour, ThrowAbleItem
             rb2D.gravityScale = _frozenGravity;
             _frozen = false;
         }
+
+        IsDangerous = ThrowerId.IsValid && isLethal && rb2D.linearVelocity.magnitude >= stunVelocityThreshold;
+        ApplyCollisionLayer();
     }
 
     public override void Spawned()
