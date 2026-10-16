@@ -43,6 +43,8 @@ public class Bird_Moveset : MovementCharacter, IstunAble
 
     // หน่วงปล่อยหินให้ตรงจังหวะเหวี่ยงของ animation (deterministic ผ่าน TickTimer ไม่ใช่ Animation Event)
     [Networked] bool _isReleasingThrow { get; set; }
+    // ท่า "Throwing" ของทุกเครื่องอ่านจากค่านี้ (CharacterAnimation) แทน RPC
+    public bool IsReleasingThrow => _isReleasingThrow;
     [Networked] TickTimer ThrowReleaseTimer { get; set; }
     [Tooltip("หน่วงเวลา (วินาที) ตั้งแต่กดยืนยันปา จนหินหลุดมือ ให้ตรงเฟรมเหวี่ยงของ animation")]
     [SerializeField] float throwReleaseDelay = 0.35f;
@@ -119,9 +121,6 @@ public class Bird_Moveset : MovementCharacter, IstunAble
                 if (!IsFlying && (duck.IsGrounded || duck.isWaterSurface))
                 {
                     IsAlreadyFly = false;
-                    resetAnimation = true;
-
-                    if (cAnimation != null) cAnimation.ReturnToBlendAnimation();
                 }
                 else if (duck.IsHeadUnderwater) { /* do drowning but duck carry animation */ }
 
@@ -243,11 +242,6 @@ public class Bird_Moveset : MovementCharacter, IstunAble
             rb2D.sharedMaterial = defaultMaterial;
             rb2D.linearDamping = 0f;
             rb2D.gravityScale = normalGravity;
-        }
-
-        if (cAnimation != null)
-        {
-            cAnimation.FallingAndFloatAnimation(true, false);
         }
 
         startTimer = false;
@@ -374,8 +368,6 @@ public class Bird_Moveset : MovementCharacter, IstunAble
         optionalGravity = floatingGravity;
         isOptional = true;
 
-        cAnimation.FlyFloatAnimation();
-
         rb2D.linearDamping = 5f;
     }
 
@@ -386,8 +378,6 @@ public class Bird_Moveset : MovementCharacter, IstunAble
         isOptional = false;
         rb2D.linearDamping = 0f;
         rb2D.gravityScale = normalGravity;
-
-        resetAnimation = true;
     }
 
     private void StartFlying()
@@ -399,8 +389,6 @@ public class Bird_Moveset : MovementCharacter, IstunAble
 
         float duration = IsBeingCarried ? carryFlyTime : normalFlyTime;
         FlightTimer = TickTimer.CreateFromSeconds(Runner, duration);
-
-        if (cAnimation != null) cAnimation.FlyUpAnimation();
 
         if (rb2D != null && zeroFrictionMaterial != null)
         {
@@ -498,20 +486,10 @@ public class Bird_Moveset : MovementCharacter, IstunAble
             isMoveAble = false;
             IsInteractBusy = true;
 
-            cAnimation.AimAnimation();
             UpdateOscillatingAim();
         }
 
         _wasisThrowItemPressed = input.KeybindThrowItem;
-    }
-
-    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    public void PlayThrowAnimation_RPC()
-    {
-        if (cAnimation != null)
-        {
-            cAnimation.ThrowAnimation();
-        }
     }
 
     // กดยืนยันปา: เริ่มเล่น animation เหวี่ยง + ล็อกทิศเล็ง แล้วหน่วง spawn ด้วย TickTimer
@@ -521,8 +499,6 @@ public class Bird_Moveset : MovementCharacter, IstunAble
         _prepareToThrow = false;
         _isReleasingThrow = true;
         ThrowReleaseTimer = TickTimer.CreateFromSeconds(Runner, throwReleaseDelay);
-
-        PlayThrowAnimation_RPC();
     }
 
     public void ExecuteThrow()
@@ -561,15 +537,6 @@ public class Bird_Moveset : MovementCharacter, IstunAble
         _isReleasingThrow = false;
         ThrowReleaseTimer = TickTimer.None;
         IsInteractBusy = false;
-
-        if (cAnimation != null)
-        {
-            // เคลียร์ lock ของ throw animation (ThrowAnimation ล็อก 1.43s) ก่อน
-            // ไม่งั้น ReturnToBlendAnimation จะถูกบล็อกด้วย guard ของ AnimationTimer
-            // -> เดินทันทีหลังปาแล้ว animation ค้างที่ state "Throwing" (ดูเหมือนยืนเฉยๆ)
-            cAnimation.ClearAnimationLock();
-            cAnimation.ReturnToBlendAnimation();
-        }
 
         throwPoint.localRotation = Quaternion.identity;
     }

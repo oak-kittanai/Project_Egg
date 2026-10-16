@@ -48,7 +48,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [Networked] public bool isFloating { get; set; }
     [SerializeField] public bool isMoveAble = true;
 
-    public bool resetAnimation;
     [Networked] public bool isJumping { get; set; }
     #endregion
 
@@ -302,7 +301,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         }
 
         JumpCooldown = TickTimer.CreateFromSeconds(Runner, JumpCooldownTimer);
-        resetAnimation = true;
 
         if (GameManager.Instance != null) GameManager.Instance.RegisterPlayer(this);
         if (localGUI != null) localGUI.SetCharacterType(isThisCharacterBird);
@@ -423,10 +421,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                     {
                         HandleMovement(input);
                         rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, input.vertical * climbSpeed);
-                        if (cAnimation != null)
-                        {
-                            cAnimation.UpdateClimbAnimation(Mathf.Abs(input.vertical));
-                        }
                     }
 
                     HandleEtcInput(input);
@@ -611,9 +605,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, 0f);
             rb2D.AddForce(Vector2.up * stats.s_jumpForce, ForceMode2D.Impulse);
             IsGrounded = false;
-            resetAnimation = false;
             JumpCooldown = TickTimer.CreateFromSeconds(Runner, JumpCooldownTimer);
-            if (cAnimation != null && !isCarrying) cAnimation.JumpAnimation();
         }
     }
 
@@ -645,8 +637,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
         isJumping = false;
         rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, headBumpDownwardVelocity);
-        resetAnimation = false;
-        if (cAnimation != null) cAnimation.FallingAndFloatAnimation(true, false);
         return true;
     }
 
@@ -711,12 +701,10 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         rb2D.linearVelocity = Vector2.zero;
         rb2D.AddForce(Vector2.up * stats.s_jumpForce, ForceMode2D.Impulse);
         IsGrounded = false;
-        resetAnimation = false;
         JumpCooldown = TickTimer.CreateFromSeconds(Runner, JumpCooldownTimer);
 
         if (HasInputAuthority && jumpSoundClip != null)
             AudioManager.Instance?.PlayClipAtPosition(jumpSoundClip, transform.position);
-        if (cAnimation != null && !isCarrying) cAnimation.JumpAnimation();
     }
 
     #endregion
@@ -830,7 +818,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         isStunned = true;
         isMoveAble = false;
         IsInteractBusy = true;
-        if (cAnimation != null) cAnimation.SetFrozen(true);
         StunTimer = TickTimer.CreateFromSeconds(Runner, stunDuration);
     }
 
@@ -842,7 +829,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             isStunned = false;
             isMoveAble = true;
             IsInteractBusy = false;
-            if (cAnimation != null) cAnimation.SetFrozen(false);
         }
     }
 
@@ -1011,8 +997,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             isDrowningDamageActive = false;
             DrowningDamageTimer = TickTimer.None;
         }
-
-        if (cAnimation != null) cAnimation.ReturnToBlendAnimation();
 
         if (respawnSoundClip != null)
         {
@@ -1203,13 +1187,10 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
                 IsGrounded = false;
                 IsInAir = true;
-                resetAnimation = false;
             }
 
             if (coll2D != null) coll2D.isTrigger = false;
 
-            if (cAnimation != null)
-                cAnimation.FallingAndFloatAnimation(true, false);
             if (visualTransform != null)
                 visualTransform.localPosition = Vector3.zero;
             OnDroppedEvent();
@@ -1334,7 +1315,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         if (!wasGrounded && IsGrounded)
         {
             isJumping = false;
-            resetAnimation = true;
             if (HasInputAuthority && landingSoundClip != null)
             {
                 AudioManager.Instance?.PlayClipAtPosition(landingSoundClip, transform.position);
@@ -1345,11 +1325,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         {
             isOptional = false;
             FallingBusy = false;
-            if (resetAnimation)
-            {
-                if (cAnimation != null) cAnimation.ReturnToBlendAnimation();
-                resetAnimation = false;
-            }
         }
 
         if (IsInAir && !isClimbing)
@@ -1360,7 +1335,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                 if (!FallingBusy && !isOptional)
                 {
                     if (!effectivelyCarried) FallingCheck();
-                    if (cAnimation != null) cAnimation.FallingAndFloatAnimation(true, isNearGround);
                 }
             }
         }

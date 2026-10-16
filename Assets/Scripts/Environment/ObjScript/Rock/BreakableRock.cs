@@ -58,7 +58,7 @@ public class BreakableRock : NetworkBehaviour, Interactable
         if (player is Duck_Moveset duck && duck.isSmashUnlocked)
         {
             lastBreaker = duck;
-            duck.PlayHitAnimation_RPC();
+            if (duck.cAnimation != null) duck.cAnimation.SmashAnimation(); // host ตั้งท่าทุบ ทุกเครื่องเล่นตามจาก state ที่ sync
             RPC_BreakRock();
         }
     }
