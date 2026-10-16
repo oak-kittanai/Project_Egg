@@ -782,7 +782,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         }
         rb2D.linearVelocity = Vector2.zero;
         rb2D.AddForce(vec * knockbackForce, ForceMode2D.Impulse);
-        if (_damageFlash != null) _damageFlash.CallDamageFlash_RPC();
+        if (_damageFlash != null) _damageFlash.StartFlash();
 
         if (currentHealth <= 0)
         {
