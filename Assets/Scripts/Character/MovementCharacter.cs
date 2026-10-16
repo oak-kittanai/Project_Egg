@@ -146,9 +146,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     public bool localIsBeingCarriedPredict;
     public NetworkId localCarrierIdPredict;
     private bool _wasVisuallyCarried;
-    [SerializeField] public bool _isEPressed;
 
-    private bool _wasTabPressed;
     #endregion
 
     #region Platform Interaction
@@ -193,7 +191,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [Header("Inventory System (1 Slot)")]
     [Networked, OnChangedRender(nameof(OnHeldItemChanged))]
     public NetworkString<_32> HeldItemName { get; set; }
-    private bool _wasDropPressed;
 
     [HideInInspector] public bool isNearBreakableRock;
 
@@ -208,7 +205,13 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     #region Etc
     [Header("Etc")]
-    public bool _wasEscPressed;
+    // ปุ่มของ tick ก่อนหน้า — networked จึงถูกย้อนตอน resimulate (แทน _isEPressed / _wasEscPressed ฯลฯ เดิม)
+    [Networked] public NetworkButtons PreviousButtons { get; set; }
+
+    protected bool WasPressed(NetworkInputData input, InputButton button) => input.Buttons.WasPressed(PreviousButtons, button);
+
+    // E ที่กดค้างอยู่ใน tick ล่าสุด (ไอคอนสกิลใช้)
+    public bool IsInteractHeld => PreviousButtons.IsSet(InputButton.Interact);
     #endregion
 
     #region LifeCycle Effect
@@ -320,6 +323,14 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     }
 
     public override void FixedUpdateNetwork()
+    {
+        SimulateTick();
+
+        // จำปุ่มของ tick นี้ไว้เทียบ tick หน้า — อัปเดตทุก tick แม้ SimulateTick ออกก่อน (ตาย / ยังโหลดไม่เสร็จ)
+        if (GetInput(out NetworkInputData input)) PreviousButtons = input.Buttons;
+    }
+
+    private void SimulateTick()
     {
         if (GameManager.Instance == null || GameManager.Instance.Object == null || !GameManager.Instance.Object.IsValid)
         {
@@ -529,7 +540,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     private void HandleEtcInput(NetworkInputData input)
     {
-        bool isEscPressed = input.Keyboard_ESC && !_wasEscPressed;
+        bool isEscPressed = WasPressed(input, InputButton.Esc);
         if (isEscPressed)
         {
             if (Runner.IsForward)
@@ -544,16 +555,14 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                 }
             }
         }
-        _wasEscPressed = input.Keyboard_ESC;
 
-        bool isTabPressed = input.Keyboard_Tab && !_wasTabPressed;
+        bool isTabPressed = WasPressed(input, InputButton.Tab);
         if (isTabPressed)
         {
             if (HasInputAuthority && PlayerInterface.Instance != null)
                 PlayerInterface.Instance.HideNote();
             TutorialUIManager.Instance?.HideTutorial();
         }
-        _wasTabPressed = input.Keyboard_Tab;
     }
 
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
@@ -713,7 +722,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     private void HandleInteraction(NetworkInputData input)
     {
-        bool isEPressed = input.KeybindInteract && !_isEPressed;
+        bool isEPressed = WasPressed(input, InputButton.Interact);
         if (isEPressed)
         {
             Collider2D[] hitsItem = Physics2D.OverlapCircleAll(transform.position, interactRadius);
@@ -731,7 +740,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
                         cAnimation.InteractAnimation();
                         throwableItem.PickupItem_RPC(this);
-                        _isEPressed = input.KeybindInteract;
                         return;
                     }
                 }
@@ -751,7 +759,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                 }
             }
         }
-        _isEPressed = input.KeybindInteract;
     }
 
     #endregion
@@ -1455,11 +1462,11 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     private void HandleDrop(NetworkInputData input)
     {
-        bool isDropPressed = input.KeybindDropItem && !_wasDropPressed;
+        bool isDropPressed = WasPressed(input, InputButton.Drop);
 
         if (isDropPressed && HeldItemName.ToString() != "")
         {
-            if (this is Bird_Moveset bird && bird._prepareToThrow) { _wasDropPressed = input.KeybindDropItem; return; }
+            if (this is Bird_Moveset bird && bird._prepareToThrow) return;
 
             if (Runner.IsForward)
             {
@@ -1467,8 +1474,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                 GameManager.Instance.RPC_DropItemByName(HeldItemName.ToString(), dropPosition, this);
             }
         }
-
-        _wasDropPressed = input.KeybindDropItem;
     }
 
     private Vector2 GetSafeDropPosition()

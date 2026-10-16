@@ -26,11 +26,6 @@ public class Bird_Moveset : MovementCharacter, IstunAble
     [Networked] public bool AlreadyFloating { get; set; }
 
 
-    [Header("Pressed")]
-    public bool _wasJumpPressed;
-    public bool _wasPrepareThrowPressed;
-    public bool _wasisThrowItemPressed;
-
     // Drowning
     [Networked] private TickTimer DrownTimer { get; set; }
     [SerializeField] float drowningTime = 3f;
@@ -91,9 +86,6 @@ public class Bird_Moveset : MovementCharacter, IstunAble
             else
             {
                 if (_prepareToThrow) CancelThrow();
-
-                _wasJumpPressed = input.KeybindJump;
-                _wasisThrowItemPressed = input.KeybindThrowItem;
             }
         }
 
@@ -277,7 +269,7 @@ public class Bird_Moveset : MovementCharacter, IstunAble
     {
         if (!isFlyUnlocked) return;
 
-        bool isPressed = input.KeybindJump && !_wasJumpPressed;
+        bool isPressed = WasPressed(input, InputButton.Jump);
 
         if (!IsBeingCarried)
         {
@@ -337,8 +329,6 @@ public class Bird_Moveset : MovementCharacter, IstunAble
                 }
             }
         }
-
-        _wasJumpPressed = input.KeybindJump;
     }
 
     public void OnFlyingStateChanged()
@@ -435,7 +425,7 @@ public class Bird_Moveset : MovementCharacter, IstunAble
 
     public void HandleThrowLogic(NetworkInputData input)
     {
-        bool isPrepareThrowPressed = input.KeybindThrowItem && !_wasisThrowItemPressed;
+        bool isPrepareThrowPressed = WasPressed(input, InputButton.Throw);
 
         // อยู่ช่วง windup (กดยืนยันแล้ว กำลังรอหินหลุดมือ) — ล็อกการเคลื่อนที่ รอ timer แล้วค่อย spawn
         if (_isReleasingThrow)
@@ -448,7 +438,6 @@ public class Bird_Moveset : MovementCharacter, IstunAble
                 ExecuteThrow();
             }
 
-            _wasisThrowItemPressed = input.KeybindThrowItem;
             return;
         }
 
@@ -488,8 +477,6 @@ public class Bird_Moveset : MovementCharacter, IstunAble
 
             UpdateOscillatingAim();
         }
-
-        _wasisThrowItemPressed = input.KeybindThrowItem;
     }
 
     // กดยืนยันปา: เริ่มเล่น animation เหวี่ยง + ล็อกทิศเล็ง แล้วหน่วง spawn ด้วย TickTimer

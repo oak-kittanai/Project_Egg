@@ -50,11 +50,6 @@ public class Duck_Moveset : MovementCharacter, IstunAble
 
     [Networked] private TickTimer DiveTimer { get; set; }
 
-    [Header("Etc")]
-    public bool _wasEPressed;
-    public bool _wasFPressed;
-    public bool _wasJumpPressed;
-
     [Header("Floating Settings")]
     [SerializeField] private float floatOffset = -0.2f;
 
@@ -109,7 +104,7 @@ public class Duck_Moveset : MovementCharacter, IstunAble
         {
             if (!isMenuOpen)
             {
-                isJumpPressed = input.KeybindJump && !_wasJumpPressed;
+                isJumpPressed = WasPressed(input, InputButton.Jump);
 
                 HandleDuckInteraction(input);
                 HandleWaterLogic(input);
@@ -120,10 +115,6 @@ public class Duck_Moveset : MovementCharacter, IstunAble
                     else isJumpingUp = false;
                 }
             }
-
-            _wasEPressed = input.KeybindInteract;
-            _wasFPressed = input.Keyboard_F;
-            _wasJumpPressed = input.KeybindJump;
         }
 
         if (IsCarry)
@@ -194,7 +185,7 @@ public class Duck_Moveset : MovementCharacter, IstunAble
 
     private void HandleDuckInteraction(NetworkInputData input)
     {
-        bool isEPressed = input.KeybindInteract && !_wasEPressed;
+        bool isEPressed = WasPressed(input, InputButton.Interact);
 
         if (isEPressed)
         {
@@ -308,7 +299,7 @@ public class Duck_Moveset : MovementCharacter, IstunAble
             return;
         }
 
-        bool isFPressed = input.Keyboard_F && !_wasFPressed;
+        bool isFPressed = WasPressed(input, InputButton.F);
 
         if (!isWaterSurface && isFPressed && onDiving && !IsGrounded)
         {
@@ -566,7 +557,7 @@ public class Duck_Moveset : MovementCharacter, IstunAble
 
         if (isSmashUnlocked && PlayerInterface.Instance.spawnedDuckSmash != null)
         {
-            PlayerInterface.Instance.spawnedDuckSmash.SetPressed(_isEPressed);
+            PlayerInterface.Instance.spawnedDuckSmash.SetPressed(IsInteractHeld);
 
             PlayerInterface.Instance.spawnedDuckSmash.SetUsable(isNearBreakableRock);
         }
