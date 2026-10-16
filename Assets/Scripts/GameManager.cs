@@ -292,13 +292,22 @@ public class GameManager : SingletonNetwork<GameManager>
 
     private static bool _returningToSession;
 
+    // true ตั้งแต่ Fusion เริ่มโหลดด่าน (INetworkStructure.OnSceneLoadStart) จนกลับ lobby
+    // ใช้ตัดสินว่า runner ปิด/อีกฝั่งหลุด "ในเกม" หรือ "ใน lobby" — เดิมเช็ค SessionManager.Instance == null
+    // แต่ SessionManager อยู่บน object เดียวกับ SessionHub (DontDestroyOnLoad) จึงไม่เคยเป็น null ในเกม (C-1)
+    public static bool IsInGameplay { get; private set; }
+
+    public static void MarkInGameplay() => IsInGameplay = true;
+
     public async void BackToSessionScene()
     {
         // ปิด runner ของตัวเอง -> OnShutdown จะพา ReturnToSession ให้
         // (อีกฝั่งจะ detect disconnect แล้ว ReturnToSession ตามเองผ่าน INetworkStructure)
         VerifyLog.Log($"BackToSessionScene called (Runner null={Runner == null})"); // TEMP verify C-1
-        if (Runner != null) await Runner.Shutdown();
-        else ReturnToSession();
+        if (Runner != null && Runner.IsRunning) await Runner.Shutdown();
+
+        // กันกรณี OnShutdown ไม่มาถึง — เช็ค IsInGameplay เพราะถ้า lobby โหลดเสร็จแล้ว guard ถูก reset ไปแล้ว
+        if (IsInGameplay) ReturnToSession();
     }
 
     // จุดเดียวที่ทุก leave path เรียก (กดออกเอง / host หลุด / client หลุด) แบบ idempotent
@@ -313,6 +322,15 @@ public class GameManager : SingletonNetwork<GameManager>
 
         if (_returningToSession) return;
         _returningToSession = true;
+        IsInGameplay = false;
+
+        // state ที่อยู่ข้ามรอบ (static / DontDestroyOnLoad) — ล้างทุกเส้นทางออก ไม่ใช่แค่ Quit ผ่านเมนู
+        PlayerInterface._birdFlyUnlocked = false;   // M-4
+        PlayerInterface._birdThrowUnlocked = false;
+        PlayerInterface._duckDiveUnlocked = false;
+        PlayerInterface._duckSmashUnlocked = false;
+        DialogueManager.ResetForNewSession();       // H-2
+        if (TutorialUIManager.Instance != null) TutorialUIManager.Instance.HideTutorial();
 
         if (CameraCharacter.LocalCamera != null)
             Destroy(CameraCharacter.LocalCamera.transform.root.gameObject);
@@ -328,7 +346,11 @@ public class GameManager : SingletonNetwork<GameManager>
     }
 
     // เรียกตอน SessionScene โหลดเสร็จ (จาก SessionManager.Awake) เพื่อรีเซ็ต guard ให้ leave รอบหน้าทำงาน
-    public static void ResetReturnGuard() => _returningToSession = false;
+    public static void ResetReturnGuard()
+    {
+        _returningToSession = false;
+        IsInGameplay = false;
+    }
 
     private static void DestroyByName(string objName)
     {

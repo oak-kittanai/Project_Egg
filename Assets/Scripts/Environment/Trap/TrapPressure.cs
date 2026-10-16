@@ -35,6 +35,10 @@ public class TrapPressure : NetworkBehaviour
 
     public override void Spawned()
     {
+        // ให้ client จำลองลมด้วย (FixedUpdateNetwork ใส่แรงให้ผู้เล่นของตัวเองผ่าน player.HasInputAuthority)
+        // ไม่งั้นตัวละครฝั่ง client ถูก host ดึงกลับทุกครั้งที่อยู่ในลม (NJ-7)
+        Runner.SetIsSimulated(Object, true);
+
         if (HasStateAuthority)
         {
             _isActive = true;

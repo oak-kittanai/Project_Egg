@@ -46,9 +46,9 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [Networked] public bool IsInAir { get; set; }
     [Networked] public Vector2 MoveInput { get; set; }
     [Networked] public bool isFloating { get; set; }
-    [SerializeField] public bool isMoveAble = true;
+    // ค่าที่ FixedUpdateNetwork ใช้ตัดสินการเคลื่อนที่ต้องเป็น [Networked] ไม่งั้นไม่ถูกย้อนตอน client resimulate (M-1)
+    [Networked] public bool isMoveAble { get; set; }
 
-    public bool resetAnimation;
     [Networked] public bool isJumping { get; set; }
     #endregion
 
@@ -74,8 +74,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     #endregion
 
     #region Gravity & Falling
+    [Networked] public bool isSpeedoptional { get; set; }
     [Header("Gravity Settings")]
-    [SerializeField] public bool isSpeedoptional;
     [SerializeField] public float normalGravity = 3.5f;
     [SerializeField] public float heavyGravity = 6.5f;
     [SerializeField] public float maxGravity = 19f;
@@ -85,8 +85,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     // Falling
     [Networked] public bool IsFalling { get; set; }
     [Networked] public bool FallingBusy { get; set; }
-    [SerializeField] public bool isOptional;
-    [SerializeField] public float optionalGravity;
+    [Networked] public bool isOptional { get; set; }
+    [Networked] public float optionalGravity { get; set; }
     [SerializeField] public float accelerationSpeedOptional = 0.6f;
     [SerializeField] public float decelerationSpeedOptional = 3f;
     [SerializeField] public float optionalMaxSpeed = 1f;
@@ -97,6 +97,12 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [Networked] public int characterMaxHealth { get; set; }
     [Networked, OnChangedRender(nameof(OnHealthChanged))] public int currentHealth { get; set; }
     [Networked] public bool isDead { get; set; }
+
+    // ตาย/เกิดใหม่ sync ด้วย state แทน RPC (LP-3): host เพิ่มตัวนับ แล้วทุกเครื่องทำภาพ เสียง UI และฟิสิกส์ของตัวเองตอนค่าเปลี่ยน
+    [Networked] public NetworkBool IsPrimaryDeath { get; set; }
+    [Networked, OnChangedRender(nameof(OnDeathCountChanged))] private byte DeathCount { get; set; }
+    [Networked, OnChangedRender(nameof(OnRespawnCountChanged))] private byte RespawnCount { get; set; }
+    [Networked] private NetworkBool LastRespawnWasReset { get; set; }
 
     [Networked] TickTimer respawnTimer { get; set; }
     [SerializeField] float respawnCooldown = 3f;
@@ -147,15 +153,13 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     public bool localIsBeingCarriedPredict;
     public NetworkId localCarrierIdPredict;
     private bool _wasVisuallyCarried;
-    [SerializeField] public bool _isEPressed;
 
-    private bool _wasTabPressed;
     #endregion
 
     #region Platform Interaction
     // moving platform ที่ยืนอยู่ตอนนี้ + ตำแหน่งล่าสุดของมัน (ไว้คำนวณ delta แล้ว follow แนวนอน)
     private Transform currentPlatform;
-    private Vector3 lastPlatformPos;
+    [Networked] private Vector3 lastPlatformPos { get; set; }
     #endregion
 
     #region Interaction & Physics
@@ -182,7 +186,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [Networked] public bool isClimbing { get; set; }
     [Networked] public bool jumpedFromClimb { get; set; }
 
-    private bool wasMenuOpenLastTick = false;
+    [Networked] private bool wasMenuOpenLastTick { get; set; }
     #endregion
 
     #region Skills
@@ -194,7 +198,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [Header("Inventory System (1 Slot)")]
     [Networked, OnChangedRender(nameof(OnHeldItemChanged))]
     public NetworkString<_32> HeldItemName { get; set; }
-    private bool _wasDropPressed;
 
     [HideInInspector] public bool isNearBreakableRock;
 
@@ -209,7 +212,13 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     #region Etc
     [Header("Etc")]
-    public bool _wasEscPressed;
+    // ปุ่มของ tick ก่อนหน้า — networked จึงถูกย้อนตอน resimulate (แทน _isEPressed / _wasEscPressed ฯลฯ เดิม)
+    [Networked] public NetworkButtons PreviousButtons { get; set; }
+
+    protected bool WasPressed(NetworkInputData input, InputButton button) => input.Buttons.WasPressed(PreviousButtons, button);
+
+    // E ที่กดค้างอยู่ใน tick ล่าสุด (ไอคอนสกิลใช้)
+    public bool IsInteractHeld => PreviousButtons.IsSet(InputButton.Interact);
     #endregion
 
     #region LifeCycle Effect
@@ -305,9 +314,12 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         }
 
         JumpCooldown = TickTimer.CreateFromSeconds(Runner, JumpCooldownTimer);
-        resetAnimation = true;
 
         if (GameManager.Instance != null) GameManager.Instance.RegisterPlayer(this);
+
+        // เดินทะลุตัวมอน (มอนที่ spawn ทีหลังจัดการเองใน BaseMonster.Spawned)
+        foreach (var monster in FindObjectsByType<BaseMonster>(FindObjectsSortMode.None))
+            BaseMonster.IgnorePlayerCollision(monster, this);
         if (localGUI != null) localGUI.SetCharacterType(isThisCharacterBird);
 
         if (HasInputAuthority)
@@ -315,7 +327,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             Invoke(nameof(ForceUpdateUI), 0.5f);
         }
 
-        isMoveAble = true;
+        if (HasStateAuthority) isMoveAble = true;
     }
 
     private void ForceUpdateUI()
@@ -325,6 +337,14 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     }
 
     public override void FixedUpdateNetwork()
+    {
+        SimulateTick();
+
+        // จำปุ่มของ tick นี้ไว้เทียบ tick หน้า — อัปเดตทุก tick แม้ SimulateTick ออกก่อน (ตาย / ยังโหลดไม่เสร็จ)
+        if (GetInput(out NetworkInputData input)) PreviousButtons = input.Buttons;
+    }
+
+    private void SimulateTick()
     {
         if (GameManager.Instance == null || GameManager.Instance.Object == null || !GameManager.Instance.Object.IsValid)
         {
@@ -426,10 +446,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                     {
                         HandleMovement(input);
                         rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, input.vertical * climbSpeed);
-                        if (cAnimation != null)
-                        {
-                            cAnimation.UpdateClimbAnimation(Mathf.Abs(input.vertical));
-                        }
                     }
 
                     HandleEtcInput(input);
@@ -495,6 +511,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                                            + Vector3.up * betweenCarryPosition;
                 _wasVisuallyCarried = true;
             }
+
+            ResetCorrectionSmoothing();
         }
         else
         {
@@ -505,8 +523,63 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                 visualTransform.localPosition = Vector3.zero;
                 _wasVisuallyCarried = false;
             }
+
+            SmoothPredictionCorrection();
         }
     }
+
+    #region Correction Smoothing (LP-2)
+    // ตัวละครของเราฝั่ง client: ถ้าทำนายผิดแล้วถูก host แก้ ภาพจะกระโดดไปตำแหน่งใหม่ทันที (NetworkRigidbody2D ไม่มีระบบเกลี่ย)
+    // เก็บส่วนที่กระโดดเกินความเร็วปกติไว้เป็นค่าเหลื่อม แล้วค่อย ๆ ลดลง -> ภาพไหลไปตำแหน่งที่ถูกแทนการดีด
+    private const float CorrectionDecayTime = 0.1f;     // ค่าเหลื่อมลดลงเหลือ ~37% ทุก 0.1 วิ
+    private const float MaxRenderSpeed = 30f;           // หน่วย/วินาที — ขยับเร็วกว่านี้ในเฟรมเดียวถือว่าเป็นการแก้ตำแหน่ง
+    private const float CorrectionTeleportDistance = 2f; // กระโดดไกลกว่านี้ = วาร์ป/เกิดใหม่ ไม่เกลี่ย
+
+    private Vector3 _correctionOffset;
+    private Vector3 _lastRenderTarget;
+    private Vector3 _lastWrittenVisual;
+    private bool _hasLastRenderTarget;
+
+    private void SmoothPredictionCorrection()
+    {
+        if (visualTransform == null || !HasInputAuthority || isDead || Time.deltaTime <= 0f)
+        {
+            ResetCorrectionSmoothing();
+            return;
+        }
+
+        // ตำแหน่งที่ NetworkRigidbody2D เพิ่งเขียน — ถ้าเฟรมนี้ไม่ได้เขียน (ค่ายังเป็นที่เราเขียนไว้) ใช้ตำแหน่งจริงของเฟรมก่อน
+        Vector3 current = visualTransform.position;
+        Vector3 target = (_hasLastRenderTarget && current == _lastWrittenVisual) ? _lastRenderTarget : current;
+
+        if (_hasLastRenderTarget)
+        {
+            Vector3 delta = target - _lastRenderTarget;
+            float distance = delta.magnitude;
+            float maxStep = MaxRenderSpeed * Time.deltaTime;
+
+            if (distance > CorrectionTeleportDistance)
+                _correctionOffset = Vector3.zero;
+            else if (distance > maxStep)
+                _correctionOffset -= delta * (1f - maxStep / distance);
+        }
+
+        _correctionOffset *= Mathf.Exp(-Time.deltaTime / CorrectionDecayTime);
+        if (_correctionOffset.sqrMagnitude < 0.000001f) _correctionOffset = Vector3.zero;
+
+        _lastRenderTarget = target;
+        _hasLastRenderTarget = true;
+
+        _lastWrittenVisual = target + _correctionOffset;
+        visualTransform.position = _lastWrittenVisual;
+    }
+
+    private void ResetCorrectionSmoothing()
+    {
+        _correctionOffset = Vector3.zero;
+        _hasLastRenderTarget = false;
+    }
+    #endregion
 
     // Self-heal an orphaned carry prediction. localIsBeingCarriedPredict bridges the latency
     // between the Client initiating a carry and the authoritative IsBeingCarried replicating.
@@ -538,7 +611,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     private void HandleEtcInput(NetworkInputData input)
     {
-        bool isEscPressed = input.Keyboard_ESC && !_wasEscPressed;
+        bool isEscPressed = WasPressed(input, InputButton.Esc);
         if (isEscPressed)
         {
             if (Runner.IsForward)
@@ -553,16 +626,14 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                 }
             }
         }
-        _wasEscPressed = input.Keyboard_ESC;
 
-        bool isTabPressed = input.Keyboard_Tab && !_wasTabPressed;
+        bool isTabPressed = WasPressed(input, InputButton.Tab);
         if (isTabPressed)
         {
             if (HasInputAuthority && PlayerInterface.Instance != null)
                 PlayerInterface.Instance.HideNote();
             TutorialUIManager.Instance?.HideTutorial();
         }
-        _wasTabPressed = input.Keyboard_Tab;
     }
 
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
@@ -614,9 +685,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, 0f);
             rb2D.AddForce(Vector2.up * stats.s_jumpForce, ForceMode2D.Impulse);
             IsGrounded = false;
-            resetAnimation = false;
             JumpCooldown = TickTimer.CreateFromSeconds(Runner, JumpCooldownTimer);
-            if (cAnimation != null && !isCarrying) cAnimation.JumpAnimation();
         }
     }
 
@@ -648,8 +717,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
         isJumping = false;
         rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, headBumpDownwardVelocity);
-        resetAnimation = false;
-        if (cAnimation != null) cAnimation.FallingAndFloatAnimation(true, false);
         return true;
     }
 
@@ -714,12 +781,10 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         rb2D.linearVelocity = Vector2.zero;
         rb2D.AddForce(Vector2.up * stats.s_jumpForce, ForceMode2D.Impulse);
         IsGrounded = false;
-        resetAnimation = false;
         JumpCooldown = TickTimer.CreateFromSeconds(Runner, JumpCooldownTimer);
 
         if (HasInputAuthority && jumpSoundClip != null)
             AudioManager.Instance?.PlayClipAtPosition(jumpSoundClip, transform.position);
-        if (cAnimation != null && !isCarrying) cAnimation.JumpAnimation();
     }
 
     #endregion
@@ -728,7 +793,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     private void HandleInteraction(NetworkInputData input)
     {
-        bool isEPressed = input.KeybindInteract && !_isEPressed;
+        bool isEPressed = WasPressed(input, InputButton.Interact);
         if (isEPressed)
         {
             Collider2D[] hitsItem = Physics2D.OverlapCircleAll(transform.position, interactRadius);
@@ -747,7 +812,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                         VerifyLog.Log($"HandleInteraction PICKUP '{hit.name}' by {(isBird ? "Bird" : "Duck")} stateAuth={HasStateAuthority} inputAuth={HasInputAuthority} isForward={Runner.IsForward} tick={Runner.Tick}"); // TEMP verify H-4
                         cAnimation.InteractAnimation();
                         throwableItem.PickupItem_RPC(this);
-                        _isEPressed = input.KeybindInteract;
                         return;
                     }
                 }
@@ -768,7 +832,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                 }
             }
         }
-        _isEPressed = input.KeybindInteract;
     }
 
     #endregion
@@ -791,12 +854,12 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         }
         rb2D.linearVelocity = Vector2.zero;
         rb2D.AddForce(vec * knockbackForce, ForceMode2D.Impulse);
-        if (_damageFlash != null) _damageFlash.CallDamageFlash_RPC();
+        if (_damageFlash != null) _damageFlash.StartFlash();
 
         if (currentHealth <= 0)
         {
             isMoveAble = false;
-            DeathMechanic_RPC(true);
+            DeathMechanic(true);
         }
         else
         {
@@ -835,7 +898,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         isStunned = true;
         isMoveAble = false;
         IsInteractBusy = true;
-        if (cAnimation != null) cAnimation.SetFrozen(true);
         StunTimer = TickTimer.CreateFromSeconds(Runner, stunDuration);
     }
 
@@ -847,7 +909,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             isStunned = false;
             isMoveAble = true;
             IsInteractBusy = false;
-            if (cAnimation != null) cAnimation.SetFrozen(false);
         }
     }
 
@@ -862,8 +923,26 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     #region Death & Respawn
 
-    [Rpc(RpcSources.All, RpcTargets.All)]
-    public virtual void DeathMechanic_RPC(bool isPrimaryDeath)
+    // host: เริ่มการตาย — เดิม DeathMechanic_RPC ยิงไปทุกเครื่องแล้วทุกเครื่องรัน CharacterDie เอง
+    // (รวมถึง client ส่ง RPC_UpdateCarry ซ้ำ) ตอนนี้ host ตัดสินที่เดียว เครื่องอื่นตามจาก DeathCount
+    public virtual void DeathMechanic(bool isPrimaryDeath)
+    {
+        if (!HasStateAuthority || isDead) return;
+
+        IsPrimaryDeath = isPrimaryDeath;
+        DeathCount++;
+        CharacterDie(isPrimaryDeath);
+        ApplyDeathLocal();
+    }
+
+    public void OnDeathCountChanged()
+    {
+        if (HasStateAuthority) return; // host ทำไปแล้วใน DeathMechanic
+        ApplyDeathLocal();
+    }
+
+    // ภาพ เสียง UI และฟิสิกส์ของเครื่องตัวเองตอนตาย
+    private void ApplyDeathLocal()
     {
         if (localGUI != null)
         {
@@ -871,23 +950,23 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             localGUI.StopFlightBar();
         }
 
-        if (!isPrimaryDeath && lifeCycle != null)
+        if (!IsPrimaryDeath && lifeCycle != null)
         {
             lifeCycle.PlayOnFriendDeath();
         }
 
-        CharacterDie(isPrimaryDeath);
+        if (dieSoundClip != null)
+            AudioManager.Instance?.PlayClipAtPosition(dieSoundClip, transform.position);
+
+        rb2D.linearVelocity = Vector2.zero;
+        rb2D.simulated = false;
     }
 
+    // host เท่านั้น (เรียกจาก DeathMechanic)
     public virtual void CharacterDie(bool isPrimaryDeath)
     {
         if (isDead) return;
         isDead = true;
-
-        if (HasStateAuthority)
-        {
-            RPC_PlayDieSound();
-        }
 
         if (IsBeingCarried)
         {
@@ -902,9 +981,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             ((Duck_Moveset)this).DropFriend(true);
         }
 
-        rb2D.linearVelocity = Vector2.zero;
-        rb2D.simulated = false;
-
         if (cAnimation != null)
         {
             if (isPrimaryDeath)
@@ -913,12 +989,12 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             }
         }
 
-        if (HasStateAuthority && canbeRespawn)
+        if (canbeRespawn)
         {
             respawnTimer = TickTimer.CreateFromSeconds(Runner, respawnCooldown);
         }
 
-        if (HasStateAuthority && isPrimaryDeath)
+        if (isPrimaryDeath)
         {
             MovementCharacter[] allPlayers = FindObjectsByType<MovementCharacter>(FindObjectsSortMode.None);
 
@@ -928,7 +1004,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                 if (partner == this) continue;
                 if (partner.isDead) continue;
 
-                partner.DeathMechanic_RPC(false);
+                partner.DeathMechanic(false);
             }
         }
     }
@@ -971,12 +1047,27 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                 }
             }
 
-            RPC_OnRespawned();
+            LastRespawnWasReset = false;
+            RespawnCount++;
+            ApplyRespawnLocal();
         }
     }
 
-    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    public virtual void RPC_OnRespawned()
+    public void OnRespawnCountChanged()
+    {
+        if (HasStateAuthority) return; // host ทำไปแล้วใน Respawn / DoResetToSpawn
+        ApplyRespawnLocal();
+    }
+
+    private void ApplyRespawnLocal()
+    {
+        // รีเซ็ตจากเมนู (DoResetToSpawn) เล่นเอฟเฟกต์เพื่อนตายก่อนเหมือนเดิม
+        if (LastRespawnWasReset && lifeCycle != null) lifeCycle.PlayOnFriendDeath();
+        OnRespawned();
+    }
+
+    // ทุกเครื่องรันตอนเกิดใหม่ (host เรียกตรง, เครื่องอื่นจาก RespawnCount) — เดิมเป็น RPC_OnRespawned
+    public virtual void OnRespawned()
     {
         isMoveAble = true;
 
@@ -1017,8 +1108,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             DrowningDamageTimer = TickTimer.None;
         }
 
-        if (cAnimation != null) cAnimation.ReturnToBlendAnimation();
-
         if (respawnSoundClip != null)
         {
             AudioManager.Instance?.PlayClipAtPosition(respawnSoundClip, transform.position);
@@ -1031,52 +1120,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         }
 
         if (lifeCycle != null) lifeCycle.PlayOnRespawn();
-    }
-
-    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    public void RPC_ForceClientTeleport(Vector3 newPos)
-    {
-        isMoveAble = true;
-        isOptional = false;
-        isSpeedoptional = false;
-
-        transform.position = newPos;
-
-        if (rb2D != null)
-        {
-            rb2D.simulated = true;
-            rb2D.gravityScale = normalGravity;
-            rb2D.position = newPos;
-            rb2D.linearVelocity = Vector2.zero;
-            rb2D.angularVelocity = 0f;
-        }
-
-        if (TryGetComponent<NetworkRigidbody2D>(out var netRb))
-        {
-            netRb.Teleport(newPos, transform.rotation);
-        }
-
-        if (visualTransform != null)
-        {
-            visualTransform.position = newPos;
-            visualTransform.localPosition = Vector3.zero;
-        }
-    }
-
-    [Rpc(RpcSources.All, RpcTargets.All)]
-    public void RPC_PlayRespawnSound()
-    {
-        if (respawnSoundClip != null)
-        {
-            AudioManager.Instance?.PlayClipAtPosition(respawnSoundClip, transform.position);
-        }
-    }
-
-    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    public void RPC_PlayDieSound()
-    {
-        if (dieSoundClip != null)
-            AudioManager.Instance?.PlayClipAtPosition(dieSoundClip, transform.position);
     }
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
@@ -1137,15 +1180,9 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             }
         }
 
-        RPC_PlayFriendDeathEffect();
-
-        RPC_OnRespawned();
-    }
-
-    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    public void RPC_PlayFriendDeathEffect()
-    {
-        if (lifeCycle != null) lifeCycle.PlayOnFriendDeath();
+        LastRespawnWasReset = true;
+        RespawnCount++;
+        ApplyRespawnLocal();
     }
 
     #endregion
@@ -1210,13 +1247,10 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
                 IsGrounded = false;
                 IsInAir = true;
-                resetAnimation = false;
             }
 
             if (coll2D != null) coll2D.isTrigger = false;
 
-            if (cAnimation != null)
-                cAnimation.FallingAndFloatAnimation(true, false);
             if (visualTransform != null)
                 visualTransform.localPosition = Vector3.zero;
             OnDroppedEvent();
@@ -1341,7 +1375,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         if (!wasGrounded && IsGrounded)
         {
             isJumping = false;
-            resetAnimation = true;
             if (HasInputAuthority && landingSoundClip != null)
             {
                 AudioManager.Instance?.PlayClipAtPosition(landingSoundClip, transform.position);
@@ -1352,11 +1385,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         {
             isOptional = false;
             FallingBusy = false;
-            if (resetAnimation)
-            {
-                if (cAnimation != null) cAnimation.ReturnToBlendAnimation();
-                resetAnimation = false;
-            }
         }
 
         if (IsInAir && !isClimbing)
@@ -1367,7 +1395,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                 if (!FallingBusy && !isOptional)
                 {
                     if (!effectivelyCarried) FallingCheck();
-                    if (cAnimation != null) cAnimation.FallingAndFloatAnimation(true, isNearGround);
                 }
             }
         }
@@ -1488,11 +1515,11 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     private void HandleDrop(NetworkInputData input)
     {
-        bool isDropPressed = input.KeybindDropItem && !_wasDropPressed;
+        bool isDropPressed = WasPressed(input, InputButton.Drop);
 
         if (isDropPressed && HeldItemName.ToString() != "")
         {
-            if (this is Bird_Moveset bird && bird._prepareToThrow) { _wasDropPressed = input.KeybindDropItem; return; }
+            if (this is Bird_Moveset bird && bird._prepareToThrow) return;
 
             if (Runner.IsForward)
             {
@@ -1500,8 +1527,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                 GameManager.Instance.RPC_DropItemByName(HeldItemName.ToString(), dropPosition, this);
             }
         }
-
-        _wasDropPressed = input.KeybindDropItem;
     }
 
     private Vector2 GetSafeDropPosition()

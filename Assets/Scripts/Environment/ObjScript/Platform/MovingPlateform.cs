@@ -15,6 +15,10 @@ public class MovingPlateform : NetworkBehaviour, IRideablePlatform
 
     public override void Spawned()
     {
+        // ตำแหน่งคำนวณจาก Runner.SimulationTime -> client ทำนายตรงกับ host ได้เอง
+        // ผู้เล่นฝั่ง client ที่ยืนบนแพจึงไม่ถูกดึงกลับ (NJ-7; Fusion เคยเตือนว่า NetworkRigidbody ไม่ถูกจำลองบน client)
+        Runner.SetIsSimulated(Object, true);
+
         startPosition = transform.position;
         rb = GetComponent<Rigidbody2D>();
 

@@ -26,11 +26,27 @@ public class SessionManager : MonoBehaviour
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
 #if !UNITY_WEBGL
-        // quality เริ่มต้นปิด vSync -> FPS ไม่จำกัด กิน CPU/GPU เต็มจน simulation ของ Fusion สะดุด (WebGL ปล่อยให้ browser คุมเอง)
-        Application.targetFrameRate = 60;
+        // ล็อก 60 FPS (WebGL ปล่อยให้ browser คุมเอง) — เดิม quality เริ่มต้นปิด vSync ทำให้ FPS ไม่จำกัด กิน CPU/GPU เต็มจน simulation ของ Fusion สะดุด
+        ApplyFrameRateCap();
 #endif
         GameManager.ResetReturnGuard(); // SessionScene โหลดใหม่ -> รีเซ็ต guard ให้ leave รอบหน้าทำงาน
         Setup();
+    }
+
+    private const int TargetFrameRate = 60;
+
+    // ล็อก 60 FPS ด้วย VSync: ใช้ทุก N รอบของจอ (60Hz -> 1, 120Hz -> 2, 240Hz -> 4) ภาพไม่ฉีกและจังหวะเฟรมสม่ำเสมอ
+    // จอที่หาร 60 ไม่ลงตัว (144/165Hz) VSync ล็อก 60 พอดีไม่ได้ -> ปิด VSync แล้วจำกัดด้วย targetFrameRate แทน
+    private static void ApplyFrameRateCap()
+    {
+        double refreshRate = Screen.currentResolution.refreshRateRatio.value;
+        int interval = refreshRate > 0 ? (int)Math.Round(refreshRate / TargetFrameRate) : 0;
+
+        bool vSyncFits = interval >= 1 && interval <= 4 && Math.Abs(refreshRate / interval - TargetFrameRate) < 1.0;
+        QualitySettings.vSyncCount = vSyncFits ? interval : 0;
+
+        // Unity ใช้ค่านี้เฉพาะตอน vSyncCount = 0
+        Application.targetFrameRate = TargetFrameRate;
     }
 
     #region Variables & Data Structures

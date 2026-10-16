@@ -50,11 +50,6 @@ public class Duck_Moveset : MovementCharacter, IstunAble
 
     [Networked] private TickTimer DiveTimer { get; set; }
 
-    [Header("Etc")]
-    public bool _wasEPressed;
-    public bool _wasFPressed;
-    public bool _wasJumpPressed;
-
     [Header("Floating Settings")]
     [SerializeField] private float floatOffset = -0.2f;
 
@@ -72,9 +67,9 @@ public class Duck_Moveset : MovementCharacter, IstunAble
         base.Spawned();
     }
 
-    public override void RPC_OnRespawned()
+    public override void OnRespawned()
     {
-        base.RPC_OnRespawned();
+        base.OnRespawned();
 
         // เคลียร์ state ดำน้ำ/ลอยน้ำที่ base ไม่ได้รีเซ็ต — กันค่าค้างหลังตายแบบจมน้ำ
         // (onDiving/onDivingControl ค้าง -> HandleWaterLogic/HandleBuoyancy ใส่ค่าลอยน้ำกลับ
@@ -109,7 +104,7 @@ public class Duck_Moveset : MovementCharacter, IstunAble
         {
             if (!isMenuOpen)
             {
-                isJumpPressed = input.KeybindJump && !_wasJumpPressed;
+                isJumpPressed = WasPressed(input, InputButton.Jump);
 
                 HandleDuckInteraction(input);
                 HandleWaterLogic(input);
@@ -120,10 +115,6 @@ public class Duck_Moveset : MovementCharacter, IstunAble
                     else isJumpingUp = false;
                 }
             }
-
-            _wasEPressed = input.KeybindInteract;
-            _wasFPressed = input.Keyboard_F;
-            _wasJumpPressed = input.KeybindJump;
         }
 
         if (IsCarry)
@@ -145,17 +136,12 @@ public class Duck_Moveset : MovementCharacter, IstunAble
 
         if (isWaterSurface && !onDiving)
         {
-            cAnimation.UpdateGroundTypeOnDuck(true);
             ReadyToDive = true;
 
             if (isJumpPressed && WaterJumpCooldownTimer.ExpiredOrNotRunning(Runner))
             {
                 HandleJumpOffWater();
             }
-        }
-        else if (!onDiving && !isJumping && IsGrounded)
-        {
-            cAnimation.ReturnToBlendAnimation();
         }
 
         if (IsHeadUnderwater && !justDive && onDiving)
@@ -199,7 +185,7 @@ public class Duck_Moveset : MovementCharacter, IstunAble
 
     private void HandleDuckInteraction(NetworkInputData input)
     {
-        bool isEPressed = input.KeybindInteract && !_wasEPressed;
+        bool isEPressed = WasPressed(input, InputButton.Interact);
 
         if (isEPressed)
         {
@@ -270,7 +256,6 @@ public class Duck_Moveset : MovementCharacter, IstunAble
         if (carryCollider != null) carryCollider.enabled = false;
         IsCarry = false;
         CarriedFriendId = default;
-        resetAnimation = true;
 
         PickupCooldownTimer = TickTimer.CreateFromSeconds(Runner, pickupCooldown);
     }
@@ -314,7 +299,7 @@ public class Duck_Moveset : MovementCharacter, IstunAble
             return;
         }
 
-        bool isFPressed = input.Keyboard_F && !_wasFPressed;
+        bool isFPressed = WasPressed(input, InputButton.F);
 
         if (!isWaterSurface && isFPressed && onDiving && !IsGrounded)
         {
@@ -362,7 +347,6 @@ public class Duck_Moveset : MovementCharacter, IstunAble
 
                     rb2D.AddForce(speedDif * accelRate);
 
-                    cAnimation.SwimAnimation();
                     cAnimation.UpdateSwimFlip(new Vector2(input.horizontal, input.vertical));
                     rb2D.linearDamping = 5f;
                 }
@@ -479,8 +463,6 @@ public class Duck_Moveset : MovementCharacter, IstunAble
                 float accelRate = inputDir.sqrMagnitude > 0.01f ? emergencyAcceleration : swimDeceleration;
 
                 rb2D.AddForce(speedDif * accelRate);
-
-                cAnimation.SwimAnimation();
             }
             else
             {
@@ -492,15 +474,6 @@ public class Duck_Moveset : MovementCharacter, IstunAble
 
                 EndDiveLogic();
             }
-        }
-    }
-
-    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    public void PlayHitAnimation_RPC()
-    {
-        if (cAnimation != null)
-        {
-            cAnimation.SmashAnimation();
         }
     }
 
@@ -584,7 +557,7 @@ public class Duck_Moveset : MovementCharacter, IstunAble
 
         if (isSmashUnlocked && PlayerInterface.Instance.spawnedDuckSmash != null)
         {
-            PlayerInterface.Instance.spawnedDuckSmash.SetPressed(_isEPressed);
+            PlayerInterface.Instance.spawnedDuckSmash.SetPressed(IsInteractHeld);
 
             PlayerInterface.Instance.spawnedDuckSmash.SetUsable(isNearBreakableRock);
         }

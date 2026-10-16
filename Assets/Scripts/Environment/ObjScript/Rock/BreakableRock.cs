@@ -8,6 +8,12 @@ public class BreakableRock : NetworkBehaviour, Interactable
 
     [Networked, OnChangedRender(nameof(OnRockBroken))] public NetworkBool isBroken { get; set; }
 
+    // จังหวะหินแตกหลังเริ่มท่าทุบ (FB2-4) — clip แตกเริ่มทันทีที่ isBroken เปลี่ยน รอยร้าวขึ้นที่ ~0.43 วิของ clip
+    // จึงตรงกับค้อนลง (~0.5 วิของท่าทุบ) — เดิม SetTrigger แล้วรอ exit time ของ state ว่างได้ถึง ~1 วิ ท่าทุบจบก่อนหินแตก
+    [Tooltip("หน่วงหลังเริ่มท่าทุบก่อนหินเริ่มแตก (วินาที)")]
+    [SerializeField] float breakDelay = 0.1f;
+    [Networked] private TickTimer BreakTimer { get; set; }
+
     [SerializeField] NetworkObject selfNet;
     [SerializeField] NetworkObject itemToDrop;
     [SerializeField] int dropAmount = 1;
@@ -44,7 +50,7 @@ public class BreakableRock : NetworkBehaviour, Interactable
 
     public bool CanInteract(MovementCharacter player)
     {
-        if (player is Duck_Moveset duck && canDrop && duck.isSmashUnlocked)
+        if (player is Duck_Moveset duck && canDrop && !isBroken && !BreakTimer.IsRunning && duck.isSmashUnlocked)
         {
             return true;
         }
@@ -55,21 +61,23 @@ public class BreakableRock : NetworkBehaviour, Interactable
     {
         if (!HasStateAuthority) return;
 
-        if (player is Duck_Moveset duck && duck.isSmashUnlocked)
+        if (player is Duck_Moveset duck && duck.isSmashUnlocked && canDrop && !isBroken && !BreakTimer.IsRunning)
         {
             lastBreaker = duck;
-            duck.PlayHitAnimation_RPC();
-            RPC_BreakRock();
+            if (duck.cAnimation != null) duck.cAnimation.SmashAnimation(); // host ตั้งท่าทุบ ทุกเครื่องเล่นตามจาก state ที่ sync
+            BreakTimer = TickTimer.CreateFromSeconds(Runner, breakDelay);
         }
     }
 
-    [Rpc(RpcSources.All, RpcTargets.All)]
-    public void RPC_BreakRock()
+    // host: ครบเวลาแล้วหินแตก — ทุกเครื่องเห็นผ่าน isBroken (เดิมใช้ RPC_BreakRock)
+    public override void FixedUpdateNetwork()
     {
+        if (!HasStateAuthority || !BreakTimer.Expired(Runner)) return;
+
+        BreakTimer = TickTimer.None;
+
         if (itemToDrop != null && canDrop)
         {
-            animator.SetTrigger("Trigger");
-
             for (int i = 0; i < dropAmount; i++)
             {
                 SpawnItem();
@@ -82,7 +90,21 @@ public class BreakableRock : NetworkBehaviour, Interactable
 
     public void OnRockBroken()
     {
+        if (!isBroken) return;
+
+        canDrop = false;
         DisableCollider();
+        PlayBreakClip();
+    }
+
+    // เล่น clip แตกทันที (ไม่ผ่าน transition ที่มี exit time) — จบ clip แล้ว Animation Event เรียก ChangeSprite
+    private void PlayBreakClip()
+    {
+        if (animator == null || !animator.isActiveAndEnabled) return;
+
+        string clip = animator.GetBool("IsVer1") ? "Version1" : "Version2";
+        if (animator.HasState(0, Animator.StringToHash(clip))) animator.Play(clip, 0, 0f);
+        else ChangeSprite();
     }
 
     private void DisableCollider()

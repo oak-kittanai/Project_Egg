@@ -108,7 +108,8 @@ public class TutorialUIManager : MonoBehaviour
         if (lockCoroutine != null) StopCoroutine(lockCoroutine);
         if (tutorialPanel != null) tutorialPanel.SetActive(false);
 
-        if (MenuController.Instance != null && MenuController.Instance.IsMenuOpen
+        // IsMenuOpenSafe: ถูกเรียกตอนกลับ lobby (GameManager.ReturnToSession) ได้ด้วย ซึ่ง MenuController อาจ despawn แล้ว
+        if (MenuController.Instance != null && MenuController.Instance.IsMenuOpenSafe
             && EventSystem.current != null && PlayerInterface.Instance?.resumeButton != null)
         {
             EventSystem.current.SetSelectedGameObject(PlayerInterface.Instance.resumeButton.gameObject);

@@ -35,9 +35,10 @@ public class DamageFlash : NetworkBehaviour
         }
     }
 
-    [Rpc(RpcSources.All, RpcTargets.All)]
-    public void CallDamageFlash_RPC()
+    // _damageFlashTimer เป็น networked อยู่แล้ว — host ตั้งค่าเดียว ทุกเครื่องกระพริบตาม (เดิมเป็น RPC ส่งไปทุกเครื่องซ้ำ)
+    public void StartFlash()
     {
+        if (!HasStateAuthority) return;
         _damageFlashTimer = TickTimer.CreateFromSeconds(Runner, flashDuration);
     }
 

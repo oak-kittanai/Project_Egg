@@ -16,26 +16,27 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
     public void OnDisconnectedFromServer(NetworkRunner runner, NetDisconnectReason reason)
     {
         Debug.Log($"Fusion: Disconnected from server reason + : {reason}");
-        VerifyLog.Log($"OnDisconnectedFromServer reason={reason} SessionManager.Instance null={SessionManager.Instance == null} runnerRunning={runner != null && runner.IsRunning} -> willShutdown={SessionManager.Instance == null && runner != null && runner.IsRunning}"); // TEMP verify C-1
+        VerifyLog.Log($"OnDisconnectedFromServer reason={reason} SessionManager.Instance null={SessionManager.Instance == null} runnerRunning={runner != null && runner.IsRunning} -> willShutdown={GameManager.IsInGameplay && runner != null && runner.IsRunning}"); // TEMP verify C-1
 
         // อยู่ในเกมแล้ว host หลุด -> ปิด runner ตัวเอง (จะวิ่งเข้า OnShutdown -> ReturnToSession)
-        if (SessionManager.Instance == null && runner != null && runner.IsRunning)
+        if (GameManager.IsInGameplay && runner != null && runner.IsRunning)
             runner.Shutdown();
     }
 
     public void OnShutdown(NetworkRunner runner, ShutdownReason shutdownReason)
     {
-        VerifyLog.Log($"OnShutdown reason={shutdownReason} SessionManager.Instance null={SessionManager.Instance == null} -> branch={(SessionManager.Instance != null ? "LOBBY (DisconnedFromServer, no scene load)" : "IN-GAME (ReturnToSession)")}"); // TEMP verify C-1
+        VerifyLog.Log($"OnShutdown reason={shutdownReason} inGameplay={GameManager.IsInGameplay} -> branch={(GameManager.IsInGameplay ? "IN-GAME (ReturnToSession)" : "LOBBY (DisconnedFromServer)")}"); // TEMP verify C-1
+        Debug.Log($"Fusion: Shutdown reason: {shutdownReason} | inGameplay={GameManager.IsInGameplay}");
 
-        if (SessionManager.Instance != null)
+        if (GameManager.IsInGameplay)
+        {
+            // อยู่ในเกม (runner ปิด ไม่ว่าจะกดออกเอง เข้าประตูสุดท้าย หรืออีกฝั่งหลุด) -> กลับหน้า session
+            GameManager.ReturnToSession();
+        }
+        else if (SessionManager.Instance != null)
         {
             // อยู่หน้า menu/lobby -> รีเซ็ตสถานะ lobby ตามเดิม
             SessionManager.Instance.DisconnedFromServer();
-        }
-        else
-        {
-            // อยู่ในเกม (runner ปิด ไม่ว่าจะกดออกเองหรืออีกฝั่งหลุด) -> กลับหน้า session
-            GameManager.ReturnToSession();
         }
     }
 
@@ -165,10 +166,10 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
 
     public void OnPlayerLeft(NetworkRunner runner, PlayerRef player)
     {
-        VerifyLog.Log($"OnPlayerLeft player={player} SessionManager.Instance null={SessionManager.Instance == null} runnerRunning={runner != null && runner.IsRunning} -> willShutdown={SessionManager.Instance == null && runner != null && runner.IsRunning}"); // TEMP verify C-1
+        VerifyLog.Log($"OnPlayerLeft player={player} inGameplay={GameManager.IsInGameplay} runnerRunning={runner != null && runner.IsRunning} -> willShutdown={GameManager.IsInGameplay && runner != null && runner.IsRunning}"); // TEMP verify C-1
 
         // co-op 2 คน: ถ้าอยู่ในเกมแล้วอีกคนออก -> ออกทั้งคู่ (ปิด runner -> OnShutdown -> ReturnToSession)
-        if (SessionManager.Instance == null && runner != null && runner.IsRunning)
+        if (GameManager.IsInGameplay && runner != null && runner.IsRunning)
             runner.Shutdown();
     }
 
@@ -185,6 +186,9 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
 
     public void OnSceneLoadStart(NetworkRunner runner)
     {
+        // Fusion โหลด scene เฉพาะด่าน (lobby โหลดด้วย SceneManager ใน GameManager.ReturnToSession) -> นับว่าเข้าเกมแล้ว
+        GameManager.MarkInGameplay();
+
         if (GlobalLoadingManager.Instance != null)
             GlobalLoadingManager.Instance.ShowLoading();
     }
@@ -242,19 +246,33 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
     #endregion
 }
 
+// ปุ่มทั้งหมดเก็บเป็น bit ใน NetworkButtons — ใช้ WasPressed(PreviousButtons, ...) จับจังหวะกด
+// (MovementCharacter.PreviousButtons เป็น [Networked] จึงถูกย้อนตอน resimulate ไม่ทำงานซ้ำ/หายเหมือน bool ธรรมดา)
+public enum InputButton
+{
+    Jump = 0,     // Space / A
+    F = 1,        // R1 (เป็ดดำน้ำ)
+    Esc = 2,      // Start
+    Tab = 3,      // B
+    Interact = 4, // E / X
+    Drop = 5,     // G / L1
+    Throw = 6,    // Q / R1
+}
+
 public struct NetworkInputData : INetworkInput
 {
     // Input
     public Vector2 mousePos;
     public float horizontal; // D-Pad / Left Stick
     public float vertical; // D-Pad / Left Stick
-    public bool KeybindJump; // A
-    public bool Keyboard_F; // R1
+    public NetworkButtons Buttons;
 
-    public bool Keyboard_ESC; // Start
-    public bool Keyboard_Tab; // B
-
-    public bool KeybindInteract; // X
-    public bool KeybindDropItem; // L1
-    public bool KeybindThrowItem; // R1
+    // ชื่อเดิม อ่าน/เขียน bit ใน Buttons — โค้ดที่เช็คปุ่มกดค้างใช้ต่อได้เหมือนเดิม
+    public bool KeybindJump { get => Buttons.IsSet(InputButton.Jump); set => Buttons.Set(InputButton.Jump, value); }
+    public bool Keyboard_F { get => Buttons.IsSet(InputButton.F); set => Buttons.Set(InputButton.F, value); }
+    public bool Keyboard_ESC { get => Buttons.IsSet(InputButton.Esc); set => Buttons.Set(InputButton.Esc, value); }
+    public bool Keyboard_Tab { get => Buttons.IsSet(InputButton.Tab); set => Buttons.Set(InputButton.Tab, value); }
+    public bool KeybindInteract { get => Buttons.IsSet(InputButton.Interact); set => Buttons.Set(InputButton.Interact, value); }
+    public bool KeybindDropItem { get => Buttons.IsSet(InputButton.Drop); set => Buttons.Set(InputButton.Drop, value); }
+    public bool KeybindThrowItem { get => Buttons.IsSet(InputButton.Throw); set => Buttons.Set(InputButton.Throw, value); }
 }

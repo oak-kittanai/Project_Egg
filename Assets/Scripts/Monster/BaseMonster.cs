@@ -44,6 +44,9 @@ public class BaseMonster : NetworkBehaviour
 
     private readonly HashSet<MovementCharacter> playersInRange = new HashSet<MovementCharacter>();
 
+    // collider ผู้เล่นที่ตัวมอนชนอยู่ตอนนี้ (นอกนั้นทะลุ — ค่าเริ่มต้นจาก FB2-3)
+    private readonly HashSet<Collider2D> solidWithPlayers = new HashSet<Collider2D>();
+
     [Header("HitBox System")]
     [SerializeField] public Transform hitBoxPivot;
     [SerializeField] public GameObject hitBox;
@@ -54,6 +57,9 @@ public class BaseMonster : NetworkBehaviour
         if (animator == null) animator = GetComponentInChildren<Animator>();
         if (spriteRenderer == null) spriteRenderer = GetComponentInChildren<SpriteRenderer>();
         if (col == null) col = GetComponent<Collider2D>();
+
+        foreach (var player in FindObjectsByType<MovementCharacter>(FindObjectsSortMode.None))
+            IgnorePlayerCollision(this, player);
 
         // ฝั่ง client ตำแหน่งมอนมาจาก netPos ใน Render() — ไม่ให้ physics ในเครื่องขยับมอนเอง (โดนผู้เล่นชนแล้วไหลค้าง)
         if (!HasStateAuthority && rb2D != null)
@@ -72,6 +78,9 @@ public class BaseMonster : NetworkBehaviour
 
         PlayerRadar();
         MonsterSpecificUpdate();
+
+        // host ปรับ collider ใน tick เดียวกับที่ state เปลี่ยน (ทุกเครื่องเรียกซ้ำใน Render)
+        ApplyVisualState();
     }
 
     public void NotifyRadarTriggerEnter(Collider2D other)
@@ -172,11 +181,63 @@ public class BaseMonster : NetworkBehaviour
         }
     }
 
-    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    public void TriggerHitBox_RPC(bool o)
+    // ผู้เล่นเดินทะลุตัวมอนได้ (FB2-3): Puffy/Knight Jay ขยับด้วย transform จึงวาร์ปซ้อนตัวผู้เล่น
+    // แล้วฟิสิกส์ดันผู้เล่นออกทางที่สั้นที่สุด บางทีทะลุพื้นออกนอกแมพ — ดาเมจยังมาจาก hitbox (trigger) เหมือนเดิม
+    // หินที่ปายังชนตัวมอนได้ (ไม่ได้ปิดกับ layer อื่น)
+    public static void IgnorePlayerCollision(BaseMonster monster, MovementCharacter player)
     {
-        if (hitBox != null) hitBox.SetActive(o);
+        if (monster == null || player == null) return;
+
+        Collider2D monsterCol = monster.col != null ? monster.col : monster.GetComponent<Collider2D>();
+        if (monsterCol == null) return;
+
+        if (player.coll2D != null) Physics2D.IgnoreCollision(monsterCol, player.coll2D, true);
+        if (player.normalCollider != null) Physics2D.IgnoreCollision(monsterCol, player.normalCollider, true);
+        if (player.carryCollider != null) Physics2D.IgnoreCollision(monsterCol, player.carryCollider, true);
     }
+
+    // ช่วงที่ตัวมอนชนผู้เล่นได้ (FB2-7) — ค่าเริ่มต้นทะลุตลอด มอนแต่ละแบบกำหนดเองจาก state ที่ sync อยู่แล้ว
+    protected virtual bool BlocksPlayers => false;
+
+    // เรียกทุก tick บน host และทุกเฟรมใน Render ทุกเครื่อง (ผ่าน ApplyVisualState) ให้ผลเหมือนกันทุกเครื่อง
+    protected void UpdatePlayerCollision()
+    {
+        if (col == null || GameManager.Instance == null) return;
+
+        bool block = BlocksPlayers && col.enabled;
+
+        foreach (var player in GameManager.Instance.activePlayers)
+        {
+            if (player == null) continue;
+
+            SetSolidWith(player.coll2D, block);
+            SetSolidWith(player.normalCollider, block);
+            SetSolidWith(player.carryCollider, block);
+        }
+    }
+
+    private void SetSolidWith(Collider2D playerCol, bool block)
+    {
+        if (playerCol == null) return;
+        if (block == solidWithPlayers.Contains(playerCol)) return;
+
+        // ผู้เล่นยืนซ้อนตัวมอนอยู่ตอนเปลี่ยนเป็นตัน -> ฟิสิกส์จะดีดออก (อาจทะลุพื้นแบบ FB2-3) — ให้ทะลุต่อจนกว่าจะเดินออก
+        if (block && (!playerCol.isActiveAndEnabled || col.Distance(playerCol).isOverlapped)) return;
+
+        Physics2D.IgnoreCollision(col, playerCol, !block);
+        if (block) solidWithPlayers.Add(playerCol);
+        else solidWithPlayers.Remove(playerCol);
+    }
+
+    // hitbox ตัดสินการโดนบน host เท่านั้น — เดิมเป็น RPC ที่ฝั่ง client ก็ส่งมาหา host โดยไม่จำเป็น
+    public void SetHitBoxActive(bool active)
+    {
+        if (!HasStateAuthority) return;
+        if (hitBox != null) hitBox.SetActive(active);
+    }
+
+    // การแสดงผล/collider ของมอนคำนวณจาก state ที่ sync อยู่แล้ว ทุกเครื่องได้ผลเดียวกัน (แทน SetVisuals_RPC)
+    protected virtual void ApplyVisualState() { }
 
     public void InstantKill()
     {

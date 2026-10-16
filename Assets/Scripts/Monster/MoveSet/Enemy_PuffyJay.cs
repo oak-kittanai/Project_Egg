@@ -52,8 +52,7 @@ public class Enemy_PuffyJay : BaseMonster
         netPos = startPosition;
 
         if (rb2D != null) rb2D.linearVelocity = Vector2.zero;
-        SetVisuals_RPC(true);
-        TriggerHitBox_RPC(false);
+        SetHitBoxActive(false);
     }
 
     private void HandlePuffyAnimations(MonState state)
@@ -80,7 +79,7 @@ public class Enemy_PuffyJay : BaseMonster
                 if (canRespawn)
                 {
                     isHidden = true;
-                    SetVisuals_RPC(false);
+                    SetHitBoxActive(false);
 
                     transform.position = startPosition;
                     netPos = startPosition;
@@ -105,7 +104,7 @@ public class Enemy_PuffyJay : BaseMonster
                 isPreparingBoom = false;
                 hasBoomed = true;
 
-                TriggerHitBox_RPC(true);
+                SetHitBoxActive(true);
 
                 actionTimer = TickTimer.CreateFromSeconds(Runner, despawnDelay);
             }
@@ -148,21 +147,24 @@ public class Enemy_PuffyJay : BaseMonster
     {
         if (!HasStateAuthority)
         {
-            transform.position = Vector2.Lerp(transform.position, netPos, Time.deltaTime * 15f);
+            // ใช้ตำแหน่งที่ Fusion interpolate ระหว่าง 2 snapshot (เดิมไล่ค่าล่าสุดที่ได้รับ -> ขยับเป็นจังหวะตอน packet มาไม่สม่ำเสมอ)
+            var interpolator = new NetworkBehaviourBufferInterpolator(this);
+            transform.position = interpolator ? interpolator.Vector2(nameof(netPos)) : netPos;
         }
 
         if (spriteRenderer != null)
         {
             spriteRenderer.flipX = isFlip;
         }
+
+        ApplyVisualState();
     }
 
-    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    private void SetVisuals_RPC(bool show)
+    protected override void ApplyVisualState()
     {
-        if (spriteRenderer != null) spriteRenderer.enabled = show;
-        if (col != null) col.enabled = show;
-        if (!show) TriggerHitBox_RPC(false);
+        bool visible = !isHidden;
+        if (spriteRenderer != null) spriteRenderer.enabled = visible;
+        if (col != null) col.enabled = visible;
     }
 
     public override void Despawned(NetworkRunner runner, bool hasState)

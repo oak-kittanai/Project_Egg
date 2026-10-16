@@ -30,7 +30,18 @@ public class PlayerGUI : MonoBehaviour
     private void Awake()
     {
         if (flightBar != null) flightBar.gameObject.SetActive(false);
-        if (stunIcon != null) stunIcon.SetActive(false);
+        if (stunIcon != null)
+        {
+            stunRect = stunIcon.transform as RectTransform;
+            if (stunRect != null)
+            {
+                stunBaseX = Mathf.Abs(stunRect.anchoredPosition.x);
+                stunBaseY = stunRect.anchoredPosition.y;
+            }
+            characterSprite = stunIcon.GetComponentInParent<SpriteRenderer>(true);
+            characterAnimation = stunIcon.GetComponentInParent<CharacterAnimation>(true);
+            stunIcon.SetActive(false);
+        }
         if (miniDialogueContainer != null) miniDialogueContainer.SetActive(false);
     }
 
@@ -44,6 +55,8 @@ public class PlayerGUI : MonoBehaviour
 
     private void Update()
     {
+        if (stunIcon != null && stunIcon.activeSelf) AlignStunIcon();
+
         if (isTrackingFlight && activeRunner != null)
         {
             float remainingTime = activeFlightTimer.RemainingTime(activeRunner) ?? 0f;
@@ -140,10 +153,37 @@ public class PlayerGUI : MonoBehaviour
     public GameObject stunIcon;
     public Animator stunAnimator;
 
+    [Tooltip("ตำแหน่งไอคอนมึนตอนท่าว่าย (หน่วยของ Character_Canvas) วัดตอน flipX = false ซึ่งหัวอยู่ขวา")]
+    [SerializeField] private Vector2 stunIconSwimOffset = new Vector2(28f, 35f);
+
+    private RectTransform stunRect;
+    private SpriteRenderer characterSprite;
+    private CharacterAnimation characterAnimation;
+    private float stunBaseX;
+    private float stunBaseY;
+
     public void ShowStunIcon()
     {
         if (stunIcon != null) stunIcon.SetActive(true);
         if (stunAnimator != null) stunAnimator.Play("Stun");
+        AlignStunIcon();
+    }
+
+    // ไอคอนอยู่เหนือหัว: ใน prefab วางไว้ตอนหันซ้าย (flipX = false) — sprite มี pivot กลาง
+    // หันขวาหัวจึงย้ายไปอีกฝั่งเท่ากัน -> กลับค่า x ตามทิศหัน (FB2-5 เดิมไอคอนค้างฝั่งซ้ายเสมอ)
+    // ท่าว่ายวาดหันกลับด้านและหัวต่ำกว่า จึงใช้ตำแหน่งแยก (FB2-8 — วัดจากภาพเรนเดอร์ prefab)
+    private void AlignStunIcon()
+    {
+        if (stunRect == null) return;
+
+        bool flip = characterSprite != null && characterSprite.flipX;
+        Vector2 target;
+        if (characterAnimation != null && characterAnimation.IsSwimPose)
+            target = new Vector2(flip ? -stunIconSwimOffset.x : stunIconSwimOffset.x, stunIconSwimOffset.y);
+        else
+            target = new Vector2(flip ? stunBaseX : -stunBaseX, stunBaseY);
+
+        if (stunRect.anchoredPosition != target) stunRect.anchoredPosition = target;
     }
 
     public void HideStunIcon()
