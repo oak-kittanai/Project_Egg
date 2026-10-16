@@ -178,6 +178,10 @@ public class Enemy_KnightJay : BaseMonster
         ApplyVisualState();
     }
 
+    // ตัวมอนชนผู้เล่นเฉพาะตอนยืนเตรียมพุ่ง (FB2-7) — ยืนเฉยเดินทะลุได้, ตอนพุ่งตัวทะลุแต่ hitbox ตี + กระเด็น
+    // (ตอนพุ่งมอนย้ายตำแหน่งทีละ tick ถ้าตัวชนผู้เล่นจะวาร์ปซ้อนแล้วดันผู้เล่นทะลุพื้นแบบ FB2-3)
+    protected override bool BlocksPlayers => isPreparing && !isDashing && !isHidden && !hasFinishedDash;
+
     // ซ่อนตอนพุ่งจบ/รอเกิดใหม่ และปิด collider ตอนพุ่ง — ทุกเครื่องเหมือนกัน
     // (เดิมปิด collider ตอนพุ่งเฉพาะบน host ทำให้ client ชนตัวมอนที่กำลังพุ่งแต่ host ไม่ชน — NJ-8)
     protected override void ApplyVisualState()
@@ -185,6 +189,8 @@ public class Enemy_KnightJay : BaseMonster
         bool visible = !isHidden && !hasFinishedDash;
         if (spriteRenderer != null) spriteRenderer.enabled = visible;
         if (col != null) col.enabled = visible && !isDashing;
+
+        UpdatePlayerCollision();
     }
 
     public override void Despawned(NetworkRunner runner, bool hasState)

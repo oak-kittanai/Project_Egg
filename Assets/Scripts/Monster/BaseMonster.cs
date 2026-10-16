@@ -44,6 +44,9 @@ public class BaseMonster : NetworkBehaviour
 
     private readonly HashSet<MovementCharacter> playersInRange = new HashSet<MovementCharacter>();
 
+    // collider ผู้เล่นที่ตัวมอนชนอยู่ตอนนี้ (นอกนั้นทะลุ — ค่าเริ่มต้นจาก FB2-3)
+    private readonly HashSet<Collider2D> solidWithPlayers = new HashSet<Collider2D>();
+
     [Header("HitBox System")]
     [SerializeField] public Transform hitBoxPivot;
     [SerializeField] public GameObject hitBox;
@@ -191,6 +194,39 @@ public class BaseMonster : NetworkBehaviour
         if (player.coll2D != null) Physics2D.IgnoreCollision(monsterCol, player.coll2D, true);
         if (player.normalCollider != null) Physics2D.IgnoreCollision(monsterCol, player.normalCollider, true);
         if (player.carryCollider != null) Physics2D.IgnoreCollision(monsterCol, player.carryCollider, true);
+    }
+
+    // ช่วงที่ตัวมอนชนผู้เล่นได้ (FB2-7) — ค่าเริ่มต้นทะลุตลอด มอนแต่ละแบบกำหนดเองจาก state ที่ sync อยู่แล้ว
+    protected virtual bool BlocksPlayers => false;
+
+    // เรียกทุก tick บน host และทุกเฟรมใน Render ทุกเครื่อง (ผ่าน ApplyVisualState) ให้ผลเหมือนกันทุกเครื่อง
+    protected void UpdatePlayerCollision()
+    {
+        if (col == null || GameManager.Instance == null) return;
+
+        bool block = BlocksPlayers && col.enabled;
+
+        foreach (var player in GameManager.Instance.activePlayers)
+        {
+            if (player == null) continue;
+
+            SetSolidWith(player.coll2D, block);
+            SetSolidWith(player.normalCollider, block);
+            SetSolidWith(player.carryCollider, block);
+        }
+    }
+
+    private void SetSolidWith(Collider2D playerCol, bool block)
+    {
+        if (playerCol == null) return;
+        if (block == solidWithPlayers.Contains(playerCol)) return;
+
+        // ผู้เล่นยืนซ้อนตัวมอนอยู่ตอนเปลี่ยนเป็นตัน -> ฟิสิกส์จะดีดออก (อาจทะลุพื้นแบบ FB2-3) — ให้ทะลุต่อจนกว่าจะเดินออก
+        if (block && (!playerCol.isActiveAndEnabled || col.Distance(playerCol).isOverlapped)) return;
+
+        Physics2D.IgnoreCollision(col, playerCol, !block);
+        if (block) solidWithPlayers.Add(playerCol);
+        else solidWithPlayers.Remove(playerCol);
     }
 
     // hitbox ตัดสินการโดนบน host เท่านั้น — เดิมเป็น RPC ที่ฝั่ง client ก็ส่งมาหา host โดยไม่จำเป็น
