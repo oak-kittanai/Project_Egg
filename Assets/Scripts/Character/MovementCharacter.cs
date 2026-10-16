@@ -46,7 +46,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [Networked] public bool IsInAir { get; set; }
     [Networked] public Vector2 MoveInput { get; set; }
     [Networked] public bool isFloating { get; set; }
-    [SerializeField] public bool isMoveAble = true;
+    // ค่าที่ FixedUpdateNetwork ใช้ตัดสินการเคลื่อนที่ต้องเป็น [Networked] ไม่งั้นไม่ถูกย้อนตอน client resimulate (M-1)
+    [Networked] public bool isMoveAble { get; set; }
 
     [Networked] public bool isJumping { get; set; }
     #endregion
@@ -73,8 +74,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     #endregion
 
     #region Gravity & Falling
+    [Networked] public bool isSpeedoptional { get; set; }
     [Header("Gravity Settings")]
-    [SerializeField] public bool isSpeedoptional;
     [SerializeField] public float normalGravity = 3.5f;
     [SerializeField] public float heavyGravity = 6.5f;
     [SerializeField] public float maxGravity = 19f;
@@ -84,8 +85,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     // Falling
     [Networked] public bool IsFalling { get; set; }
     [Networked] public bool FallingBusy { get; set; }
-    [SerializeField] public bool isOptional;
-    [SerializeField] public float optionalGravity;
+    [Networked] public bool isOptional { get; set; }
+    [Networked] public float optionalGravity { get; set; }
     [SerializeField] public float accelerationSpeedOptional = 0.6f;
     [SerializeField] public float decelerationSpeedOptional = 3f;
     [SerializeField] public float optionalMaxSpeed = 1f;
@@ -152,7 +153,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     #region Platform Interaction
     // moving platform ที่ยืนอยู่ตอนนี้ + ตำแหน่งล่าสุดของมัน (ไว้คำนวณ delta แล้ว follow แนวนอน)
     private Transform currentPlatform;
-    private Vector3 lastPlatformPos;
+    [Networked] private Vector3 lastPlatformPos { get; set; }
     #endregion
 
     #region Interaction & Physics
@@ -179,7 +180,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [Networked] public bool isClimbing { get; set; }
     [Networked] public bool jumpedFromClimb { get; set; }
 
-    private bool wasMenuOpenLastTick = false;
+    [Networked] private bool wasMenuOpenLastTick { get; set; }
     #endregion
 
     #region Skills
@@ -313,7 +314,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             Invoke(nameof(ForceUpdateUI), 0.5f);
         }
 
-        isMoveAble = true;
+        if (HasStateAuthority) isMoveAble = true;
     }
 
     private void ForceUpdateUI()
