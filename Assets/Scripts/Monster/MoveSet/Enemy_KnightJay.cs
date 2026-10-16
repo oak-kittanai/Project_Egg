@@ -169,7 +169,9 @@ public class Enemy_KnightJay : BaseMonster
     {
         if (!HasStateAuthority)
         {
-            transform.position = Vector2.Lerp(transform.position, netPos, Time.deltaTime * 20f);
+            // ใช้ตำแหน่งที่ Fusion interpolate ระหว่าง 2 snapshot (เดิมไล่ค่าล่าสุดที่ได้รับ -> ขยับเป็นจังหวะตอน packet มาไม่สม่ำเสมอ)
+            var interpolator = new NetworkBehaviourBufferInterpolator(this);
+            transform.position = interpolator ? interpolator.Vector2(nameof(netPos)) : netPos;
         }
 
         if (spriteRenderer != null)
