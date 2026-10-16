@@ -55,6 +55,9 @@ public class BaseMonster : NetworkBehaviour
         if (spriteRenderer == null) spriteRenderer = GetComponentInChildren<SpriteRenderer>();
         if (col == null) col = GetComponent<Collider2D>();
 
+        foreach (var player in FindObjectsByType<MovementCharacter>(FindObjectsSortMode.None))
+            IgnorePlayerCollision(this, player);
+
         // ฝั่ง client ตำแหน่งมอนมาจาก netPos ใน Render() — ไม่ให้ physics ในเครื่องขยับมอนเอง (โดนผู้เล่นชนแล้วไหลค้าง)
         if (!HasStateAuthority && rb2D != null)
         {
@@ -173,6 +176,21 @@ public class BaseMonster : NetworkBehaviour
             case 315f: return AttackDirection.Left305Degree;
             default: return AttackDirection.None;
         }
+    }
+
+    // ผู้เล่นเดินทะลุตัวมอนได้ (FB2-3): Puffy/Knight Jay ขยับด้วย transform จึงวาร์ปซ้อนตัวผู้เล่น
+    // แล้วฟิสิกส์ดันผู้เล่นออกทางที่สั้นที่สุด บางทีทะลุพื้นออกนอกแมพ — ดาเมจยังมาจาก hitbox (trigger) เหมือนเดิม
+    // หินที่ปายังชนตัวมอนได้ (ไม่ได้ปิดกับ layer อื่น)
+    public static void IgnorePlayerCollision(BaseMonster monster, MovementCharacter player)
+    {
+        if (monster == null || player == null) return;
+
+        Collider2D monsterCol = monster.col != null ? monster.col : monster.GetComponent<Collider2D>();
+        if (monsterCol == null) return;
+
+        if (player.coll2D != null) Physics2D.IgnoreCollision(monsterCol, player.coll2D, true);
+        if (player.normalCollider != null) Physics2D.IgnoreCollision(monsterCol, player.normalCollider, true);
+        if (player.carryCollider != null) Physics2D.IgnoreCollision(monsterCol, player.carryCollider, true);
     }
 
     // hitbox ตัดสินการโดนบน host เท่านั้น — เดิมเป็น RPC ที่ฝั่ง client ก็ส่งมาหา host โดยไม่จำเป็น
