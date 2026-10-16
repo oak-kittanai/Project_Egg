@@ -121,6 +121,10 @@ public class CharacterAnimation : NetworkBehaviour
         _hasLastVisualPos = true;
     }
 
+    // ท่าว่าย (เป็ดดำน้ำ) วาดหันคนละทางกับท่าอื่น (ดู UpdateSwimFlip) และตัวนอนราบ — UI ที่วางตามหัวต้องรู้ (FB2-8)
+    // ตอน stun ท่าค้างตาม _lastLocalState จึงตรงกับภาพที่เห็นอยู่
+    public bool IsSwimPose => _lastLocalState == "Swim";
+
     private bool IsActionActive =>
         Runner != null && CurrentAction != ActionAnim.None && !AnimationTimer.ExpiredOrNotRunning(Runner);
 
