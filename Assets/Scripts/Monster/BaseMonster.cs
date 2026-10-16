@@ -72,6 +72,9 @@ public class BaseMonster : NetworkBehaviour
 
         PlayerRadar();
         MonsterSpecificUpdate();
+
+        // host ปรับ collider ใน tick เดียวกับที่ state เปลี่ยน (ทุกเครื่องเรียกซ้ำใน Render)
+        ApplyVisualState();
     }
 
     public void NotifyRadarTriggerEnter(Collider2D other)
@@ -172,11 +175,15 @@ public class BaseMonster : NetworkBehaviour
         }
     }
 
-    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    public void TriggerHitBox_RPC(bool o)
+    // hitbox ตัดสินการโดนบน host เท่านั้น — เดิมเป็น RPC ที่ฝั่ง client ก็ส่งมาหา host โดยไม่จำเป็น
+    public void SetHitBoxActive(bool active)
     {
-        if (hitBox != null) hitBox.SetActive(o);
+        if (!HasStateAuthority) return;
+        if (hitBox != null) hitBox.SetActive(active);
     }
+
+    // การแสดงผล/collider ของมอนคำนวณจาก state ที่ sync อยู่แล้ว ทุกเครื่องได้ผลเดียวกัน (แทน SetVisuals_RPC)
+    protected virtual void ApplyVisualState() { }
 
     public void InstantKill()
     {

@@ -54,8 +54,6 @@ public class Enemy_KnightJay : BaseMonster
         netPos = startPosition;
 
         if (rb2D != null) rb2D.linearVelocity = Vector2.zero;
-
-        SetVisuals_RPC(true);
     }
 
     private void HandleJayAnimations(AttackDirection state)
@@ -89,7 +87,7 @@ public class Enemy_KnightJay : BaseMonster
                     isHidden = true;
                     transform.position = startPosition;
                     netPos = startPosition;
-                    SetVisuals_RPC(false);
+                    SetHitBoxActive(false);
                     actionTimer = TickTimer.CreateFromSeconds(Runner, respawnTime);
                 }
                 else
@@ -114,7 +112,7 @@ public class Enemy_KnightJay : BaseMonster
                 transform.position = lockedTargetPos;
                 netPos = transform.position;
 
-                SetVisuals_RPC(false);
+                SetHitBoxActive(false);
 
                 hasFinishedDash = true;
                 actionTimer = TickTimer.CreateFromSeconds(Runner, despawnDelay);
@@ -135,15 +133,13 @@ public class Enemy_KnightJay : BaseMonster
 
                 dashFailsafeTimer = TickTimer.CreateFromSeconds(Runner, 2f);
 
-                if (col != null) col.enabled = false;
-
                 isFlip = lockedTargetPos.x < transform.position.x;
 
                 AttackDirection dashDir = CheckDirection(lockedTargetPos);
                 RotateHitBoxToDirection(dashDir);
                 currentAttackDirectionState = dashDir;
 
-                TriggerHitBox_RPC(true);
+                SetHitBoxActive(true);
             }
         }
         else if (hasSpotPlayer)
@@ -178,14 +174,17 @@ public class Enemy_KnightJay : BaseMonster
         {
             spriteRenderer.flipX = isFlip;
         }
+
+        ApplyVisualState();
     }
 
-    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    private void SetVisuals_RPC(bool show)
+    // ซ่อนตอนพุ่งจบ/รอเกิดใหม่ และปิด collider ตอนพุ่ง — ทุกเครื่องเหมือนกัน
+    // (เดิมปิด collider ตอนพุ่งเฉพาะบน host ทำให้ client ชนตัวมอนที่กำลังพุ่งแต่ host ไม่ชน — NJ-8)
+    protected override void ApplyVisualState()
     {
-        if (spriteRenderer != null) spriteRenderer.enabled = show;
-        if (col != null) col.enabled = show;
-        if (!show) TriggerHitBox_RPC(false);
+        bool visible = !isHidden && !hasFinishedDash;
+        if (spriteRenderer != null) spriteRenderer.enabled = visible;
+        if (col != null) col.enabled = visible && !isDashing;
     }
 
     public override void Despawned(NetworkRunner runner, bool hasState)
