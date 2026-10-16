@@ -29,6 +29,7 @@ public class DialogueManager : MonoBehaviour
         if (sequence == null || sequence.Length == 0) return;
 
         IsDialogueOpen = true;
+        VerifyLog.Log("DialogueManager.StartDialogueSequence -> IsDialogueOpen=true"); // TEMP verify H-2
         currentSequence = sequence;
         currentConfigIndex = 0;
 
@@ -38,6 +39,7 @@ public class DialogueManager : MonoBehaviour
     public void CloseDialogue()
     {
         IsDialogueOpen = false;
+        VerifyLog.Log("DialogueManager.CloseDialogue -> IsDialogueOpen=false"); // TEMP verify H-2
         DialogueHUB.Instance?.CloseDialogue();
     }
 

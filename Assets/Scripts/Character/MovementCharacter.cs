@@ -264,6 +264,9 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
         if (cAnimation != null) cAnimation.InitializeMovement(this);
 
+        // TEMP verify M-4: static unlock flags as seen when this character spawns
+        VerifyLog.Log($"MovementCharacter.Spawned {(isThisCharacterBird ? "Bird" : "Duck")} stateAuth={HasStateAuthority} inputAuth={HasInputAuthority} | {VerifyLog.Statics()}");
+
         if (HasStateAuthority)
         {
             isBird = isThisCharacterBird;
@@ -802,6 +805,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                         if (throwableItem.AlreadyThrow) continue;
                         if (!throwableItem.IsStationary()) continue;
 
+                        VerifyLog.Log($"HandleInteraction PICKUP '{hit.name}' by {(isBird ? "Bird" : "Duck")} stateAuth={HasStateAuthority} inputAuth={HasInputAuthority} isForward={Runner.IsForward} tick={Runner.Tick}"); // TEMP verify H-4
                         cAnimation.InteractAnimation();
                         throwableItem.PickupItem_RPC(this);
                         return;
@@ -817,6 +821,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                 {
                     if (!interactable.CanInteract(this)) continue;
 
+                    VerifyLog.Log($"HandleInteraction INTERACT '{hit.name}' by {(isBird ? "Bird" : "Duck")} stateAuth={HasStateAuthority} inputAuth={HasInputAuthority} isForward={Runner.IsForward} tick={Runner.Tick}"); // TEMP verify H-4
                     cAnimation.InteractAnimation();
                     interactable.Interact(this);
                     break;
@@ -1181,8 +1186,10 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     #region CarrySystem
 
     [Rpc(RpcSources.All, RpcTargets.All)]
-    public void RPC_UpdateCarry(bool state, NetworkId carrierId, bool doThrow = false, float throwDir = 1f, float forceX = 4f, float forceY = 4f, Vector2 throwSpawnPos = default)
+    public void RPC_UpdateCarry(bool state, NetworkId carrierId, bool doThrow = false, float throwDir = 1f, float forceX = 4f, float forceY = 4f, Vector2 throwSpawnPos = default, RpcInfo info = default) // TEMP verify H-4: RpcInfo added for logging
     {
+        VerifyLog.Log($"RPC_UpdateCarry state={state} doThrow={doThrow} throwSpawnPos={throwSpawnPos} source={info.Source} invokeLocal={info.IsInvokeLocal} rpcTick={info.Tick} runnerTick={Runner.Tick} receiverStateAuth={HasStateAuthority} posNow={(Vector2)transform.position}");
+
         if (HasStateAuthority)
         {
             IsBeingCarried = state;

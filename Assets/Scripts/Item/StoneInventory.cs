@@ -18,8 +18,10 @@ public class StoneInventory : NetworkBehaviour
     }
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    public void AddStone_RPC(StoneShape shape)
+    public void AddStone_RPC(StoneShape shape, RpcInfo info = default) // TEMP verify H-4: RpcInfo added for logging
     {
+        VerifyLog.Log($"AddStone_RPC shape={shape} source={info.Source} invokeLocal={info.IsInvokeLocal} rpcTick={info.Tick} runnerTick={Runner.Tick}");
+
         switch (shape)
         {
             case StoneShape.Triangle: TriangleCount++; break;

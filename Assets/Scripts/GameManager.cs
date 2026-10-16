@@ -303,6 +303,7 @@ public class GameManager : SingletonNetwork<GameManager>
     {
         // ปิด runner ของตัวเอง -> OnShutdown จะพา ReturnToSession ให้
         // (อีกฝั่งจะ detect disconnect แล้ว ReturnToSession ตามเองผ่าน INetworkStructure)
+        VerifyLog.Log($"BackToSessionScene called (Runner null={Runner == null})"); // TEMP verify C-1
         if (Runner != null && Runner.IsRunning) await Runner.Shutdown();
 
         // กันกรณี OnShutdown ไม่มาถึง — เช็ค IsInGameplay เพราะถ้า lobby โหลดเสร็จแล้ว guard ถูก reset ไปแล้ว
@@ -313,6 +314,12 @@ public class GameManager : SingletonNetwork<GameManager>
     // ไม่อ่าน networked object ที่กำลังตาย
     public static void ReturnToSession()
     {
+        // TEMP verify C-1 / H-1
+        VerifyLog.Log($"ReturnToSession called (alreadyReturning={_returningToSession}) " +
+                      $"Find(CoreManagerSceneHop)={GameObject.Find("CoreManagerSceneHop") != null} " +
+                      $"Find(PlayerInterfaceCanvas)={GameObject.Find("PlayerInterfaceCanvas") != null} " +
+                      $"Find(Canvas)={GameObject.Find("Canvas") != null} | rootCanvases: {VerifyLog.RootCanvases()}");
+
         if (_returningToSession) return;
         _returningToSession = true;
         IsInGameplay = false;
@@ -481,8 +488,10 @@ public class GameManager : SingletonNetwork<GameManager>
     [Networked] public NetworkBool TeamHasBlueStone { get; set; }
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    public void RPC_RequestAddStone(bool isOrange)
+    public void RPC_RequestAddStone(bool isOrange, RpcInfo info = default) // TEMP verify H-4: RpcInfo added for logging
     {
+        VerifyLog.Log($"RPC_RequestAddStone isOrange={isOrange} source={info.Source} invokeLocal={info.IsInvokeLocal} rpcTick={info.Tick} runnerTick={Runner.Tick}");
+
         if (isOrange) TeamHasOrangeStone = true;
         else TeamHasBlueStone = true;
 
