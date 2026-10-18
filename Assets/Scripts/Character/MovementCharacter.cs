@@ -625,9 +625,10 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         }
 
         bool isTabPressed = WasPressed(input, InputButton.Tab);
-        if (isTabPressed)
+        if (isTabPressed && HasInputAuthority && Runner.IsForward)
         {
-            if (HasInputAuthority && PlayerInterface.Instance != null)
+            // เฉพาะเครื่องเจ้าของตัว — เดิมบน host ปิดหน้าสอนเล่นของ host ตอน client กด Tab ด้วย (FB3-2)
+            if (PlayerInterface.Instance != null)
                 PlayerInterface.Instance.HideNote();
             TutorialUIManager.Instance?.HideTutorial();
         }

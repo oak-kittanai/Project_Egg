@@ -25,6 +25,11 @@ public class TutorialUIManager : MonoBehaviour
     private bool isCloseLocked;
     private Coroutine lockCoroutine;
 
+    // หน้าสอนเล่นที่รอบทพูดปิดก่อน (FB3-2) — เดิมขึ้นทับบทพูด และกด Tab ครั้งเดียวปิดทั้งสองอัน
+    private List<TutorialData> pendingList;
+    private int pendingIndex;
+    private bool pendingFirstTime;
+
     // เก็บ TutorialProgressSO ไว้กับ manager ที่ DontDestroyOnLoad -> ข้อมูล "ปลดแล้ว"
     // ไม่ถูก unload ตอนเปลี่ยนฉาก (จำได้ตลอดรอบเล่น)
     private TutorialProgressSO progress;
@@ -58,6 +63,25 @@ public class TutorialUIManager : MonoBehaviour
 
     private void Update()
     {
+        if (pendingList != null && !DialogueManager.IsDialogueOpen)
+        {
+            var list = pendingList;
+            pendingList = null;
+            ShowTutorialPanel(list, pendingIndex, pendingFirstTime);
+            return;
+        }
+
+        // บทพูดเริ่มตอนหน้าสอนเล่นเปิดอยู่ -> เก็บหน้าปัจจุบันไว้ เปิดต่อหลังบทพูดปิด (ยังล็อค Tab ถ้ายังไม่ครบเวลา)
+        if (tutorialPanel != null && tutorialPanel.activeSelf && DialogueManager.IsDialogueOpen && currentList != null)
+        {
+            pendingList = currentList;
+            pendingIndex = currentIndex;
+            pendingFirstTime = isCloseLocked;
+            if (lockCoroutine != null) StopCoroutine(lockCoroutine);
+            tutorialPanel.SetActive(false);
+            return;
+        }
+
         if (tutorialPanel == null || !tutorialPanel.activeSelf || isCloseLocked) return;
 
         bool closeFromKeyboard = Keyboard.current != null && Keyboard.current.tabKey.wasPressedThisFrame;
@@ -92,6 +116,14 @@ public class TutorialUIManager : MonoBehaviour
     {
         if (list == null || list.Count == 0 || tutorialPanel == null) return;
 
+        if (DialogueManager.IsDialogueOpen)
+        {
+            pendingList = list;
+            pendingIndex = index;
+            pendingFirstTime = isFirstTimeView;
+            return;
+        }
+
         currentList = list;
         currentIndex = Mathf.Clamp(index, 0, list.Count - 1);
         tutorialPanel.SetActive(true);
@@ -105,6 +137,7 @@ public class TutorialUIManager : MonoBehaviour
 
     public void HideTutorial()
     {
+        pendingList = null;
         if (lockCoroutine != null) StopCoroutine(lockCoroutine);
         if (tutorialPanel != null) tutorialPanel.SetActive(false);
 
