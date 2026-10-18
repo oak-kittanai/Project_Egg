@@ -139,6 +139,7 @@ GameObject:
   - component: {fileID: 8046317191659959584}
   - component: {fileID: 2079111536744702851}
   - component: {fileID: 307999691732686351}
+  - component: {fileID: 3743604317438135217}
   m_Layer: 0
   m_Name: Trap_HitBlock
   m_TagString: Untagged
@@ -290,4 +291,62 @@ PolygonCollider2D:
       - {x: 1.2929196, y: -0.03813766}
       - {x: 1.4280249, y: 0.49933356}
       - {x: 0.5, y: 0.5}
+  m_UseDelaunayMesh: 0
+--- !u!60 &3743604317438135217
+PolygonCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4648493285559714405}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: 0}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0.5, y: 0.5}
+    oldSize: {x: 1, y: 1}
+    newSize: {x: 1, y: 1}
+    adaptiveTilingThreshold: 0.5
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  m_Points:
+    m_Paths:
+    - - {x: -0.55784065, y: 0.5514621}
+      - {x: -0.18533558, y: 0.028091341}
+      - {x: -0.025675505, y: -1.2668672}
+      - {x: 0.28221458, y: -1.0473228}
+      - {x: 0.34916776, y: -0.3888017}
+      - {x: 0.71153176, y: 0.07073206}
+      - {x: 0.87134534, y: -0.38620448}
+      - {x: 1.1069038, y: 0.11473012}
+      - {x: 1.342654, y: -0.018963814}
+      - {x: 1.4858656, y: 0.5507557}
+      - {x: 0.50215924, y: 0.5514621}
   m_UseDelaunayMesh: 0

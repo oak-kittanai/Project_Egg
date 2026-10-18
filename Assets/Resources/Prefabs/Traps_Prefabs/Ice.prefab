@@ -138,6 +138,7 @@ GameObject:
   - component: {fileID: 8931580513131496440}
   - component: {fileID: 4783624344224980738}
   - component: {fileID: 8190788000779945284}
+  - component: {fileID: 8443466655888356660}
   m_Layer: 0
   m_Name: Trap_HitBlock
   m_TagString: Untagged
@@ -232,3 +233,60 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DoDamage
   damageAmount: 1
   knockbackForce: 1
+--- !u!60 &8443466655888356660
+PolygonCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7256360383550570494}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: 0}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0.5, y: 0.5}
+    oldSize: {x: 1, y: 1}
+    newSize: {x: 1, y: 1}
+    adaptiveTilingThreshold: 0.5
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  m_Points:
+    m_Paths:
+    - - {x: 1.0120811, y: 0.91070175}
+      - {x: -1.009037, y: 0.9093133}
+      - {x: -0.5833695, y: 0.28000355}
+      - {x: -0.4968369, y: -0.91566753}
+      - {x: -0.19774146, y: -0.67245036}
+      - {x: 0.11083213, y: 0.34156197}
+      - {x: 0.22557272, y: 0.4181403}
+      - {x: 0.43808705, y: -0.028413352}
+      - {x: 0.688983, y: 0.5233724}
+      - {x: 0.8824683, y: 0.30398047}
+  m_UseDelaunayMesh: 0
