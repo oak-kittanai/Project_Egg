@@ -15,6 +15,12 @@ public class CutsceneManager : NetworkBehaviour
     [Networked, OnChangedRender(nameof(OnVoteChanged))]
     public NetworkBool ClientSkipReady { get; set; }
 
+    // host ตั้งตอนคัตซีนจบ (จบเอง / วิดีโอ error / โหวต Skip ครบ) ทุกเครื่องปิดคัตซีนจากค่านี้ (FB3-1)
+    // เดิมใช้ RPC: ด่านที่ไม่มีไฟล์คัตซีน host จบทันที RPC ถึง client ก่อน Setup() (หรือก่อน object spawn แล้วหาย)
+    // แล้ว Setup() มาเปิดปุ่ม Skip ทีหลัง ไม่มีอะไรปิด -> ปุ่ม Skip ค้างทั้งเกมฝั่ง client
+    [Networked, OnChangedRender(nameof(OnCutsceneEndedChanged))]
+    public NetworkBool CutsceneEnded { get; set; }
+
     private bool hasFinishedLocal = false;
 
     private void Awake()
@@ -40,6 +46,13 @@ public class CutsceneManager : NetworkBehaviour
 
     private void Setup()
     {
+        // host จบคัตซีนไปก่อนเครื่องนี้พร้อม -> ไม่ต้องเปิดปุ่ม Skip / เล่นวิดีโอ
+        if (hasFinishedLocal || CutsceneEnded)
+        {
+            FinishCutscene();
+            return;
+        }
+
         if (LevelData.Instance == null)
         {
             Debug.LogWarning("[CutsceneManager] LevelData null");
@@ -120,7 +133,7 @@ public class CutsceneManager : NetworkBehaviour
             PlayerInterface.Instance.introVideoPlayer.errorReceived -= OnVideoError;
 
         if (HasStateAuthority)
-            RPC_EndCutsceneAll();
+            EndCutscene();
     }
 
     // ==== Skip vote ====
@@ -142,7 +155,7 @@ public class CutsceneManager : NetworkBehaviour
         int skipCount = (HostSkipReady ? 1 : 0) + (ClientSkipReady ? 1 : 0);
 
         if (skipCount >= activePlayers)
-            RPC_EndCutsceneAll();
+            EndCutscene();
     }
 
     private void OnVideoPlaybackFinished(VideoPlayer vp)
@@ -150,13 +163,19 @@ public class CutsceneManager : NetworkBehaviour
         if (PlayerInterface.Instance?.introVideoPlayer != null)
             PlayerInterface.Instance.introVideoPlayer.loopPointReached -= OnVideoPlaybackFinished;
 
-        RPC_EndCutsceneAll();
+        if (HasStateAuthority)
+            EndCutscene();
     }
 
-    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    private void RPC_EndCutsceneAll()
+    private void EndCutscene()
     {
+        CutsceneEnded = true;
         FinishCutscene();
+    }
+
+    public void OnCutsceneEndedChanged()
+    {
+        if (CutsceneEnded) FinishCutscene();
     }
 
     private void FinishCutscene()
