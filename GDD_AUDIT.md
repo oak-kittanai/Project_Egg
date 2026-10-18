@@ -399,7 +399,7 @@ Controller: `Assets/Art-Source/ART/player/Duck_R/Duck_Controller.controller`, `.
 |---|---|---|---|---|
 | 1 | ✅ **เสร็จ 2026-10-16** — ทดสอบ T1–T7 ยืนยันบั๊ก (ผลหัวข้อ 7.5; 4b, 6b ข้าม) | — | S | — |
 | 2 | **แก้แล้ว รอเทส: `fix/c1-lobby-return` `6d6ae65a`, `a92d5117` (หัวข้อ 11)** — แก้ flow กลับ lobby ที่ยืนยันแล้ว (C-1): **(b)** เข้าประตูสุดท้าย S3 แล้วค้าง, **(c)** client หลุด → ให้ทั้งคู่กลับ lobby ตามเจตนาใน `OnPlayerLeft` (ปิด **H-7** ไปด้วย), **(d)** host หลุด → client กลับ lobby — สำคัญสุดเพราะ "จบเกม = กลับ lobby" คือฉากจบที่เลือกไว้; หลังแก้ให้เทส M-4 (4b, 6b) และ H-1/H-2 ซ้ำในเส้นทางเหล่านี้ — (a) Quit ผ่านเมนูทำงานแล้ว ห้ามทำให้พัง — **ยังไม่แก้จนกว่าเจ้าของโปรเจกต์สั่ง** | `INetworkStructure.cs`, `GameManager.cs`, `SessionHub.cs` (+ `DialogueManager.cs`, `PlayerInterface.cs` ถ้าเทสหลังแก้พบ H-2 / M-4) | M | — |
-| 4a | **FB-7** ของสำคัญใน S3 (`Scale_Door`, `G_PL`, `G_PR`, `platfrom_1`, `WeighingScale`) ถูก tilemap `Tree-Tiles` บัง — ปรับ sorting ของ `Tree-Tiles` ตามขั้นตอนใน 8.3 | `Stage1-S3.unity` | S | แก้ scene: ผ่าน Unity MCP หรือทำเองใน Editor |
+| 4a | **แก้แล้ว รอเทส: `fix/feedback-1018` `713f4f96` (หัวข้อ 15)** — **FB-7** ของสำคัญใน S3 ถูก tilemap `Tree-Tiles` บัง — ย้าย `Scale_Door`, `platfrom_1` ×8 และหนาม 4 ชุดขึ้น layer เดียวกับของประเภทเดียวกัน (ไม่แตะ `Tree-Tiles`) | `Stage1-S3.unity` | S | แก้ scene: ผ่าน Unity MCP หรือทำเองใน Editor |
 | 4 | ซ่อน/เอาของที่กดแล้วไม่เกิดอะไรออกจากด่าน: `Item_Key`, `Item_GoldKey` (S1, S2) และหินรูปทรง 4 ก้อนใน S1 (H-3, M-5) — เก็บ prefab ไว้สำหรับ Key Extra ในอนาคต | `Stage1-S1.unity`, `Stage1-S2.unity` | S | — |
 | 4b | เทสรวม `integration/feedback-jitter` ตาม checklist หัวข้อ 10 แล้ว merge เข้า `branch-UpdateSession` (รวม NAV, FB-1, FB-2, FB-4, FB-5, NJ-2 ถึง NJ-6) | — | S | — |
 | 5 | Merge `branch-UpdateSession` → `dev` → `main` | — | S | ข้อ 2, 4, 4a, 4b ผ่าน |
@@ -610,7 +610,7 @@ Controller: `Assets/Art-Source/ART/player/Duck_R/Duck_Controller.controller`, `.
 | FB-4 | ฟองน้ำนก: ขึ้น 8 ช่องแต่เต็มแค่ 6 | ยังไม่แก้ | `Player(Bird).prefab` มี `oxygenBubbles` 8 ช่อง แต่ `drowningTime = 6` | `fix/feedback-v0902` `6c4a49d1` |
 | FB-5 | S2 เครื่องพ่นดันผู้เล่นทะลุแมพที่มุมดิน | แก้เฉพาะจุด ต้นเหตุยังอยู่ | `4806544c` ขยับ `Trap_Mix (1)` ใน S2. ต้นเหตุ: `Rigidbody2D` ของผู้เล่นเป็น Collision Detection แบบ Discrete และ `CompositeCollider2D` ของพื้นเป็น Outlines (กลวง) ทั้ง 3 ด่าน | `fix/feedback-v0902` `85cce42a` |
 | FB-6 | S3 ท้ายแมพหมุนผิดด้านทั้งแมพ | แก้แล้ว | `3b842843` (06-27 02:33) ทำให้ tile ของ `Main-Ground` ทั้ง 708 ช่องเหลือทิศเดียว (เดิมมี 8 แบบ); `949c2b3b` "Map3" (06-27 22:27) ซ่อมกลับมามี 4 แบบ ก่อน build 903 | — |
-| FB-7 | S3 ของสำคัญมองไม่เห็น (พื้น, ประตูตรงที่ชั่งน้ำหนัก) | น่าจะยังไม่แก้ — ยังไม่ได้เปิดดูภาพยืนยัน | `Scale_Door`, `G_PL`, `G_PR`, `platfrom_1` ×8, `WeighingScale` ใช้ sorting layer `Default` (หลังสุด) แต่ tilemap `Tree-Tiles` (BGLayer, tile ทึบ, วาดด้วยกล้องเดียวกัน) ทาอยู่ที่ตำแหน่งเดียวกัน → ถูกบัง ค่าเหล่านี้ไม่เปลี่ยนตั้งแต่ก่อน 902 | ยังไม่แก้ (เป็น scene) |
+| FB-7 | S3 ของสำคัญมองไม่เห็น (พื้น, ประตูตรงที่ชั่งน้ำหนัก) | น่าจะยังไม่แก้ — ยังไม่ได้เปิดดูภาพยืนยัน | `Scale_Door`, `G_PL`, `G_PR`, `platfrom_1` ×8, `WeighingScale` ใช้ sorting layer `Default` (หลังสุด) แต่ tilemap `Tree-Tiles` (BGLayer, tile ทึบ, วาดด้วยกล้องเดียวกัน) ทาอยู่ที่ตำแหน่งเดียวกัน → ถูกบัง ค่าเหล่านี้ไม่เปลี่ยนตั้งแต่ก่อน 902 — ยืนยันซ้ำในเทส 0.9 (2026-10-18) | **แก้แล้ว: `fix/feedback-1018` `713f4f96`** (หัวข้อ 15) |
 | FB-8 | เป็ดยกเพื่อนบางทีไม่เป็นท่ายก | ยังไม่แก้ / ยังไม่รู้เงื่อนไข | เกี่ยวกับ M-7: โค้ดเรียก state `Falling_carry` / `Floating_carry` ที่ไม่มีใน `Duck_Controller` และ lock 0.5 วิ หลังกด E — ต้องรู้ว่าเกิดตอนไหน (กลางอากาศ / ในน้ำ / หลังยกทันที) | ยังไม่แก้ |
 | NAV | (คำขอใหม่) กรอบ highlight ของเมนูขึ้นเฉพาะตอนเสียบจอย | — | `SelectionHighlightFollower.LateUpdate()` | `fix/feedback-v0902` `1c50ce09` |
 
@@ -629,7 +629,7 @@ Compile: ผ่าน 0 error (`Editor.log` 2026-10-03 00:13, ไม่มี wa
 ย้ายไปรวมกับ 9.2 ที่ **หัวข้อ 10** แล้ว (ข้อเช็คเดิมครบ + ข้อเพิ่มของ FB-1, FB-2, FB-8)
 
 ### 8.3 ยังไม่ได้แก้ (ต้องแก้ scene — รอสั่ง)
-- **FB-7:** เปิด `Stage1-S3` → เลือก `Tree-Tiles` (ใต้ `=== Grid ===`) → Tilemap Renderer → Sorting Layer = `Default`, Order in Layer = `-10` แล้วดูว่า `Scale_Door` และแพลตฟอร์มข้างตาชั่งโผล่หรือไม่ ถ้าโผล่ = ยืนยันสาเหตุและแก้เสร็จในจุดเดียว
+- ~~**FB-7:** ปรับ sorting ของ `Tree-Tiles`~~ — **แก้แล้วอีกวิธี: `fix/feedback-1018` `713f4f96`** ย้ายของที่ถูกบังขึ้น layer ที่ถูก แทนการย้าย `Tree-Tiles` (ดูหัวข้อ 15)
 - **FB-5 (เสริม ถ้ายังทะลุ):** `Main-Ground` → Composite Collider 2D → Geometry Type = `Polygons` ทั้ง 3 ด่าน
 - **FB-8:** มีสมมติฐานจากโค้ดแล้ว (ดูหัวข้อ 5 ข้อ 7) — รอผลเทสกรณี S1-FB8 a/b/c ในหัวข้อ 10
 
@@ -871,7 +871,7 @@ Stop → เลือก `Assets/Photon/Fusion/Resources/NetworkProjectConfig` �
 | LP-2 | `54cc1f94` | `MovementCharacter.LateUpdate` → `SmoothPredictionCorrection` / `ResetCorrectionSmoothing` | ตัวละครของเราเอง: ส่วนที่ภาพกระโดดเร็วเกิน 30 หน่วย/วิ (แต่ไม่เกิน 2 หน่วย = ไม่ใช่วาร์ป) ถือเป็นการแก้ตำแหน่งจาก host เก็บเป็นค่าเหลื่อมแล้วลดลงภายใน ~0.1 วิ → ไหลแทนดีด (ไม่แตะการจำลอง) |
 | LP-3 | `406b2402` | `MovementCharacter` : `DeathMechanic`, `OnDeathCountChanged`, `ApplyDeathLocal`, `CharacterDie`, `Respawn`, `OnRespawnCountChanged`, `ApplyRespawnLocal`, `OnRespawned`, `DoResetToSpawn`; `Bird_Moveset.OnRespawned`, `Duck_Moveset.OnRespawned` | ตาย/เกิดใหม่: host ตัดสินที่เดียวแล้วเพิ่ม `DeathCount` / `RespawnCount` (+ `IsPrimaryDeath`, `LastRespawnWasReset`) ทุกเครื่องทำ UI เสียง LifeCycle และ rigidbody ของตัวเองใน `OnChangedRender`; ลบ RPC 6 ตัว (`DeathMechanic_RPC`, `RPC_OnRespawned`, `RPC_PlayDieSound`, `RPC_PlayFriendDeathEffect` และที่ไม่มีคนใช้ `RPC_ForceClientTeleport`, `RPC_PlayRespawnSound`) |
 
-RPC ทั้งเกม: 71 (`branch-UpdateSession`) → 65 (`fix/net-redesign`) → **59** (`fix/lag-polish`) → **58** (`fix/feedback-1017`, หัวข้อ 14)
+RPC ทั้งเกม: 71 (`branch-UpdateSession`) → 65 (`fix/net-redesign`) → **59** (`fix/lag-polish`) → **58** (`fix/feedback-1017`, หัวข้อ 14) → **57** (`fix/feedback-1018`, หัวข้อ 15)
 
 ### 13.2 ไม่ทำ / ทำทีหลัง
 - **ทำนายการโดนตีฝั่ง client:** ไม่ทำ (เจ้าของโปรเจกต์อนุมัติ) — client เห็นมอนช้ากว่า host ราวครึ่ง ping จะตัดสินผิดบ่อยแล้วดีดหนักกว่าเดิม; LP-2 เกลี่ยภาพตอนแรงกระแทกจาก host มาถึงแทน
@@ -932,3 +932,32 @@ RPC ทั้งเกม: 71 (`branch-UpdateSession`) → 65 (`fix/net-redesign
 | 4c ตัวระเบิด | เดินผ่าน Puffy Jay แล้วยืนใกล้ตอนมันระเบิด | เดินทะลุได้ตลอด, ระเบิดโดนดาเมจ | |
 | 6b ไอคอนมึนใต้น้ำ | นกปาหินใส่เป็ดตอนดำน้ำ ทั้งหันซ้าย/ขวา | ไอคอนอยู่เหนือหัวเป็ด | |
 | 7 dialogue | คนหนึ่งอ่านจบ/กด Tab ก่อน | คนที่กดเห็น "Waiting for partner... (1/2)", อีกคนเห็น "Partner is ready (1/2)"; อีกคนกดแล้วปิดทั้งคู่ ข้อความหายไป | |
+
+## 15. Feedback เทส 0.9 (2026-10-18)
+
+**ที่มา:** เทส build 0.9 (`test/all2`) — เล่นจบด่านได้ เกมลื่นขึ้น ("ต้องลองให้คนอื่นเล่นเผื่อกระตุก"); เจอ 4 เรื่องด้านภาพ/UI + กับดัก
+**การตัดสินใจของเจ้าของโปรเจกต์:** "ปุ่มสคริป" = ปุ่ม Skip คัตซีน; หน้าสอนเล่นให้รอบทพูดจบ (แก้ในโค้ด ไม่ย้ายจุด trigger)
+**Branch:** `fix/feedback-1018` แตกจาก `fix/feedback-1017` (`cae95e50`) + cherry-pick commit "update" ของเจ้าของโปรเจกต์ 2 ตัว (`8c5b55f2` ← `01c760b3`: DOTween 1.0.435 / ai.assistant / GDD_AUDIT.md / CLAUDE.md, `bb69528a` ← `7406e581`: คืน font atlas) — ยังไม่ merge เข้าสายหลัก, **ยังไม่ได้เทสตอนรัน**; merge เข้า `test/all2` แล้ว
+**Compile:** Roslyn 0 error ทุก commit + Unity 0 error (Unity MCP); prefab/scene แก้ผ่าน Unity MCP ทั้งหมด
+
+### 15.1 สิ่งที่แก้
+| รหัส | อาการ | ต้นเหตุ | commit | ไฟล์ : method | เปลี่ยนอะไร |
+|---|---|---|---|---|---|
+| FB3-1 | ปุ่ม Skip คัตซีนค้างทั้งเกม เฉพาะฝั่ง client | client เปิดปุ่ม Skip ใน `Setup()` ที่รอ `LevelData`/`PlayerInterface` ก่อน; S2/S3 ไม่มีไฟล์คัตซีน host จบทันที → `RPC_EndCutsceneAll` ถึง client ก่อน `Setup()` (หรือก่อน object spawn แล้วหาย) → ปุ่มถูกเปิดทีหลังและไม่มีอะไรปิด | `848b3218` | `CutsceneManager` : `CutsceneEnded` (ใหม่), `EndCutscene` / `OnCutsceneEndedChanged` (ใหม่), `Setup`, `OnVideoError`, `RPC_SubmitSkipVote`, `OnVideoPlaybackFinished` | การจบคัตซีนเป็น `[Networked] CutsceneEnded` ที่ host ตั้ง (จบเอง / วิดีโอ error / โหวต Skip ครบ) ทุกเครื่องปิดคัตซีนจาก `OnChangedRender`; `Setup()` ที่มาช้าจะปิดทันทีไม่เปิดปุ่ม; ลบ `RPC_EndCutsceneAll` (RPC 58 → **57**) |
+| FB-7 | พื้นและประตูไม้ S3 ล่องหน (ชน/กดได้ปกติ) | ผนังในต้นไม้ = tilemap `Tree-Tiles` (`BGLayer`) วาดด้วยกล้องเดียวกับของในเกม; ของที่อยู่ sorting layer `Default` (หลัง `BGLayer`) จึงหายตรงที่ผนังทึบ | `713f4f96` | `Stage1-S3.unity` (ผ่าน Unity MCP) | `Scale_Door` → `SortingTexture` (เหมือนประตูอื่นในฉาก); `platfrom_1` ×8 → `PlatformLayer` (เหมือนแพลตฟอร์มอื่น 23 ชิ้น); หนาม `Trap_Multi_Thorn` 4 ชุดใต้ `platfrom_1 (8)` / `Rotate_platfrom` → `TrapLayer` (เดิมก็ล่องหน = หนามที่มองไม่เห็น); order เดิม; ยืนยันด้วยภาพจากกล้อง mask เดียวกับ Camera Sharp ก่อน/หลัง — ตาชั่ง (`WeighingScale`) มองเห็นอยู่แล้ว ไม่แตะ, `Tree-Tiles` ไม่แตะ |
+| FB3-2 | หน้าสอนเล่นขึ้นพร้อมบทพูด (ภาพจากวี่) | `TutorialTrigger` เปิดหน้าสอนเล่นทันทีไม่ดูบทพูด และทั้งสองปิดด้วย Tab → กด Tab ครั้งเดียวปิดสอนเล่น + โหวตปิดบทพูด; เพิ่มเติม: ปุ่ม Tab ใน `MovementCharacter` ปิดหน้าสอนเล่นจาก input ของตัวไหนก็ได้ (บน host = client กด Tab แล้วหน้าสอนเล่นของ host ปิด) | `dc3b0833` | `TutorialUIManager` : `ShowTutorialPanel`, `Update`, `HideTutorial`; `MovementCharacter` : ส่วนกด Tab | ระหว่าง `DialogueManager.IsDialogueOpen` หน้าสอนเล่นเข้าคิวรอ เปิดเมื่อบทพูดปิด; บทพูดเริ่มตอนสอนเล่นเปิดอยู่ → ซ่อนแล้วกลับมาหน้าเดิม (ล็อค Tab ต่อถ้ายังไม่ครบเวลา); `HideTutorial` ล้างคิว; Tab ใน `MovementCharacter` ทำงานเฉพาะเครื่องเจ้าของตัว (`HasInputAuthority && Runner.IsForward`) |
+| FB3-3 | กับดักน้ำแข็งไม่มีดาเมจ | ดาเมจมาจาก `DoDamage.OnTriggerEnter2D` บน `Trap_HitBlock` ต้องมี trigger: `Small_Ice` ถูกเปลี่ยน trigger เป็น polygon ตัน (`5a673e78`, 05-22), `Ice` ถูกลบ collider ทั้งหมด (`66ff68be`, 06-25) | `1dc64bd7` | `Small_Ice.prefab`, `Ice.prefab` (ผ่าน Unity MCP) | เพิ่ม `PolygonCollider2D` isTrigger ที่ `Trap_HitBlock`: `Small_Ice` ใช้รูป polygon ตันเดิม, `Ice` ใช้รูป polygon ก่อน 06-25 — ขยาย 6% จากจุดกึ่งกลางให้แตะผิวก็โดน (ภาพตรวจกรอบทับรูปน้ำแข็งพอดี); `Small_Ice` ยังตัน, `Ice` ยังเดินทะลุ (ตามที่ทีมทำไว้); ฉาก S1/S2 (`Ice` ×11, `Small_Ice` ×26) ไม่มี override จึงได้ทั้งหมด |
+
+### 15.2 หมายเหตุ
+- `Trap_Ice.OnCollisionStay2D` บน root ของ prefab น้ำแข็ง/หนามไม่เคยทำงาน (root ไม่มี collider/rigidbody) — ไม่แตะ ดาเมจมาจาก `DoDamage` อย่างเดียว
+- ใน S3 ยังมีของบน `Default` อีก (คบเพลิง, `Water + Shade (ForTest)`, ของตกแต่งบางชิ้น, ตัวมอนใน `=== Monster ===`) — จากภาพตัวมอนและตาชั่งมองเห็น จึงไม่แตะในรอบนี้ ถ้าเทสแล้วเจอของหายอีกให้แจ้งตำแหน่ง
+- working tree มี `ProjectSettings.asset` / `DOTweenSettings.asset` ที่ DOTween Pro ใส่ define `DOTWEENPRO` เอง (หลังอัปเดต DOTween) — ไม่ได้ commit ให้เจ้าของโปรเจกต์ตัดสิน
+- `Stage1-S3.unity` เก็บด้วย Git LFS
+
+### 15.3 Checklist เทส — branch `test/all2` (MPPM `DuoGamePlay_Test`, Host = Mira, Client = Kael) ~10 นาที
+| ขั้น | ทำอะไร | ควรเห็น | ผล |
+|---|---|---|---|
+| 1 Skip | เริ่มเกม S1 → ทั้งคู่กด Skip; แล้ว Host **F8** ไป S2 และ S3 | S1 Skip ได้ (โหวต 2/2); S2/S3 จอ **client** ไม่มีปุ่ม Skip ค้าง | |
+| 2 S3 | ไปบริเวณตาชั่ง S3 + แพลตฟอร์มหิมะในต้นไม้ | เห็นประตูไม้ในช่องกำแพงข้างตาชั่ง, แพลตฟอร์ม `platfrom_1` ทุกอัน, หนามใต้แพลตฟอร์ม; ผู้เล่นยังมองเห็นตอนยืนบนแพลตฟอร์ม | |
+| 3 สอนเล่น | จุดที่วี่แคป (สอนเล่น + บทพูดพร้อมกัน) | บทพูดขึ้นก่อน หน้าสอนเล่นขึ้นหลังบทพูดปิด; กด Tab ปิดทีละอัน; client กด Tab แล้วหน้าสอนเล่นของ host ไม่ปิด | |
+| 4 น้ำแข็ง | แตะ/กระโดดชนน้ำแข็งย้อย `Small_Ice` และ `Ice` ใน S1–S2 | โดนดาเมจ + กระเด็น (หลังโดนมีช่วงอมตะ 1.5 วิ); หนาม/น้ำแข็งย้อย S3 เหมือนเดิม | |
