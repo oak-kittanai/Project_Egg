@@ -961,3 +961,31 @@ RPC ทั้งเกม: 71 (`branch-UpdateSession`) → 65 (`fix/net-redesign
 | 2 S3 | ไปบริเวณตาชั่ง S3 + แพลตฟอร์มหิมะในต้นไม้ | เห็นประตูไม้ในช่องกำแพงข้างตาชั่ง, แพลตฟอร์ม `platfrom_1` ทุกอัน, หนามใต้แพลตฟอร์ม; ผู้เล่นยังมองเห็นตอนยืนบนแพลตฟอร์ม | |
 | 3 สอนเล่น | จุดที่วี่แคป (สอนเล่น + บทพูดพร้อมกัน) | บทพูดขึ้นก่อน หน้าสอนเล่นขึ้นหลังบทพูดปิด; กด Tab ปิดทีละอัน; client กด Tab แล้วหน้าสอนเล่นของ host ไม่ปิด | |
 | 4 น้ำแข็ง | แตะ/กระโดดชนน้ำแข็งย้อย `Small_Ice` และ `Ice` ใน S1–S2 | โดนดาเมจ + กระเด็น (หลังโดนมีช่วงอมตะ 1.5 วิ); หนาม/น้ำแข็งย้อย S3 เหมือนเดิม | |
+
+## 16. แพลตฟอร์มกระตุก + ท่าทางเร็วฝั่ง client (2026-10-21)
+
+**ที่มา:** เทส `test/all2` — (1) moving platform ทุกแบบวาร์ปไปมาบนจอ client แม้ไม่มีใครยืน (2) ท่าทางของตัวที่ client คุมเล่นเร็ว/แปลก เช่นเป็ดกระโดด (3) error `GetBool can only be called from the main thread` และ `DisconnectByServerTimeout`
+**Branch:** แก้บน `test/all2` โดยตรง (เจ้าของโปรเจกต์สั่ง) — **ยังไม่ได้เทสตอนรัน**; compile Roslyn 0 error (Unity MCP ต่อไม่ได้ตอนแก้ → ต้องดู Console เอง)
+
+### 16.1 สิ่งที่แก้
+| รหัส | อาการ | ต้นเหตุ (จากโค้ด) | commit | ไฟล์ : method | เปลี่ยนอะไร |
+|---|---|---|---|---|---|
+| NR-10 | แพลตฟอร์มวาร์ปไปมาบนจอ client | `MovingPlateform` คำนวณตำแหน่งจากเวลาเองทุกเครื่อง (NR-3) แต่ prefab ยังมี `NetworkRigidbody2D` ซึ่งฝั่ง client ทับ root ด้วยค่าจาก host ตอน resimulate และเขียน root อีกรอบตอน `Render` จาก buffer interpolation — สองแหล่งเขียนตำแหน่งเดียวกัน | `4f85c8a6` | `MovingPlateform` : `Awake` (ใหม่), `IBeforeTick.BeforeTick` (ใหม่), `FixedUpdateNetwork`, `Render` (ใหม่), `PositionAt` (ใหม่) | ตำแหน่งเป็นฟังก์ชันของ tick ล้วน (`tick × DeltaTime`) ไม่ต้อง sync: ต้น tick (รวม resimulate) วางแพที่ตำแหน่งปลาย tick ก่อน → FUN `MovePosition` ไปปลาย tick นี้ → `Render` วาดที่เวลา local ระหว่าง 2 tick ล่าสุด; `Awake` ตั้ง `InterpolationTarget` ของ `NetworkRigidbody2D` เป็น child เปล่า ให้มันไม่เขียน root อีก (แก้ด้วยโค้ด ไม่ถอด component จาก prefab เพราะฉากอ้างลำดับ behaviour) — ใช้กับ `moving_platfrom` (S1×5, S3×1), `Trap_Mix`, `Trap_Mix_2` (S2) |
+| NR-11 | ท่าตัวเราฝั่ง client เร็ว/กระพริบ (เป็ดกระโดด) | เลือกท่าจากความเร็วของภาพ ซึ่งฝั่ง client กระโดดทุกครั้งที่ host แก้ตำแหน่ง (อ่านก่อน LP-2 เกลี่ย) → สลับ Jump/Falling/ยืน ถี่ ๆ แต่ละครั้งเริ่ม clip ใหม่; และช่วง apex (`isJumping` ล้างที่ vy < -0.1 แต่ Falling ต้อง vy < -0.5) ตกไปท่ายืนแวบหนึ่ง | `8e378774` | `CharacterAnimation` : `Render`, `ResolveState`, `IsAirborne` (ใหม่) | ตัวที่จำลองในเครื่องนี้ (ตัวเราเอง / ทุกตัวบน host) ใช้ `rb2D.linearVelocity` เลือกท่า, proxy ใช้ความเร็วของภาพเหมือนเดิม; ท่ากลางอากาศค้างไว้จนแตะพื้น/กระโดดใหม่ (ไม่กลับท่ายืนกลางอากาศ); ยืนบนแพลตฟอร์มเลื่อน = ท่ายืน |
+| (log) | — | — | `ecb6e7f2` | `CharacterAnimation.Render` | `[VERIFY] anim …` ทุกครั้งที่ท่าของตัวเราเปลี่ยน (frame, เวลา, ท่า, vy จำลอง/ภาพ, isJumping, IsGrounded) — **test เท่านั้น ห้าม merge** |
+
+### 16.2 ไม่แก้ (อธิบาย)
+- **`GetBool can only be called from the main thread`:** มาจากเครื่องมือ Editor ไม่ใช่เกม — `com.unity.ai.assistant` (MCP bridge) เขียน log จาก thread pool ตอนตรวจการเชื่อมต่อ แล้ว MPPM (`StandardCloneWorkflow.OnLogMessageReceived`) อ่าน `SessionState` นอก main thread; ไม่มีใน build
+- **`DisconnectByServerTimeout`:** timeout ของ Fusion = `NetworkProjectConfig` → `Network.ConnectionTimeout` = **10 วินาที**; error นี้คือ server ของ Photon ไม่ได้รับอะไรจากเครื่องนั้นเกินเวลา — ใน log ฝั่งที่หลุดคือหน้าต่างที่อยู่เบื้องหลัง (`AppOutOfFocus`) ระหว่างเทส MPPM; Player Settings `runInBackground = 1` อยู่แล้ว build จริงสลับหน้าต่างไม่ควรหลุด → ไม่แก้ค่า (แนะนำ: ตอนเทสอย่าย่อหน้าต่าง Editor/Player 2)
+- เจอระหว่างตรวจ (ไม่ได้แก้): เสียงกระโดดใน `MovementCharacter.HandleJump` gate แค่ `HasInputAuthority` ไม่มี `Runner.IsForward` → ฝั่ง client อาจได้ยินซ้ำตอน resimulate
+
+### 16.3 Checklist เทส — `test/all2` (MPPM, Host + Client) ~10 นาที
+| ขั้น | ทำอะไร | ควรเห็น | ผล |
+|---|---|---|---|
+| 0 | เปิด Unity ดู Console หลัง compile | 0 error | |
+| 1 แพลตฟอร์ม | จอ **client**: ยืนดูแพลตฟอร์ม S1 (ไม่ขึ้นยืน) แล้ว S2 `Trap_Mix` | เลื่อนลื่น ไม่วาร์ป | |
+| 2 ยืนบน | client ขึ้นยืนบนแพลตฟอร์มแนวนอน/แนวตั้ง | ไม่ถูกดึงกลับ ไม่ตก ไม่จม; ลมบน `Trap_Mix_2` ยังดัน | |
+| 3 ท่ากระโดด | จอ **client**: ตัวเรากระโดด-ตก-ลงพื้นหลายครั้ง, เดินตกขอบ | Jump → Falling → ยืน ต่อเนื่อง ไม่เร็ว/ไม่กระพริบ; ยืนบนแพลตฟอร์มเลื่อน = ท่ายืน | |
+| 4 host | ทำข้อ 1–3 บนจอ host | เหมือนเดิม | |
+| 5 lag | เปิด Network Conditions แล้วทำข้อ 1–3 | แพลตฟอร์มยังลื่น; ท่าไม่สลับถี่ | |
+| 6 ถ้ายังเร็ว | ส่ง Editor.log | ผมอ่าน `[VERIFY] anim` ดูว่าสลับท่าตรงไหน | |
