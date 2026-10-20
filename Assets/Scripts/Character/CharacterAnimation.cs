@@ -33,6 +33,14 @@ public class CharacterAnimation : NetworkBehaviour
     private bool _hasLastVisualPos;
     private Vector2 _visualVelocity;
 
+    // ความเร็วที่ใช้เลือกท่า (NR-11): ตัวที่จำลองในเครื่องนี้ (ตัวเราเอง / ทุกตัวบน host) ใช้ความเร็วจากการจำลอง
+    // proxy ใช้ความเร็วของภาพ — ภาพตัวเราฝั่ง client กระโดดทุกครั้งที่ host แก้ตำแหน่ง ท่าจึงสลับถี่จนดูเร็ว
+    private Vector2 _stateVelocity;
+
+    // ท่ากลางอากาศที่ค้างไว้จนแตะพื้นหรือกระโดดใหม่: null / "Jump" / "Falling"
+    private string _airState;
+    private bool _wasJumping;
+
     [SerializeField] public bool Carrying => movement != null && movement.isCarrying;
     [SerializeField] public bool BeingCarried => movement != null && movement.IsBeingCarried;
     [SerializeField] public bool isBird => movement != null && movement.isBird;
@@ -76,9 +84,16 @@ public class CharacterAnimation : NetworkBehaviour
 
         if (animator == null || movement == null) return;
 
-        float targetX = Mathf.Abs(_visualVelocity.x) > MoveThreshold ? Mathf.Sign(_visualVelocity.x) : 0f;
+        bool simulatedHere = Object != null && Object.IsInSimulation && movement.rb2D != null;
+        _stateVelocity = simulatedHere ? movement.rb2D.linearVelocity : _visualVelocity;
+
+        // แตะพื้น/น้ำ/ปีน/ถูกแบก หรือเพิ่งกดกระโดดใหม่ -> เริ่มท่ากลางอากาศใหม่
+        if (!IsAirborne || (movement.isJumping && !_wasJumping)) _airState = null;
+        _wasJumping = movement.isJumping;
+
+        float targetX = Mathf.Abs(_stateVelocity.x) > MoveThreshold ? Mathf.Sign(_stateVelocity.x) : 0f;
         _smoothAnimX = Mathf.MoveTowards(_smoothAnimX, targetX, animBlendSpeed * Time.deltaTime);
-        _smoothAnimY = Mathf.MoveTowards(_smoothAnimY, _visualVelocity.y, animBlendSpeed * Time.deltaTime);
+        _smoothAnimY = Mathf.MoveTowards(_smoothAnimY, _stateVelocity.y, animBlendSpeed * Time.deltaTime);
 
         if (HasParameter("X")) animator.SetFloat("X", _smoothAnimX);
         if (HasParameter("Y")) animator.SetFloat("Y", _smoothAnimY);
@@ -146,6 +161,9 @@ public class CharacterAnimation : NetworkBehaviour
     // ตอน stun ท่าค้างตาม _lastLocalState จึงตรงกับภาพที่เห็นอยู่
     public bool IsSwimPose => _lastLocalState == "Swim";
 
+    private bool IsAirborne =>
+        !movement.IsGrounded && !movement.isWaterSurface && !movement.isClimbing && !BeingCarried;
+
     private bool IsActionActive =>
         Runner != null && CurrentAction != ActionAnim.None && !AnimationTimer.ExpiredOrNotRunning(Runner);
 
@@ -183,13 +201,16 @@ public class CharacterAnimation : NetworkBehaviour
             }
         }
 
-        bool airborne = !movement.IsGrounded && !movement.isWaterSurface && !movement.isClimbing && !BeingCarried;
-
         // เป็ดแบกเพื่อนกลางอากาศใช้ท่าแบกต่อ (controller ไม่มีท่ากระโดด/ตกขณะแบก — FB-8)
-        if (airborne && !carrying)
+        if (IsAirborne && !carrying)
         {
-            if (_visualVelocity.y < FallThreshold && !movement.FallingBusy) return "Falling";
-            if (movement.isJumping) return "Jump";
+            if (_stateVelocity.y < FallThreshold && !movement.FallingBusy) _airState = "Falling";
+            else if (movement.isJumping && _airState == null) _airState = "Jump";
+
+            if (_airState == "Falling" && movement.FallingBusy) _airState = null;
+
+            // ค้างท่าอากาศเดิมจนแตะพื้น — เดิมช่วง apex (isJumping ล้างแล้วแต่ยังตกไม่ถึงเกณฑ์) กลับไปท่ายืนแวบหนึ่ง
+            if (_airState != null) return _airState;
         }
 
         return carrying ? "CarryMovementTree" : "NormalMovementTree";
