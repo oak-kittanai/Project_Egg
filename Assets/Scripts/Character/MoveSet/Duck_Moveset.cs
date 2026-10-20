@@ -4,7 +4,7 @@ using UnityEngine;
 public class Duck_Moveset : MovementCharacter, IstunAble
 {
     [Header("Duck Setting")]
-    [Networked] bool ReadyToDive { get; set; }
+    bool ReadyToDive;
 
     //SOUND
     [SerializeField] public AudioClip drivingSoundClip;
@@ -12,11 +12,11 @@ public class Duck_Moveset : MovementCharacter, IstunAble
     [SerializeField] public AudioClip pickupSoundClip;
     [SerializeField] public AudioClip dropSoundClip;
 
-    [Networked] bool isJumpingUp { get; set; }
-    [Networked] public bool isJumpAble { get; set; }
+    bool isJumpingUp;
+    public bool isJumpAble { get; set; }
 
     [Header("Water Jump Setting")]
-    [Networked] private TickTimer WaterJumpCooldownTimer { get; set; }
+    private TickTimer WaterJumpCooldownTimer;
     [SerializeField] private float waterJumpCooldown = 1.5f;
 
     [Header("Carry setting")]
@@ -36,19 +36,28 @@ public class Duck_Moveset : MovementCharacter, IstunAble
 
     [SerializeField] float emergencyAcceleration = 1f;
 
-    [Networked, OnChangedRender(nameof(OnDivingStateChanged))]
-    public NetworkBool onDiving { get; set; }
-    [Networked] bool onDivingControl { get; set; }
-    [Networked] bool justDive { get; set; }
+    // ดำน้ำอยู่ — สถานะของเจ้าของตัว (NR-12); เสียง/แถบ oxygen ของเจ้าของเรียกตอนค่าเปลี่ยน
+    public bool onDiving
+    {
+        get => GetMoveFlag(MoveFlags.Diving);
+        set
+        {
+            bool changed = IsOwner && GetMoveFlag(MoveFlags.Diving) != value;
+            SetMoveFlag(MoveFlags.Diving, value);
+            if (changed) OnDivingStateChanged();
+        }
+    }
+    bool onDivingControl;
+    bool justDive;
 
     [Header("Emergency Setting")]
-    [Networked] public bool emergencySwimBool { get; set; }
+    public bool emergencySwimBool { get; set; }
 
-    [Networked] private TickTimer EmergencyTimer { get; set; }
-    [Networked] public bool emergencyToggle { get; set; }
+    private TickTimer EmergencyTimer;
+    public bool emergencyToggle { get; set; }
     [SerializeField] private float emergencySwimTimer = 2f;
 
-    [Networked] private TickTimer DiveTimer { get; set; }
+    private TickTimer DiveTimer;
 
     [Header("Floating Settings")]
     [SerializeField] private float floatOffset = -0.2f;
@@ -77,7 +86,7 @@ public class Duck_Moveset : MovementCharacter, IstunAble
         isOptional = false;
         isSpeedoptional = false;
 
-        if (HasStateAuthority)
+        if (IsOwner)
         {
             onDiving = false;
             onDivingControl = false;
@@ -94,45 +103,28 @@ public class Duck_Moveset : MovementCharacter, IstunAble
         ApplyStun();
     }
 
-    protected override void OnFixedUpdateSpecific()
+    // เจ้าของตัว: น้ำ/ดำน้ำ/ลอยน้ำ/กระโดดจากน้ำ, collider ตอนยก, ลอยตามนกที่ถูกยกแล้วบิน (NR-12)
+    protected override void OnOwnerSimulateSpecific(NetworkInputData input, bool hasInput)
     {
         bool isJumpPressed = false;
 
         bool isMenuOpen = GameManager.Instance != null && GameManager.Instance.IsPaused;
 
-        if (GetInput(out NetworkInputData input))
+        if (hasInput && !isMenuOpen)
         {
-            if (!isMenuOpen)
+            isJumpPressed = WasPressed(input, InputButton.Jump);
+
+            HandleWaterLogic(input);
+
+            if (isJumpAble)
             {
-                isJumpPressed = WasPressed(input, InputButton.Jump);
-
-                HandleDuckInteraction(input);
-                HandleWaterLogic(input);
-
-                if (isJumpAble)
-                {
-                    if (input.KeybindJump) isJumpingUp = true;
-                    else isJumpingUp = false;
-                }
+                if (input.KeybindJump) isJumpingUp = true;
+                else isJumpingUp = false;
             }
         }
 
-        if (IsCarry)
-        {
-            if (normalCollider != null && normalCollider.enabled)
-                normalCollider.enabled = false;
-
-            if (carryCollider != null && !carryCollider.enabled)
-            {
-                carryCollider.enabled = true;
-                if (Runner.TryFindObject(CarriedFriendId, out var fObj)
-                    && fObj.TryGetComponent<MovementCharacter>(out var f)
-                    && f.coll2D != null)
-                {
-                    Physics2D.IgnoreCollision(carryCollider, f.coll2D, true);
-                }
-            }
-        }
+        SyncCarryColliders();
+        LiftWithFlyingFriend();
 
         if (isWaterSurface && !onDiving)
         {
@@ -162,8 +154,62 @@ public class Duck_Moveset : MovementCharacter, IstunAble
         {
             HandleBuoyancy();
 
+            // ขึ้นจากน้ำแล้ว -> บอก host ให้หยุดดาเมจจมน้ำ (host เป็นคนทำดาเมจ)
+            if (!stilldrowning) SetMoveFlag(MoveFlags.OxygenDepleted, false);
+        }
+    }
+
+    // host: ยก/ปล่อยนก + ดาเมจจมน้ำตามธง oxygen หมดที่เจ้าของส่งมา
+    protected override void OnHostRulesSpecific(NetworkInputData input, bool hasInput, bool isMenuOpen)
+    {
+        if (hasInput && !isMenuOpen) HandleDuckInteraction(input);
+
+        if (!isMenuOpen)
+        {
             if (!stilldrowning) StopDrowningDamage();
+            else if (GetMoveFlag(MoveFlags.OxygenDepleted)) StartDrowningDamage();
             TickDrowningDamage();
+        }
+    }
+
+    // collider ตอนยก: ปิดตัวปกติ เปิดตัวยก (สูงกว่า) — ทุกเครื่องทำตาม IsCarry ที่ host ตั้ง
+    private void SyncCarryColliders()
+    {
+        bool carrying = IsCarry;
+
+        if (normalCollider != null && normalCollider.enabled == carrying) normalCollider.enabled = !carrying;
+
+        if (carryCollider != null && carryCollider.enabled != carrying)
+        {
+            carryCollider.enabled = carrying;
+
+            if (carrying && Runner.TryFindObject(CarriedFriendId, out var fObj)
+                && fObj.TryGetComponent<MovementCharacter>(out var f) && f.coll2D != null)
+            {
+                Physics2D.IgnoreCollision(carryCollider, f.coll2D, true);
+            }
+        }
+    }
+
+    // นกที่ถูกยกกดบิน -> เป็ดลอยขึ้นตาม (เดิมนกบน host สั่งความเร็วเป็ดข้ามตัว — ตอนนี้เป็ดขยับตัวเองจาก IsFlying ของนก)
+    private void LiftWithFlyingFriend()
+    {
+        Bird_Moveset flyingBird = null;
+        if (IsCarry && Runner.TryFindObject(CarriedFriendId, out var fObj)
+            && fObj.TryGetComponent<Bird_Moveset>(out var bird) && bird.IsFlying)
+        {
+            flyingBird = bird;
+        }
+
+        if (flyingBird != null)
+        {
+            rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, flyingBird.stats.s_flySpeed);
+        }
+
+        if (carryCollider != null)
+        {
+            PhysicsMaterial2D wanted = flyingBird != null ? flyingBird.ZeroFrictionMaterial : null;
+            if (carryCollider.sharedMaterial != wanted) carryCollider.sharedMaterial = wanted;
         }
     }
 
@@ -213,47 +259,30 @@ public class Duck_Moveset : MovementCharacter, IstunAble
         }
     }
 
+    // host: ยกนก — ตัดสินที่ host ที่เดียว สองตัวทำตามจากค่าที่ sync (เดิม client ทำนายไปก่อนแล้วไม่ถูกย้อน)
     public void PickupFriend(MovementCharacter friend)
     {
+        if (!HasStateAuthority || friend == null) return;
+
         IsCarry = true;
         CarriedFriendId = friend.Object.Id;
-
-        friend.localIsBeingCarriedPredict = true;
-        friend.localCarrierIdPredict = Object.Id;
-
-        if (friend.coll2D != null) friend.coll2D.isTrigger = true;
-
-        if (normalCollider != null) normalCollider.enabled = false;
-        if (carryCollider != null) carryCollider.enabled = true;
-
-        if (carryCollider != null && friend.coll2D != null)
-            Physics2D.IgnoreCollision(carryCollider, friend.coll2D, true);
-
-        friend.RPC_UpdateCarry(true, Object.Id);
+        friend.HostSetCarried(Object.Id);
     }
 
+    // host: ปล่อย/โยนนก — นกวาร์ปไปเหนือหัวเป็ดแล้วรับแรงโยนผ่าน event ของเจ้าของนก
     public void DropFriend(bool throwFriend = true)
     {
-        if (Runner.TryFindObject(CarriedFriendId, out var obj))
+        if (!HasStateAuthority) return;
+
+        if (Runner.TryFindObject(CarriedFriendId, out var obj) && obj.TryGetComponent<MovementCharacter>(out var friend))
         {
-            Bird_Moveset friend = obj.GetComponent<Bird_Moveset>();
-            if (friend != null)
-            {
-                float throwDir = cAnimation.FlipX ? 1f : -1f;
+            float throwDir = cAnimation.FlipX ? 1f : -1f;
+            Vector2 dropPos = (Vector2)transform.position + Vector2.up * friend.betweenCarryPosition;
+            Vector2 impulse = throwFriend ? new Vector2(throwDir * throwForceX, throwForceY) : Vector2.zero;
 
-                Vector2 throwSpawnPos = (Vector2)friend.transform.position;
-
-                friend.localIsBeingCarriedPredict = false;
-                if (friend.rb2D != null) friend.rb2D.bodyType = RigidbodyType2D.Dynamic;
-                if (friend.coll2D != null) friend.coll2D.isTrigger = false;
-                if (carryCollider != null && friend.coll2D != null) Physics2D.IgnoreCollision(carryCollider, friend.coll2D, false);
-                if (normalCollider != null && friend.coll2D != null) Physics2D.IgnoreCollision(normalCollider, friend.coll2D, false);
-
-                friend.RPC_UpdateCarry(false, Object.Id, throwFriend, throwDir, throwForceX, throwForceY, throwSpawnPos);
-            }
+            friend.HostReleaseCarried(dropPos, impulse);
         }
-        if (normalCollider != null) normalCollider.enabled = true;
-        if (carryCollider != null) carryCollider.enabled = false;
+
         IsCarry = false;
         CarriedFriendId = default;
 
@@ -480,10 +509,9 @@ public class Duck_Moveset : MovementCharacter, IstunAble
     public void TimeUp()
     {
         EndDiveLogic();
-        if (stilldrowning)
-        {
-            StartDrowningDamage();
-        }
+
+        // oxygen หมด: host เห็นธงนี้แล้วเริ่มดาเมจจมน้ำ (NR-12)
+        if (stilldrowning) SetMoveFlag(MoveFlags.OxygenDepleted, true);
     }
 
     public void HandleBuoyancy()
@@ -545,6 +573,8 @@ public class Duck_Moveset : MovementCharacter, IstunAble
     public override void Render()
     {
         base.Render();
+
+        SyncCarryColliders();
 
         if (!HasInputAuthority || PlayerInterface.Instance == null) return;
 

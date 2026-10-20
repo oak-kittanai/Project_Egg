@@ -2,7 +2,7 @@ using Fusion;
 using UnityEngine;
 using Fusion.Addons.Physics;
 
-public class MovementCharacter : NetworkBehaviour, IDamageable
+public class MovementCharacter : NetworkBehaviour, IDamageable, IBeforeTick, IAfterTick
 {
     #region References
     [Header("References")]
@@ -41,19 +41,20 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     #region Movement State
     [Header("Movement Settings")]
-    [Networked] public bool IsGrounded { get; set; }
-    [Networked] public bool isWaterSurface { get; set; }
-    [Networked] public bool IsInAir { get; set; }
-    [Networked] public Vector2 MoveInput { get; set; }
-    [Networked] public bool isFloating { get; set; }
-    // ค่าที่ FixedUpdateNetwork ใช้ตัดสินการเคลื่อนที่ต้องเป็น [Networked] ไม่งั้นไม่ถูกย้อนตอน client resimulate (M-1)
-    [Networked] public bool isMoveAble { get; set; }
+    // สถานะการเคลื่อนที่เป็นของเจ้าของตัว (NR-12): เจ้าของอ่าน/เขียนในเครื่อง, เครื่องอื่นอ่านจาก RepFlags ที่ host sync
+    // (ดู region "Owner Movement") — ค่าที่เขียนจากเครื่องที่ไม่ใช่เจ้าของถูกเมิน
+    public bool IsGrounded { get => GetMoveFlag(MoveFlags.Grounded); set => SetMoveFlag(MoveFlags.Grounded, value); }
+    public bool isWaterSurface { get => GetMoveFlag(MoveFlags.WaterSurface); set => SetMoveFlag(MoveFlags.WaterSurface, value); }
+    public bool IsInAir { get => GetMoveFlag(MoveFlags.InAir); set => SetMoveFlag(MoveFlags.InAir, value); }
+    public bool isFloating { get => GetMoveFlag(MoveFlags.Floating); set => SetMoveFlag(MoveFlags.Floating, value); }
+    // ใช้แค่ในเครื่องเจ้าของ — ล็อกที่ host ตัดสิน (มึน/ถูกยก/เล็งปา) ดู HostMovementLocked
+    public bool isMoveAble { get; set; }
 
-    [Networked] public bool isJumping { get; set; }
+    public bool isJumping { get => GetMoveFlag(MoveFlags.Jumping); set => SetMoveFlag(MoveFlags.Jumping, value); }
     #endregion
 
     #region Jump Physics
-    [Networked] private TickTimer JumpCooldown { get; set; }
+    private TickTimer JumpCooldown;
     [SerializeField] private float JumpCooldownTimer = 2f;
 
     [Header("Jump - Cut")]
@@ -74,7 +75,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     #endregion
 
     #region Gravity & Falling
-    [Networked] public bool isSpeedoptional { get; set; }
+    public bool isSpeedoptional { get; set; }
     [Header("Gravity Settings")]
     [SerializeField] public float normalGravity = 3.5f;
     [SerializeField] public float heavyGravity = 6.5f;
@@ -83,10 +84,10 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     private bool hasSetInitialPosition = false;
 
     // Falling
-    [Networked] public bool IsFalling { get; set; }
-    [Networked] public bool FallingBusy { get; set; }
-    [Networked] public bool isOptional { get; set; }
-    [Networked] public float optionalGravity { get; set; }
+    public bool IsFalling { get; set; }
+    public bool FallingBusy { get => GetMoveFlag(MoveFlags.FallingBusy); set => SetMoveFlag(MoveFlags.FallingBusy, value); }
+    public bool isOptional { get; set; }
+    public float optionalGravity { get; set; }
     [SerializeField] public float accelerationSpeedOptional = 0.6f;
     [SerializeField] public float decelerationSpeedOptional = 3f;
     [SerializeField] public float optionalMaxSpeed = 1f;
@@ -126,13 +127,13 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     #region Water Settings
     [Header("Water Setting")]
-    [Networked] public bool IsHeadUnderwater { get; set; }
-    [Networked] public bool IsBodyOnWater { get; set; }
+    public bool IsHeadUnderwater { get => GetMoveFlag(MoveFlags.HeadUnderwater); set => SetMoveFlag(MoveFlags.HeadUnderwater, value); }
+    public bool IsBodyOnWater { get => GetMoveFlag(MoveFlags.BodyOnWater); set => SetMoveFlag(MoveFlags.BodyOnWater, value); }
     [SerializeField] public float headOffset = 0.2f;
     [SerializeField] public float bodyOffset = -0.2f;
     [SerializeField] public float nearGroundDistance = 0.63f;
     [SerializeField] public NetworkInteractableWater currentWater;
-    [Networked] public bool stilldrowning { get; set; }
+    public bool stilldrowning { get => GetMoveFlag(MoveFlags.StillDrowning); set => SetMoveFlag(MoveFlags.StillDrowning, value); }
     #endregion
 
     #region Passenger / Carry System
@@ -149,17 +150,16 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     [SerializeField] PhysicsMaterial2D zeroFiction;
 
-    // Local Predict Variables
-    public bool localIsBeingCarriedPredict;
-    public NetworkId localCarrierIdPredict;
     private bool _wasVisuallyCarried;
+    // เจ้าของตัว: สถานะถูกยกของ tick ก่อน (จับจังหวะเพิ่งถูกยก/เพิ่งถูกปล่อย)
+    private bool _ownerWasCarried;
 
     #endregion
 
     #region Platform Interaction
     // moving platform ที่ยืนอยู่ตอนนี้ + ตำแหน่งล่าสุดของมัน (ไว้คำนวณ delta แล้ว follow แนวนอน)
     private Transform currentPlatform;
-    [Networked] private Vector3 lastPlatformPos { get; set; }
+    private Vector3 lastPlatformPos;
     #endregion
 
     #region Interaction & Physics
@@ -182,11 +182,11 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     [Header("Climbing")]
     [SerializeField] float climbSpeed = 2f;
     [SerializeField] LayerMask climbableMask;
-    [Networked] public bool isInClimbZone { get; set; }
-    [Networked] public bool isClimbing { get; set; }
-    [Networked] public bool jumpedFromClimb { get; set; }
+    public bool isInClimbZone { get; set; }
+    public bool isClimbing { get => GetMoveFlag(MoveFlags.Climbing); set => SetMoveFlag(MoveFlags.Climbing, value); }
+    public bool jumpedFromClimb { get; set; }
 
-    [Networked] private bool wasMenuOpenLastTick { get; set; }
+    private bool wasMenuOpenLastTick;
     #endregion
 
     #region Skills
@@ -221,6 +221,306 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     public bool IsInteractHeld => PreviousButtons.IsSet(InputButton.Interact);
     #endregion
 
+    #region Owner Movement (NR-12)
+    // เจ้าของตัว (input authority) จำลองการเคลื่อนที่ของตัวเองเฉพาะ tick ใหม่ ไม่ถูก host แก้/ย้อน
+    // client ส่งตำแหน่ง/ความเร็ว/สถานะใน input ทุก tick -> host วางตัวนั้น (kinematic) ตามแล้ว sync ให้อีกเครื่องดู
+    // host ยังตัดสินโลกทั้งหมด (ดาเมจ, มึน, ตาย/เกิด, ยก/ปล่อย, ไอเท็ม) — ผลที่ต้องกระทบตัวเจ้าของส่งเป็น event (วาร์ป/แรง)
+    [System.Flags]
+    public enum MoveFlags : uint
+    {
+        None = 0,
+        Grounded = 1u << 0,
+        WaterSurface = 1u << 1,
+        InAir = 1u << 2,
+        Jumping = 1u << 3,
+        Climbing = 1u << 4,
+        FallingBusy = 1u << 5,
+        HeadUnderwater = 1u << 6,
+        BodyOnWater = 1u << 7,
+        StillDrowning = 1u << 8,
+        Floating = 1u << 9,
+        FacingRight = 1u << 10,
+        OxygenDepleted = 1u << 11,   // เป็ด: oxygen หมดแล้ว (host เริ่มดาเมจจมน้ำ)
+        Diving = 1u << 16,           // เป็ด
+        Flying = 1u << 20,           // นก
+        AlreadyFloating = 1u << 21,
+        AlreadyFly = 1u << 22,
+        ReportValid = 1u << 31,      // input: มีตัวละครของเครื่องนั้นแล้ว
+    }
+
+    // ตัวละครของเครื่องนี้ (OnInput อ่านไปส่งให้ host)
+    public static MovementCharacter Local { get; private set; }
+
+    private MoveFlags _ownerFlags;
+    [Networked] public uint RepFlags { get; set; }
+    [Networked] public Vector2 RepPosition { get; set; }
+    [Networked] public Vector2 RepVelocity { get; set; }
+
+    private bool IsSpawnedObject => Object != null && Object.IsValid;
+    public bool IsOwner => IsSpawnedObject && HasInputAuthority;
+    // host กับตัวของ client
+    private bool IsMirror => IsSpawnedObject && HasStateAuthority && !HasInputAuthority;
+    // client กับตัวของตัวเอง
+    private bool IsClientOwner => IsSpawnedObject && HasInputAuthority && !HasStateAuthority;
+
+    public MoveFlags OwnerFlags => _ownerFlags;
+
+    public bool GetMoveFlag(MoveFlags flag)
+    {
+        MoveFlags flags = (!IsSpawnedObject || HasInputAuthority) ? _ownerFlags : (MoveFlags)RepFlags;
+        return (flags & flag) != 0;
+    }
+
+    public void SetMoveFlag(MoveFlags flag, bool on)
+    {
+        if (IsSpawnedObject && !HasInputAuthority) return;
+        if (on) _ownerFlags |= flag;
+        else _ownerFlags &= ~flag;
+    }
+
+    // ความเร็วที่เครื่องนี้รู้ของตัวนี้: เจ้าของใช้ของจริง, เครื่องอื่นใช้ค่าที่ sync
+    public Vector2 CurrentVelocity => IsOwner ? rb2D.linearVelocity : RepVelocity;
+
+    // ล็อกการเคลื่อนที่ที่ host ตัดสิน — เจ้าของอ่านอย่างเดียว
+    protected virtual bool HostMovementLocked => isStunned || IsBeingCarried;
+
+    // ---- event จาก host -> เจ้าของ (วาร์ป / แรงกระแทก) ----
+    [Networked] public byte EventSeq { get; set; }
+    [Networked] private Vector2 EventPosition { get; set; }
+    [Networked] private Vector2 EventImpulse { get; set; }
+    [Networked] private NetworkBool EventTeleport { get; set; }
+    [Networked] private NetworkBool EventResetVelocity { get; set; }
+
+    private byte _appliedEventSeq;   // เจ้าของ: seq ล่าสุดที่ทำแล้ว (ส่งกลับใน input)
+    private byte _ownerAckedSeq;     // host: seq ล่าสุดที่ client ยืนยันว่าทำแล้ว
+    public byte AppliedEventSeq => _appliedEventSeq;
+
+    private const float TeleportSnapDistance = 2f;
+
+    // host: ให้เจ้าของวาร์ป/ใส่แรงกับตัวเอง — ถ้ามี event ค้างที่เจ้าของยังไม่ทำ รวมเข้าด้วยกัน (วาร์ปล่าสุดชนะ, แรงบวกกัน)
+    public void RaiseOwnerEvent(Vector2? teleportTo, Vector2 impulse, bool resetVelocity)
+    {
+        if (!HasStateAuthority) return;
+
+        byte acked = HasInputAuthority ? _appliedEventSeq : _ownerAckedSeq;
+        if (EventSeq == acked)
+        {
+            EventTeleport = false;
+            EventImpulse = Vector2.zero;
+            EventResetVelocity = false;
+        }
+
+        if (teleportTo.HasValue)
+        {
+            EventTeleport = true;
+            EventPosition = teleportTo.Value;
+            EventImpulse = Vector2.zero;
+        }
+
+        EventImpulse += impulse;
+        EventResetVelocity = EventResetVelocity || resetVelocity || teleportTo.HasValue;
+        EventSeq = (byte)(EventSeq == byte.MaxValue ? 1 : EventSeq + 1);
+
+        // ฝั่ง host เห็นตัวของ client ที่จุดวาร์ปทันที (ไม่รับตำแหน่งจาก input จนกว่า client จะยืนยัน)
+        if (teleportTo.HasValue && IsMirror)
+        {
+            RepPosition = teleportTo.Value;
+            RepVelocity = Vector2.zero;
+            rb2D.position = teleportTo.Value;
+            transform.position = teleportTo.Value;
+        }
+    }
+
+    // เจ้าของ: ทำ event ที่ยังไม่ได้ทำ (ครั้งเดียวต่อ seq)
+    private void ApplyPendingOwnerEvent()
+    {
+        byte seq = EventSeq;
+        if (seq == _appliedEventSeq) return;
+        _appliedEventSeq = seq;
+
+        if (EventResetVelocity) rb2D.linearVelocity = Vector2.zero;
+
+        if (EventTeleport)
+        {
+            Vector2 pos = EventPosition;
+            rb2D.position = pos;
+            transform.position = pos;
+            SnapOwnerVisual(pos);
+        }
+
+        Vector2 impulse = EventImpulse;
+        if (impulse != Vector2.zero)
+        {
+            if (rb2D.IsSleeping()) rb2D.WakeUp();
+            rb2D.AddForce(impulse, ForceMode2D.Impulse);
+        }
+    }
+
+    // host กับตัวของ client: วางตามตำแหน่งที่ client คำนวณเองแล้วส่งมา แล้ว sync ให้เครื่องอื่น
+    private void ApplyOwnerReport(NetworkInputData input)
+    {
+        if ((input.OwnerFlags & (uint)MoveFlags.ReportValid) == 0) return;
+
+        _ownerAckedSeq = input.OwnerAckSeq;
+
+        MakeRemoteBody();
+
+        RepFlags = input.OwnerFlags;
+
+        // client ยังไม่ได้วาร์ปตาม event ล่าสุด -> ตำแหน่งที่ส่งมายังเป็นของก่อนวาร์ป ไม่ใช้
+        if (EventTeleport && input.OwnerAckSeq != EventSeq) return;
+
+        Vector2 target = input.OwnerPosition;
+
+        // ถูกยกอยู่: ฝั่ง host ติดหัวผู้ยกตามตำแหน่งที่ host เห็น (client ติดตามภาพผู้ยกที่ช้ากว่า)
+        if (IsBeingCarried && Runner.TryFindObject(CarrierId, out var carrierObj)
+            && carrierObj.TryGetComponent<MovementCharacter>(out var carrier))
+        {
+            target = (Vector2)carrier.transform.position + Vector2.up * betweenCarryPosition;
+        }
+
+        if (((Vector2)rb2D.position - target).sqrMagnitude > TeleportSnapDistance * TeleportSnapDistance)
+        {
+            rb2D.position = target;
+            transform.position = target;
+        }
+        else
+        {
+            rb2D.MovePosition(target);
+        }
+
+        RepPosition = target;
+        RepVelocity = input.OwnerVelocity;
+    }
+
+    // host กับตัวของ host เอง: sync ให้ client
+    private void WriteReplicaFromOwner()
+    {
+        RepPosition = rb2D.position;
+        RepVelocity = rb2D.linearVelocity;
+        RepFlags = (uint)_ownerFlags;
+    }
+
+    // ---- body ของเจ้าของฝั่ง client ----
+    // NetworkRigidbody2D ใน prefab ตั้ง body กลับเป็นค่าจาก host ทุกครั้งที่ resimulate (รวมถึงเป็น kinematic ตามตัวบน host)
+    // -> เก็บค่าของเราเองหลังทุก tick ใหม่ แล้วตั้งกลับก่อนทุก tick
+    private struct OwnerBodyState
+    {
+        public bool Valid;
+        public Vector2 Position;
+        public float Rotation;
+        public Vector2 Velocity;
+        public float AngularVelocity;
+        public float GravityScale;
+        public float LinearDamping;
+        public float AngularDamping;
+        public RigidbodyConstraints2D Constraints;
+    }
+    private OwnerBodyState _ownerBody;
+
+    private void CaptureOwnerBody()
+    {
+        if (rb2D == null) return;
+        _ownerBody.Valid = true;
+        _ownerBody.Position = rb2D.position;
+        _ownerBody.Rotation = rb2D.rotation;
+        _ownerBody.Velocity = rb2D.linearVelocity;
+        _ownerBody.AngularVelocity = rb2D.angularVelocity;
+        _ownerBody.GravityScale = rb2D.gravityScale;
+        _ownerBody.LinearDamping = rb2D.linearDamping;
+        _ownerBody.AngularDamping = rb2D.angularDamping;
+        _ownerBody.Constraints = rb2D.constraints;
+    }
+
+    void IBeforeTick.BeforeTick()
+    {
+        if (!IsClientOwner || rb2D == null) return;
+
+        if (rb2D.bodyType != RigidbodyType2D.Dynamic) rb2D.bodyType = RigidbodyType2D.Dynamic;
+        if (!_ownerBody.Valid) return;
+
+        rb2D.position = _ownerBody.Position;
+        rb2D.rotation = _ownerBody.Rotation;
+        transform.position = _ownerBody.Position;
+        rb2D.linearVelocity = _ownerBody.Velocity;
+        rb2D.angularVelocity = _ownerBody.AngularVelocity;
+        rb2D.gravityScale = _ownerBody.GravityScale;
+        rb2D.linearDamping = _ownerBody.LinearDamping;
+        rb2D.angularDamping = _ownerBody.AngularDamping;
+        rb2D.constraints = _ownerBody.Constraints;
+    }
+
+    void IAfterTick.AfterTick()
+    {
+        if (!IsOwner || rb2D == null || !Runner.IsForward) return;
+
+        // ภาพของเจ้าของ: ตำแหน่งปลาย 2 tick ล่าสุด ไว้ interpolate ใน Render
+        _ownerVisualPrev = _ownerVisualCurr;
+        _ownerVisualCurr = rb2D.position;
+        _hasOwnerVisual = true;
+
+        if (!HasStateAuthority) CaptureOwnerBody();
+    }
+
+    // ---- ภาพ ----
+    private Vector2 _ownerVisualPrev;
+    private Vector2 _ownerVisualCurr;
+    private bool _hasOwnerVisual;
+
+    private void SnapOwnerVisual(Vector2 pos)
+    {
+        _ownerVisualPrev = pos;
+        _ownerVisualCurr = pos;
+        _hasOwnerVisual = true;
+    }
+
+    // เจ้าของ: body เดินทีละ tick -> วาดภาพระหว่างปลาย tick ก่อนหน้ากับ tick ล่าสุด
+    private void RenderOwnerVisual()
+    {
+        if (visualTransform == null || !_hasOwnerVisual) return;
+
+        Vector2 pos = Vector2.Lerp(_ownerVisualPrev, _ownerVisualCurr, Runner.LocalAlpha);
+        visualTransform.position = new Vector3(pos.x, pos.y, visualTransform.position.z);
+    }
+
+    // ตัวที่เครื่องนี้ไม่ได้เป็นเจ้าของ: วางตามตำแหน่งที่ sync (interpolate) — body เป็น kinematic
+    private void RenderRemoteBody()
+    {
+        var interpolator = new NetworkBehaviourBufferInterpolator(this);
+        Vector2 pos = interpolator ? interpolator.Vector2(nameof(RepPosition)) : RepPosition;
+        transform.position = new Vector3(pos.x, pos.y, transform.position.z);
+
+        if (coll2D != null && coll2D.isTrigger != IsBeingCarried) coll2D.isTrigger = IsBeingCarried;
+    }
+
+    // ตัวที่เครื่องนี้ไม่ได้เป็นเจ้าของ: kinematic วางตามตำแหน่งที่ sync
+    // useFullKinematicContacts: kinematic ปกติไม่ยิง trigger/contact กับ collider ที่อยู่นิ่ง (กับดัก จุดตาย checkpoint)
+    // — ฝั่ง host ต้องได้ event เหล่านั้นจากตัวของ client
+    private void MakeRemoteBody()
+    {
+        if (rb2D == null) return;
+        if (rb2D.bodyType != RigidbodyType2D.Kinematic) rb2D.bodyType = RigidbodyType2D.Kinematic;
+        if (!rb2D.useFullKinematicContacts) rb2D.useFullKinematicContacts = true;
+    }
+
+    // เจ้าของ: ล้างสถานะการเคลื่อนที่ตอนเกิดใหม่/รีเซ็ต (host ไม่ได้ถือค่าพวกนี้ของตัว client)
+    protected virtual void ResetOwnerMovementState()
+    {
+        bool facingRight = GetMoveFlag(MoveFlags.FacingRight);
+        _ownerFlags = MoveFlags.None;
+        SetMoveFlag(MoveFlags.FacingRight, facingRight);
+
+        isMoveAble = true;
+        isOptional = false;
+        isSpeedoptional = false;
+        IsFalling = false;
+        isInClimbZone = false;
+        jumpedFromClimb = false;
+        currentPlatform = null;
+        _ownerWasCarried = false;
+    }
+    #endregion
+
     #region LifeCycle Effect
     [Header("LifeCycle Effect")]
     [SerializeField] public LifeCycle lifeCycle;
@@ -250,9 +550,12 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
         if (lifeCycle == null) lifeCycle = GetComponentInChildren<LifeCycle>();
 
+        // NetworkRigidbody2D ใน prefab: ให้วาดลง child เปล่า — ตำแหน่งและภาพของตัวละครคุมเองทั้งหมด (NR-12)
         if (TryGetComponent<Fusion.Addons.Physics.NetworkRigidbody2D>(out var netRb))
         {
-            netRb.InterpolationTarget = visualTransform;
+            var unusedTarget = new GameObject("NetworkRigidbodyUnusedTarget").transform;
+            unusedTarget.SetParent(transform, false);
+            netRb.InterpolationTarget = unusedTarget;
         }
     }
 
@@ -313,6 +616,33 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             if (lifeCycle != null) lifeCycle.Initialize(isThisCharacterBird);
         }
 
+        // เจ้าของจำลองตัวเอง (dynamic) / เครื่องอื่นวางตามตำแหน่งที่ sync (kinematic) — NR-12
+        if (HasInputAuthority) Local = this;
+
+        if (rb2D != null)
+        {
+            if (HasInputAuthority)
+            {
+                rb2D.bodyType = RigidbodyType2D.Dynamic;
+            }
+            else
+            {
+                MakeRemoteBody();
+                rb2D.linearVelocity = Vector2.zero;
+            }
+        }
+
+        if (HasStateAuthority)
+        {
+            RepPosition = transform.position;
+        }
+        else if (HasInputAuthority)
+        {
+            transform.position = RepPosition;
+            if (rb2D != null) rb2D.position = RepPosition;
+        }
+        SnapOwnerVisual(transform.position);
+
         JumpCooldown = TickTimer.CreateFromSeconds(Runner, JumpCooldownTimer);
 
         if (GameManager.Instance != null) GameManager.Instance.RegisterPlayer(this);
@@ -327,7 +657,12 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             Invoke(nameof(ForceUpdateUI), 0.5f);
         }
 
-        if (HasStateAuthority) isMoveAble = true;
+        isMoveAble = true;
+    }
+
+    public override void Despawned(NetworkRunner runner, bool hasState)
+    {
+        if (Local == this) Local = null;
     }
 
     private void ForceUpdateUI()
@@ -338,88 +673,86 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
     public override void FixedUpdateNetwork()
     {
-        SimulateTick();
+        bool hasInput = GetInput(out NetworkInputData input);
 
-        // จำปุ่มของ tick นี้ไว้เทียบ tick หน้า — อัปเดตทุก tick แม้ SimulateTick ออกก่อน (ตาย / ยังโหลดไม่เสร็จ)
-        if (GetInput(out NetworkInputData input)) PreviousButtons = input.Buttons;
+        if (IsMirror)
+        {
+            // host กับตัวของ client: วางตามตำแหน่งที่ client คำนวณเองแล้วส่งมา
+            if (hasInput) ApplyOwnerReport(input);
+        }
+        else if (HasInputAuthority && (HasStateAuthority || Runner.IsForward))
+        {
+            // เจ้าของตัวขยับตัวเอง — client ทำเฉพาะ tick ใหม่ ไม่ย้อนคำนวณตอน resimulate (ไม่ถูก host ดึงกลับ)
+            OwnerSimulate(input, hasInput);
+        }
+
+        if (HasStateAuthority)
+        {
+            HostRules(input, hasInput);
+            if (HasInputAuthority) WriteReplicaFromOwner();
+        }
+
+        // จำปุ่มของ tick นี้ไว้เทียบ tick หน้า — อัปเดตทุก tick แม้ข้ามการจำลอง (ตาย / ยังโหลดไม่เสร็จ / ย้อนคำนวณ)
+        if (hasInput) PreviousButtons = input.Buttons;
     }
 
-    private void SimulateTick()
+    // เจ้าของตัว: การเคลื่อนที่ทั้งหมดของตัวเอง
+    private void OwnerSimulate(NetworkInputData input, bool hasInput)
     {
-        if (GameManager.Instance == null || GameManager.Instance.Object == null || !GameManager.Instance.Object.IsValid)
+        ApplyPendingOwnerEvent();
+
+        if (GameManager.Instance == null || GameManager.Instance.Object == null || !GameManager.Instance.Object.IsValid
+            || !GameManager.Instance.isLoadMapDone || !GameManager.Instance.IsGameReady)
         {
             rb2D.linearVelocity = Vector2.zero;
             return;
         }
-        if (!GameManager.Instance.isLoadMapDone)
-        {
-            hasSetInitialPosition = false;
-            rb2D.linearVelocity = Vector2.zero;
-            return;
-        }
 
-        if (!hasSetInitialPosition)
-        {
-            hasSetInitialPosition = true;
-            if (HasStateAuthority)
-            {
-                GameManager.Instance.PlayerFinishedLoading();
+        if (isDead) return;
 
-                if (TryGetComponent<NetworkRigidbody2D>(out var netRb))
-                    netRb.Teleport(GameManager.Instance.GetRespawnPosition(), transform.rotation);
-            }
-        }
+        UpdateOwnerCarriedState();
 
-        if (!GameManager.Instance.IsGameReady) { rb2D.linearVelocity = Vector2.zero; return; }
+        bool carried = IsBeingCarried;
 
-        if (isDead) { if (HasStateAuthority && canbeRespawn && respawnTimer.Expired(Runner)) Respawn(); return; }
-
-        bool effectivelyCarried = IsBeingCarried || localIsBeingCarriedPredict;
-        NetworkId effectiveCarrierId = IsBeingCarried ? CarrierId : localCarrierIdPredict;
-
-        if (effectivelyCarried)
+        if (carried)
         {
             rb2D.gravityScale = 0f;
             rb2D.linearVelocity = Vector2.zero;
             if (coll2D != null && !coll2D.isTrigger) coll2D.isTrigger = true;
             isMoveAble = false;
 
-            if ((HasStateAuthority || HasInputAuthority) && Runner.TryFindObject(effectiveCarrierId, out var duckObj) && duckObj.TryGetComponent<Rigidbody2D>(out var duckRb))
+            // ผู้ยกอาจเป็นตัวของอีกเครื่อง — ใช้ตำแหน่งที่วาดอยู่ในเครื่องนี้
+            if (Runner.TryFindObject(CarrierId, out var carrierObj) && carrierObj.TryGetComponent<MovementCharacter>(out var carrier))
             {
-                Vector2 targetPos = duckRb.position + Vector2.up * betweenCarryPosition;
+                Vector2 targetPos = (Vector2)carrier.transform.position + Vector2.up * betweenCarryPosition;
                 rb2D.MovePosition(targetPos);
             }
         }
 
-        bool isMenuOpen = GameManager.Instance != null && GameManager.Instance.IsPaused;
+        bool isMenuOpen = GameManager.Instance.IsPaused;
         bool wasMenuOpenBeforeThisTick = wasMenuOpenLastTick;
         wasMenuOpenLastTick = isMenuOpen;
 
-        if (HasStateAuthority || HasInputAuthority) CheckGround();
+        CheckGround();
 
-        TickStun();
-
-        // ติดหนึบกับ moving platform แนวนอน (player follow เองจาก transform ที่ sync แล้ว)
+        // ติดหนึบกับ moving platform แนวนอน (ตำแหน่งแพคำนวณจาก tick ตรงกันทุกเครื่อง — NR-10)
         // แนวตั้งปล่อยให้ kinematic collision จัดการ — กัน double-count ที่เคยทำให้โดนผลักลง
-        if (IsGrounded && currentPlatform != null && !effectivelyCarried && !isMenuOpen)
+        if (IsGrounded && currentPlatform != null && !carried && !isMenuOpen)
         {
             Vector3 cur = currentPlatform.position;
             rb2D.position += new Vector2(cur.x - lastPlatformPos.x, 0f);
             lastPlatformPos = cur;
         }
 
-        // Test
-
         bool wasInZone = isInClimbZone;
         isInClimbZone = CheckInClimbZone();
 
-        // ----
         if (wasInZone && !isInClimbZone && isClimbing)
         {
             ExitClimbState();
         }
 
-        if (GetInput(out NetworkInputData input))
+        if (hasInput)
         {
             if (isMenuOpen)
             {
@@ -429,7 +762,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             }
             else
             {
-                if (isInClimbZone && !isClimbing && Mathf.Abs(input.vertical) > 0.1f)
+                if (isInClimbZone && !isClimbing && !HostMovementLocked && Mathf.Abs(input.vertical) > 0.1f)
                 {
                     EnterClimbState();
                 }
@@ -447,25 +780,19 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                         HandleMovement(input);
                         rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, input.vertical * climbSpeed);
                     }
-
-                    HandleEtcInput(input);
                 }
-                else
+                else if (isMoveAble && !HostMovementLocked)
                 {
-                    if (isMoveAble)
-                    {
-                        HandleMovement(input);
-                        HandleJump(input);
-                        HandleJumpPhysics(input);
-                    }
-                    if (!IsInteractBusy) HandleInteraction(input);
-                    HandleEtcInput(input);
-                    HandleDrop(input);
+                    HandleMovement(input);
+                    HandleJump(input);
+                    HandleJumpPhysics(input);
                 }
+
+                HandleEtcInput(input);
             }
         }
 
-        OnFixedUpdateSpecific();
+        OnOwnerSimulateSpecific(input, hasInput);
 
         if (isMenuOpen)
         {
@@ -478,29 +805,62 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         }
     }
 
+    // host: กติกาที่ host ตัดสินให้ทุกตัว (ตัวของ client ใช้ปุ่มจาก input) — กด E, ทิ้งของ, มึน, ตาย/เกิดใหม่ และของเฉพาะเป็ด/นก
+    private void HostRules(NetworkInputData input, bool hasInput)
+    {
+        if (GameManager.Instance == null || GameManager.Instance.Object == null || !GameManager.Instance.Object.IsValid) return;
+
+        if (!GameManager.Instance.isLoadMapDone)
+        {
+            hasSetInitialPosition = false;
+            return;
+        }
+
+        if (!hasSetInitialPosition)
+        {
+            hasSetInitialPosition = true;
+            GameManager.Instance.PlayerFinishedLoading();
+            RaiseOwnerEvent(GameManager.Instance.GetRespawnPosition(), Vector2.zero, true);
+        }
+
+        if (!GameManager.Instance.IsGameReady) return;
+
+        if (isDead)
+        {
+            if (canbeRespawn && respawnTimer.Expired(Runner)) Respawn();
+            return;
+        }
+
+        TickStun();
+
+        bool isMenuOpen = GameManager.Instance.IsPaused;
+
+        if (hasInput && !isMenuOpen && !isClimbing)
+        {
+            if (!IsInteractBusy) HandleInteraction(input);
+            HandleDrop(input);
+        }
+
+        OnHostRulesSpecific(input, hasInput, isMenuOpen);
+    }
+
     public override void Render()
     {
+        if (IsOwner) RenderOwnerVisual();
+        else RenderRemoteBody();
+
         if (HasInputAuthority) CheckInteractable();
 
         ManageMovementSounds();
     }
 
-    // The carried visual-follow must be the LAST transform writer of the frame.
-    // Fusion's NetworkRigidbody2D render-interpolation writes the same visualTransform
-    // (it's the InterpolationTarget) and runs AFTER MovementCharacter.Render(), so doing
-    // the follow in Render() loses the race and the proxy jitters. LateUpdate runs after
-    // Fusion's render phase, so our predicted-carrier follow wins → no jitter.
+    // ภาพตัวที่ถูกยกติดหัวผู้ยก — ต้องเป็นตัวเขียนตำแหน่งภาพคนสุดท้ายของเฟรม (LateUpdate หลัง Render ของทุกตัว)
     private void LateUpdate()
     {
         if (Object == null || !Object.IsValid || Runner == null) return;
 
-        ReconcileCarryPrediction();
-
-        bool effectivelyCarried = IsBeingCarried || localIsBeingCarriedPredict;
-        NetworkId effectiveCarrierId = IsBeingCarried ? CarrierId : localCarrierIdPredict;
-
-        if (effectivelyCarried
-            && Runner.TryFindObject(effectiveCarrierId, out var duckObj)
+        if (IsBeingCarried
+            && Runner.TryFindObject(CarrierId, out var duckObj)
             && duckObj.TryGetComponent<MovementCharacter>(out var duckMC))
         {
             if (spriteRenderer != null) spriteRenderer.sortingOrder = originalSortingOrder - 1;
@@ -511,8 +871,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                                            + Vector3.up * betweenCarryPosition;
                 _wasVisuallyCarried = true;
             }
-
-            ResetCorrectionSmoothing();
         }
         else
         {
@@ -523,85 +881,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
                 visualTransform.localPosition = Vector3.zero;
                 _wasVisuallyCarried = false;
             }
-
-            SmoothPredictionCorrection();
-        }
-    }
-
-    #region Correction Smoothing (LP-2)
-    // ตัวละครของเราฝั่ง client: ถ้าทำนายผิดแล้วถูก host แก้ ภาพจะกระโดดไปตำแหน่งใหม่ทันที (NetworkRigidbody2D ไม่มีระบบเกลี่ย)
-    // เก็บส่วนที่กระโดดเกินความเร็วปกติไว้เป็นค่าเหลื่อม แล้วค่อย ๆ ลดลง -> ภาพไหลไปตำแหน่งที่ถูกแทนการดีด
-    private const float CorrectionDecayTime = 0.1f;     // ค่าเหลื่อมลดลงเหลือ ~37% ทุก 0.1 วิ
-    private const float MaxRenderSpeed = 30f;           // หน่วย/วินาที — ขยับเร็วกว่านี้ในเฟรมเดียวถือว่าเป็นการแก้ตำแหน่ง
-    private const float CorrectionTeleportDistance = 2f; // กระโดดไกลกว่านี้ = วาร์ป/เกิดใหม่ ไม่เกลี่ย
-
-    private Vector3 _correctionOffset;
-    private Vector3 _lastRenderTarget;
-    private Vector3 _lastWrittenVisual;
-    private bool _hasLastRenderTarget;
-
-    private void SmoothPredictionCorrection()
-    {
-        if (visualTransform == null || !HasInputAuthority || isDead || Time.deltaTime <= 0f)
-        {
-            ResetCorrectionSmoothing();
-            return;
-        }
-
-        // ตำแหน่งที่ NetworkRigidbody2D เพิ่งเขียน — ถ้าเฟรมนี้ไม่ได้เขียน (ค่ายังเป็นที่เราเขียนไว้) ใช้ตำแหน่งจริงของเฟรมก่อน
-        Vector3 current = visualTransform.position;
-        Vector3 target = (_hasLastRenderTarget && current == _lastWrittenVisual) ? _lastRenderTarget : current;
-
-        if (_hasLastRenderTarget)
-        {
-            Vector3 delta = target - _lastRenderTarget;
-            float distance = delta.magnitude;
-            float maxStep = MaxRenderSpeed * Time.deltaTime;
-
-            if (distance > CorrectionTeleportDistance)
-                _correctionOffset = Vector3.zero;
-            else if (distance > maxStep)
-                _correctionOffset -= delta * (1f - maxStep / distance);
-        }
-
-        _correctionOffset *= Mathf.Exp(-Time.deltaTime / CorrectionDecayTime);
-        if (_correctionOffset.sqrMagnitude < 0.000001f) _correctionOffset = Vector3.zero;
-
-        _lastRenderTarget = target;
-        _hasLastRenderTarget = true;
-
-        _lastWrittenVisual = target + _correctionOffset;
-        visualTransform.position = _lastWrittenVisual;
-    }
-
-    private void ResetCorrectionSmoothing()
-    {
-        _correctionOffset = Vector3.zero;
-        _hasLastRenderTarget = false;
-    }
-    #endregion
-
-    // Self-heal an orphaned carry prediction. localIsBeingCarriedPredict bridges the latency
-    // between the Client initiating a carry and the authoritative IsBeingCarried replicating.
-    // If the authoritative state says "not carried" AND the predicted carrier no longer claims
-    // this character, the prediction is stale (e.g. a fast pickup->drop whose predicted carrier
-    // state was rolled back) — clear it so the phantom-on-head can't persist. Runs on proxies
-    // too (the Bird is a pure proxy on the Client, so only LateUpdate executes for it there).
-    private void ReconcileCarryPrediction()
-    {
-        if (!localIsBeingCarriedPredict || IsBeingCarried) return;
-
-        bool carrierStillClaims =
-            Runner.TryFindObject(localCarrierIdPredict, out var carrierObj)
-            && carrierObj.TryGetComponent<Duck_Moveset>(out var carrierDuck)
-            && carrierDuck.IsCarry
-            && carrierDuck.CarriedFriendId == Object.Id;
-
-        if (!carrierStillClaims)
-        {
-            localIsBeingCarriedPredict = false;
-            localCarrierIdPredict = default;
-            if (coll2D != null) coll2D.isTrigger = false;
         }
     }
 
@@ -853,8 +1132,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         {
             AudioManager.Instance?.PlayClipAtPosition(dmgSoundClip, transform.position);
         }
-        rb2D.linearVelocity = Vector2.zero;
-        rb2D.AddForce(vec * knockbackForce, ForceMode2D.Impulse);
+        // แรงกระเด็น: เจ้าของตัวเป็นคนใส่ให้ตัวเอง (NR-12)
+        RaiseOwnerEvent(null, vec * knockbackForce, true);
         if (_damageFlash != null) _damageFlash.StartFlash();
 
         if (currentHealth <= 0)
@@ -961,6 +1240,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
         rb2D.linearVelocity = Vector2.zero;
         rb2D.simulated = false;
+
+        if (IsClientOwner) CaptureOwnerBody();
     }
 
     // host เท่านั้น (เรียกจาก DeathMechanic)
@@ -975,7 +1256,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             {
                 duck.DropFriend(false);
             }
-            RPC_UpdateCarry(false, default);
+            if (IsBeingCarried) HostReleaseCarried(rb2D.position, Vector2.zero);
         }
         else if (isCarrying)
         {
@@ -1033,20 +1314,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
 
             if (cAnimation != null) cAnimation.ClearAnimationLock();
 
-            if (GameManager.Instance != null)
-            {
-                Vector3 newPos = GameManager.Instance.GetRespawnPosition();
-
-                if (TryGetComponent<NetworkRigidbody2D>(out var netRb))
-                {
-                    netRb.Teleport(newPos, transform.rotation);
-                }
-                else
-                {
-                    transform.position = newPos;
-                    if (rb2D != null) rb2D.position = newPos;
-                }
-            }
+            if (GameManager.Instance != null) RaiseOwnerEvent(GameManager.Instance.GetRespawnPosition(), Vector2.zero, true);
 
             LastRespawnWasReset = false;
             RespawnCount++;
@@ -1070,6 +1338,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     // ทุกเครื่องรันตอนเกิดใหม่ (host เรียกตรง, เครื่องอื่นจาก RespawnCount) — เดิมเป็น RPC_OnRespawned
     public virtual void OnRespawned()
     {
+        if (IsOwner) ResetOwnerMovementState();
         isMoveAble = true;
 
         if (coll2D != null) coll2D.isTrigger = false;
@@ -1080,11 +1349,15 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             rb2D.linearVelocity = Vector2.zero;
             rb2D.angularVelocity = 0f;
 
-            if (HasStateAuthority || HasInputAuthority)
+            if (IsOwner)
             {
                 rb2D.bodyType = RigidbodyType2D.Dynamic;
                 rb2D.gravityScale = normalGravity;
                 rb2D.linearDamping = 0f;
+            }
+            else
+            {
+                MakeRemoteBody();
             }
         }
 
@@ -1099,7 +1372,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             }
         }
 
-        localIsBeingCarriedPredict = false;
+        _ownerWasCarried = false;
         if (HasStateAuthority)
         {
             IsBeingCarried = false;
@@ -1121,6 +1394,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
         }
 
         if (lifeCycle != null) lifeCycle.PlayOnRespawn();
+
+        if (IsClientOwner) CaptureOwnerBody();
     }
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
@@ -1162,24 +1437,14 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             {
                 duck.DropFriend(false);
             }
-            RPC_UpdateCarry(false, default);
+            if (IsBeingCarried) HostReleaseCarried(rb2D.position, Vector2.zero);
         }
         else if (isCarrying)
         {
             ((Duck_Moveset)this).DropFriend(false);
         }
 
-        if (GameManager.Instance != null)
-        {
-            Vector3 newPos = GameManager.Instance.GetRespawnPosition();
-            if (TryGetComponent<NetworkRigidbody2D>(out var netRb))
-                netRb.Teleport(newPos, transform.rotation);
-            else
-            {
-                transform.position = newPos;
-                if (rb2D != null) rb2D.position = newPos;
-            }
-        }
+        if (GameManager.Instance != null) RaiseOwnerEvent(GameManager.Instance.GetRespawnPosition(), Vector2.zero, true);
 
         LastRespawnWasReset = true;
         RespawnCount++;
@@ -1189,73 +1454,53 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     #endregion
 
     #region CarrySystem
+    // ยก/ปล่อยตัดสินที่ host ที่เดียว (เดิม RPC_UpdateCarry ยิงทุกเครื่องและ client ทำนายไปก่อน — ทำให้ตัวที่ถูกยกโยกบนจอ client)
+    // ตัวที่ถูกยก: เจ้าของตัวติดตามผู้ยกเอง (OwnerSimulate) และวาร์ป/รับแรงโยนผ่าน event ตอนถูกปล่อย
 
-    [Rpc(RpcSources.All, RpcTargets.All)]
-    public void RPC_UpdateCarry(bool state, NetworkId carrierId, bool doThrow = false, float throwDir = 1f, float forceX = 4f, float forceY = 4f, Vector2 throwSpawnPos = default, RpcInfo info = default) // TEMP verify H-4: RpcInfo added for logging
+    // host: เริ่มถูกยก (เรียกจาก Duck_Moveset.PickupFriend)
+    public void HostSetCarried(NetworkId carrierId)
     {
-        VerifyLog.Log($"RPC_UpdateCarry state={state} doThrow={doThrow} throwSpawnPos={throwSpawnPos} source={info.Source} invokeLocal={info.IsInvokeLocal} rpcTick={info.Tick} runnerTick={Runner.Tick} receiverStateAuth={HasStateAuthority} posNow={(Vector2)transform.position}");
+        if (!HasStateAuthority) return;
+        IsBeingCarried = true;
+        CarrierId = carrierId;
+        IsInteractBusy = true;
+    }
 
-        if (HasStateAuthority)
-        {
-            IsBeingCarried = state;
-            CarrierId = carrierId;
-            IsInteractBusy = state;
-        }
-        localIsBeingCarriedPredict = state;
-        localCarrierIdPredict = carrierId;
+    // host: ถูกปล่อย/โยน
+    public void HostReleaseCarried(Vector2 dropPos, Vector2 impulse)
+    {
+        if (!HasStateAuthority) return;
+        IsBeingCarried = false;
+        CarrierId = default;
+        IsInteractBusy = false;
+        RaiseOwnerEvent(dropPos, impulse, true);
+    }
 
-        if (Runner.TryFindObject(carrierId, out var duckObjForCollision)
-            && duckObjForCollision.TryGetComponent<Collider2D>(out var duckColl))
-        {
-            Physics2D.IgnoreCollision(coll2D, duckColl, state);
-        }
-        if (!state)
-        {
-            if (HasStateAuthority)
-            {
-                Vector2 dropPos;
-                if (throwSpawnPos != default)
-                {
-                    dropPos = throwSpawnPos;
-                }
-                else if (Runner.TryFindObject(carrierId, out var duckObjForPos)
-                         && duckObjForPos.TryGetComponent<Rigidbody2D>(out var duckRb))
-                {
-                    dropPos = duckRb.position + Vector2.up * betweenCarryPosition;
-                }
-                else
-                {
-                    dropPos = rb2D.position;
-                }
+    // เจ้าของ: จับจังหวะเพิ่งถูกยก/เพิ่งถูกปล่อยจากค่าที่ host ตั้ง
+    private void UpdateOwnerCarriedState()
+    {
+        bool carried = IsBeingCarried;
+        if (carried == _ownerWasCarried) return;
+        _ownerWasCarried = carried;
 
-                rb2D.gravityScale = normalGravity;
+        if (carried) OnOwnerCarried();
+        else OnOwnerReleased();
+    }
 
-                if (TryGetComponent<NetworkRigidbody2D>(out var netRb))
-                {
-                    netRb.Teleport(dropPos, transform.rotation);
-                }
-                else
-                {
-                    rb2D.position = dropPos;
-                }
+    protected virtual void OnOwnerCarried()
+    {
+        isJumping = false;
+        IsGrounded = false;
+    }
 
-                rb2D.linearVelocity = Vector2.zero;
-
-                if (doThrow)
-                {
-                    rb2D.AddForce(new Vector2(throwDir * forceX, forceY), ForceMode2D.Impulse);
-                }
-
-                IsGrounded = false;
-                IsInAir = true;
-            }
-
-            if (coll2D != null) coll2D.isTrigger = false;
-
-            if (visualTransform != null)
-                visualTransform.localPosition = Vector3.zero;
-            OnDroppedEvent();
-        }
+    // ตำแหน่งและแรงโยนมาจาก event (ทำไปแล้วก่อนหน้านี้ใน tick เดียวกัน) — ตรงนี้คืนสถานะตัวเอง
+    protected virtual void OnOwnerReleased()
+    {
+        rb2D.gravityScale = normalGravity;
+        if (coll2D != null) coll2D.isTrigger = false;
+        IsGrounded = false;
+        IsInAir = true;
+        OnDroppedEvent();
     }
 
     public virtual void OnDroppedEvent()
@@ -1306,8 +1551,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
     private void CheckGround()
     {
         bool wasGrounded = IsGrounded;
-        bool effectivelyCarried = IsBeingCarried || localIsBeingCarriedPredict;
-        NetworkId effectiveCarrierId = IsBeingCarried ? CarrierId : localCarrierIdPredict;
+        bool effectivelyCarried = IsBeingCarried;
+        NetworkId effectiveCarrierId = CarrierId;
 
         float referenceVelocityY = rb2D.linearVelocity.y;
         bool isNearGround = false;
@@ -1320,7 +1565,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             IsHeadUnderwater = duckMC.IsHeadUnderwater;
             IsBodyOnWater = duckMC.IsBodyOnWater;
 
-            referenceVelocityY = duckMC.rb2D.linearVelocity.y;
+            referenceVelocityY = duckMC.CurrentVelocity.y;
 
             if (isJumping)
             {
@@ -1508,7 +1753,11 @@ public class MovementCharacter : NetworkBehaviour, IDamageable
             PlayerInterface.Instance.HideInteract();
     }
 
-    protected virtual void OnFixedUpdateSpecific() { }
+    // เจ้าของตัว: การเคลื่อนที่เฉพาะของเป็ด/นก
+    protected virtual void OnOwnerSimulateSpecific(NetworkInputData input, bool hasInput) { }
+
+    // host: กติกาเฉพาะของเป็ด/นก (ยก/ปล่อย, ปา, ดาเมจจมน้ำ)
+    protected virtual void OnHostRulesSpecific(NetworkInputData input, bool hasInput, bool isMenuOpen) { }
 
     #endregion
 

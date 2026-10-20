@@ -19,11 +19,28 @@ public class Bird_Moveset : MovementCharacter, IstunAble
     private PhysicsMaterial2D defaultMaterial;
 
     [Header("Bird State")]
-    [Networked] private TickTimer FlightTimer { get; set; }
-    [Networked, OnChangedRender(nameof(OnFlyingStateChanged))]
-    public NetworkBool IsFlying { get; set; }
-    [Networked] public bool IsAlreadyFly { get; set; }
-    [Networked] public bool AlreadyFloating { get; set; }
+    // สถานะบิน/ลอยเป็นของเจ้าของตัว (NR-12) — เสียง/แถบบินของเจ้าของเรียกตอนค่าเปลี่ยน
+    private TickTimer FlightTimer;
+    public bool IsFlying
+    {
+        get => GetMoveFlag(MoveFlags.Flying);
+        set
+        {
+            bool changed = IsOwner && GetMoveFlag(MoveFlags.Flying) != value;
+            SetMoveFlag(MoveFlags.Flying, value);
+            if (changed) OnFlyingStateChanged();
+        }
+    }
+    public bool IsAlreadyFly { get => GetMoveFlag(MoveFlags.AlreadyFly); set => SetMoveFlag(MoveFlags.AlreadyFly, value); }
+    public bool AlreadyFloating { get => GetMoveFlag(MoveFlags.AlreadyFloating); set => SetMoveFlag(MoveFlags.AlreadyFloating, value); }
+
+    // เป็ดที่ยกนกอยู่ใช้ตอนนกบิน (Duck_Moveset.LiftWithFlyingFriend)
+    public PhysicsMaterial2D ZeroFrictionMaterial => zeroFrictionMaterial;
+
+    // กำลังเล็ง/เหวี่ยงปา (host ตัดสิน) -> เจ้าของล็อกการเดิน
+    protected override bool HostMovementLocked => base.HostMovementLocked || _prepareToThrow || _isReleasingThrow;
+
+    private bool _wasReleasingThrow;
 
 
     // Drowning
@@ -72,21 +89,14 @@ public class Bird_Moveset : MovementCharacter, IstunAble
         ApplyStun();
     }
 
-    protected override void OnFixedUpdateSpecific()
+    // เจ้าของตัว: บิน/ลอย, หันตามเป็ดที่ยกอยู่, จมน้ำส่วนการเคลื่อนที่ (NR-12)
+    protected override void OnOwnerSimulateSpecific(NetworkInputData input, bool hasInput)
     {
         bool isMenuOpen = GameManager.Instance != null && GameManager.Instance.IsPaused;
 
-        if (GetInput(out NetworkInputData input))
+        if (hasInput && !isMenuOpen)
         {
-            if (!isMenuOpen)
-            {
-                HandleFlightLogic(input);
-                HandleThrowLogic(input);
-            }
-            else
-            {
-                if (_prepareToThrow) CancelThrow();
-            }
+            HandleFlightLogic(input);
         }
 
         if (IsGrounded)
@@ -101,55 +111,55 @@ public class Bird_Moveset : MovementCharacter, IstunAble
             }
         }
 
-        bool effectivelyCarried = IsBeingCarried || localIsBeingCarriedPredict;
-        NetworkId effectiveCarrierId = IsBeingCarried ? CarrierId : localCarrierIdPredict;
-
-        if (effectivelyCarried)
+        if (IsBeingCarried)
         {
             if (AlreadyFloating) StopFloating();
 
-            if (Runner.TryFindObject(effectiveCarrierId, out var duckObj) && duckObj.TryGetComponent<MovementCharacter>(out var duck))
+            if (Runner.TryFindObject(CarrierId, out var duckObj) && duckObj.TryGetComponent<MovementCharacter>(out var duck))
             {
                 if (!IsFlying && (duck.IsGrounded || duck.isWaterSurface))
                 {
                     IsAlreadyFly = false;
                 }
-                else if (duck.IsHeadUnderwater) { /* do drowning but duck carry animation */ }
 
-                if (HasStateAuthority || HasInputAuthority)
-                {
-                    cAnimation.FlipX = duck.cAnimation.FlipX;
-                }
+                cAnimation.FlipX = duck.cAnimation.FlipX;
             }
         }
 
-        if (!isMenuOpen) HandleDrowning();
+        if (!isMenuOpen) OwnerDrowningMovement();
     }
 
-    private void HandleDrowning()
+    // host: ปาหิน (spawn บน host) + จับเวลา oxygen / ดาเมจจมน้ำ
+    protected override void OnHostRulesSpecific(NetworkInputData input, bool hasInput, bool isMenuOpen)
     {
-        bool effectivelyCarried = IsBeingCarried || localIsBeingCarriedPredict;
-        NetworkId effectiveCarrierId = IsBeingCarried ? CarrierId : localCarrierIdPredict;
-
-        bool isBirdDrowning = false;
-
-        if (effectivelyCarried)
+        if (hasInput)
         {
-            if (Runner.TryFindObject(effectiveCarrierId, out var duckObj) && duckObj.TryGetComponent<Duck_Moveset>(out var duck))
-            {
-                if (duck.onDiving || duck.IsHeadUnderwater)
-                    isBirdDrowning = true;
-            }
-        }
-        else
-        {
-            if (stilldrowning)
-                isBirdDrowning = true;
+            if (!isMenuOpen) HandleThrowLogic(input);
+            else if (_prepareToThrow) CancelThrow();
         }
 
-        if (isBirdDrowning)
+        if (!isMenuOpen) HostDrowningTimer();
+    }
+
+    // จมน้ำเอง หรือถูกเป็ดที่กำลังดำน้ำยกอยู่
+    private bool IsBirdDrowning()
+    {
+        if (IsBeingCarried)
         {
-            if (!effectivelyCarried)
+            return Runner.TryFindObject(CarrierId, out var duckObj)
+                && duckObj.TryGetComponent<Duck_Moveset>(out var duck)
+                && (duck.onDiving || duck.IsHeadUnderwater);
+        }
+
+        return stilldrowning;
+    }
+
+    // เจ้าของ: จมน้ำแล้วค่อย ๆ จมลง
+    private void OwnerDrowningMovement()
+    {
+        if (IsBirdDrowning())
+        {
+            if (!IsBeingCarried)
             {
                 isMoveAble = false;
                 isOptional = true;
@@ -157,28 +167,32 @@ public class Bird_Moveset : MovementCharacter, IstunAble
                 rb2D.linearVelocity = new Vector2(0f, -1.5f);
                 rb2D.linearDamping = 3f;
             }
+        }
+        else if (!AlreadyFloating && !IsFlying && rb2D != null && rb2D.linearDamping != 0f)
+        {
+            rb2D.linearDamping = 0f;
+        }
+    }
 
-            // เริ่มจับเวลา oxygen ครั้งเดียวตอนเข้าจมน้ำ — พอ oxygen หมดเข้าเฟส damage แล้ว
-            // อย่า restart timer อีก (ไม่งั้น oxygen visual จะเด้งกลับมาเต็มทั้งที่ยังจมอยู่)
+    // host: เริ่มจับเวลา oxygen ครั้งเดียวตอนเข้าจมน้ำ — พอ oxygen หมดเข้าเฟส damage แล้วอย่า restart timer อีก
+    // (ไม่งั้น oxygen visual จะเด้งกลับมาเต็มทั้งที่ยังจมอยู่)
+    private void HostDrowningTimer()
+    {
+        if (IsBirdDrowning())
+        {
             if (!startTimer && !isDrowningDamageActive)
             {
-                if (HasStateAuthority) StartDrowningTimer();
+                StartDrowningTimer();
             }
-            else if (startTimer)
+            else if (startTimer && DrownTimer.Expired(Runner))
             {
-                if (DrownTimer.Expired(Runner) && HasStateAuthority)
-                {
-                    startTimer = false;
-                    StartDrowningDamage();
-                }
+                startTimer = false;
+                StartDrowningDamage();
             }
         }
         else
         {
-            if (!AlreadyFloating && !IsFlying && rb2D != null && rb2D.linearDamping != 0f)
-                rb2D.linearDamping = 0f;
-
-            if (startTimer && HasStateAuthority)
+            if (startTimer)
             {
                 DrownTimer = TickTimer.None;
                 startTimer = false;
@@ -215,14 +229,11 @@ public class Bird_Moveset : MovementCharacter, IstunAble
     {
         base.OnDroppedEvent();
 
-        if (HasStateAuthority)
-        {
-            ForceCancelFlight();
+        ForceCancelFlight();
 
-            FallingBusy = false;
-            isOptional = false;
-            IsAlreadyFly = false;
-        }
+        FallingBusy = false;
+        isOptional = false;
+        IsAlreadyFly = false;
 
         if (HasInputAuthority && localGUI != null)
         {
@@ -236,8 +247,11 @@ public class Bird_Moveset : MovementCharacter, IstunAble
             rb2D.gravityScale = normalGravity;
         }
 
-        startTimer = false;
-        DrownTimer = TickTimer.None;
+        if (HasStateAuthority)
+        {
+            startTimer = false;
+            DrownTimer = TickTimer.None;
+        }
     }
 
     public override void OnRespawned()
@@ -248,12 +262,17 @@ public class Bird_Moveset : MovementCharacter, IstunAble
         IsAlreadyFly = false;
         AlreadyFloating = false;
         FallingBusy = false;
-        startTimer = false;
-        DrownTimer = TickTimer.None;
+        FlightTimer = TickTimer.None;
 
-        _prepareToThrow = false;
-        _isReleasingThrow = false;
-        ThrowReleaseTimer = TickTimer.None;
+        if (HasStateAuthority)
+        {
+            startTimer = false;
+            DrownTimer = TickTimer.None;
+
+            _prepareToThrow = false;
+            _isReleasingThrow = false;
+            ThrowReleaseTimer = TickTimer.None;
+        }
 
         if (rb2D != null)
         {
@@ -316,16 +335,10 @@ public class Bird_Moveset : MovementCharacter, IstunAble
             }
             else
             {
+                // ถูกยกอยู่: เป็ดลอยตัวเองขึ้นตาม IsFlying ของนก (Duck_Moveset.LiftWithFlyingFriend)
                 if (!IsBeingCarried)
                 {
                     rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, stats.s_flySpeed);
-                }
-                else
-                {
-                    if (HasStateAuthority && Runner.TryFindObject(CarrierId, out var carrierObj) && carrierObj.TryGetComponent<MovementCharacter>(out var duck))
-                    {
-                        duck.rb2D.linearVelocity = new Vector2(duck.rb2D.linearVelocity.x, stats.s_flySpeed);
-                    }
                 }
             }
         }
@@ -374,23 +387,16 @@ public class Bird_Moveset : MovementCharacter, IstunAble
     // (เดิม return ถ้าไม่ใช่ host ทำให้ฝั่ง client บินช้ากว่ากดแล้วดีดตามทีหลัง — NJ-8)
     private void StartFlying()
     {
-        IsFlying = true;
-        isJumping = false;
-
+        // ตั้ง timer ก่อน — IsFlying เปลี่ยนแล้วแถบบินของเจ้าของอ่าน timer ทันที
         float duration = IsBeingCarried ? carryFlyTime : normalFlyTime;
         FlightTimer = TickTimer.CreateFromSeconds(Runner, duration);
+
+        IsFlying = true;
+        isJumping = false;
 
         if (rb2D != null && zeroFrictionMaterial != null)
         {
             rb2D.sharedMaterial = zeroFrictionMaterial;
-        }
-
-        if (IsBeingCarried && Runner.TryFindObject(CarrierId, out var carrierObj))
-        {
-            if (carrierObj.TryGetComponent<Duck_Moveset>(out var duck))
-            {
-                if (duck.carryCollider != null) duck.carryCollider.sharedMaterial = zeroFrictionMaterial;
-            }
         }
     }
 
@@ -402,14 +408,6 @@ public class Bird_Moveset : MovementCharacter, IstunAble
         if (rb2D != null)
         {
             rb2D.sharedMaterial = defaultMaterial;
-        }
-
-        if (IsBeingCarried && Runner.TryFindObject(CarrierId, out var carrierObj))
-        {
-            if (carrierObj.TryGetComponent<Duck_Moveset>(out var duck))
-            {
-                if (duck.carryCollider != null) duck.carryCollider.sharedMaterial = null;
-            }
         }
     }
 
@@ -596,6 +594,13 @@ public class Bird_Moveset : MovementCharacter, IstunAble
     public override void Render()
     {
         base.Render();
+
+        // เสียงปาของนกฝั่ง client — หินถูก spawn บน host (เดิมเล่นจากการทำนายของ client)
+        if (HasInputAuthority && !HasStateAuthority && _wasReleasingThrow && !_isReleasingThrow && throwSoundClip != null)
+        {
+            AudioManager.Instance?.PlayClipAtPosition(throwSoundClip, transform.position);
+        }
+        _wasReleasingThrow = _isReleasingThrow;
 
         if (_prepareToThrow)
         {

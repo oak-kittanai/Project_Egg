@@ -68,7 +68,7 @@ public class TrapPressure : NetworkBehaviour
             {
                 playersInTrap.Remove(player);
 
-                if (player.rb2D != null)
+                if (player.rb2D != null && player.HasInputAuthority)
                 {
                     Vector2 currentDirection = _isRevers ? -defaultDirection : defaultDirection;
 
@@ -106,7 +106,8 @@ public class TrapPressure : NetworkBehaviour
                 if (processedPlayers.Contains(player)) continue;
                 processedPlayers.Add(player);
 
-                if (HasStateAuthority || player.HasInputAuthority)
+                // ใส่แรงลมให้ตัวที่เครื่องนี้เป็นเจ้าของเท่านั้น (เจ้าของคุมการเคลื่อนที่ของตัวเอง — NR-12) และเฉพาะ tick ใหม่
+                if (player.HasInputAuthority && Runner.IsForward)
                 {
                     ApplyTrapForce(player);
                 }

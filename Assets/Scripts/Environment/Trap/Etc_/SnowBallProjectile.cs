@@ -33,8 +33,8 @@ public class SnowBallProjectile : NetworkBehaviour
 
     public override void Spawned()
     {
-        Runner.SetIsSimulated(Object, true);
-
+        // ไม่ให้ client จำลองลูกหิมะเอง — client ไม่ย้อนคำนวณฟิสิกส์แล้ว (NR-12) ลูกที่ถูกตั้งกลับตอน resimulate จะกระตุก
+        // ใช้ภาพที่ sync จาก host แทน (ดาเมจตัดสินบน host อยู่แล้ว)
         rb2D = GetComponent<Rigidbody2D>();
 
         if (HasStateAuthority)

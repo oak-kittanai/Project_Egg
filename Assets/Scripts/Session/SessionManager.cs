@@ -300,6 +300,10 @@ public class SessionManager : MonoBehaviour
             sceneManager = networkRunner.gameObject.AddComponent<NetworkSceneManagerDefault>();
         }
 
+        // client ไม่ย้อนคำนวณฟิสิกส์ตอน resimulate: ตัวเราขยับเองเฉพาะ tick ใหม่ (NR-12)
+        var physics = networkRunner.GetComponent<Fusion.Addons.Physics.RunnerSimulatePhysics2D>();
+        if (physics != null) physics.ClientPhysicsSimulation = Fusion.Addons.Physics.ClientPhysicsSimulation.SimulateForward;
+
         var startJoiningArgs = new StartGameArgs()
         {
             GameMode = GameMode.Client,

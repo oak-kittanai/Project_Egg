@@ -131,6 +131,16 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
             data.KeybindDropItem = press_G;
         }
 
+        // ผลการเคลื่อนที่ของตัวเรา (NR-12): ส่งทุก tick แม้ปุ่มถูกปิดระหว่าง dialogue/สอนเล่น
+        var local = MovementCharacter.Local;
+        if (local != null && local.Object != null && local.Object.IsValid && local.rb2D != null)
+        {
+            data.OwnerPosition = local.rb2D.position;
+            data.OwnerVelocity = local.rb2D.linearVelocity;
+            data.OwnerFlags = (uint)local.OwnerFlags | (uint)MovementCharacter.MoveFlags.ReportValid;
+            data.OwnerAckSeq = local.AppliedEventSeq;
+        }
+
         input.Set(data);
     }
 
@@ -266,6 +276,12 @@ public struct NetworkInputData : INetworkInput
     public float horizontal; // D-Pad / Left Stick
     public float vertical; // D-Pad / Left Stick
     public NetworkButtons Buttons;
+
+    // ตัวละครของเครื่องนี้ (NR-12): เจ้าของคำนวณการเคลื่อนที่เองแล้วส่งผลให้ host
+    public Vector2 OwnerPosition;
+    public Vector2 OwnerVelocity;
+    public uint OwnerFlags;
+    public byte OwnerAckSeq; // event จาก host ล่าสุดที่ทำแล้ว (วาร์ป/แรงกระแทก)
 
     // ชื่อเดิม อ่าน/เขียน bit ใน Buttons — โค้ดที่เช็คปุ่มกดค้างใช้ต่อได้เหมือนเดิม
     public bool KeybindJump { get => Buttons.IsSet(InputButton.Jump); set => Buttons.Set(InputButton.Jump, value); }

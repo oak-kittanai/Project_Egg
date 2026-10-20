@@ -14,7 +14,13 @@ public class CharacterAnimation : NetworkBehaviour
     SpriteRenderer spriteRenderer;
     MovementCharacter movement;
 
-    [Networked] public NetworkBool FlipX { get; set; }
+    // ทิศหันเป็นของเจ้าของตัว (NR-12) — เก็บเป็นธงใน MovementCharacter แล้ว sync ไปกับสถานะการเคลื่อนที่
+    // (gameplay ใช้เป็นทิศโยน/วาง/เล็ง)
+    public bool FlipX
+    {
+        get => movement != null && movement.GetMoveFlag(MovementCharacter.MoveFlags.FacingRight);
+        set { if (movement != null) movement.SetMoveFlag(MovementCharacter.MoveFlags.FacingRight, value); }
+    }
     [Networked] public TickTimer AnimationTimer { get; set; }
     [Networked] public ActionAnim CurrentAction { get; set; }
 
@@ -84,8 +90,8 @@ public class CharacterAnimation : NetworkBehaviour
 
         if (animator == null || movement == null) return;
 
-        bool simulatedHere = Object != null && Object.IsInSimulation && movement.rb2D != null;
-        _stateVelocity = simulatedHere ? movement.rb2D.linearVelocity : _visualVelocity;
+        // เจ้าของใช้ความเร็วจริงของตัวเอง, เครื่องอื่นใช้ความเร็วที่เจ้าของส่งมา (NR-12)
+        _stateVelocity = movement.IsOwner && movement.rb2D != null ? movement.rb2D.linearVelocity : movement.RepVelocity;
 
         // แตะพื้น/น้ำ/ปีน/ถูกแบก หรือเพิ่งกดกระโดดใหม่ -> เริ่มท่ากลางอากาศใหม่
         if (!IsAirborne || (movement.isJumping && !_wasJumping)) _airState = null;
@@ -274,10 +280,10 @@ public class CharacterAnimation : NetworkBehaviour
         }
     }
 
-    // ท่าครั้งเดียว: ตั้งบน host / input authority ใน FUN แล้วทุกเครื่องเล่นตามจาก state ที่ sync
+    // ท่าครั้งเดียว: host ตั้ง (จากการกระทำที่ host ตัดสิน — E, ทุบ, ตาย) แล้วทุกเครื่องเล่นตามจาก state ที่ sync
     public void PlayAction(ActionAnim action, float lockDuration)
     {
-        if (Runner == null || !(HasStateAuthority || HasInputAuthority)) return;
+        if (Runner == null || !HasStateAuthority) return;
 
         CurrentAction = action;
         AnimationTimer = TickTimer.CreateFromSeconds(Runner, lockDuration);
