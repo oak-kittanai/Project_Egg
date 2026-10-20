@@ -109,6 +109,10 @@ public class CharacterAnimation : NetworkBehaviour
 
         if (state != _lastLocalState || restartAction)
         {
+            // TEMP — branch test/all2 only. DO NOT MERGE. NR-11: ท่าของตัวเราเปลี่ยนเมื่อไร (ถ้ายังดูเร็วจะเห็นว่าสลับถี่ตรงไหน)
+            if (HasInputAuthority)
+                VerifyLog.Log($"anim f={Time.frameCount} t={Time.time:F3} {_lastLocalState}->{state} restart={restartAction} simVy={_stateVelocity.y:F2} visVy={_visualVelocity.y:F2} jumping={movement.isJumping} grounded={movement.IsGrounded} air={_airState}");
+
             PlayAnimationSafeLocal(state, restartAction);
             _lastLocalState = state;
         }
