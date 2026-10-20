@@ -1,7 +1,11 @@
 using Fusion;
+using Fusion.Addons.Physics;
 using UnityEngine;
 
-public class MovingPlateform : NetworkBehaviour, IRideablePlatform
+// แพเลื่อนไปกลับตามเวลา — ตำแหน่งเป็นฟังก์ชันของ tick ล้วน ๆ ทุกเครื่องคำนวณเองได้ตรงกันโดยไม่ต้อง sync (NR-10)
+// เดิม NetworkRigidbody2D ใน prefab ฝั่ง client ทับตำแหน่ง root ด้วยค่าจาก host ตอน resimulate และเขียน root อีกรอบตอน Render
+// -> สองแหล่งเขียนตำแหน่งเดียวกันคนละจังหวะ แพวาร์ปไปมาบนจอ client แม้ไม่มีใครยืน
+public class MovingPlateform : NetworkBehaviour, IRideablePlatform, IBeforeTick
 {
     [SerializeField] float speed = 1.5f;
     [SerializeField] float distance = 4f;
@@ -13,10 +17,21 @@ public class MovingPlateform : NetworkBehaviour, IRideablePlatform
     // ผิวแพไม่มี friction -> ไม่ลากผู้เล่นซ้อนกับ follow (กันการสไลด์)
     private static PhysicsMaterial2D s_zeroFriction;
 
+    private void Awake()
+    {
+        // ให้ NetworkRigidbody2D ใน prefab วาดลง child เปล่าแทน root -> ตำแหน่งที่เห็นมาจาก Render ของเราที่เดียว
+        // (แก้ด้วยโค้ดแทนการถอด component ออกจาก prefab ที่ฉากอ้างลำดับ behaviour ไว้)
+        if (TryGetComponent<NetworkRigidbody2D>(out var netRb))
+        {
+            var unusedTarget = new GameObject("NetworkRigidbodyUnusedTarget").transform;
+            unusedTarget.SetParent(transform, false);
+            netRb.InterpolationTarget = unusedTarget;
+        }
+    }
+
     public override void Spawned()
     {
-        // ตำแหน่งคำนวณจาก Runner.SimulationTime -> client ทำนายตรงกับ host ได้เอง
-        // ผู้เล่นฝั่ง client ที่ยืนบนแพจึงไม่ถูกดึงกลับ (NJ-7; Fusion เคยเตือนว่า NetworkRigidbody ไม่ถูกจำลองบน client)
+        // client จำลองแพเองด้วย -> ผู้เล่นฝั่ง client ที่ยืนบนแพไม่ถูกดึงกลับ (NJ-7)
         Runner.SetIsSimulated(Object, true);
 
         startPosition = transform.position;
@@ -36,19 +51,43 @@ public class MovingPlateform : NetworkBehaviour, IRideablePlatform
         col.sharedMaterial = s_zeroFriction;
     }
 
+    private Vector3 PositionAt(float time)
+    {
+        float sineValue = (Mathf.Sin(time * speed) + 1f) / 2f;
+        float movementOffset = sineValue * distance;
+
+        Vector3 position = startPosition;
+
+        if (isVertical) position.y += movementOffset;
+        else position.x += movementOffset;
+
+        return position;
+    }
+
+    private float TickTime(float tick) => tick * Runner.DeltaTime;
+
+    // ต้น tick (รวมตอน resimulate): วางแพที่ตำแหน่งปลาย tick ก่อนหน้า ก่อน FixedUpdateNetwork ของใครก็ตาม
+    // ทุกเครื่องจึงเห็นจุดเริ่มเดียวกัน — ผู้เล่นที่ยืนบนอ่านตำแหน่งแพตรงนี้ไป follow
+    void IBeforeTick.BeforeTick()
+    {
+        if (rb == null) return;
+
+        Vector3 position = PositionAt(TickTime(Runner.Tick.Raw - 1));
+        transform.position = position;
+        rb.position = position;
+    }
+
     public override void FixedUpdateNetwork()
     {
         // แค่ขยับตัวเอง — ผู้เล่นที่ยืนอยู่บนจะ follow เองผ่าน IRideablePlatform
         // (รับน้ำหนักแนวตั้งจาก kinematic collision, ส่วนแนวนอน player ตามใน MovementCharacter)
-        float sineValue = (Mathf.Sin((float)Runner.SimulationTime * speed) + 1f) / 2f;
-        float movementOffset = sineValue * distance;
+        rb.MovePosition(PositionAt(TickTime(Runner.Tick.Raw)));
+    }
 
-        Vector3 newPosition = startPosition;
-
-        if (isVertical) newPosition.y += movementOffset;
-        else newPosition.x += movementOffset;
-
-        rb.MovePosition(newPosition);
+    // วาดระหว่าง tick ก่อนหน้ากับ tick ล่าสุด — จังหวะเดียวกับตัวผู้เล่นที่ทำนายอยู่ในเครื่องนี้
+    public override void Render()
+    {
+        transform.position = PositionAt(TickTime(Runner.Tick.Raw - 1 + Runner.LocalAlpha));
     }
 
     private void OnDrawGizmosSelected()
