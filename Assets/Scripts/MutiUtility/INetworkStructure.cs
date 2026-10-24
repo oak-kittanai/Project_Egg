@@ -54,7 +54,7 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
 
     #region Input
 
-    private static float _verifyNextInputLog; // TEMP verify H-2
+    private static bool _verifyWasBlocked; // TEMP verify H-2
 
     public void OnInput(NetworkRunner runner, NetworkInput input)
     {
@@ -63,11 +63,13 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
         bool tutorialBlocking = TutorialUIManager.Instance != null && TutorialUIManager.Instance.IsTutorialOpen;
         bool dialogueBlocking = DialogueManager.IsDialogueOpen;
 
-        // TEMP verify H-2: report (max once per second) while gameplay input is being dropped
-        if ((tutorialBlocking || dialogueBlocking) && Time.unscaledTime >= _verifyNextInputLog)
+        // TEMP verify H-2: report when gameplay input starts/stops being dropped
+        // (เดิม log ทุกวินาทีระหว่าง dialogue — Console ของ Editor บวมตอนเล่นนาน, PF-0)
+        bool blocked = tutorialBlocking || dialogueBlocking;
+        if (blocked != _verifyWasBlocked)
         {
-            _verifyNextInputLog = Time.unscaledTime + 1f;
-            VerifyLog.Log($"OnInput BLOCKED dialogueBlocking={dialogueBlocking} tutorialBlocking={tutorialBlocking}");
+            _verifyWasBlocked = blocked;
+            VerifyLog.Log($"OnInput {(blocked ? "BLOCKED" : "UNBLOCKED")} dialogueBlocking={dialogueBlocking} tutorialBlocking={tutorialBlocking}");
         }
 
         if (!tutorialBlocking && !dialogueBlocking)

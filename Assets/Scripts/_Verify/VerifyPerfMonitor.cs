@@ -2,6 +2,7 @@
 // PF-2: หาสาเหตุที่เกมหน่วงขึ้นเรื่อย ๆ เมื่อเล่นนาน — log ค่าที่อาจโตตามเวลาทุก 30 วิ ทั้ง Host และ Client (อ่านจาก Editor.log / Player.log)
 // กด F12 แสดงค่าล่าสุดบนจอ
 using Fusion;
+using Unity.Profiling;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Profiling;
@@ -30,8 +31,21 @@ public class VerifyPerfMonitor : MonoBehaviour
     private bool _show;
     private string _last = "perf: waiting for first sample (30s)";
 
-    private void OnEnable() => Application.logMessageReceived += CountLog;
-    private void OnDisable() => Application.logMessageReceived -= CountLog;
+    // หน่วยความจำที่จองต่อเฟรม (Editor และ development build) — ยิ่งมากยิ่งเกิด GC บ่อย
+    private ProfilerRecorder _gcAllocRecorder;
+    private long _allocBytes;
+
+    private void OnEnable()
+    {
+        Application.logMessageReceived += CountLog;
+        _gcAllocRecorder = ProfilerRecorder.StartNew(ProfilerCategory.Memory, "GC Allocated In Frame");
+    }
+
+    private void OnDisable()
+    {
+        Application.logMessageReceived -= CountLog;
+        _gcAllocRecorder.Dispose();
+    }
     private void CountLog(string condition, string stackTrace, UnityEngine.LogType type) => _logs++;
 
     private void Start()
@@ -49,6 +63,7 @@ public class VerifyPerfMonitor : MonoBehaviour
         _sumMs += ms;
         if (ms > _maxMs) _maxMs = ms;
         if (ms > HitchMs) _hitches++;
+        if (_gcAllocRecorder.Valid) _allocBytes += _gcAllocRecorder.LastValue;
 
         if (Time.realtimeSinceStartup - _windowStart >= Interval) Sample();
     }
@@ -68,7 +83,7 @@ public class VerifyPerfMonitor : MonoBehaviour
         _last =
             $"perf role={VerifyLog.Role()} up={(Time.realtimeSinceStartup - _startTime) / 60f:F1}min " +
             $"frame avg={_sumMs / Mathf.Max(1, _frames):F1}ms max={_maxMs:F0}ms hitches>{HitchMs:F0}ms={_hitches} " +
-            $"gc={gcNow - _gcAtWindowStart} monoMB={Profiler.GetMonoUsedSizeLong() / 1048576f:F1} heapMB={Profiler.GetMonoHeapSizeLong() / 1048576f:F1} allocMB={Profiler.GetTotalAllocatedMemoryLong() / 1048576f:F0} " +
+            $"gc={gcNow - _gcAtWindowStart} allocKB/frame={(_gcAllocRecorder.Valid ? (_allocBytes / 1024f / Mathf.Max(1, _frames)).ToString("F1") : "n/a")} monoMB={Profiler.GetMonoUsedSizeLong() / 1048576f:F1} heapMB={Profiler.GetMonoHeapSizeLong() / 1048576f:F1} allocMB={Profiler.GetTotalAllocatedMemoryLong() / 1048576f:F0} " +
             $"objects={FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length} " +
             $"netObjs={FindObjectsByType<NetworkObject>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length} " +
             $"rb2d={FindObjectsByType<Rigidbody2D>(FindObjectsSortMode.None).Length} " +
@@ -83,6 +98,7 @@ public class VerifyPerfMonitor : MonoBehaviour
         _sumMs = 0f;
         _maxMs = 0f;
         _hitches = 0;
+        _allocBytes = 0;
         _gcAtWindowStart = gcNow;
     }
 
