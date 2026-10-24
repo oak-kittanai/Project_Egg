@@ -134,6 +134,9 @@ public class JellyfishTrap : NetworkBehaviour
                 }
                 break;
         }
+
+        // หยุดเคลื่อนที่ตอนชาร์จ/ระเบิด/ซ่อน — host ตัดสิน แล้วทุกเครื่องหยุดที่ tick เดียวกัน (P-3)
+        if (moveScript != null) moveScript.HoldRequested = CurrentState != JellyState.Idle;
     }
 
     public override void Render()
@@ -166,7 +169,6 @@ public class JellyfishTrap : NetworkBehaviour
         bool isVisible = CurrentState != JellyState.Hidden;
         if (sr != null) sr.enabled = isVisible;
         if (col != null) col.enabled = isVisible;
-        if (moveScript != null) moveScript.enabled = (CurrentState == JellyState.Idle);
 
         if (CurrentState != JellyState.Charging)
         {
