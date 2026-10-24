@@ -77,9 +77,11 @@ public class MovementCharacter : NetworkBehaviour, IDamageable, IBeforeTick, IAf
     // การบังคับแบบ platformer ทั่วไป (Hollow Knight / Celeste): ตั้งความเร็วตรงแทนการใช้แรง + ตัวช่วยกระโดด
     // คำนวณในเครื่องเจ้าของตัวเท่านั้น (NR-12) — ค่าในหัวนี้จูนสดได้ใน Play Mode
     [Header("Movement Feel (MV)")]
-    [Tooltip("เวลา (วินาที) จากหยุดนิ่งจนถึง maxSpeed บนพื้น — น้อย = ออกตัวไว")]
+    [Tooltip("ความเร็วเดิน/วิ่งบนพื้นและกลางอากาศ (MV-6) — แยกจาก CharacterStats.maxSpeed ที่สูตรเดิมใช้ในน้ำ/ร่อน/ลม/กระเด็น")]
+    [SerializeField] private float runSpeed = 3.5f;
+    [Tooltip("เวลา (วินาที) จากหยุดนิ่งจนถึง runSpeed บนพื้น — น้อย = ออกตัวไว")]
     [SerializeField] private float groundAccelTime = 0.06f;
-    [Tooltip("เวลา (วินาที) จาก maxSpeed จนหยุดบนพื้นหลังปล่อยปุ่ม — น้อย = หยุดไว")]
+    [Tooltip("เวลา (วินาที) จาก runSpeed จนหยุดบนพื้นหลังปล่อยปุ่ม — น้อย = หยุดไว")]
     [SerializeField] private float groundDecelTime = 0.05f;
     [Tooltip("สัดส่วนการเร่ง/เบรกกลางอากาศเทียบกับบนพื้น (1 = เท่าบนพื้น)")]
     [Range(0f, 1f)][SerializeField] private float airControl = 0.65f;
@@ -984,7 +986,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable, IBeforeTick, IAf
     // ตั้งความเร็วแนวนอนตรง: ออกตัว/หยุดตามเวลาที่ตั้ง กลางอากาศคุมได้น้อยกว่า (MV-1)
     private void HandleVelocityMovement(NetworkInputData input)
     {
-        float maxSpeed = stats.maxSpeed;
+        float maxSpeed = runSpeed;
         float targetSpeed = input.horizontal * maxSpeed;
         float vx = rb2D.linearVelocity.x;
 
