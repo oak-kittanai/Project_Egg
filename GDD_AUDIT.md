@@ -1118,3 +1118,38 @@ network (แก้เฉพาะฝั่งเจ้าของใน `OwnerS
 | T11 กลับมาคุมได้หลังลงพื้น | ✅ | ถึง 95% ใน 4 tick |
 
 ยังต้องเทสเองด้วย MPPM: ฝั่ง client (ตัวที่ client คุม), ลม `TrapPressure`, ว่าย/ดำน้ำ, นกบิน/ร่อน, ยก/โยน, แพลตฟอร์มเลื่อน, ปีน, ความยากของช่องกระโดดในด่าน (ข้อ 7–13 ของ 18.4)
+
+## 19. Feedback เทส MV (2026-10-24): แพเลื่อน, เสียงกับดัก, หน่วงเมื่อเล่นนาน, ความเร็วเดิน
+
+**ที่มา:** ผู้ใช้เทส `fix/movement-feel` แล้ว — การเคลื่อนที่ดีขึ้นมาก แต่ตัวละครเร็วไป; สั่งรวมเข้า `test/all2` แล้วจะเทสอีกรอบ
+**Branch:** `fix/feedback-1024` (แตกจาก `fix/movement-feel`) → fast-forward เข้า `test/all2` แล้ว — Roslyn + Unity 0 error; เทสอัตโนมัติผ่าน MCP 19/19
+
+### 19.1 ต้นเหตุและการแก้
+| รหัส | อาการ / ต้นเหตุ | การแก้ | แก้แล้ว |
+|---|---|---|---|
+| MV-6 | เดินเร็วไป (เดินได้ 5 เต็ม) | field ใหม่ `runSpeed` = 3.5 (เลือกโดยเจ้าของโปรเจกต์) ใช้กับการคุมแบบตั้งความเร็วตรง; `CharacterStats.maxSpeed` = 5 คงไว้ให้สูตรเดิมในน้ำ/ร่อน/ลม/กระเด็น | แก้แล้ว: `fix/feedback-1024` `d150ef22` |
+| P-1 | แพเลื่อนไม่ตรงกัน ผิดทั้งสองจอ (จอ Host เห็น Client ลอย, จอ Client เห็น Host ลอย) — `MovingPlateform` อ่าน `transform.position` ตอน `Spawned` เป็นจุดตั้งต้น แต่ฝั่ง client `NetworkRigidbody2D.Spawned` ย้าย transform ไปตำแหน่งปัจจุบันของ host ได้ก่อน → แพของ client แกว่งรอบจุดที่เลื่อนไป | host ส่งจุดที่วางไว้ในฉาก (`[Networked] StartPosition`, เก็บจาก `Awake`) ทุกเครื่องใช้ค่านี้; log `[VERIFY] platform ... start= transformAtSpawned=` ไว้ยืนยันตอนเทส | แก้แล้ว: `fix/feedback-1024` `9b45c0fe` |
+| P-2 | จอ Client วาดตัว Host ย้อนหลัง (interpolate) แต่วาดแพตามเวลาที่ทำนาย → Host ดูเลื่อนจากแพ | host ส่ง `RepPlatformId` (แพที่ยืนอยู่); จอ client เลื่อนตัว Host ตามระยะที่แพขยับระหว่างสองเวลานั้น (เกลี่ย 0.12 วิตอนขึ้น/ลงแพ) — บน host ได้ 0 เอง | แก้แล้ว: `fix/feedback-1024` `9b45c0fe` |
+| SFX-1 | เสียงกับดักไม่อยู่ใน SFX — กับดักหมี, ปืนหิมะ (และ checkpoint, ตาชั่ง) เล่นด้วย `AudioSource.PlayOneShot` ของตัวเอง (2D, ไม่คูณระดับ SFX, ได้ยินทั้งด่าน) | เล่นผ่าน `AudioManager.PlayObjectSfx` → SFX pool เหมือนเสียงตัวละคร (ตามระดับ SFX, เบาลงตามระยะ) ใช้ volume เดิมของแต่ละตัวเป็นความดังเฉพาะ | แก้แล้ว: `fix/feedback-1024` `521090f8` |
+| PF-1 | `PressurePlateHinge` จอง array ทุก tick, `PuzzleItem` จอง array + string ทุกเฟรม → GC ทำงานบ่อย | ใช้ buffer ซ้ำ (`Physics2D.OverlapBox/OverlapCircle` + `ContactFilter2D`), เช็ค `HeldItemName.Length` แทน `ToString()` | แก้แล้ว: `fix/feedback-1024` `5ae01926` |
+| PF-0 | หน่วงเมื่อเล่นนาน (ผู้ใช้คาดว่าเป็นทั้งสองฝั่ง) | soak test ด้านล่าง → ในเกมไม่มีอะไรสะสม; ที่โตคือ log ทดสอบ → ลด log `OnInput BLOCKED` (เดิมทุกวินาทีระหว่าง dialogue → เฉพาะตอนสถานะเปลี่ยน) และลบ log `anim` ของ NR-11 | test-only `432c3483` |
+| PF-2 | ยังไม่รู้ว่าฝั่ง client / ใน build เป็นอย่างไร | `_Verify/VerifyPerfMonitor`: log `[VERIFY] perf role=HOST\|CLIENT ...` ทุก 30 วิ ทั้งสองฝั่ง (เฟรม, GC, allocKB/frame, heap, จำนวน object/network object/เสียง/particle/material/texture, tween, log) — กด F12 ดูบนจอ | test-only `8839cff6`, `432c3483` |
+
+### 19.2 ผล soak test ผ่าน Unity MCP (Host คนเดียว, Stage1-S1, 15 นาที, ตัวละครเดิน/กระโดดตลอด)
+- เฟรมเฉลี่ย 16.7 ms ตลอด (60 FPS), ทุกช่วง 30 วิมี GC 1 ครั้ง และเฟรมเกิน 50 ms 0–2 ครั้ง (สูงสุด ~100 ms) — ไม่แย่ลงตามเวลา
+- object 714, network object 114, Rigidbody2D 16, AudioSource 33, particle 9, material 253, texture 1109, tween 0 — **คงที่ทั้ง 15 นาที**
+- managed heap ของ Editor ~1 GB (heap สำรอง 3.4 GB) ขึ้นลงตามรอบ GC ไม่โตสะสม — GC ใน Editor หยุดนานเพราะ heap ใหญ่ (build จะเล็กกว่ามาก)
+- สิ่งเดียวที่โต: จำนวน log ~150 รายการ/นาที (`OnInput BLOCKED` ทุกวินาทีระหว่าง dialogue + `anim` 3 บรรทัดต่อการกระโดด) → Editor.log ~40,000 บรรทัดใน 15 นาที — ลดแล้ว (PF-0)
+- ข้อสรุป: ยังไม่พบต้นเหตุในโค้ดเกมสำหรับ Host คนเดียว — รอบเทส 2 คนให้ดู log `perf` ของทั้งสองฝั่ง ถ้าค่าใดโตตามเวลาจะเห็นทันที; ถ้าค่าคงที่แต่ยังหน่วง → ฝั่ง Editor (Console, AI Assistant ที่ log error ซ้ำ, Inspector/Scene view) — ลองใน build เทียบ
+
+### 19.3 ผลเทสอัตโนมัติ (MCP, Host คนเดียว) — 19/19 ผ่าน
+T1–T11 ของหัวข้อ 18.5 ผ่านทั้งหมดด้วย `runSpeed` 3.5 (ความเร็วบนพื้น 3.37, ถึงความเร็วเต็มใน 4 tick) + T12 ยืนบน `moving_platfrom` ทั้ง 5 ตัวใน S1 นาน 3.5 วิ อยู่บนแพ 209/209 tick ทุกตัว; log `platform ... start=` บน host ตรงกับตำแหน่งในฉากทุกตัว
+
+### 19.4 Checklist เทส — `test/all2` (MPPM, Host + Client) ~30 นาที
+| ขั้น | ทำอะไร | ควรเห็น | ผล |
+|---|---|---|---|
+| 0 | เปิด Unity ดู Console | 0 error | |
+| 1 แพ | S1/S2: ทั้งสองคนยืนบนแพเลื่อน (สลับกันขึ้น) | บนจอแต่ละฝั่งเห็นอีกคนอยู่บนแพ ไม่ลอย; log `[VERIFY] platform ... start=` ของสองเครื่องตรงกัน (ฝั่ง client ถ้า `transformAtSpawned` ต่างจาก `start` = ยืนยันต้นเหตุ P-1) | |
+| 2 เสียง | ตั้ง SFX = 0 แล้วเดินผ่านกับดักหมี/ปืนหิมะ/checkpoint/ตาชั่ง; ตั้งกลับแล้วยืนไกลกับดัก | SFX 0 = เงียบ; ไกลแล้วเบาลง | |
+| 3 ความเร็ว | เดิน/กระโดดข้ามช่องใน S1–S3; ว่ายน้ำ, ร่อน, ลม | เดินช้าลง (3.5) ยังข้ามช่องได้; น้ำ/ร่อน/ลมเหมือนเดิม | |
+| 4 หน่วง | เล่น 2 คนต่อเนื่อง 20–30 นาที; ถ้าเริ่มหน่วงจดเวลาไว้ | ผมอ่าน log `perf` ของ Host (Editor.log) และ Client (`Library/VP/<id>/Logs/Editor.log`) เอง; ถ้าเทส build ส่ง Player.log ทั้งสองเครื่อง | |
