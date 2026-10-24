@@ -289,6 +289,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable, IBeforeTick, IAf
     [Networked] public uint RepFlags { get; set; }
     [Networked] public Vector2 RepPosition { get; set; }
     [Networked] public Vector2 RepVelocity { get; set; }
+    // แพเลื่อนที่ตัวของ host ยืนอยู่ — จอ client วาดตัวนี้ย้อนหลังแต่วาดแพตามเวลาทำนาย จึงต้องรู้ว่าติดแพไหน (P-2)
+    [Networked] public NetworkId RepPlatformId { get; set; }
 
     private bool IsSpawnedObject => Object != null && Object.IsValid;
     public bool IsOwner => IsSpawnedObject && HasInputAuthority;
@@ -437,6 +439,10 @@ public class MovementCharacter : NetworkBehaviour, IDamageable, IBeforeTick, IAf
         RepPosition = rb2D.position;
         RepVelocity = rb2D.linearVelocity;
         RepFlags = (uint)_ownerFlags;
+
+        NetworkObject platform = null;
+        if (IsGrounded && currentPlatform != null) currentPlatform.TryGetComponent(out platform);
+        RepPlatformId = platform != null ? platform.Id : default;
     }
 
     // ---- body ของเจ้าของฝั่ง client ----
@@ -526,9 +532,35 @@ public class MovementCharacter : NetworkBehaviour, IDamageable, IBeforeTick, IAf
     {
         var interpolator = new NetworkBehaviourBufferInterpolator(this);
         Vector2 pos = interpolator ? interpolator.Vector2(nameof(RepPosition)) : RepPosition;
+        pos += PlatformRenderOffset(interpolator);
         transform.position = new Vector3(pos.x, pos.y, transform.position.z);
 
         if (coll2D != null && coll2D.isTrigger != IsBeingCarried) coll2D.isTrigger = IsBeingCarried;
+    }
+
+    // ตัวที่ถูกวาดย้อนหลังแต่ยืนบนแพเลื่อน: เลื่อนตามระยะที่แพขยับไปแล้วระหว่างเวลาที่ตัวนี้ถูกวาดกับเวลาที่แพถูกวาด
+    // -> ติดแพบนจอ client (P-2); บน host สองเวลานี้เท่ากัน ได้ 0
+    private const float PlatformOffsetBlendTime = 0.12f;
+    private MovingPlateform _renderPlatform;
+    private float _renderPlatformWeight;
+
+    private Vector2 PlatformRenderOffset(NetworkBehaviourBufferInterpolator interpolator)
+    {
+        bool onPlatform = false;
+        if (RepPlatformId.IsValid && Runner.TryFindObject(RepPlatformId, out var platformObj)
+            && platformObj.TryGetComponent<MovingPlateform>(out var platform))
+        {
+            _renderPlatform = platform;
+            onPlatform = true;
+        }
+
+        // เกลี่ยน้ำหนักตอนขึ้น/ลงแพ กันภาพกระโดด (ตอนลงยังเทียบกับแพเดิมจนน้ำหนักเป็น 0)
+        _renderPlatformWeight = Mathf.MoveTowards(_renderPlatformWeight, onPlatform ? 1f : 0f, Time.deltaTime / PlatformOffsetBlendTime);
+        if (_renderPlatformWeight <= 0f || _renderPlatform == null || !interpolator) return Vector2.zero;
+
+        float drawnTick = interpolator.From.Tick.Raw + (interpolator.To.Tick.Raw - interpolator.From.Tick.Raw) * interpolator.Alpha;
+        Vector3 moved = _renderPlatform.PositionAtTime(_renderPlatform.LocalRenderTime) - _renderPlatform.PositionAtTime(drawnTick * Runner.DeltaTime);
+        return (Vector2)moved * _renderPlatformWeight;
     }
 
     // ตัวที่เครื่องนี้ไม่ได้เป็นเจ้าของ: kinematic วางตามตำแหน่งที่ sync
