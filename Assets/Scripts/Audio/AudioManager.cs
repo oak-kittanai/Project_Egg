@@ -110,16 +110,28 @@ public class AudioManager : MonoBehaviour
     #endregion
 
     #region Play SFX (รวม Player, SFX, Asset)
-    public void PlayClipAtPosition(AudioClip clip, Vector3 position)
+    // volumeScale: ความดังเฉพาะของเสียงนั้น (เช่น volume เดิมของ AudioSource บนกับดัก) คูณกับระดับ SFX ที่ผู้เล่นตั้ง
+    public void PlayClipAtPosition(AudioClip clip, Vector3 position, float volumeScale = 1f)
     {
         if (clip == null) return;
 
         AudioSource source = GetAvailableSFXSource();
         source.transform.position = position;
         source.clip = clip;
-        source.volume = GetGlobalSFXVolume();
+        source.volume = GetGlobalSFXVolume() * volumeScale;
         source.spatialBlend = 1f;
         source.Play();
+    }
+
+    // เสียงของวัตถุในด่าน (กับดัก, checkpoint, ตาชั่ง): เล่นผ่าน SFX pool เหมือนเสียงตัวละคร — ตามระดับ SFX และเบาลงตามระยะ (SFX-1)
+    // volume ของ AudioSource เดิมบนวัตถุใช้เป็นความดังเฉพาะของเสียงนั้น
+    public static void PlayObjectSfx(AudioSource localSource, AudioClip clip, Vector3 position)
+    {
+        if (clip == null) return;
+
+        float baseVolume = localSource != null ? localSource.volume : 1f;
+        if (Instance != null) Instance.PlayClipAtPosition(clip, position, baseVolume);
+        else if (localSource != null) localSource.PlayOneShot(clip);
     }
 
     private SoundConfig FindSoundInAllLists(string name)

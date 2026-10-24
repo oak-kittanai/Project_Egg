@@ -45,9 +45,6 @@ public class CheckpointTrigger : NetworkBehaviour
             activationParticles.Play();
         }
 
-        if (audioSource != null && activateSoundClip != null)
-        {
-            audioSource.PlayOneShot(activateSoundClip);
-        }
+        AudioManager.PlayObjectSfx(audioSource, activateSoundClip, transform.position);
     }
 }

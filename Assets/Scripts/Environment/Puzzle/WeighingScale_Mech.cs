@@ -312,14 +312,8 @@ public class WeighingScale_Mech : NetworkBehaviour
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
     public void RPC_PlaySound(bool isDropSound)
     {
-        if (audioSource != null)
-        {
-            AudioClip clipToPlay = isDropSound ? itemDropSound : phaseCompleteSound;
-            if (clipToPlay != null)
-            {
-                audioSource.PlayOneShot(clipToPlay);
-            }
-        }
+        AudioClip clipToPlay = isDropSound ? itemDropSound : phaseCompleteSound;
+        AudioManager.PlayObjectSfx(audioSource, clipToPlay, transform.position);
     }
 }
 

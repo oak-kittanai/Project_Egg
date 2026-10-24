@@ -113,10 +113,7 @@ public class BearTrapScript : NetworkBehaviour
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
     private void RPC_PlayShootSound()
     {
-        if (audioSource != null && bearTrapSoundClip != null)
-        {
-            audioSource.PlayOneShot(bearTrapSoundClip);
-        }
+        AudioManager.PlayObjectSfx(audioSource, bearTrapSoundClip, transform.position);
     }
 
     public void SetReturnTrigger()

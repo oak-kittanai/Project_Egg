@@ -109,10 +109,7 @@ public class Turret_Shooter : NetworkBehaviour
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
     private void RPC_PlayShootSound()
     {
-        if (shootAudioSource != null && shootSoundClip != null)
-        {
-            shootAudioSource.PlayOneShot(shootSoundClip);
-        }
+        AudioManager.PlayObjectSfx(shootAudioSource, shootSoundClip, transform.position);
     }
 
     private void OnDrawGizmosSelected()
