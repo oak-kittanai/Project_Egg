@@ -55,7 +55,6 @@ public class MovementCharacter : NetworkBehaviour, IDamageable, IBeforeTick, IAf
 
     #region Jump Physics
     private TickTimer JumpCooldown;
-    [SerializeField] private float JumpCooldownTimer = 2f;
 
     [Header("Jump - Cut")]
     [Tooltip("ตัวคูณ gravity ตอนปล่อยปุ่มกระโดดเร็ว (ระหว่างลอยขึ้น ไม่ใกล้ apex)")]
@@ -72,6 +71,39 @@ public class MovementCharacter : NetworkBehaviour, IDamageable, IBeforeTick, IAf
     [SerializeField] private float headBumpCheckDistance = 0.3f;
     [Tooltip("velocity.y ที่บังคับใส่ทันทีเมื่อหัวชนเพดาน (ค่าลบ = ร่วงทันที)")]
     [SerializeField] private float headBumpDownwardVelocity = -2f;
+    #endregion
+
+    #region Movement Feel (MV)
+    // การบังคับแบบ platformer ทั่วไป (Hollow Knight / Celeste): ตั้งความเร็วตรงแทนการใช้แรง + ตัวช่วยกระโดด
+    // คำนวณในเครื่องเจ้าของตัวเท่านั้น (NR-12) — ค่าในหัวนี้จูนสดได้ใน Play Mode
+    [Header("Movement Feel (MV)")]
+    [Tooltip("เวลา (วินาที) จากหยุดนิ่งจนถึง maxSpeed บนพื้น — น้อย = ออกตัวไว")]
+    [SerializeField] private float groundAccelTime = 0.06f;
+    [Tooltip("เวลา (วินาที) จาก maxSpeed จนหยุดบนพื้นหลังปล่อยปุ่ม — น้อย = หยุดไว")]
+    [SerializeField] private float groundDecelTime = 0.05f;
+    [Tooltip("สัดส่วนการเร่ง/เบรกกลางอากาศเทียบกับบนพื้น (1 = เท่าบนพื้น)")]
+    [Range(0f, 1f)][SerializeField] private float airControl = 0.65f;
+    [Tooltip("ตัวคูณการลดความเร็วตอนเร็วเกิน maxSpeed ไปทางเดียวกับที่กด (เช่นหลุดจากลม) — น้อย = เก็บโมเมนตัมนานขึ้น")]
+    [Range(0f, 1f)][SerializeField] private float overSpeedReduce = 0.4f;
+    [Tooltip("เดินพ้นขอบไปแล้วยังกดกระโดดได้อีกกี่วินาที (coyote time)")]
+    [SerializeField] private float coyoteTime = 0.1f;
+    [Tooltip("กดกระโดดก่อนแตะพื้นได้ล่วงหน้ากี่วินาที (jump buffer)")]
+    [SerializeField] private float jumpBufferTime = 0.1f;
+    [Tooltip("เวลาขั้นต่ำระหว่างการกระโดดสองครั้ง (วินาที) — เดิม 1 วินาที ทำให้ลงพื้นแล้วกดกระโดดซ้ำไม่ติด")]
+    [SerializeField] private float jumpCooldownTime = 0.1f;
+    [Tooltip("หลังโดนแรงกระเด็น/ถูกโยน ใช้การคุมแบบเดิม (ใช้แรง) อย่างน้อยกี่วินาที และต่อไปจนลงพื้น — ระยะกระเด็น/โยนเท่าเดิม")]
+    [SerializeField] private float externalForceTime = 0.25f;
+    [Tooltip("ความกว้างที่ใช้เช็คพื้นเทียบกับความกว้างตัว (ยิง ray ซ้าย/กลาง/ขวา) — ยืนเกินขอบแล้วยังกระโดดได้")]
+    [Range(0f, 1f)][SerializeField] private float groundCheckWidth = 0.8f;
+
+    private const int NoTick = int.MinValue / 2;
+    private int _lastGroundedTick = NoTick;
+    private int _jumpPressedTick = NoTick;
+    private int _externalForceUntilTick = NoTick;
+    private bool _externalForceUntilLanding;
+    // กระโดดใน tick นี้ — นกใช้กันเริ่มบินซ้อนกับ coyote jump จากขอบ
+    protected bool JumpedThisTick { get; private set; }
+    private static PhysicsMaterial2D s_airMaterial;
     #endregion
 
     #region Gravity & Falling
@@ -353,6 +385,10 @@ public class MovementCharacter : NetworkBehaviour, IDamageable, IBeforeTick, IAf
         {
             if (rb2D.IsSleeping()) rb2D.WakeUp();
             rb2D.AddForce(impulse, ForceMode2D.Impulse);
+
+            // แรงกระเด็น/ถูกโยน: ใช้การคุมแบบเดิมจนลงพื้น ไม่ให้การตั้งความเร็วตรงทับแรงนี้ (MV-5)
+            _externalForceUntilTick = Runner.Tick.Raw + SecondsToTicks(externalForceTime);
+            _externalForceUntilLanding = true;
         }
     }
 
@@ -518,6 +554,12 @@ public class MovementCharacter : NetworkBehaviour, IDamageable, IBeforeTick, IAf
         jumpedFromClimb = false;
         currentPlatform = null;
         _ownerWasCarried = false;
+
+        _lastGroundedTick = NoTick;
+        _jumpPressedTick = NoTick;
+        _externalForceUntilTick = NoTick;
+        _externalForceUntilLanding = false;
+        JumpedThisTick = false;
     }
     #endregion
 
@@ -643,7 +685,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable, IBeforeTick, IAf
         }
         SnapOwnerVisual(transform.position);
 
-        JumpCooldown = TickTimer.CreateFromSeconds(Runner, JumpCooldownTimer);
+        JumpCooldown = TickTimer.CreateFromSeconds(Runner, jumpCooldownTime);
 
         if (GameManager.Instance != null) GameManager.Instance.RegisterPlayer(this);
 
@@ -699,6 +741,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable, IBeforeTick, IAf
     // เจ้าของตัว: การเคลื่อนที่ทั้งหมดของตัวเอง
     private void OwnerSimulate(NetworkInputData input, bool hasInput)
     {
+        JumpedThisTick = false;
         ApplyPendingOwnerEvent();
 
         if (GameManager.Instance == null || GameManager.Instance.Object == null || !GameManager.Instance.Object.IsValid
@@ -734,6 +777,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable, IBeforeTick, IAf
         wasMenuOpenLastTick = isMenuOpen;
 
         CheckGround();
+        UpdateMovementFeelState();
 
         // ติดหนึบกับ moving platform แนวนอน (ตำแหน่งแพคำนวณจาก tick ตรงกันทุกเครื่อง — NR-10)
         // แนวตั้งปล่อยให้ kinematic collision จัดการ — กัน double-count ที่เคยทำให้โดนผลักลง
@@ -931,6 +975,35 @@ public class MovementCharacter : NetworkBehaviour, IDamageable, IBeforeTick, IAf
 
     private void HandleMovement(NetworkInputData input)
     {
+        if (UseForceControl) HandleForceMovement(input);
+        else HandleVelocityMovement(input);
+
+        cAnimation.UpdateAnimationController(new Vector2(input.horizontal, rb2D.linearVelocity.y));
+    }
+
+    // ตั้งความเร็วแนวนอนตรง: ออกตัว/หยุดตามเวลาที่ตั้ง กลางอากาศคุมได้น้อยกว่า (MV-1)
+    private void HandleVelocityMovement(NetworkInputData input)
+    {
+        float maxSpeed = stats.maxSpeed;
+        float targetSpeed = input.horizontal * maxSpeed;
+        float vx = rb2D.linearVelocity.x;
+
+        bool pushing = Mathf.Abs(targetSpeed) > 0.01f;
+        bool sameDirection = Mathf.Sign(vx) == Mathf.Sign(targetSpeed);
+        bool accelerating = pushing && (!sameDirection || Mathf.Abs(vx) < Mathf.Abs(targetSpeed));
+
+        float rate = maxSpeed / Mathf.Max(accelerating ? groundAccelTime : groundDecelTime, 0.001f);
+        if (!IsGrounded) rate *= airControl;
+        // เร็วเกิน maxSpeed ไปทางที่กดอยู่ (เพิ่งหลุดจากลม/แรงกระเด็น): ค่อย ๆ ลด ไม่หยุดกึก
+        if (pushing && sameDirection && Mathf.Abs(vx) > maxSpeed) rate *= overSpeedReduce;
+
+        vx = Mathf.MoveTowards(vx, targetSpeed, rate * Runner.DeltaTime);
+        rb2D.linearVelocity = new Vector2(vx, rb2D.linearVelocity.y);
+    }
+
+    // สูตรเดิม (ใช้แรง): ในน้ำ/ร่อน/ลอย และช่วงมีแรงภายนอก (ลม, แรงกระเด็น, ถูกโยน) — คงสมดุลเดิมของด่าน
+    private void HandleForceMovement(NetworkInputData input)
+    {
         float targetSpeed = input.horizontal * stats.maxSpeed;
         float currentSpeed = rb2D.linearVelocity.x;
         float accelRate = isSpeedoptional
@@ -939,24 +1012,80 @@ public class MovementCharacter : NetworkBehaviour, IDamageable, IBeforeTick, IAf
 
         float speedDif = targetSpeed - currentSpeed;
         rb2D.AddForce(Vector2.right * (speedDif * accelRate));
-        cAnimation.UpdateAnimationController(new Vector2(input.horizontal, rb2D.linearVelocity.y));
     }
+
+    private bool UseForceControl =>
+        isSpeedoptional || isOptional || _externalForceUntilLanding || Runner.Tick.Raw <= _externalForceUntilTick;
+
+    // กับดักลมเรียกทุก tick ที่ดันตัวนี้ — อยู่ในลมใช้สูตรเดิม ลมจึงแรงเท่าเดิม (MV-5)
+    // +1 tick: กันลำดับ FixedUpdateNetwork ของกับดักกับผู้เล่นที่ไม่แน่นอน
+    public void NotifyExternalForce()
+    {
+        if (Runner == null) return;
+        _externalForceUntilTick = Mathf.Max(_externalForceUntilTick, Runner.Tick.Raw + 1);
+    }
+
+    // หลังเช็คพื้นทุก tick: จำเวลายืนล่าสุด (coyote), จบช่วงแรงภายนอกเมื่อลงพื้น, สลับแรงเสียดทานตอนลอย
+    private void UpdateMovementFeelState()
+    {
+        int tick = Runner.Tick.Raw;
+
+        if (IsGrounded && !isJumping) _lastGroundedTick = tick;
+        if (IsGrounded && tick > _externalForceUntilTick) _externalForceUntilLanding = false;
+
+        UpdateAirFriction();
+    }
+
+    // ลอยอยู่: ตัวไม่มีแรงเสียดทาน ไม่ติดกำแพงตอนกดเข้าหา; ยืน: กลับไปใช้ material ของ Rigidbody2D (นกสลับเองตอนบิน) (MV-4)
+    // collider ตอนเป็ดยกนก (carryCollider) Duck_Moveset ตั้ง material เอง
+    private void UpdateAirFriction()
+    {
+        Collider2D body = normalCollider != null ? normalCollider : coll2D;
+        if (body == null) return;
+
+        PhysicsMaterial2D wanted = IsGrounded ? null : AirMaterial;
+        if (body.sharedMaterial != wanted) body.sharedMaterial = wanted;
+    }
+
+    private PhysicsMaterial2D AirMaterial
+    {
+        get
+        {
+            if (zeroFiction != null) return zeroFiction;
+            if (s_airMaterial == null) s_airMaterial = new PhysicsMaterial2D("PlayerAirZeroFriction") { friction = 0f, bounciness = 0f };
+            return s_airMaterial;
+        }
+    }
+
+    private int SecondsToTicks(float seconds) => Mathf.RoundToInt(seconds / Runner.DeltaTime);
+
+    protected void ClearJumpBuffer() => _jumpPressedTick = NoTick;
 
     #endregion
 
     #region Jump System
 
+    // กระโดดตามจังหวะกด (ไม่ใช่กดค้าง) + jump buffer + coyote time (MV-2)
     protected virtual void HandleJump(NetworkInputData input)
     {
+        int tick = Runner.Tick.Raw;
+        if (WasPressed(input, InputButton.Jump)) _jumpPressedTick = tick;
+
         if (jumpedFromClimb)
         {
             if (IsGrounded) jumpedFromClimb = false;
             else return;
         }
 
-        if (input.KeybindJump && IsGrounded && JumpCooldown.ExpiredOrNotRunning(Runner))
+        bool buffered = tick - _jumpPressedTick <= SecondsToTicks(jumpBufferTime);
+        bool onGroundRecently = tick - _lastGroundedTick <= SecondsToTicks(coyoteTime);
+
+        if (buffered && onGroundRecently && JumpCooldown.ExpiredOrNotRunning(Runner))
         {
             isJumping = true;
+            JumpedThisTick = true;
+            _jumpPressedTick = NoTick;
+            _lastGroundedTick = NoTick;
 
             if (HasInputAuthority && jumpSoundClip != null)
             {
@@ -965,7 +1094,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable, IBeforeTick, IAf
             rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, 0f);
             rb2D.AddForce(Vector2.up * stats.s_jumpForce, ForceMode2D.Impulse);
             IsGrounded = false;
-            JumpCooldown = TickTimer.CreateFromSeconds(Runner, JumpCooldownTimer);
+            JumpCooldown = TickTimer.CreateFromSeconds(Runner, jumpCooldownTime);
         }
     }
 
@@ -1061,7 +1190,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable, IBeforeTick, IAf
         rb2D.linearVelocity = Vector2.zero;
         rb2D.AddForce(Vector2.up * stats.s_jumpForce, ForceMode2D.Impulse);
         IsGrounded = false;
-        JumpCooldown = TickTimer.CreateFromSeconds(Runner, JumpCooldownTimer);
+        JumpCooldown = TickTimer.CreateFromSeconds(Runner, jumpCooldownTime);
 
         if (HasInputAuthority && jumpSoundClip != null)
             AudioManager.Instance?.PlayClipAtPosition(jumpSoundClip, transform.position);
@@ -1578,9 +1707,9 @@ public class MovementCharacter : NetworkBehaviour, IDamageable, IBeforeTick, IAf
             LayerMask mask = LayerMask.GetMask("Ground", "Platform");
             LayerMask waterMask = LayerMask.GetMask("Water");
 
-            RaycastHit2D groundHit = Physics2D.Raycast(transform.position, Vector2.down, rayDistance, mask);
+            RaycastHit2D groundHit = GroundRay(rayDistance, mask);
             bool hitGround = groundHit.collider != null;
-            isNearGround = Physics2D.Raycast(transform.position, Vector2.down, rayDistance + nearGroundDistance, mask);
+            isNearGround = GroundRay(rayDistance + nearGroundDistance, mask).collider != null;
 
             // จับว่ายืนอยู่บน moving platform ไหม (ไว้ follow แนวนอน)
             Transform plat = null;
@@ -1648,6 +1777,30 @@ public class MovementCharacter : NetworkBehaviour, IDamageable, IBeforeTick, IAf
         {
             rb2D.gravityScale = isOptional ? optionalGravity : normalGravity;
         }
+    }
+
+    // ยิง ray ลงจากกลางตัวก่อน แล้วซ้าย/ขวาตามความกว้างเท้า — ยืนเกินขอบครึ่งตัวยังนับว่ายืน (MV-3)
+    private RaycastHit2D GroundRay(float distance, int mask)
+    {
+        Vector2 origin = transform.position;
+        RaycastHit2D hit = Physics2D.Raycast(origin, Vector2.down, distance, mask);
+        if (hit.collider != null) return hit;
+
+        float halfWidth = FeetHalfWidth() * groundCheckWidth;
+        if (halfWidth <= 0f) return hit;
+
+        hit = Physics2D.Raycast(origin + Vector2.left * halfWidth, Vector2.down, distance, mask);
+        if (hit.collider != null) return hit;
+        return Physics2D.Raycast(origin + Vector2.right * halfWidth, Vector2.down, distance, mask);
+    }
+
+    // ครึ่งความกว้างของ collider ตัวที่ใช้อยู่ (เป็ดตอนยกนกใช้ carryCollider)
+    private float FeetHalfWidth()
+    {
+        Collider2D body = normalCollider != null && normalCollider.enabled ? normalCollider
+            : carryCollider != null && carryCollider.enabled ? carryCollider
+            : coll2D;
+        return body != null && body.enabled ? body.bounds.extents.x : 0f;
     }
 
     private void FallingCheck()

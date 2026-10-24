@@ -120,6 +120,9 @@ public class TrapPressure : NetworkBehaviour
         if (player.rb2D == null) return;
         if (player.rb2D.IsSleeping()) player.rb2D.WakeUp();
 
+        // อยู่ในลม: ผู้เล่นใช้การคุมแบบใช้แรงเหมือนเดิม ลมจึงแรงเท่าเดิม (MV-5)
+        player.NotifyExternalForce();
+
         Vector2 currentDirection = _isRevers ? -defaultDirection : defaultDirection;
         float currentSpeedInDir = Vector2.Dot(player.rb2D.linearVelocity, currentDirection.normalized);
         Vector2 offset = (Vector2)player.transform.position - (Vector2)transform.position;

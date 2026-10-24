@@ -292,7 +292,8 @@ public class Bird_Moveset : MovementCharacter, IstunAble
 
         if (!IsBeingCarried)
         {
-            if (isPressed && IsInAir)
+            // tick ที่เพิ่ง coyote jump จากขอบ: ปุ่มนี้ใช้กระโดดไปแล้ว ไม่เริ่มบินซ้อน (MV-2)
+            if (isPressed && IsInAir && !JumpedThisTick)
             {
                 if (!IsFlying && !IsAlreadyFly && !stilldrowning)
                 {
@@ -393,6 +394,8 @@ public class Bird_Moveset : MovementCharacter, IstunAble
 
         IsFlying = true;
         isJumping = false;
+        // ปุ่มที่กดเพื่อบินไม่ถูกจำไว้กระโดดตอนลงพื้น (MV-2)
+        ClearJumpBuffer();
 
         if (rb2D != null && zeroFrictionMaterial != null)
         {
