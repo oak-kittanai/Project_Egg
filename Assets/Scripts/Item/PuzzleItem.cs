@@ -19,6 +19,10 @@ public class PuzzleItem : NetworkBehaviour, Interactable
     private MaterialPropertyBlock mpb;
     private bool isHighlighted;
 
+    // ใช้ buffer เดิมทุกเฟรมแทน OverlapCircleAll ที่จอง array ใหม่ทุกครั้ง (PF-1) — ผลเหมือนเดิม
+    private readonly Collider2D[] _hits = new Collider2D[8];
+    private ContactFilter2D _filter;
+
     private void Awake()
     {
         if (selfNet == null) selfNet = GetComponent<NetworkObject>();
@@ -26,6 +30,8 @@ public class PuzzleItem : NetworkBehaviour, Interactable
 
         mpb = new MaterialPropertyBlock();
         SetOutline(false);
+
+        _filter = new ContactFilter2D { useLayerMask = true, layerMask = playerMask, useTriggers = Physics2D.queriesHitTriggers };
     }
 
     private void Update()
@@ -41,14 +47,14 @@ public class PuzzleItem : NetworkBehaviour, Interactable
 
     private bool IsAnyPlayerNear()
     {
-        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, highlightRadius, playerMask);
+        int hitCount = Physics2D.OverlapCircle(transform.position, highlightRadius, _filter, _hits);
 
-        foreach (var hit in hits)
+        for (int i = 0; i < hitCount; i++)
         {
-            MovementCharacter player = hit.GetComponent<MovementCharacter>();
-            if (player == null || !player.enabled) continue;
+            if (!_hits[i].TryGetComponent<MovementCharacter>(out var player) || !player.enabled) continue;
 
-            if (player.HeldItemName.ToString() == "") return true;
+            // Length แทน ToString() — ไม่สร้าง string ใหม่ทุกเฟรม
+            if (player.HeldItemName.Length == 0) return true;
         }
         return false;
     }

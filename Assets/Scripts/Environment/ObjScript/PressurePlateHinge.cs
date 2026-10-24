@@ -15,22 +15,27 @@ public class PressurePlateHinge : NetworkBehaviour
 
     private BoxCollider2D col;
 
+    // ใช้ buffer เดิมทุก tick แทน OverlapBoxAll ที่จอง array ใหม่ทุกครั้ง (PF-1) — ผลเหมือนเดิม
+    private readonly Collider2D[] _hits = new Collider2D[32];
+    private ContactFilter2D _filter;
+
     private void Awake()
     {
         col = GetComponent<BoxCollider2D>();
+        _filter = new ContactFilter2D { useLayerMask = true, layerMask = Physics2D.DefaultRaycastLayers, useTriggers = Physics2D.queriesHitTriggers };
     }
 
     public override void FixedUpdateNetwork()
     {
         if (!HasStateAuthority) return;
 
-        Collider2D[] hitColliders = Physics2D.OverlapBoxAll(col.bounds.center, col.bounds.size, 0f);
+        int hitCount = Physics2D.OverlapBox(col.bounds.center, col.bounds.size, 0f, _filter, _hits);
 
         int playerCount = 0;
 
-        foreach (Collider2D hit in hitColliders)
+        for (int i = 0; i < hitCount; i++)
         {
-            if (hit.CompareTag("Player"))
+            if (_hits[i].CompareTag("Player"))
             {
                 playerCount++;
             }
