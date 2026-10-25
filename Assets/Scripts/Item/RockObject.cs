@@ -25,6 +25,8 @@ public class RockObject : NetworkBehaviour, ThrowAbleItem
     [Header("Stun")]
     [Tooltip("rock must move faster than this to stun the duck (prevents slow rocks from stunning)")]
     [SerializeField] float stunVelocityThreshold = 3f;
+    [Tooltip("knockback given to the stunned duck (x = away from the rock, y = up) instead of the raw collision push (KB-1)")]
+    [SerializeField] Vector2 stunKnockback = new Vector2(2.5f, 2f);
 
     // หินที่ถูกปาและยังเร็วพอจะ stun -> ชนผู้เล่นได้ (layer ThrowAbleProjectile)
     // หินที่วางอยู่/ช้าแล้ว -> ItemDrop ไม่ชนผู้เล่น (ยังชนพื้นและตัวมอน, กด E เก็บได้เหมือนเดิม)
@@ -49,9 +51,11 @@ public class RockObject : NetworkBehaviour, ThrowAbleItem
         restingLayer = LayerMask.NameToLayer("ItemDrop");
     }
 
+    // ชนผู้เล่นได้เฉพาะหินฝั่ง host (KB-1): บนเครื่องอื่นหินเป็น proxy แบบ kinematic (มวลไม่จำกัด) ชนตัวของเครื่องนั้นแล้วดันกระเด็นแรงเท่าความเร็วหิน
+    // — การโดน/มึน/ฆ่ามอน/ปุ่มหิน host ตัดสินอยู่แล้ว
     private void ApplyCollisionLayer()
     {
-        int layer = IsDangerous ? projectileLayer : restingLayer;
+        int layer = IsDangerous && HasStateAuthority ? projectileLayer : restingLayer;
         if (layer >= 0 && gameObject.layer != layer) gameObject.layer = layer;
     }
 
@@ -157,9 +161,13 @@ public class RockObject : NetworkBehaviour, ThrowAbleItem
                 // stun ได้แค่เป็ดเท่านั้น และต้องเร็วพอ
                 if (!hitSomething && fastEnough
                     && hit.collider.TryGetComponent<IstunAble>(out var stunnable)
-                    && stunnable is Duck_Moveset)
+                    && stunnable is Duck_Moveset duck)
                 {
                     stunnable.TriggerStun();
+
+                    // ล้างแรงชนแล้วใส่แรงกระเด็นที่กำหนด เจ้าของตัวใส่ให้ตัวเอง (NR-12) — ระยะเท่ากันทั้งตัวของ host และ client (KB-1)
+                    float side = Mathf.Sign(duck.transform.position.x - rb2D.position.x);
+                    duck.RaiseOwnerEvent(null, new Vector2(side * stunKnockback.x, stunKnockback.y), true);
                     hitSomething = true;
                 }
 
