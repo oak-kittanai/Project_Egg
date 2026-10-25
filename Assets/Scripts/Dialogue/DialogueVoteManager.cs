@@ -88,12 +88,13 @@ public class DialogueVoteManager : NetworkBehaviour
             RPC_CloseDialogueAll();
     }
 
+    // เพลงด่านเล่นต่อหลังปิด dialogue (AU-1) — เดิม StopBGM ตรงนี้ ค้างมาจากสมัย dialogue มีเพลงของตัวเอง
+    // (TriggerDialogue ปิดการเล่นเพลง dialogue ไปแล้ว) ทำให้เพลงด่านดับหลัง dialogue แรกทุกด่าน
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
     private void RPC_CloseDialogueAll()
     {
         isDialogueActive = false;
         DialogueManager.Instance?.CloseDialogue();
-        AudioManager.Instance?.StopBGM();
     }
 
     private void OnDestroy()
