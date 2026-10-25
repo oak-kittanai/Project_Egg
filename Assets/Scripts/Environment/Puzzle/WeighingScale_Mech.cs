@@ -170,6 +170,8 @@ public class WeighingScale_Mech : NetworkBehaviour
 
         leftPlateCollider.Overlap(checkAbleItems, leftCheckWeight);
         rightPlateCollider.Overlap(checkAbleItems, rightCheckWeight);
+        RemovePlayersUnderPlate(leftCheckWeight, leftPlateCollider);
+        RemovePlayersUnderPlate(rightCheckWeight, rightPlateCollider);
 
         bool hasNewItemDropped = false;
 
@@ -196,6 +198,18 @@ public class WeighingScale_Mech : NetworkBehaviour
 
         prevRightItems.Clear();
         prevRightItems.UnionWith(rightCheckWeight);
+    }
+
+    // จานรับน้ำหนักจากด้านบนอย่างเดียว (SC-2) จานจึงจมลงมาซ้อนตัวคนที่ยืนอยู่ใต้จานได้
+    // — นับน้ำหนักผู้เล่นเฉพาะตัวที่ยืนบนจาน (กลางตัวสูงกว่าก้นช่องตรวจน้ำหนัก) ไม่นับคนที่อยู่ข้างใต้
+    private static void RemovePlayersUnderPlate(List<Collider2D> hits, Collider2D plate)
+    {
+        float plateBottom = plate.bounds.min.y;
+        for (int i = hits.Count - 1; i >= 0; i--)
+        {
+            if (hits[i].bounds.center.y < plateBottom && hits[i].GetComponentInParent<MovementCharacter>() != null)
+                hits.RemoveAt(i);
+        }
     }
 
     private bool IsValidItemConfig(Collider2D item)
