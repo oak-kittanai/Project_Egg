@@ -752,6 +752,9 @@ public class GameManager : SingletonNetwork<GameManager>
             if (PlayerInterface.Instance != null)
                 PlayerInterface.Instance.StopAllVideos();
 
+            // วิดีโอคัตซีน/หน้าโหลดหยุดแล้ว — เริ่มเพลงด่านที่รอไว้ (AU-2), ทุกเครื่องทำเองตอนหน้าโหลดของตัวเองปิด
+            AudioManager.Instance?.ReleaseBGM();
+
             allowCloseUI = false;
         }
     }

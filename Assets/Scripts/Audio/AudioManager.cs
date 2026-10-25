@@ -46,6 +46,7 @@ public class AudioManager : MonoBehaviour
     private void Start()
     {
         FindAudioComponents(SceneManager.GetActiveScene());
+        HoldBGMUntilLevelShown();
         PlayBGM("FirstBGM");
     }
 
@@ -55,6 +56,7 @@ public class AudioManager : MonoBehaviour
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         FindAudioComponents(scene);
+        HoldBGMUntilLevelShown();
 
         // เริ่ม BGM เมื่อเข้าซีนที่มี BGM_Player (เช่น Scene 1) — เดิม PlayBGM ถูกเรียกแค่ใน Start()
         // ตอนอยู่ใน core scene ที่ยังไม่มี BGM_Player เลยไม่เคยเล่นในเกมจริง (PlayBGM idempotent อยู่แล้ว)
@@ -193,8 +195,44 @@ public class AudioManager : MonoBehaviour
 
     #region BGM
 
+    // เพลงด่านรอจนหน้าโหลดปิด (AU-2): ช่วงต้นด่านมีวิดีโอที่มีเสียงเล่นอยู่ (คัตซีน S1, วิดีโอหน้าโหลดทุกด่าน)
+    // เดิมเพลงด่านเริ่มตั้งแต่โหลดฉากจึงดังซ้อน — ระหว่างรอ PlayBGM แค่จำชื่อเพลง, GameManager ปล่อยตอนปิดหน้าโหลด
+    private bool _bgmHeld;
+    private string _heldBgmName;
+
+    // ฉากด่าน (มี BGM_Player) ที่หน้าโหลดยังไม่ปิด; ถ้าเกมพร้อมแล้ว (เช่น manager ถูกสร้างช้า) ไม่รอ — ไม่มีใครปล่อยให้
+    private void HoldBGMUntilLevelShown()
+    {
+        if (bgmSource == null) return;
+
+        var gm = GameManager.Instance;
+        bool levelShown = gm != null && gm.Object != null && gm.Object.IsValid && gm.IsGameReady;
+        if (!levelShown) HoldBGM();
+    }
+
+    public void HoldBGM()
+    {
+        _bgmHeld = true;
+        if (bgmSource != null && bgmSource.isPlaying) bgmSource.Stop(); // BGM_Player บางฉากตั้ง Play On Awake ไว้
+    }
+
+    public void ReleaseBGM()
+    {
+        if (!_bgmHeld) return;
+        _bgmHeld = false;
+
+        if (!string.IsNullOrEmpty(_heldBgmName)) PlayBGM(_heldBgmName);
+        _heldBgmName = null;
+    }
+
     public void PlayBGM(string name)
     {
+        if (_bgmHeld)
+        {
+            _heldBgmName = name;
+            return;
+        }
+
         if (bgmSource == null) return;
 
         SoundConfig s = Array.Find(soundBGMList, sound => sound.soundName == name);
