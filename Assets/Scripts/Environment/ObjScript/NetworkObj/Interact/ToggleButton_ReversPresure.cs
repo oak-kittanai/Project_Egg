@@ -23,6 +23,13 @@ public class ToggleButton_ReversPresure : NetworkBehaviour, Interactable
     public Sprite unpressed;
     public Sprite pressed;
 
+    private bool _shownPressed;
+
+    public override void Spawned()
+    {
+        _shownPressed = IsPressed;
+    }
+
     public void Interact(MovementCharacter player)
     {
         if (HasStateAuthority)
@@ -65,6 +72,13 @@ public class ToggleButton_ReversPresure : NetworkBehaviour, Interactable
 
     public override void Render()
     {
+        // เสียงติกทุกครั้งที่สลับ (SW-2): ทุกเครื่องเล่นเองครั้งเดียวจากสถานะที่ sync มา
+        if (IsPressed != _shownPressed)
+        {
+            _shownPressed = IsPressed;
+            AudioManager.Instance?.PlaySwitchTick(transform.position);
+        }
+
         if (sr != null)
         {
             sr.sprite = IsPressed ? pressed : unpressed;

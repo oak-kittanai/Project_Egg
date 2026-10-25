@@ -14,6 +14,7 @@ public class PressurePlateHinge : NetworkBehaviour
     public Sprite pressed;
 
     private BoxCollider2D col;
+    private bool _shownPressed;
 
     // ใช้ buffer เดิมทุก tick แทน OverlapBoxAll ที่จอง array ใหม่ทุกครั้ง (PF-1) — ผลเหมือนเดิม
     private readonly Collider2D[] _hits = new Collider2D[32];
@@ -23,6 +24,11 @@ public class PressurePlateHinge : NetworkBehaviour
     {
         col = GetComponent<BoxCollider2D>();
         _filter = new ContactFilter2D { useLayerMask = true, layerMask = Physics2D.DefaultRaycastLayers, useTriggers = Physics2D.queriesHitTriggers };
+    }
+
+    public override void Spawned()
+    {
+        _shownPressed = IsPressed;
     }
 
     public override void FixedUpdateNetwork()
@@ -65,6 +71,13 @@ public class PressurePlateHinge : NetworkBehaviour
 
     public override void Render()
     {
+        // เสียงติกตอนถูกเหยียบ (SW-2): ทุกเครื่องเล่นเองครั้งเดียวจากสถานะที่ sync มา
+        if (IsPressed != _shownPressed)
+        {
+            _shownPressed = IsPressed;
+            if (IsPressed) AudioManager.Instance?.PlaySwitchTick(transform.position);
+        }
+
         if (sr != null)
         {
             sr.sprite = IsPressed ? pressed : unpressed;

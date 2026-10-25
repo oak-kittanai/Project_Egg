@@ -9,6 +9,13 @@ public class CoopSwitch : NetworkBehaviour, Interactable
     [SerializeField] Sprite switchOff;
     [SerializeField] Sprite switchOn;
 
+    private bool _shownOn;
+
+    public override void Spawned()
+    {
+        _shownOn = IsOn;
+    }
+
     public void Interact(MovementCharacter player)
     {
         if (HasStateAuthority)
@@ -34,6 +41,13 @@ public class CoopSwitch : NetworkBehaviour, Interactable
 
     public override void Render()
     {
+        // เสียงติกทุกครั้งที่สลับ (SW-2): ทุกเครื่องเล่นเองครั้งเดียวจากสถานะที่ sync มา
+        if (IsOn != _shownOn)
+        {
+            _shownOn = IsOn;
+            AudioManager.Instance?.PlaySwitchTick(transform.position);
+        }
+
         if (sr != null)
         {
             sr.sprite = IsOn ? switchOn : switchOff;

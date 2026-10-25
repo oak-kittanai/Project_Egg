@@ -22,6 +22,8 @@ public class ThrowButton : NetworkBehaviour
     [Networked] public NetworkBool IsPressed { get; set; }
     [Networked] private TickTimer ResetTimer { get; set; }
 
+    private bool _shownPressed;
+
     private void Awake()
     {
         if (sr == null) sr = GetComponent<SpriteRenderer>();
@@ -39,6 +41,8 @@ public class ThrowButton : NetworkBehaviour
                 targetDoor.SetDoorState(false);
             }
         }
+
+        _shownPressed = IsPressed;
     }
 
     public override void FixedUpdateNetwork()
@@ -111,6 +115,13 @@ public class ThrowButton : NetworkBehaviour
 
     public override void Render()
     {
+        // เสียงติกตอนหินโดนปุ่ม (SW-2): ทุกเครื่องเล่นเองครั้งเดียวจากสถานะที่ sync มา
+        if (IsPressed != _shownPressed)
+        {
+            _shownPressed = IsPressed;
+            if (IsPressed) AudioManager.Instance?.PlaySwitchTick(transform.position);
+        }
+
         if (sr != null)
         {
             sr.sprite = IsPressed ? pressed : unpressed;

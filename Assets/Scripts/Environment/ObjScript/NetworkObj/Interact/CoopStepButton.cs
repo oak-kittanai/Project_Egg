@@ -15,6 +15,13 @@ public class CoopStepButton : NetworkBehaviour
     public Sprite unpressed;
     public Sprite pressed;
 
+    private bool _shownPressed;
+
+    public override void Spawned()
+    {
+        _shownPressed = IsPressed;
+    }
+
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if (!HasStateAuthority) return;
@@ -46,6 +53,13 @@ public class CoopStepButton : NetworkBehaviour
 
     public override void Render()
     {
+        // เสียงติกตอนถูกเหยียบ (SW-2): ทุกเครื่องเล่นเองครั้งเดียวจากสถานะที่ sync มา
+        if (IsPressed != _shownPressed)
+        {
+            _shownPressed = IsPressed;
+            if (IsPressed) AudioManager.Instance?.PlaySwitchTick(transform.position);
+        }
+
         if (sr != null)
         {
             sr.sprite = IsPressed ? pressed : unpressed;
