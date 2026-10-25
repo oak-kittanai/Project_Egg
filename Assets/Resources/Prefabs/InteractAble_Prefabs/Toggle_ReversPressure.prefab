@@ -47,9 +47,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d3de91892c35bf6438f2c5e3dfe84651, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ToggleButton_ReversPresure
-  targetTrap: {fileID: 0}
-  _isRevers:
+  targetTraps: []
+  mode: 0
+  reverseOnPress: 1
+  _IsPressed:
     _value: 0
+  _IsPermanentlyActivated:
+    _value: 0
+  sr: {fileID: 0}
+  unpressed: {fileID: 1890445043158795683, guid: daed34ce1f475c94f960841858aa4b79, type: 3}
+  pressed: {fileID: -3521052986213070469, guid: 456874598f9394443ae2463c5a6811a9, type: 3}
 --- !u!212 &2341986638202511894
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -97,7 +104,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 1011294652550369648, guid: 81d85d6db8b35d449950030dd64edbff, type: 3}
+  m_Sprite: {fileID: 1890445043158795683, guid: daed34ce1f475c94f960841858aa4b79, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -146,7 +153,7 @@ BoxCollider2D:
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 0.26, y: 0.56}
+    oldSize: {x: 1, y: 0.5729167}
     newSize: {x: 0.26, y: 0.56}
     adaptiveTilingThreshold: 0.5
     drawMode: 0

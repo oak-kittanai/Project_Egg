@@ -80,14 +80,14 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: -2132795965
-  m_SortingLayer: 12
+  m_SortingLayer: 14
   m_SortingOrder: 0
-  m_Sprite: {fileID: -2393472865293816138, guid: 2a39a0cf593bb544cb612665d30ae8a3, type: 3}
+  m_Sprite: {fileID: 1270764102082777, guid: 1759047e5b79e0f48a8626e3f5d25d72, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 0.55, y: 0.575}
+  m_Size: {x: 1.05, y: 0.5625}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
@@ -130,9 +130,9 @@ BoxCollider2D:
   m_Offset: {x: 0, y: 0.010604322}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
-    pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 0.55, y: 0.575}
-    newSize: {x: 0.55, y: 0.575}
+    pivot: {x: 0.5, y: 0.44444445}
+    oldSize: {x: 1.05, y: 0.5625}
+    newSize: {x: 1.05, y: 0.5625}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
     adaptiveTiling: 0
@@ -155,7 +155,7 @@ MonoBehaviour:
   isSingleUse: 1
   resetTime: 3
   sr: {fileID: 9153028255348108727}
-  unpressed: {fileID: -2393472865293816138, guid: 2a39a0cf593bb544cb612665d30ae8a3, type: 3}
+  unpressed: {fileID: 1270764102082777, guid: 1759047e5b79e0f48a8626e3f5d25d72, type: 3}
   pressed: {fileID: -3026982275421995717, guid: 278d237a74371d94b89cee654fea8c78, type: 3}
   _IsPressed:
     _value: 0

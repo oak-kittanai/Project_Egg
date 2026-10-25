@@ -48,8 +48,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::B_Interact_Door
   targetDoor: {fileID: 0}
-  unpressed: {fileID: 4631503453264377532, guid: ef6b60505819e69408be4096d5326873, type: 3}
-  pressed: {fileID: -7481154837144258176, guid: 5b206e212a52e564c976a365e7203edb, type: 3}
+  unpressed: {fileID: 7335205847882109900, guid: 7cb47206c98068a4d9e49fba020658b1, type: 3}
+  pressed: {fileID: 6290093490729569754, guid: 0b294af96c2d15a4887c3a12c0e401a0, type: 3}
+  _isToggled:
+    _value: 0
 --- !u!212 &4115077783702138110
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -97,7 +99,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 4631503453264377532, guid: ef6b60505819e69408be4096d5326873, type: 3}
+  m_Sprite: {fileID: 7335205847882109900, guid: 7cb47206c98068a4d9e49fba020658b1, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -146,7 +148,7 @@ BoxCollider2D:
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 1, y: 0.33333334}
+    oldSize: {x: 1, y: 0.5729167}
     newSize: {x: 1, y: 1}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
