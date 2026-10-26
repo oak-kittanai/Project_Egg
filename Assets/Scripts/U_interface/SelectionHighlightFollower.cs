@@ -1,8 +1,11 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-// กรอบขาวมุมมนรอบปุ่มที่เลือกด้วย Controller (HL-1) — เดิมเป็นกล่องเหลืองโปร่งแสงทับปุ่ม
+// บอกว่า Controller เลือกอะไรอยู่ (HL-1/HL-3):
+// - ปุ่มที่มีรูป/สีตอนเมาส์ชี้ (Hover) -> ใช้หน้าตา Hover นั้นตอนถูกเลือก
+// - หลอดปรับค่า, ช่องพิมพ์ และปุ่มที่ไม่มี Hover ให้เห็น -> กรอบขาวมุมมนรอบตัว
 // รูปกรอบสร้างในโค้ด (ไม่ต้องมีไฟล์รูป); component นี้ถูกเพิ่มตอนรันโดย UIKeyboardNavigator จึงใช้ค่าเริ่มต้นด้านล่าง
 public class SelectionHighlightFollower : MonoBehaviour
 {
@@ -17,6 +20,15 @@ public class SelectionHighlightFollower : MonoBehaviour
     private RectTransform highlightRect;
     private Image highlightImage;
     private GameObject currentSelected;
+
+    // ปุ่มที่กำลังยืมหน้าตา Hover มาเป็นหน้าตาตอนถูกเลือก + ค่าเดิมไว้คืน (HL-3)
+    // uGUI โชว์สถานะ Selected ก่อน Highlighted เสมอ จึงต้องสลับค่า Selected ชั่วคราวแทนการจำลองเมาส์ชี้
+    private Selectable hoverTarget;
+    private SpriteState savedSpriteState;
+    private ColorBlock savedColors;
+
+    // สี Hover ต้องต่างจากสีปกติอย่างน้อยเท่านี้ (ช่องใดช่องหนึ่ง) ถึงนับว่ามองเห็น — ค่าเริ่มต้นของ Unity 0.96 ต่างแค่ 0.04
+    private const float VisibleTintDelta = 0.08f;
 
     private void LateUpdate()
     {
@@ -35,16 +47,17 @@ public class SelectionHighlightFollower : MonoBehaviour
         UpdateHighlightTransform();
     }
 
+    private void OnDisable()
+    {
+        RestoreHover();
+    }
+
     private void HandleSelectionChanged()
     {
-        if (currentSelected == null)
-        {
-            if (highlightImage != null) highlightImage.gameObject.SetActive(false);
-            return;
-        }
+        RestoreHover();
 
-        var targetRect = currentSelected.GetComponent<RectTransform>();
-        if (targetRect == null)
+        var targetRect = currentSelected != null ? currentSelected.GetComponent<RectTransform>() : null;
+        if (targetRect == null || (currentSelected.TryGetComponent<Selectable>(out var selectable) && TryApplyHover(selectable)))
         {
             if (highlightImage != null) highlightImage.gameObject.SetActive(false);
             return;
@@ -59,6 +72,57 @@ public class SelectionHighlightFollower : MonoBehaviour
 
         highlightRect.SetAsLastSibling();
         highlightImage.gameObject.SetActive(true);
+    }
+
+    // ปุ่มที่มี Hover ให้เห็น: ใช้รูป/สี Hover เป็นหน้าตาตอนถูกเลือก (เก็บค่าเดิมไว้คืน) — หลอด/ช่องพิมพ์ใช้กรอบเสมอ
+    private bool TryApplyHover(Selectable selectable)
+    {
+        if (selectable is Slider || selectable is Scrollbar || selectable is TMP_InputField || selectable is InputField) return false;
+
+        switch (selectable.transition)
+        {
+            case Selectable.Transition.SpriteSwap:
+                SpriteState sprites = selectable.spriteState;
+                if (sprites.highlightedSprite == null) return false;
+
+                savedSpriteState = sprites;
+                sprites.selectedSprite = sprites.highlightedSprite;
+                selectable.spriteState = sprites;
+                break;
+
+            case Selectable.Transition.ColorTint:
+                ColorBlock colors = selectable.colors;
+                if (!VisiblyDifferent(colors.highlightedColor, colors.normalColor)) return false;
+
+                savedColors = colors;
+                colors.selectedColor = colors.highlightedColor;
+                selectable.colors = colors;
+                break;
+
+            default:
+                return false;
+        }
+
+        hoverTarget = selectable;
+        return true;
+    }
+
+    // คืนหน้าตาตอนถูกเลือกเดิม — ไม่งั้นปุ่มที่เมาส์คลิกภายหลังจะค้างหน้า Hover
+    private void RestoreHover()
+    {
+        if (hoverTarget != null)
+        {
+            if (hoverTarget.transition == Selectable.Transition.SpriteSwap) hoverTarget.spriteState = savedSpriteState;
+            else hoverTarget.colors = savedColors;
+        }
+        hoverTarget = null;
+    }
+
+    private static bool VisiblyDifferent(Color a, Color b)
+    {
+        return Mathf.Abs(a.r - b.r) >= VisibleTintDelta
+            || Mathf.Abs(a.g - b.g) >= VisibleTintDelta
+            || Mathf.Abs(a.b - b.b) >= VisibleTintDelta;
     }
 
     private void EnsureHighlightExists()
