@@ -201,6 +201,9 @@ public class MovementCharacter : NetworkBehaviour, IDamageable, IBeforeTick, IAf
     public float rayDistance = 1.2f;
     public float interactRadius = 1.5f;
     public float playerInteractRadius = 1f;
+
+    // host: กด E ใน tick นี้ไปใช้กับของแล้ว (ทุบหิน/เก็บของ) — เป็ดจะไม่ยกนกซ้ำในกดเดียวกัน (IN-1)
+    protected bool InteractUsedOnWorldThisTick;
     #endregion
 
     #region I-Frames & Effects
@@ -913,6 +916,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable, IBeforeTick, IAf
 
         bool isMenuOpen = GameManager.Instance.IsPaused;
 
+        InteractUsedOnWorldThisTick = false;
         if (hasInput && !isMenuOpen && !isClimbing)
         {
             if (!IsInteractBusy) HandleInteraction(input);
@@ -1255,27 +1259,50 @@ public class MovementCharacter : NetworkBehaviour, IDamageable, IBeforeTick, IAf
                         VerifyLog.Log($"HandleInteraction PICKUP '{hit.name}' by {(isBird ? "Bird" : "Duck")} stateAuth={HasStateAuthority} inputAuth={HasInputAuthority} isForward={Runner.IsForward} tick={Runner.Tick}"); // TEMP verify H-4
                         cAnimation.InteractAnimation();
                         throwableItem.PickupItem_RPC(this);
+                        InteractUsedOnWorldThisTick = true;
                         return;
                     }
                 }
             }
 
-            foreach (var hit in hitsItem)
-            {
-                if (hit.gameObject == gameObject) continue;
+            // ของที่ใกล้ที่สุด (เดิมเลือกตัวแรกที่ overlap คืนมา) — ถ้าเพื่อนใกล้กว่า/กำลังแบกอยู่ ให้เป็ดจัดการแทน (IN-1)
+            Interactable interactable = FindClosestInteractable(out float interactDist, out Collider2D interactHit);
+            if (interactable == null || FriendInteractWins(interactDist)) return;
 
-                if (hit.TryGetComponent<Interactable>(out var interactable))
-                {
-                    if (!interactable.CanInteract(this)) continue;
-
-                    VerifyLog.Log($"HandleInteraction INTERACT '{hit.name}' by {(isBird ? "Bird" : "Duck")} stateAuth={HasStateAuthority} inputAuth={HasInputAuthority} isForward={Runner.IsForward} tick={Runner.Tick}"); // TEMP verify H-4
-                    cAnimation.InteractAnimation();
-                    interactable.Interact(this);
-                    break;
-                }
-            }
+            VerifyLog.Log($"HandleInteraction INTERACT '{interactHit.name}' by {(isBird ? "Bird" : "Duck")} stateAuth={HasStateAuthority} inputAuth={HasInputAuthority} isForward={Runner.IsForward} tick={Runner.Tick}"); // TEMP verify H-4
+            cAnimation.InteractAnimation();
+            interactable.Interact(this);
+            InteractUsedOnWorldThisTick = true;
         }
     }
+
+    // ของที่กด E ได้และใกล้ที่สุด (วัดจากจุดกลางแบบเดียวกับป้ายกด)
+    private Interactable FindClosestInteractable(out float distance, out Collider2D hitCollider)
+    {
+        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, interactRadius);
+
+        Interactable closest = null;
+        distance = float.MaxValue;
+        hitCollider = null;
+
+        foreach (var hit in hits)
+        {
+            if (hit.gameObject == gameObject) continue;
+            if (!hit.TryGetComponent<Interactable>(out var interactable) || !interactable.CanInteract(this)) continue;
+
+            float dist = Vector2.Distance(transform.position, hit.transform.position);
+            if (dist < distance)
+            {
+                distance = dist;
+                closest = interactable;
+                hitCollider = hit;
+            }
+        }
+        return closest;
+    }
+
+    // กด E แล้วเพื่อนชนะของที่ใกล้สุดระยะ interactDist ไหม (เป็ด: กำลังแบก หรือนกใกล้กว่า) — host ใช้ตัดสิน, ป้ายกดใช้ซ่อน
+    protected virtual bool FriendInteractWins(float interactDist) => false;
 
     #endregion
 
@@ -1931,6 +1958,9 @@ public class MovementCharacter : NetworkBehaviour, IDamageable, IBeforeTick, IAf
                 }
             }
         }
+
+        // กด E แล้วจะไปยก/โยนเพื่อนแทน -> ไม่ชี้ป้ายที่ของ (IN-1)
+        if (closestInteract != null && FriendInteractWins(minInteractDist)) closestInteract = null;
 
         Transform target = (closestItem != null) ? closestItem : closestInteract;
 

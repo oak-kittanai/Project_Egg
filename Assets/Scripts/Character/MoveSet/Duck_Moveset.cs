@@ -241,22 +241,42 @@ public class Duck_Moveset : MovementCharacter, IstunAble
                 return;
             }
 
-            // ติด cooldown หลังพึ่งปล่อยนก — ยังยกใหม่ไม่ได้ (แต่ปล่อยข้างบนไม่ติด cooldown)
-            if (!PickupCooldownTimer.ExpiredOrNotRunning(Runner)) return;
+            // กดเดียวกันไปทุบหิน/ใช้ของที่ใกล้กว่าแล้ว -> ไม่ยกนก (IN-1)
+            if (InteractUsedOnWorldThisTick) return;
 
-            Collider2D[] hitsPlayer = Physics2D.OverlapCircleAll(transform.position, playerInteractRadius);
-            foreach (var hit in hitsPlayer)
+            Bird_Moveset birdToCarry = FindLiftableBird(out _);
+            if (birdToCarry != null) PickupFriend(birdToCarry);
+        }
+    }
+
+    // นกในระยะยกที่ใกล้ที่สุด — ติด cooldown หลังพึ่งปล่อยนกถือว่ายังยกไม่ได้ (แต่ปล่อยข้างบนไม่ติด cooldown)
+    private Bird_Moveset FindLiftableBird(out float distance)
+    {
+        distance = float.MaxValue;
+        if (!PickupCooldownTimer.ExpiredOrNotRunning(Runner)) return null;
+
+        Bird_Moveset closest = null;
+        Collider2D[] hitsPlayer = Physics2D.OverlapCircleAll(transform.position, playerInteractRadius);
+        foreach (var hit in hitsPlayer)
+        {
+            if (hit.gameObject == gameObject) continue;
+            if (!hit.TryGetComponent<Bird_Moveset>(out var bird)) continue;
+
+            float dist = Vector2.Distance(transform.position, bird.transform.position);
+            if (dist < distance)
             {
-                if (hit.gameObject == gameObject) continue;
-
-                Bird_Moveset birdToCarry = hit.GetComponent<Bird_Moveset>();
-                if (birdToCarry != null)
-                {
-                    PickupFriend(birdToCarry);
-                    return;
-                }
+                distance = dist;
+                closest = bird;
             }
         }
+        return closest;
+    }
+
+    // แบกอยู่ = กด E โยนนกอย่างเดียว; ไม่แบก = นกชนะเมื่อใกล้กว่าของที่ใกล้สุด (IN-1)
+    protected override bool FriendInteractWins(float interactDist)
+    {
+        if (IsCarry) return true;
+        return FindLiftableBird(out float birdDist) != null && birdDist < interactDist;
     }
 
     // host: ยกนก — ตัดสินที่ host ที่เดียว สองตัวทำตามจากค่าที่ sync (เดิม client ทำนายไปก่อนแล้วไม่ถูกย้อน)
