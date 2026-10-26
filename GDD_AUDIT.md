@@ -1358,3 +1358,66 @@ probe ชั่วคราว (ไม่ commit) log เสียงที่�
 | 4 | คีย์บอร์ด/เมาส์: คลิกช่องเลขแล้วพิมพ์ / กด Enter ที่ช่องแล้วพิมพ์ | พิมพ์ได้เหมือนเดิม | |
 | 5 | ทุกเมนู (lobby, ตั้งค่า, pause, dialogue, tutorial) ด้วยจอย | กรอบขาวมุมมนรอบปุ่ม เห็นชัดทั้งบนปุ่มสีเข้มและสีขาว | |
 | 6 | คลิกปุ่มใน lobby/ในเกม, เข้าธง, เหยียบปุ่มในด่าน | คลิกและธงเบาลงครึ่งหนึ่ง, ติกปุ่มดังเท่าเดิม, ทั้งหมดยังตามค่า SFX | |
+
+## 24. Dynamic Input Prompt — รูปปุ่มเปลี่ยนตามอุปกรณ์ที่ใช้ล่าสุด + template ทีม UI (2026-10-26)
+
+**ที่มา:** เจ้าของโปรเจกต์ขอให้ปุ่มบน UI เปลี่ยนเป็นปุ่ม Controller เมื่อเล่นด้วยจอย (Seamless Glyph Switching) และทำเป็น template ส่งทีม UI
+
+ผู้ใช้เลือก:
+- รองรับ Xbox + PlayStation (จอยอื่น = Xbox)
+- ทำระบบ + template + ต่อเข้าจุดที่มีอยู่
+
+**Branch:** `feature/input-prompts` (แตกจาก `test/all2`) → fast-forward เข้า `test/all2`
+- Unity compile 0 error
+- prefab/ฉากแก้ผ่าน Unity MCP
+- คู่มือทีม UI: `Assets/Art-Source/UI/InputGlyphs/README.md`
+
+### 24.1 สิ่งที่ทำ
+| รหัส | อะไร | แก้แล้ว |
+|---|---|---|
+| IP-1 | ระบบใน `Assets/Scripts/U_interface/InputPrompt/`:<br>• `InputDeviceWatcher` — อุปกรณ์ที่กดล่าสุด: ปุ่มทุกชนิด / ก้าน > 0.5 / เมาส์ขยับต่อเนื่อง > 20 px; ถอดจอยหมด → คีย์บอร์ด; PS4/PS5 = `DualShockGamepad`<br>• `InputPromptAction` (12 การกระทำ)<br>• `InputGlyphSet` (Resources, รูป/รูปตอนกด/ชื่อ ต่ออุปกรณ์)<br>• `InputGlyph` (Image/SpriteRenderer)<br>• `InputPromptText` (ข้อความ `{Action}`) | แก้แล้ว: `feature/input-prompts` `3cfee371` |
+| IP-2 | ต่อจุดเดิม:<br>• ไอคอนสกิล 4 ตัว (`SkillGUI.keyAction`)<br>• ป้ายกด E เหนือของ (`Canvas.prefab` `InteractPrompt/Square`)<br>• หน้าสอนเล่น (`TutorialData.tutorialSpriteController`, เปลี่ยนสดตอนเปิดอยู่)<br>• ข้อความ popup เลขห้อง (ซ่อนตอนใช้คีย์บอร์ด) | แก้แล้ว: `feature/input-prompts` `f1b2c8fb` |
+| IP-3 | Template:<br>• รูป placeholder 50 ไฟล์ (Xbox/PS/Keyboard + `_pressed`, 300×300 และ ×2 1133×300, PPU 300)<br>• `Resources/InputGlyphSet.asset` ต่อครบ 12 การกระทำ<br>• `Template/InputPrompt_UI.prefab`, `InputPrompt_World.prefab`<br>• README ภาษาไทย | แก้แล้ว: `feature/input-prompts` `2726f645` |
+| HL-2 | กรอบเลือกปุ่มขึ้นเฉพาะตอนกำลังใช้จอย (เดิม: เมื่อมีจอยเสียบ แม้ใช้เมาส์อยู่) | แก้แล้ว: `feature/input-prompts` `62229b36` |
+
+### 24.2 ผลกระทบที่ตรวจก่อนแก้ (สรุป)
+- ไม่แตะการอ่านปุ่มของเกม (`INetworkStructure`, `UIKeyboardNavigator`, `RoomCodeKeypad`) — ระบบใหม่แค่ฟัง
+- ไม่มี network: แต่ละเครื่องเปลี่ยนตามอุปกรณ์ตัวเอง
+- `SkillGUI.SetPressed` ถูกเรียกทุกเฟรม → เลือกคู่รูปใหม่เฉพาะตอนอุปกรณ์เปลี่ยน (วัดแล้วไม่จอง memory)
+- `InteractPrompt` ไม่มี Animator — ปรับ scale ให้ขนาดเท่าเดิมได้
+- หน้าสอนเล่น: field ใหม่ว่าง = รูปเดิม; เทส `TutorialPanelKeyboardNavTests` ไม่พัง
+- พฤติกรรมที่เปลี่ยน: จอยเสียบอยู่แต่ใช้เมาส์ → กรอบเลือกปุ่มหาย (ตั้งใจ)
+- ข้อจำกัด:
+  - จอย PS ผ่าน Steam Input / DS4Windows จะเห็นเป็น Xbox
+  - ข้อความใช้ชื่อปุ่มภาษาอังกฤษ (ฟอนต์ไม่มี ✕○□△)
+
+### 24.3 ผลเทสอัตโนมัติ (MCP, Host คนเดียว, อุปกรณ์เสมือน Xbox + DualShock4 + คีย์บอร์ด/เมาส์จริง)
+
+**การสลับอุปกรณ์**
+- สลับ คีย์บอร์ด → Xbox → PS → คีย์บอร์ด ถูกทุกครั้ง (`psIsDualShock=True`)
+- ก้าน 0.3 + เมาส์ 3 px → ไม่สลับ (เปลี่ยน 0 ครั้ง); เมาส์ 36 px → คีย์บอร์ด; ก้าน 0.8 → Xbox
+
+**รูปที่ได้**
+
+| จุด | คีย์บอร์ด | Xbox | PlayStation |
+|---|---|---|---|
+| สกิลเป็ด | `F_0` / `E_0` | `xbox_rb` / `xbox_x` | `ps_r1` / `ps_square` |
+| สกิลนก | `spacebar x 2` / `q_0` | `xbox_a_x2` / `xbox_rb` | — |
+| ป้ายกด E | `E_Button_0` scale 100 | `xbox_x` scale 77 (สูง 0.77 เท่ารูปเดิม) | — |
+
+- รูปตอนกด: `ps_r1_pressed`, `xbox_a_x2_pressed`
+- `SetPressed` ×2000 = จอง memory **0 byte**
+- หน้าสอนเล่น: รูปคีย์บอร์ด → รูปจอย → รูปคีย์บอร์ด ตามอุปกรณ์ขณะเปิดอยู่
+- ข้อความ popup เลขห้อง: ซ่อนตอนคีย์บอร์ด
+- กรอบเลือกปุ่ม: ขึ้นตอน Xbox/PS, หายตอนคีย์บอร์ด
+- ภาพจอ HUD: ไอคอนสกิลแสดงปุ่ม RB/X, R1/□, A×2/RB ตามอุปกรณ์
+
+### 24.4 Checklist เทส — `test/all2` (MPPM หรือ build, Host + Client, จอยจริง)
+| ขั้น | ทำอะไร | ควรเห็น | ผล |
+|---|---|---|---|
+| 1 | เล่นด้วยจอย Xbox: เดินไปใกล้ของที่กด E ได้, ดูไอคอนสกิล | ป้าย X เหนือของ (ขนาดเท่าป้าย E เดิม), สกิลเป็ด RB/X, สกิลนก A×2/RB | |
+| 2 | แตะคีย์บอร์ดหรือขยับเมาส์ | กลับเป็น E/F/Q/Space×2 ทันที, กรอบเลือกปุ่มในเมนูหาย | |
+| 3 | จอย PS4/PS5 (ไม่ผ่าน Steam/DS4Windows) | □ / R1 / ✕×2 | |
+| 4 | Host ใช้จอย, Client ใช้คีย์บอร์ด | แต่ละจอแสดงตามอุปกรณ์ของตัวเอง | |
+| 5 | ใส่รูปสอนเล่นเวอร์ชันจอยใน `LevelData` สักหน้า แล้วเปิดด้วยจอย/คีย์บอร์ด | รูปเปลี่ยนตามอุปกรณ์ | |
+| 6 | ทีม UI วาดทับไฟล์ใน `InputGlyphs/` ชื่อเดิม | รูปใหม่ขึ้นทุกจุดโดยไม่ต้องต่อใหม่ | |
