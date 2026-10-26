@@ -1,0 +1,171 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f90d76448b6a504dbc297f5c28ec75d, type: 3}
+  m_Name: InputGlyphSet
+  m_EditorClassIdentifier: MainGame.Core::InputGlyphSet
+  entries:
+  - action: 0
+    keyboard:
+      sprite: {fileID: 21300000, guid: ecf119bf8500ae8409df5afb65172529, type: 3}
+      pressed: {fileID: 21300000, guid: 1987a7c75f28e0143a7cf953fa88f304, type: 3}
+      label: WASD
+    xbox:
+      sprite: {fileID: 21300000, guid: 696894d2ff7cd6547aab5eecdda78155, type: 3}
+      pressed: {fileID: 21300000, guid: c6027513585c75d48af6ac9333a63f44, type: 3}
+      label: L Stick
+    playStation:
+      sprite: {fileID: 21300000, guid: 8b0193c50500f8143a877acd73bc00bb, type: 3}
+      pressed: {fileID: 21300000, guid: dc2a71e57ac2e914cb57d78f2f9a06be, type: 3}
+      label: L Stick
+  - action: 1
+    keyboard:
+      sprite: {fileID: 21300000, guid: f8ca3a9b9aec20e4c9823778ee9f1cbf, type: 3}
+      pressed: {fileID: 21300000, guid: 4c67b639cfcf1de43ab6ef5d27097702, type: 3}
+      label: Space
+    xbox:
+      sprite: {fileID: 21300000, guid: 424be8a2ced8c034a8f67b6b022034ff, type: 3}
+      pressed: {fileID: 21300000, guid: 42a09ea3aa94d854885cf703bcd92ba7, type: 3}
+      label: A
+    playStation:
+      sprite: {fileID: 21300000, guid: 171ed9dac36410644a14060ece28eb90, type: 3}
+      pressed: {fileID: 21300000, guid: 7cff58390616080408ffacbbbad51086, type: 3}
+      label: Cross
+  - action: 2
+    keyboard:
+      sprite: {fileID: 21300000, guid: 3bbc9453a77d11b428cdbde1952559c5, type: 3}
+      pressed: {fileID: 21300000, guid: 14788fbad460bb84e89cce52dcb1ec4b, type: 3}
+      label: Space x2
+    xbox:
+      sprite: {fileID: 21300000, guid: 8d1dca785397b724faf843e673c00245, type: 3}
+      pressed: {fileID: 21300000, guid: 80ed4f9126fbfbb4a83b26cf370f92fd, type: 3}
+      label: A x2
+    playStation:
+      sprite: {fileID: 21300000, guid: 3fe976358e4a1fe4d833110d35d3c40b, type: 3}
+      pressed: {fileID: 21300000, guid: 07d8b7bde48d47640bca5502a16005f6, type: 3}
+      label: Cross x2
+  - action: 3
+    keyboard:
+      sprite: {fileID: -2224474878120320963, guid: 31c5b04d2687ba14e94205e1fecd05f9, type: 3}
+      pressed: {fileID: 7561341663905687637, guid: c96407b19cb196345ab52220c4a23d23, type: 3}
+      label: E
+    xbox:
+      sprite: {fileID: 21300000, guid: 89e6e0fa7cb7e00448329ea3e1390745, type: 3}
+      pressed: {fileID: 21300000, guid: e6eb1c7e346f856488079c94f67bcb3d, type: 3}
+      label: X
+    playStation:
+      sprite: {fileID: 21300000, guid: 86a2b7e2fb90b34468e785d38468d278, type: 3}
+      pressed: {fileID: 21300000, guid: 06688bb02784ea247a4a18526436266e, type: 3}
+      label: Square
+  - action: 4
+    keyboard:
+      sprite: {fileID: -3687348052613884379, guid: 47ed8067ef86efa4781433ae980d27f0, type: 3}
+      pressed: {fileID: -198568845936864311, guid: 2101f0f57538972439add6596b490d17, type: 3}
+      label: F
+    xbox:
+      sprite: {fileID: 21300000, guid: add86990742e74644a21e835b47e281b, type: 3}
+      pressed: {fileID: 21300000, guid: b0831a82fcb59a0478e357b7b6467462, type: 3}
+      label: RB
+    playStation:
+      sprite: {fileID: 21300000, guid: dc36fbf9a80f85f4abbceb6408cf0922, type: 3}
+      pressed: {fileID: 21300000, guid: 2855948b712b68b45a84078bdd46d7d1, type: 3}
+      label: R1
+  - action: 5
+    keyboard:
+      sprite: {fileID: 4359327472603921858, guid: e6e2bf29d57ef5f4c9762b1ece36406b, type: 3}
+      pressed: {fileID: 2471149320260251004, guid: 3cebc92dcdbb599459664286c66e7425, type: 3}
+      label: Q
+    xbox:
+      sprite: {fileID: 21300000, guid: add86990742e74644a21e835b47e281b, type: 3}
+      pressed: {fileID: 21300000, guid: b0831a82fcb59a0478e357b7b6467462, type: 3}
+      label: RB
+    playStation:
+      sprite: {fileID: 21300000, guid: dc36fbf9a80f85f4abbceb6408cf0922, type: 3}
+      pressed: {fileID: 21300000, guid: 2855948b712b68b45a84078bdd46d7d1, type: 3}
+      label: R1
+  - action: 6
+    keyboard:
+      sprite: {fileID: 21300000, guid: c9dfb50a448e26d4f945f97b0a4cefea, type: 3}
+      pressed: {fileID: 21300000, guid: c88587fae9e76cd429ef438c2fa31955, type: 3}
+      label: G
+    xbox:
+      sprite: {fileID: 21300000, guid: e404db90564674541ae77de2abac5803, type: 3}
+      pressed: {fileID: 21300000, guid: 71a1e88d23e00924d80341a473e0db3d, type: 3}
+      label: LB
+    playStation:
+      sprite: {fileID: 21300000, guid: 0a28c7856b7f4d94abbcc7009433296c, type: 3}
+      pressed: {fileID: 21300000, guid: f63be4726a015fb429d6abe8cbf12aef, type: 3}
+      label: L1
+  - action: 7
+    keyboard:
+      sprite: {fileID: 21300000, guid: 0a43402fca9145d4787c4fad6f2fbe0b, type: 3}
+      pressed: {fileID: 21300000, guid: 4b1ae2ef2d0990748a6424e115eface9, type: 3}
+      label: Esc
+    xbox:
+      sprite: {fileID: 21300000, guid: 2e9dfa89a59140d4697b9a505de078b7, type: 3}
+      pressed: {fileID: 21300000, guid: d261157ea4e193340af34069333819e5, type: 3}
+      label: Start
+    playStation:
+      sprite: {fileID: 21300000, guid: 8d8e7fbfa54f74a42821040978fccaf6, type: 3}
+      pressed: {fileID: 21300000, guid: 2714f18625fab0d4092e918506c4d93d, type: 3}
+      label: Options
+  - action: 8
+    keyboard:
+      sprite: {fileID: 21300000, guid: 0ee614b92b8c16248afea003419eb5cd, type: 3}
+      pressed: {fileID: 21300000, guid: 6dc0b44bed2b28940b2ccd298c31aa3d, type: 3}
+      label: Tab
+    xbox:
+      sprite: {fileID: 21300000, guid: 45daddd17dbd3624ca1d7b7543a09921, type: 3}
+      pressed: {fileID: 21300000, guid: cd4eb666f05ded847bcccb2f2130a716, type: 3}
+      label: B
+    playStation:
+      sprite: {fileID: 21300000, guid: 720d1e536c48c114ca8ba03d053f8322, type: 3}
+      pressed: {fileID: 21300000, guid: 9c99d3670b36ee14989405e31e73f508, type: 3}
+      label: Circle
+  - action: 9
+    keyboard:
+      sprite: {fileID: 21300000, guid: 114b1e76260107247ab52746d427e706, type: 3}
+      pressed: {fileID: 21300000, guid: 87f8763557db48a43891d7875d3f0747, type: 3}
+      label: Enter
+    xbox:
+      sprite: {fileID: 21300000, guid: 424be8a2ced8c034a8f67b6b022034ff, type: 3}
+      pressed: {fileID: 21300000, guid: 42a09ea3aa94d854885cf703bcd92ba7, type: 3}
+      label: A
+    playStation:
+      sprite: {fileID: 21300000, guid: 171ed9dac36410644a14060ece28eb90, type: 3}
+      pressed: {fileID: 21300000, guid: 7cff58390616080408ffacbbbad51086, type: 3}
+      label: Cross
+  - action: 10
+    keyboard:
+      sprite: {fileID: 21300000, guid: 0a43402fca9145d4787c4fad6f2fbe0b, type: 3}
+      pressed: {fileID: 21300000, guid: 4b1ae2ef2d0990748a6424e115eface9, type: 3}
+      label: Esc
+    xbox:
+      sprite: {fileID: 21300000, guid: 45daddd17dbd3624ca1d7b7543a09921, type: 3}
+      pressed: {fileID: 21300000, guid: cd4eb666f05ded847bcccb2f2130a716, type: 3}
+      label: B
+    playStation:
+      sprite: {fileID: 21300000, guid: 720d1e536c48c114ca8ba03d053f8322, type: 3}
+      pressed: {fileID: 21300000, guid: 9c99d3670b36ee14989405e31e73f508, type: 3}
+      label: Circle
+  - action: 11
+    keyboard:
+      sprite: {fileID: 21300000, guid: c0d18d787cbca5445970ba5c52612085, type: 3}
+      pressed: {fileID: 21300000, guid: b0e4a47a04cf96e4f8c6727c000dc554, type: 3}
+      label: Backspace
+    xbox:
+      sprite: {fileID: 21300000, guid: 89e6e0fa7cb7e00448329ea3e1390745, type: 3}
+      pressed: {fileID: 21300000, guid: e6eb1c7e346f856488079c94f67bcb3d, type: 3}
+      label: X
+    playStation:
+      sprite: {fileID: 21300000, guid: 86a2b7e2fb90b34468e785d38468d278, type: 3}
+      pressed: {fileID: 21300000, guid: 06688bb02784ea247a4a18526436266e, type: 3}
+      label: Square
