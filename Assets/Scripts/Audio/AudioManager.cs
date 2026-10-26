@@ -23,6 +23,7 @@ public class AudioManager : MonoBehaviour
 
     [Header("SFX Pool Settings")]
     [SerializeField] private int sfxPoolSize = 15;
+    [SerializeField, Range(0f, 1f)] private float switchTickVolume = 1f;
     private List<AudioSource> sfxPool = new List<AudioSource>();
 
     private void Awake()
@@ -187,11 +188,12 @@ public class AudioManager : MonoBehaviour
     }
 
     // เสียง "ติก" ตอนปุ่ม/แผ่นกดในด่านถูกกด (SW-2): ใช้เสียงชื่อ "SwitchTick" ถ้าใส่ไว้ใน sfxSoundList ไม่งั้นใช้เสียงคลิก UI
+    // ความดังแยกจากเสียงคลิก (คลิกเล่นผ่าน uiSource) — ปรับที่ switchTickVolume (SFX-2)
     public void PlaySwitchTick(Vector3 position)
     {
         SoundConfig s = Array.Find(sfxSoundList, sound => sound.soundName == "SwitchTick")
                      ?? Array.Find(sfxSoundList, sound => sound.soundName == "Click");
-        if (s != null) PlayClipAtPosition(s.clip, position);
+        if (s != null) PlayClipAtPosition(s.clip, position, switchTickVolume);
     }
 
     public float GetGlobalSFXVolume()

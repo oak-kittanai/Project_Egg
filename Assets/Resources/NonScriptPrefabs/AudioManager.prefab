@@ -47,7 +47,7 @@ AudioSource:
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 0}
   m_PlayOnAwake: 0
-  m_Volume: 1
+  m_Volume: 0.5
   m_Pitch: 1
   Loop: 0
   Mute: 0
@@ -171,8 +171,11 @@ MonoBehaviour:
   sfxSoundList:
   - soundName: Click
     clip: {fileID: 8300000, guid: ff4f352999a5a5c4d921ed4de5db8ee1, type: 3}
+  - soundName: SwitchTick
+    clip: {fileID: 8300000, guid: ff4f352999a5a5c4d921ed4de5db8ee1, type: 3}
   assetsSoundList: []
   gameSettings: {fileID: 11400000, guid: e664379b5916dbc4dbee3fed3f321f7e, type: 2}
   uiSource: {fileID: 3562781797650811021}
   bgmSource: {fileID: 0}
   sfxPoolSize: 15
+  switchTickVolume: 1
