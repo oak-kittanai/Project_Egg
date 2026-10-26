@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 // กรอบขาวมุมมนรอบปุ่มที่เลือกด้วย Controller (HL-1) — เดิมเป็นกล่องเหลืองโปร่งแสงทับปุ่ม
@@ -21,10 +20,10 @@ public class SelectionHighlightFollower : MonoBehaviour
 
     private void LateUpdate()
     {
-        // แสดง highlight เฉพาะตอนมี gamepad เสียบอยู่ (เสียบ/ถอดระหว่างเล่นมีผลทันที)
-        bool gamepadConnected = Gamepad.all.Count > 0;
+        // แสดงกรอบเฉพาะตอนกำลังใช้จอย (อุปกรณ์ที่กดล่าสุด) — ใช้เมาส์/คีย์บอร์ดกรอบหาย แตะจอยกรอบขึ้น (HL-2)
+        bool usingGamepad = InputDeviceWatcher.UsingGamepad;
 
-        var selected = gamepadConnected && EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
+        var selected = usingGamepad && EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
         if (selected != null && !selected.activeInHierarchy) selected = null;
 
         if (selected != currentSelected)
