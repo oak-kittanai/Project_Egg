@@ -66,9 +66,13 @@ public class UIKeyboardNavigator : MonoBehaviour
         bool kbSubmit = Keyboard.current != null && (Keyboard.current.enterKey.wasPressedThisFrame || Keyboard.current.spaceKey.wasPressedThisFrame);
         bool gpSubmit = Gamepad.current != null && Gamepad.current.buttonSouth.wasPressedThisFrame;
         if (!kbSubmit && !gpSubmit) return;
+        if (selected == null) return;
 
-        if (selected != null)
-            ExecuteEvents.Execute(selected, new BaseEventData(EventSystem.current), ExecuteEvents.submitHandler);
+        // Controller กด A ที่ช่องใส่เลขห้อง: เปิดปุ่มตัวเลขแทนการเข้าโหมดพิมพ์ (เดิมเข้าโหมดพิมพ์แล้ว Controller ติดอยู่ในช่อง) (KP-1)
+        if (gpSubmit && selected.TryGetComponent<TMP_InputField>(out var field) && RoomCodeKeypad.TryOpenFor(field))
+            return;
+
+        ExecuteEvents.Execute(selected, new BaseEventData(EventSystem.current), ExecuteEvents.submitHandler);
     }
 
     private void HandleMove(GameObject selected)
