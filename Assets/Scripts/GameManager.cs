@@ -336,7 +336,9 @@ public class GameManager : SingletonNetwork<GameManager>
             Destroy(CameraCharacter.LocalCamera.transform.root.gameObject);
 
         DestroyByName("CoreManagerSceneHop");
-        DestroyByName("PlayerInterfaceCanvas");
+        // UI ในเกม = Canvas.prefab ที่ CenterHost สร้างชื่อ "Canvas" (เดิมลบด้วยชื่อ "PlayerInterfaceCanvas" ซึ่งไม่มีอยู่จริง)
+        // ค้างเข้า lobby พร้อมเมนู pause ที่ยังเปิด (ออกผ่าน Quit) -> Controller กดทิศแล้วไปเลือกปุ่มที่ซ่อนอยู่หลัง lobby (NV-1)
+        DestroyPersistentRoot("Canvas");
 
         // ทิ้ง SessionHub ตัวที่ค้างจากรอบก่อน (DontDestroyOnLoad) ให้ scene ใหม่สร้างใหม่ + wire ปุ่มสด
         // (ไม่งั้นปุ่ม Play/Host/Join ในหน้า session ใหม่จะไม่มี listener -> กดไม่ติด ต้องรีสตาร์ทเกม)
@@ -356,6 +358,18 @@ public class GameManager : SingletonNetwork<GameManager>
     {
         GameObject obj = GameObject.Find(objName);
         if (obj != null) Destroy(obj);
+    }
+
+    // ลบเฉพาะ root ใน DontDestroyOnLoad — ไม่ไปโดน object ชื่อเดียวกันในฉากด่าน (ซึ่งถูก unload อยู่แล้ว)
+    private static void DestroyPersistentRoot(string objName)
+    {
+        var marker = new GameObject("DontDestroyOnLoad marker");
+        DontDestroyOnLoad(marker);
+        foreach (GameObject root in marker.scene.GetRootGameObjects())
+        {
+            if (root.name == objName) Destroy(root);
+        }
+        Destroy(marker);
     }
 
     #region GameSetting
