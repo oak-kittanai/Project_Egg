@@ -20,6 +20,8 @@ public class SelectionHighlightFollower : MonoBehaviour
     private RectTransform highlightRect;
     private Image highlightImage;
     private GameObject currentSelected;
+    private Selectable currentSelectable;
+    private bool currentInteractable;
 
     // ปุ่มที่กำลังยืมหน้าตา Hover มาเป็นหน้าตาตอนถูกเลือก + ค่าเดิมไว้คืน (HL-3)
     // uGUI โชว์สถานะ Selected ก่อน Highlighted เสมอ จึงต้องสลับค่า Selected ชั่วคราวแทนการจำลองเมาส์ชี้
@@ -41,6 +43,14 @@ public class SelectionHighlightFollower : MonoBehaviour
         if (selected != currentSelected)
         {
             currentSelected = selected;
+            currentSelectable = selected != null ? selected.GetComponent<Selectable>() : null;
+            currentInteractable = currentSelectable != null && currentSelectable.IsInteractable();
+            HandleSelectionChanged();
+        }
+        else if (currentSelectable != null && currentSelectable.IsInteractable() != currentInteractable)
+        {
+            // ปุ่มเปลี่ยนกดได้/กดไม่ได้ระหว่างถูกเลือก (เช่นปุ่ม Start ตอนอีกคนกด Ready) -> เลือก Hover/กรอบใหม่
+            currentInteractable = !currentInteractable;
             HandleSelectionChanged();
         }
 
@@ -57,7 +67,7 @@ public class SelectionHighlightFollower : MonoBehaviour
         RestoreHover();
 
         var targetRect = currentSelected != null ? currentSelected.GetComponent<RectTransform>() : null;
-        if (targetRect == null || (currentSelected.TryGetComponent<Selectable>(out var selectable) && TryApplyHover(selectable)))
+        if (targetRect == null || (currentSelectable != null && TryApplyHover(currentSelectable)))
         {
             if (highlightImage != null) highlightImage.gameObject.SetActive(false);
             return;
@@ -75,8 +85,10 @@ public class SelectionHighlightFollower : MonoBehaviour
     }
 
     // ปุ่มที่มี Hover ให้เห็น: ใช้รูป/สี Hover เป็นหน้าตาตอนถูกเลือก (เก็บค่าเดิมไว้คืน) — หลอด/ช่องพิมพ์ใช้กรอบเสมอ
+    // ปุ่มที่กดไม่ได้ Unity โชว์หน้าตา Disabled ทับ Selected -> ใช้กรอบ
     private bool TryApplyHover(Selectable selectable)
     {
+        if (!selectable.IsInteractable()) return false;
         if (selectable is Slider || selectable is Scrollbar || selectable is TMP_InputField || selectable is InputField) return false;
 
         switch (selectable.transition)
