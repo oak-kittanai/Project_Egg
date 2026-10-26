@@ -1279,3 +1279,82 @@ probe ชั่วคราว (ไม่ commit) log เสียงที่�
 | 6 layer | S3: เดินผ่านตาชั่ง, ประตูทุกบาน, เครื่องลม; S1/S2: เครื่องลม; วางไอเทมบนจาน | ผู้เล่นและไอเทมอยู่หน้าทุกชิ้น และทุกชิ้นยังเห็นหน้าผนังต้นไม้ | |
 | 7 ตาชั่ง | S3: คนหนึ่งยืนใต้จาน อีกคนวางของจนจานจม (ลองทั้งตัว Host และตัว Client อยู่ใต้จาน) | ไม่ทะลุพื้น; เดิน/กระโดดออกได้; ยืนบนจานยังนับน้ำหนัก, ใต้จานไม่นับ | |
 | 8 หิน | นกปาหินใส่เป็ด (เป็ดเป็น Host และเป็ดเป็น Client) | มึนและกระเด็นสั้น ๆ ระยะเท่ากันทั้งสองแบบ; หินยังฆ่ามอน/กดปุ่มหินได้ | |
+
+## 23. Controller ใน lobby: ตัวเลือกหายหลังออกจากเกม, ปุ่มตัวเลขใส่เลขห้อง, กรอบ highlight + ลดเสียงคลิก/ธง (2026-10-26)
+
+**ที่มา:** เจ้าของโปรเจกต์แจ้ง
+- Controller ใส่เลขห้องไม่ได้ (อยากได้คีย์บอร์ด popup)
+- ออกจากเกมรอบแรกด้วย Controller แล้วสร้างห้อง → กดลงจากปุ่มกากบาทแล้วตัวเลือกหาย
+- ลดเสียงคลิกและเสียงธง 50% (เสียงติกปุ่มในด่านแยกออก คงความดังเดิม)
+- ขอให้ highlight ของ Controller เป็นกรอบขาวแบบ highlight ผู้เล่น/ไอเทม
+
+ผู้ใช้เลือก: ปุ่มตัวเลข popup (เลขห้องเป็นตัวเลข 6 หลัก), กรอบขาวมุมมน
+
+**Branch:** `fix/controller-ui` (แตกจาก `test/all2`) → fast-forward เข้า `test/all2`
+- Unity compile 0 error
+- ฉาก/prefab แก้ผ่าน Unity MCP
+- เทสอัตโนมัติผ่าน MCP ด้วยจอยเสมือน (`InputSystem.QueueStateEvent`) ให้ทุกการกดผ่าน `UIKeyboardNavigator` จริง
+
+### 23.1 ต้นเหตุและการแก้
+| รหัส | ต้นเหตุ | การแก้ | แก้แล้ว |
+|---|---|---|---|
+| NV-1 | `GameManager.ReturnToSession` ลบ UI ในเกมด้วยชื่อ `PlayerInterfaceCanvas` แต่ `CenterHost` สร้าง `Canvas.prefab` ชื่อ `Canvas` → UI ในเกมทั้งชุดค้างใน DontDestroyOnLoad เข้า lobby; ออกผ่านเมนู Quit ปุ่ม Resume/Reset/Setting/Quit/Tutorial ยัง active + กดได้ ซ่อนอยู่หลัง lobby; navigation อัตโนมัติของ Unity หาจาก Selectable ทุกตัว → กดทิศแล้วตัวเลือก (และกรอบ) ไปอยู่ที่ปุ่มที่มองไม่เห็น | `ReturnToSession` ลบ root ชื่อ `Canvas` เฉพาะใน DontDestroyOnLoad (เกมถัดไป `CenterHost` สร้างใหม่เหมือนเกมแรก); `UIKeyboardNavigator` กันซ้ำ: ตัวเลือกใหม่ต้องอยู่ root canvas เดิม/มองเห็น/กดได้ ไม่งั้นหาปุ่มในทิศเดียวกันบนหน้าเดิม; ตัวที่เลือกยังอยู่บนจอแต่ใช้ไม่ได้ → กดทิศแล้วเลือกปุ่มบนสุดของหน้านั้น; ไม่มีอะไรถูกเลือก/หน้าปิดไปแล้ว (กำลังเล่น) ไม่แตะ | แก้แล้ว: `fix/controller-ui` `fb75c6c1` |
+| KP-1 | กด A ที่ช่องใส่เลข → ช่องเข้าโหมดพิมพ์ แล้ว `UIKeyboardNavigator` หยุดรับปุ่ม → Controller ติดในช่อง; ช่องยังเข้าโหมดพิมพ์ทันทีที่ถูกเลือก; navigation อัตโนมัติหาช่องไม่เจอระหว่าง DOTween pop-in (scale 0) | `RoomCodeKeypad` (0–9, DEL, OK, ตารางวนในตัว, สูงสุด 6 หลัก, OK = กด Join ให้, B ปิด, X ลบ, Start = OK); กด A ที่ช่อง → เปิด popup; ช่องไม่เข้าโหมดพิมพ์ตอนถูกเลือก (คลิกเมาส์/Enter ยังพิมพ์ได้); หน้า Join เริ่มที่ช่องใส่เลข; ช่อง/Join/ปุ่มกลับ ใช้ navigation แบบ Explicit; UI popup สร้างใน `SessionScene` (แก้หน้าตาต่อใน Editor ได้) | แก้แล้ว: `fix/controller-ui` `8b78238c` |
+| HL-1 | highlight เป็นกล่องเหลืองโปร่งแสงทับปุ่ม | กรอบขาวมุมมนรอบปุ่ม (texture สร้างในโค้ด, 9-slice, กลางโปร่ง) + ขอบเข้มบาง ๆ ให้เห็นบนปุ่มขาว/ฟ้าอ่อน; ยังแสดงเฉพาะตอนมี gamepad | แก้แล้ว: `fix/controller-ui` `0912d6ba` |
+| SFX-2 | คลิกในเกม (`AudioManager.prefab` `uiSource`), คลิก lobby (`AudioSession.uiSource`), ธง (`Spawnpoint_WayMark.prefab`) volume 1 | ทั้งสามเป็น 0.5; ติกปุ่มในด่าน: entry `SwitchTick` ของตัวเองใน `sfxSoundList` (ไฟล์เดิมไปก่อน เปลี่ยนใน Inspector ได้) + `switchTickVolume` = 1 (เล่นผ่าน SFX pool ไม่โดนการลดคลิก) | แก้แล้ว: `fix/controller-ui` `99cd7cc9` (คลิก lobby อยู่ใน `8b78238c`) |
+
+### 23.2 ผลเทสอัตโนมัติ (MCP, Host คนเดียว, จอยเสมือน)
+
+**NV-1**
+- ก่อนแก้ (ออกผ่านเมนู pause → Quit ด้วยจอย):
+  - DontDestroyOnLoad ยังมี `Canvas` ของเกม
+  - ในนั้นมี `PauseMenu/Resume`, `Reset`, `Setting`, `Quit`, `Tutorial` active + interactable
+  - กรอบ highlight ค้างอยู่บน canvas นั้น (ขนาดปุ่ม Quit 372×122)
+- หลังแก้:
+  - DontDestroyOnLoad ไม่มี `Canvas`
+  - Selectable นอก `SessionScene` = 0
+  - กดลง/ขวา/ขึ้นจากกากบาท อยู่ใน `Session_Create` ตลอด
+  - กรอบอยู่ที่ปุ่ม lobby (90×90)
+- เกมที่ 2 หลังออก:
+  - สร้าง `Canvas` ใหม่ 1 ชุด; HUD/หลอดเลือด, dialogue (`Canvas/Dialogue`), ปุ่ม Skip คัตซีนใช้ได้
+  - เมนู pause เลื่อน/กดได้
+- ระหว่างเล่น:
+  - ไม่มีปุ่มที่ active+interactable บน HUD
+  - กด D-pad แล้วตัวเลือกไม่เปลี่ยน
+
+**KP-1**
+- หน้า Join เริ่มที่ช่องใส่เลข (ไม่เข้าโหมดพิมพ์); ขวา → Join, ลง → ปุ่มกลับ, ขึ้น → ช่อง
+- กด A → popup เปิดที่ปุ่ม 1
+- กด 1 2 3 6 5 4 → `123654`; กดหลักที่ 7 ไม่เพิ่ม; X → `12365`
+- ซ้ายวนในแถว; B ปิดกลับช่อง (ไม่เข้าโหมดพิมพ์); A เปิดใหม่ → ไล่ไป 0 → `123650`
+- Start → ปิดแล้วกด Join
+
+**HL-1**
+- ภาพจอ: กรอบขาวมุมมนรอบ PLAY (เมนูหลัก), รอบ RESUME (เมนู pause ในเกม)
+- บนปุ่มขาวของ popup เห็นขอบเข้ม
+
+**SFX-2** (SFX 100, Music 0, ฟังด้วย `AudioListener.GetOutputData`)
+
+| เสียง | ก่อน | หลัง |
+|---|---|---|
+| คลิก | 0.4603 | 0.2302 |
+| ธง (`Spawnpoint_WayMark (1)`) | 0.0203 | 0.0097 (pool vol 0.50) |
+| ติก | — | 0.751 (pool vol 1.00 ไม่ลด) |
+
+### 23.3 ข้อสังเกต (ไม่ได้แก้)
+- ใส่เลขห้องที่ไม่มีอยู่จริง: Fusion ตอบ `GameNotFound` → `OnShutdown` สาย lobby พากลับเมนูหลัก (ไม่อยู่หน้า Join พร้อมข้อความ "Connection failed") — พฤติกรรมเดิม
+- เล่นใน Editor แล้ว `LoadingScreenManager.prefab` ถูกเขียน `m_IsActive: 0` (โค้ดหน้าโหลด SetActive ตัว prefab asset)
+  - เป็นที่มาของไฟล์นี้ที่โผล่ใน working tree บ่อย ๆ
+  - รอบนี้คืนค่าด้วย git ไม่ commit
+- ข้อความ debug "Join Session Fail: …" ใช้ฟอนต์ที่ตกไป `LiberationSans SDF - Fallback` (dynamic) → ไฟล์ฟอนต์นี้เปลี่ยนหลังเทส join (คืนค่าแล้ว)
+- กรอบ highlight ปรับขนาดได้ในโค้ด (`frameThickness` 4, `cornerRadius` 12, `padding` 6 ใน `SelectionHighlightFollower`) — component ถูกเพิ่มตอนรัน จึงไม่ขึ้นใน Inspector
+
+### 23.4 Checklist เทส — `test/all2` (MPPM หรือ build, Host + Client, จอยจริง)
+| ขั้น | ทำอะไร | ควรเห็น | ผล |
+|---|---|---|---|
+| 1 | เล่นเกม → เปิดเมนู pause ด้วยจอย → Quit → สร้างห้อง → กดลง/ซ้าย/ขวา/ขึ้น | ตัวเลือกและกรอบอยู่บนปุ่มของห้องตลอด ไม่หาย | |
+| 2 | ข้อ 1 แล้วเริ่มเกมรอบ 2 | HUD, dialogue, คัตซีน, เมนู pause ใช้ได้เหมือนรอบแรก | |
+| 3 | Client: Join → กด A ที่ช่องเลข → กดเลขห้องของ Host ด้วย popup → OK | เข้าห้องได้; B ปิด popup, X ลบ ใช้ได้ | |
+| 4 | คีย์บอร์ด/เมาส์: คลิกช่องเลขแล้วพิมพ์ / กด Enter ที่ช่องแล้วพิมพ์ | พิมพ์ได้เหมือนเดิม | |
+| 5 | ทุกเมนู (lobby, ตั้งค่า, pause, dialogue, tutorial) ด้วยจอย | กรอบขาวมุมมนรอบปุ่ม เห็นชัดทั้งบนปุ่มสีเข้มและสีขาว | |
+| 6 | คลิกปุ่มใน lobby/ในเกม, เข้าธง, เหยียบปุ่มในด่าน | คลิกและธงเบาลงครึ่งหนึ่ง, ติกปุ่มดังเท่าเดิม, ทั้งหมดยังตามค่า SFX | |
