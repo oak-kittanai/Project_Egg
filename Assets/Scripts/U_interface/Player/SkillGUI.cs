@@ -25,6 +25,15 @@ public class SkillGUI : MonoBehaviour
     [SerializeField] Sprite shortSkill;
     [SerializeField] Sprite shortSkillPressed;
 
+    [Header("Input Prompt (IP-2)")]
+    [Tooltip("ปุ่มของสกิลนี้ — ตอนใช้จอยรูปปุ่มมาจาก InputGlyphSet; คีย์บอร์ดใช้รูปด้านบนเหมือนเดิม")]
+    [SerializeField] InputPromptAction keyAction;
+
+    // คู่รูปปุ่มของอุปกรณ์ปัจจุบัน — เลือกใหม่เฉพาะตอนอุปกรณ์เปลี่ยน; SetPressed (เรียกทุกเฟรม) แค่สลับคู่นี้
+    private Sprite keyNormal;
+    private Sprite keyPressed;
+    private bool keyIsPressed;
+
     private void Start()
     {
         if (!isSkillDiscover)
@@ -37,14 +46,47 @@ public class SkillGUI : MonoBehaviour
     {
         longSkillKey.enabled = !isSkillKeyPressShort;
         shortSkillKey.enabled = isSkillKeyPressShort;
+
+        InputDeviceWatcher.Changed += OnInputSchemeChanged;
+        RefreshKeySprites();
+    }
+
+    private void OnDisable()
+    {
+        InputDeviceWatcher.Changed -= OnInputSchemeChanged;
+    }
+
+    private void OnInputSchemeChanged(InputScheme scheme) => RefreshKeySprites();
+
+    private void RefreshKeySprites()
+    {
+        keyNormal = isSkillKeyPressShort ? shortSkill : longSkill;
+        keyPressed = isSkillKeyPressShort ? shortSkillPressed : longSkillPressed;
+
+        InputGlyphSet set = InputGlyphSet.Instance;
+        if (InputDeviceWatcher.UsingGamepad && set != null)
+        {
+            InputGlyphSet.Glyph glyph = set.Get(keyAction, InputDeviceWatcher.Current);
+            if (glyph != null && glyph.sprite != null)
+            {
+                keyNormal = glyph.sprite;
+                keyPressed = glyph.pressed != null ? glyph.pressed : glyph.sprite;
+            }
+        }
+        ApplyKeySprite();
     }
 
     public void SetPressed(bool isKeyPress)
     {
-        if (isSkillKeyPressShort)
-            shortSkillKey.sprite = isKeyPress ? shortSkillPressed : shortSkill;
-        else
-            longSkillKey.sprite = isKeyPress ? longSkillPressed : longSkill;
+        keyIsPressed = isKeyPress;
+        if (keyNormal == null) RefreshKeySprites();
+        else ApplyKeySprite();
+    }
+
+    private void ApplyKeySprite()
+    {
+        Image key = isSkillKeyPressShort ? shortSkillKey : longSkillKey;
+        if (key != null) key.sprite = keyIsPressed ? keyPressed : keyNormal;
     }
 
     public void UpdateCooldown(TickTimer timer, NetworkRunner runner)

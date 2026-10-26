@@ -90,4 +90,6 @@ public class TutorialData
     public Vector2 RectTransform;
     public float displayDuration = 3f; // เวลา "ล็อคปิดด้วย Tab" ตอนเจอครั้งแรก (ไม่ใช่ auto-close แล้ว)
     public Sprite tutorialSprite;
+    [Tooltip("รูปเวอร์ชันจอย ขนาดเท่ารูปด้านบน — ว่าง = ใช้รูปด้านบนทุกอุปกรณ์ (IP-2)")]
+    public Sprite tutorialSpriteController;
 }

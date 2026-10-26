@@ -163,10 +163,35 @@ public class TutorialUIManager : MonoBehaviour
         RenderCurrentPage();
     }
 
+    private void OnEnable()
+    {
+        InputDeviceWatcher.Changed += OnInputSchemeChanged;
+    }
+
+    private void OnDisable()
+    {
+        InputDeviceWatcher.Changed -= OnInputSchemeChanged;
+    }
+
+    // สลับอุปกรณ์ระหว่างเปิดหน้าสอนเล่น -> เปลี่ยนรูปทันที (ไม่ย้ายตัวเลือก)
+    private void OnInputSchemeChanged(InputScheme scheme)
+    {
+        if (tutorialPanel != null && tutorialPanel.activeSelf && currentList != null) ApplyPageSprite();
+    }
+
+    // รูปเวอร์ชันจอยถ้าใส่ไว้และกำลังใช้จอย ไม่งั้นรูปเดิม (IP-2)
+    private void ApplyPageSprite()
+    {
+        if (tutorialImage == null || currentList == null || currentIndex >= currentList.Count) return;
+        TutorialData data = currentList[currentIndex];
+        tutorialImage.sprite = InputDeviceWatcher.UsingGamepad && data.tutorialSpriteController != null
+            ? data.tutorialSpriteController
+            : data.tutorialSprite;
+    }
+
     private void RenderCurrentPage()
     {
-        TutorialData data = currentList[currentIndex];
-        if (tutorialImage != null) tutorialImage.sprite = data.tutorialSprite;
+        ApplyPageSprite();
 
         if (prevButton != null) prevButton.interactable = currentIndex > 0;
         if (nextButton != null) nextButton.interactable = currentIndex < currentList.Count - 1;
