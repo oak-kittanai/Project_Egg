@@ -103,9 +103,9 @@ MonoBehaviour:
     - line: '|   m_ShowUnitySplashScreen: 1'
     - line: '|   m_ShowUnitySplashLogo: 1'
     - line: '|   m_SplashScreenOverlayOpacity: 1'
-    - line: '|   m_SplashScreenAnimation: 1'
+    - line: '|   m_SplashScreenAnimation: 0'
     - line: '|   m_SplashScreenLogoStyle: 1'
-    - line: '|   m_SplashScreenDrawMode: 0'
+    - line: '|   m_SplashScreenDrawMode: 1'
     - line: '|   m_SplashScreenBackgroundAnimationZoom: 1'
     - line: '|   m_SplashScreenLogoAnimationZoom: 1'
     - line: '|   m_SplashScreenBackgroundLandscapeAspect: 1'
@@ -125,7 +125,13 @@ MonoBehaviour:
     - line: '|   m_SplashScreenLogos:'
     - line: '|   - logo: {fileID: 21300000, guid: be54aa921134a464a9701c0c638c534d,
         type: 3}'
-    - line: '|     duration: 2.5'
+    - line: '|     duration: 4'
+    - line: '|   - logo: {fileID: 21300000, guid: a9fbfa53951e2ce4389a317714f0183c,
+        type: 3}'
+    - line: '|     duration: 4'
+    - line: '|   - logo: {fileID: 10404, guid: 0000000000000000f000000000000000,
+        type: 0}'
+    - line: '|     duration: 3'
     - line: '|   m_VirtualRealitySplashScreen: {instanceID: 0}'
     - line: '|   m_HolographicTrackingLossScreen: {instanceID: 0}'
     - line: '|   defaultScreenWidth: 1920'
@@ -228,7 +234,7 @@ MonoBehaviour:
     - line: '|   loadStoreDebugModeEnabled: 0'
     - line: '|   visionOSBundleVersion: 1.0'
     - line: '|   tvOSBundleVersion: 1.0'
-    - line: '|   bundleVersion: 0.7'
+    - line: '|   bundleVersion: 0.71'
     - line: '|   preloadedAssets:'
     - line: '|   - {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100,
         type: 3}'
