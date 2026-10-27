@@ -7,6 +7,11 @@
 
 รูปในโฟลเดอร์นี้ตอนนี้เป็น **placeholder** — วาดของจริงทับได้เลย
 
+**PlayStation ใช้ art จริงแล้ว (2026-10-27):** อยู่ที่ `Assets/Resources/UI_Assets/NewUI/`
+- เกมผูกไฟล์ในโฟลเดอร์นั้นตรง ๆ แก้ art ให้วาดทับไฟล์ชื่อเดิมที่นั่น
+- รูปใน `PlayStation/` ของโฟลเดอร์นี้ยังใช้แค่ ○ (`ps_circle`) ที่ยังไม่มีรูปจริง
+- คำในชื่อไฟล์ NewUI: `pass` = ตอนกด, `hold` = ตอนชี้/จอยเลือก, `dis` = กดไม่ได้
+
 ## เปลี่ยน art: วาดทับไฟล์เดิม ชื่อเดิม
 - เปิด PNG ในโฟลเดอร์นี้ วาดใหม่แล้ว **save ทับชื่อเดิม** → Unity ใช้รูปใหม่ทุกที่ทันที (ไม่ต้องลากต่อใหม่)
 - อย่าเปลี่ยนชื่อ/ย้ายไฟล์ — ถ้าจำเป็น ให้ย้ายใน Unity (ไฟล์ `.meta` ต้องไปด้วย)
@@ -18,6 +23,8 @@
 
 - ทุกปุ่มมีคู่ `_pressed` = รูปตอนกดค้าง (เช่นตอนนกบิน/ตอนเล็งปาหิน)
 - Import ตั้งไว้แล้ว: Sprite (Single), PPU 300, ไม่มี mipmap, Max Size 256 (ปุ่มเดี่ยว) / 1024 (×2)
+- ปุ่มที่ยาวกว่า (เช่น R1, OPTION) ทำ canvas กว้างขึ้นได้ — **สูงต้องเท่าเดิม 300** เกมให้ช่องสูงเท่าเดิมแล้วกว้างตามรูปเอง
+- รูปตอนกด/ตอนชี้ ต้องวางตำแหน่งบน canvas ตรงกับรูปปกติ (ใช้ขนาด canvas เดียวกัน)
 
 ## รายการไฟล์
 | การกระทำ | คีย์บอร์ด | Xbox | PlayStation |
@@ -34,6 +41,23 @@
 | ยืนยัน (Confirm) | `Keyboard/key_enter` | `xbox_a` | `ps_cross` |
 | ย้อน (Back) | `Keyboard/key_esc` | `xbox_b` | `ps_circle` |
 | ลบ (Delete) | `Keyboard/key_backspace` | `xbox_x` | `ps_square` |
+| ป้าย "กด … เพื่อปิด" (CloseHint) | รูปเดิม `Note_Interface/Tab close` | `xbox_close_hint` (placeholder 416 × 118) | `NewUI/join close` |
+
+PlayStation ที่ใช้อยู่จริง (NewUI):
+
+| การกระทำ | ไฟล์ |
+|---|---|
+| Move | `L Stick`, `L Stick pass` |
+| Jump / Confirm | `join jump` |
+| Fly | `join Fly`, `join Fly pass` |
+| Interact / Delete | `jpin interact`, `jpin interact pass` |
+| Dive / Throw | `R1`, `R1 pass` |
+| Drop | `L1`, `l1 pass` |
+| Pause | `option` |
+| CloseUI / Back | ยังเป็น placeholder `ps_circle` |
+
+- `other` (△) ยังไม่มีการกระทำไหนใช้
+- ยังไม่มีรูปตอนกดของ ✕, OPTION, △
 
 - ตารางนี้ตรงกับปุ่มที่เกมรับจริง ถ้าโปรแกรมเมอร์เปลี่ยนปุ่ม ต้องแก้ทั้งสองที่
 - ไฟล์ที่ผูกทั้งหมดอยู่ที่ `Assets/Resources/InputGlyphSet.asset` (เปิดใน Inspector ได้)
@@ -42,7 +66,7 @@
   - ช่อง PlayStation ว่าง = ใช้รูป Xbox
 
 ## ใส่ปุ่มใน UI ใหม่
-- **รูปบน UI (Image):** ลาก `Template/InputPrompt_UI.prefab` มาใช้ หรือใส่ component `InputGlyph` บน Image แล้วเลือก `Action`
+- **รูปบน UI (Image / RawImage):** ลาก `Template/InputPrompt_UI.prefab` มาใช้ หรือใส่ component `InputGlyph` บน Image/RawImage แล้วเลือก `Action`
   - `Keep Authored Keyboard Sprite` เปิด = ตอนใช้คีย์บอร์ดโชว์รูปที่ใส่ไว้ใน Image (รักษาสไตล์ art เดิม)
   - ปิด = ใช้รูปช่องคีย์บอร์ดใน `InputGlyphSet`
 - **รูปในฉาก (SpriteRenderer):** `Template/InputPrompt_World.prefab` หรือใส่ `InputGlyph` บน SpriteRenderer — ขนาดบนจอคงเท่ารูปเดิมเอง
@@ -65,6 +89,8 @@
   - ใช้คีย์บอร์ด: รูปเดิมของ prefab
   - ใช้จอย: รูปจาก `InputGlyphSet`
 - ข้อความวิธีกดใน popup ใส่เลขห้อง (`SessionScene`)
+- ป้าย "PRESS Tab TO CLOSE" ในหน้าโน้ตและหน้าสอนเล่น — `Canvas.prefab` → `NoteObj/PressTabToClose`, `TutorialPanel/PressTabToClose`
+- ปุ่มลูกศร back (`NewUI/back*`): ปุ่มกลับหน้า Join, Prev/Next บทสนทนาและหน้าสอนเล่น; ปุ่ม ? (`NewUI/how to play*`) ในเมนู pause
 - หน้าสอนเล่น (รอรูปเวอร์ชันจอย)
 - กรอบเลือกปุ่มสีขาวในเมนู: ขึ้นเฉพาะตอนกำลังใช้จอย
 

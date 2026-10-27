@@ -1482,3 +1482,57 @@ probe ชั่วคราว (ไม่ commit) log เสียงที่�
 | 7 | Host อยู่ที่ START ด้วยจอย แล้ว Client กด Ready | START เปลี่ยนจากกรอบเป็นหน้า Hover | |
 | 8 | ใช้เมาส์คลิกปุ่มแล้วขยับออก | ปุ่มไม่ค้างหน้า Hover | |
 | 9 | เปิดฉาก S1–S3 / lobby หลังเปลี่ยนชื่อ asset | รูป เสียง บทพูด ครบเหมือนเดิม ไม่มี Missing | |
+
+## 26. UI ชุดใหม่ของทีม UI (PlayStation) จาก `Resources/UI_Assets/NewUI` (2026-10-27)
+
+**ที่มา:** ทีม UI ส่งรูป 21 ไฟล์ — ปุ่มจอย PS, ป้าย "○ TO CLOSE", ปุ่มลูกศร back และปุ่ม ? (how to play) พร้อมสถานะ `hold` (ชี้/เลือก) / `pass` (กด) / `dis` (กดไม่ได้)
+
+ผู้ใช้เลือก:
+- ผูกไฟล์ใน NewUI ตรง ๆ (ไม่คัดลอกทับ placeholder)
+- back ใช้ที่ปุ่มกลับใน lobby + Prev/Next บทสนทนาและหน้าสอนเล่น; ? ใช้ที่ปุ่ม Tutorial ในเมนู pause
+- ป้าย TO CLOSE ของ Xbox ทำ placeholder ให้
+
+**Branch:** `feature/ps-ui` (แตกจาก `test/all2`) → fast-forward เข้า `test/all2`
+- Unity compile 0 error
+- import / asset / prefab / ฉาก แก้ผ่าน Unity MCP
+
+### 26.1 สิ่งที่ทำ
+| รหัส | อะไร | แก้แล้ว |
+|---|---|---|
+| IP-4 | `InputGlyphSet` ช่อง PS ชี้ art จริง (L Stick, L1, R1, ✕, ✕×2, □, OPTION); import แบบเดียวกับปุ่ม E/F/Q (sprite เดียวตัดขอบ, รูปตอนกดใช้กรอบเดียวกัน) ส่วน ✕×2 ใช้ทั้งภาพเหมือน spacebar ×2 (`join Fly` เดิมถูกตัดเป็น 2 ชิ้น); `InputGlyph.FitWidthToSprite` — ช่องปุ่มสูงเท่าเดิม กว้างตามรูป (`SkillGUI` ใช้ด้วย) เดิมรูปกว้างจะถูกบีบ/ยืดเข้าช่องสี่เหลี่ยม | แก้แล้ว: `feature/ps-ui` `4f20e066` |
+| IP-5 | การกระทำใหม่ `CloseHint` (ต่อท้าย enum) สำหรับป้าย "PRESS Tab TO CLOSE" ในหน้าโน้ตและหน้าสอนเล่น: คีย์บอร์ด = รูปเดิม, PS = `join close`, Xbox = placeholder `Xbox/xbox_close_hint.png` (สร้างจากป้าย PS แล้วใส่ปุ่ม B); `InputGlyph` รองรับ RawImage (ป้ายนี้เป็น RawImage) | แก้แล้ว: `feature/ps-ui` `4f20e066`, `20dd0bb1` |
+| UI-1 | SpriteSwap ด้วย art ใหม่: ปุ่มกลับหน้า Join (`SessionScene`), Prev/Next `Dialogue.prefab`, Prev/Next หน้าสอนเล่น (เดิม ColorTint, Next กลับด้านด้วย scale −1 แบบบทสนทนา), ปุ่ม Tutorial ในเมนู pause (เดิม ColorTint) → จอยเลือกแล้วเห็นรูป `hold` แทนกรอบ (HL-3) | แก้แล้ว: `feature/ps-ui` `20dd0bb1` |
+
+### 26.2 ผลเทสอัตโนมัติ (Play Mode จาก `SessionScene`, Host คนเดียว, DualShock4 + Xbox + คีย์บอร์ดเสมือน) — 23/23 ผ่าน
+
+| จุด | คีย์บอร์ด | PS | Xbox |
+|---|---|---|---|
+| สกิลเป็ด ดำน้ำ | `F_0` 51.6×51.6 | `R1_0` 74.0×51.6 (กด = `R1 pass_0`) | `xbox_rb` 55.7×51.6 |
+| สกิลเป็ด ทุบ | `E_0` 51.6×51.6 | `jpin interact_0` 51.6×51.6 | — |
+| สกิลนก บิน | `spacebar x 2` 170.5×45.2 | `join Fly` 76.0×45.2 | `xbox_a_x2` 170.5×45.2 |
+| สกิลนก ปาหิน | — | `R1_0` 74.0×51.6 | — |
+| ป้ายกดเหนือของ | `E_Button_0` สูง 0.297 | `jpin interact_0` สูง 0.297 | — |
+| ป้ายปิดหน้าโน้ต | `Tab close` กว้าง 659.9 | `join close` 440.7 | `xbox_close_hint` 440.7 |
+
+- ใช้คีย์บอร์ดแล้วช่องกลับขนาดเดิมพอดี
+- ปุ่มกลับหน้า Join: ปกติ `back_0`, จอยเลือก `back hold_0` ไม่มีกรอบ
+- บทสนทนา: Prev/Next = `back_0` (Next scale −1), hover `back hold_0`, disabled `back dis_0`
+- เมนู pause: Tutorial ปกติ `how to play icon_0`, จอยเลือก `how to play icon hold_0` ไม่มีกรอบ
+- หน้าสอนเล่นหน้าแรก: Prev = `back dis_0` (กดไม่ได้), Next กลับด้าน, ป้ายปิด PS = `join close`
+- ภาพจอ: HUD เป็ดปุ่ม R1/□, หน้าสอนเล่นลูกศรเทา/ฟ้า, ปุ่ม ? มุมขวาล่างเมนู pause
+
+### 26.3 ข้อสังเกต
+- ยังไม่มีรูปจริง: ○ (CloseUI/Back ใช้ placeholder), รูปตอนกดของ ✕ / OPTION / △; Xbox ทั้งชุดยังเป็น placeholder
+- placeholder Xbox (ทั้ง canvas 300×300) ในช่องสกิลกว้าง 55.7 (เดิม 51.6) เพราะช่องใช้อัตรายืดเดียวกับรูป E/F/Q — จะเท่ากันเองเมื่อทีม UI ส่ง art Xbox แบบเดียวกับ PS
+- ชื่อไฟล์ NewUI ยังเป็นของทีม UI (`join …`, `jpin interact` สะกดผิด) — ไม่ได้เปลี่ยน เพื่อให้ทีมวาดทับชื่อเดิมได้
+- `back.png`, `how to play icon.png`, `Next.png`, `Back_Not_available.png`, `Next_Not_available.png` เดิมใน `Resources/Assets/Ingame/Tutorial/` ไม่มี prefab/ฉากใดใช้แล้ว (ไม่ได้ลบ)
+
+### 26.4 Checklist เทส — `test/all2` (MPPM หรือ build, Host + Client, จอย PS จริง)
+| ขั้น | ทำอะไร | ควรเห็น | ผล |
+|---|---|---|---|
+| 1 | เล่นด้วยจอย PS: ดูไอคอนสกิลเป็ด/นก, เดินไปใกล้ของ | R1 / □ / ✕×2 รูปใหม่ ไม่บีบ ไม่ยืด; ป้าย □ เหนือของขนาดเท่าป้าย E | |
+| 2 | เปิดโน้ต / หน้าสอนเล่น ด้วยจอย PS → จอย Xbox → คีย์บอร์ด | ป้าย "○ TO CLOSE" → "B TO CLOSE" → "PRESS Tab TO CLOSE" | |
+| 3 | หน้าสอนเล่น เลื่อนหน้าด้วยจอย | ลูกศรเทาตอนกดไม่ได้, ลูกศรที่เลือกเป็นรูป hold | |
+| 4 | บทสนทนา Prev/Next, ปุ่มกลับหน้า Join ด้วยเมาส์และจอย | ลูกศรใหม่, ชี้/เลือก = hold, กด = pass | |
+| 5 | เมนู pause → ปุ่ม ? | รูป hold ตอนเลือก, กดแล้วเปิดหน้าสอนเล่น | |
+| 6 | Host ใช้จอย PS, Client ใช้คีย์บอร์ด | แต่ละจอแสดงตามอุปกรณ์ของตัวเอง | |
