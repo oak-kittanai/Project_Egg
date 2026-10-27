@@ -14,4 +14,5 @@ public enum InputPromptAction
     Confirm,
     Back,
     Delete,
+    CloseHint,  // ป้าย "กด … เพื่อปิด" ในหน้าโน้ต/หน้าสอนเล่น (รูปทั้งป้าย ไม่ใช่ปุ่มเดี่ยว) (IP-5)
 }

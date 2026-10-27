@@ -34,6 +34,11 @@ public class SkillGUI : MonoBehaviour
     private Sprite keyPressed;
     private bool keyIsPressed;
 
+    // ขนาดช่องปุ่มที่ออกแบบไว้ — รูปจอยที่กว้างไม่เท่ากันปรับความกว้างจากค่านี้ (IP-4)
+    private bool keySizeCaptured;
+    private Vector2 shortKeySize;
+    private Vector2 longKeySize;
+
     private void Start()
     {
         if (!isSkillDiscover)
@@ -85,8 +90,25 @@ public class SkillGUI : MonoBehaviour
 
     private void ApplyKeySprite()
     {
+        if (!keySizeCaptured)
+        {
+            keySizeCaptured = true;
+            if (shortSkillKey != null) shortKeySize = shortSkillKey.rectTransform.sizeDelta;
+            if (longSkillKey != null) longKeySize = longSkillKey.rectTransform.sizeDelta;
+        }
+
         Image key = isSkillKeyPressShort ? shortSkillKey : longSkillKey;
-        if (key != null) key.sprite = keyIsPressed ? keyPressed : keyNormal;
+        if (key == null) return;
+
+        key.sprite = keyIsPressed ? keyPressed : keyNormal;
+
+        // สูงเท่าเดิม กว้างตามรูป เทียบกับรูปคีย์บอร์ดที่ช่องนี้ออกแบบไว้ (R1 กว้างกว่า E, ✕×2 แคบกว่า Space×2)
+        Sprite reference = isSkillKeyPressShort ? shortSkill : longSkill;
+        if (reference != null)
+        {
+            InputGlyph.FitWidthToSprite(key.rectTransform, isSkillKeyPressShort ? shortKeySize : longKeySize,
+                InputGlyph.SpriteAspect(reference), key.sprite);
+        }
     }
 
     public void UpdateCooldown(TickTimer timer, NetworkRunner runner)
