@@ -91,6 +91,7 @@ PlayStation ที่ใช้อยู่จริง (NewUI):
 - ข้อความวิธีกดใน popup ใส่เลขห้อง (`SessionScene`)
 - ป้าย "PRESS Tab TO CLOSE" ในหน้าโน้ตและหน้าสอนเล่น — `Canvas.prefab` → `NoteObj/PressTabToClose`, `TutorialPanel/PressTabToClose`
 - ปุ่มลูกศร back (`NewUI/back*`): ปุ่มกลับหน้า Join, Prev/Next บทสนทนาและหน้าสอนเล่น; ปุ่ม ? (`NewUI/how to play*`) ในเมนู pause
+- แถบบอกปุ่ม "[A] Confirm  [B] Back" มุมขวาล่างของเมนู (ตอนใช้จอย) — `Resources/Prefabs/Interface/ControllerHintBar.prefab` แต่งพื้น/ฟอนต์/ขนาดได้ที่ prefab นี้; กด B = ปุ่มที่มี component `UIBackButton`
 - หน้าสอนเล่น (รอรูปเวอร์ชันจอย)
 - กรอบเลือกปุ่มสีขาวในเมนู: ขึ้นเฉพาะตอนกำลังใช้จอย
 
