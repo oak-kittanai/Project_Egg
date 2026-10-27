@@ -12,6 +12,10 @@ public class UIKeyboardNavigator : MonoBehaviour
 
     private float nextMoveTime;
 
+    // B บนจอย = ปุ่มย้อนกลับของหน้านั้น (BK-1): ปุ่มแบบกดค้างนับเวลาจากตอนเริ่มกด
+    private UIBackButton backHoldTarget;
+    private float backHoldStart;
+
     // ตัวที่เลือกล่าสุดที่ยังใช้ได้ — ไว้หาหน้าจอเดิมตอนตัวเลือกหายไป (NV-1)
     private GameObject lastSeenSelected;
     private GameObject lastUsableSelected;
@@ -75,6 +79,61 @@ public class UIKeyboardNavigator : MonoBehaviour
         ExecuteEvents.Execute(selected, new BaseEventData(EventSystem.current), ExecuteEvents.submitHandler);
     }
 
+    // อ่าน B หลัง Update ของทุกตัว — popup ที่ปิดตัวเองด้วย B ในเฟรมนี้ (ConsumeBack) ได้ใช้ปุ่มไปก่อน
+    private void LateUpdate()
+    {
+        var pad = Gamepad.current;
+        if (pad == null || EventSystem.current == null)
+        {
+            CancelBackHold();
+            return;
+        }
+
+        if (pad.buttonEast.wasPressedThisFrame && !UIBackButton.BackConsumedThisFrame)
+        {
+            UIBackButton target = UIBackButton.Current;
+            if (target == null) return;
+
+            if (target.HoldSeconds <= 0f) PressBack(target);
+            else
+            {
+                backHoldTarget = target;
+                backHoldStart = Time.unscaledTime;
+                UIBackButton.HoldProgress = 0f;
+            }
+            return;
+        }
+
+        if (backHoldTarget == null) return;
+
+        // ปล่อยก่อนครบ หรือหน้าเปลี่ยนไประหว่างกดค้าง = ยกเลิก
+        if (!pad.buttonEast.isPressed || UIBackButton.Current != backHoldTarget)
+        {
+            CancelBackHold();
+            return;
+        }
+
+        UIBackButton.HoldProgress = Mathf.Clamp01((Time.unscaledTime - backHoldStart) / backHoldTarget.HoldSeconds);
+        if (UIBackButton.HoldProgress >= 1f)
+        {
+            UIBackButton target = backHoldTarget;
+            CancelBackHold();
+            PressBack(target);
+        }
+    }
+
+    private void CancelBackHold()
+    {
+        backHoldTarget = null;
+        UIBackButton.HoldProgress = 0f;
+    }
+
+    // กดผ่าน submit แบบเดียวกับปุ่ม A: เห็นสถานะกด และ onClick เดิมทำงาน
+    private static void PressBack(UIBackButton target)
+    {
+        ExecuteEvents.Execute(target.gameObject, new BaseEventData(EventSystem.current), ExecuteEvents.submitHandler);
+    }
+
     private void HandleMove(GameObject selected)
     {
         Vector2 moveDir = Vector2.zero;
@@ -136,7 +195,7 @@ public class UIKeyboardNavigator : MonoBehaviour
     }
 
     // เลือกได้จริงและมองเห็น: active, กดได้, canvas เปิดอยู่, ไม่อยู่ใต้ CanvasGroup ที่ alpha 0
-    private static bool IsUsable(GameObject go)
+    internal static bool IsUsable(GameObject go)
     {
         if (go == null || !go.activeInHierarchy) return false;
         if (!go.TryGetComponent<Selectable>(out var selectable) || !selectable.IsInteractable()) return false;

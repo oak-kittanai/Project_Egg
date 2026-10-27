@@ -76,7 +76,8 @@ public class RoomCodeKeypad : MonoBehaviour
         var pad = Gamepad.current;
         if (pad != null)
         {
-            if (pad.buttonEast.wasPressedThisFrame) { Close(true); return; }
+            // B ปิด popup อย่างเดียว ไม่ให้หน้า Join ย้อนกลับต่อในกดเดียวกัน (BK-1)
+            if (pad.buttonEast.wasPressedThisFrame) { UIBackButton.ConsumeBack(); Close(true); return; }
             if (pad.buttonWest.wasPressedThisFrame) Backspace();
             if (pad.startButton.wasPressedThisFrame) { Confirm(); return; }
         }

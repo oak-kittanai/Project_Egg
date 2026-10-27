@@ -87,7 +87,10 @@ public class TutorialUIManager : MonoBehaviour
         bool closeFromKeyboard = Keyboard.current != null && Keyboard.current.tabKey.wasPressedThisFrame;
         bool closeFromGamepad = Gamepad.current != null && Gamepad.current.buttonEast.wasPressedThisFrame;
         if (closeFromKeyboard || closeFromGamepad)
+        {
+            if (closeFromGamepad) UIBackButton.ConsumeBack();   // B ปิดหน้าสอนเล่นอย่างเดียว ไม่ย้อนหน้าข้างหลังต่อ (BK-1)
             HideTutorial();
+        }
     }
 
     public void RegisterCanvas(GameObject canvas)
