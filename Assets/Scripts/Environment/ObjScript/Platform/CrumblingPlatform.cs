@@ -51,6 +51,7 @@ public class CrumblingPlatform : NetworkBehaviour
     private void OnCollisionEnter2D(Collision2D collision)
     {
         if (!HasStateAuthority) return;
+        if (GameplayPause.Frozen) return;
 
         if (CurrentState == PlatformState.Idle && collision.gameObject.CompareTag("Player"))
         {
@@ -65,6 +66,13 @@ public class CrumblingPlatform : NetworkBehaviour
     public override void FixedUpdateNetwork()
     {
         if (!HasStateAuthority) return;
+
+        // freeze ตอน pause/dialogue/tutorial — เดิมไม่เช็คเลย: แท่นที่สั่นอยู่พังระหว่าง pause คนบนแท่นลอยค้างแล้วตกตอนเล่นต่อ (TP-4)
+        if (GameplayPause.Frozen)
+        {
+            StateTimer = GameplayPause.Hold(StateTimer, Runner);
+            return;
+        }
 
         if (CurrentState == PlatformState.Shaking && StateTimer.Expired(Runner))
         {
@@ -92,6 +100,11 @@ public class CrumblingPlatform : NetworkBehaviour
 
     public override void Render()
     {
+        // ตอน pause: ท่าแตกหยุดกลางคัน, ไม่สั่น, เลื่อนเวลาซ่อน sprite ออกไปเท่าเวลาที่หยุด
+        bool frozen = GameplayPause.Frozen;
+        if (animator != null) animator.speed = frozen ? 0f : 1f;
+        if (frozen && hideSpriteAtTime >= 0f) hideSpriteAtTime += Time.deltaTime;
+
         if (lastState != CurrentState)
         {
             if (CurrentState == PlatformState.Broken)
@@ -123,7 +136,7 @@ public class CrumblingPlatform : NetworkBehaviour
             if (CurrentState == PlatformState.Broken && sr != null) sr.enabled = false;
         }
 
-        if (CurrentState == PlatformState.Shaking)
+        if (CurrentState == PlatformState.Shaking && !frozen)
         {
             float t = (float)Runner.SimulationTime * shakeFrequency;
             Vector3 shakeOffset = new Vector3(Mathf.Sin(t), Mathf.Cos(t * 1.3f), 0f) * shakeIntensity;

@@ -15,6 +15,8 @@ public class MoveSome : NetworkBehaviour, IRideablePlatform, IBeforeTick
     // จุดที่วางไว้ในฉาก (host ส่งให้ทุกเครื่อง) และ tick ที่สั่งหยุด (0 = กำลังเคลื่อนที่)
     [Networked] private Vector3 StartPosition { get; set; }
     [Networked] private int HoldTick { get; set; }
+    // จำนวน tick ที่หยุดไปแล้วรวมกัน — ปล่อยแล้วเดินต่อจากจุดที่หยุด (TP-5)
+    [Networked] private int PausedTicks { get; set; }
 
     // host: ขอให้หยุดอยู่กับที่ (JellyfishTrap ตั้งตอนชาร์จ/ระเบิด/ซ่อน)
     public bool HoldRequested { get; set; }
@@ -60,10 +62,11 @@ public class MoveSome : NetworkBehaviour, IRideablePlatform, IBeforeTick
         }
     }
 
-    // หยุดอยู่: อยู่ที่ตำแหน่งของ tick ที่หยุด; เคลื่อนที่ต่อ: กลับไปตำแหน่งตามเวลา (เหมือนเดิมที่ใช้ SimulationTime)
+    // หยุดอยู่: อยู่ที่ตำแหน่งของ tick ที่หยุด; เคลื่อนที่: นับเวลาเฉพาะช่วงที่ไม่ได้หยุด
+    // (เดิมปล่อยแล้วกลับไปตำแหน่งตามเวลาจริง — หลัง pause/ชาร์จ แมงกะพรุนวาร์ป)
     private Vector3 PositionAt(float tick)
     {
-        float time = (HoldTick != 0 ? HoldTick : tick) * Runner.DeltaTime;
+        float time = ((HoldTick != 0 ? HoldTick : tick) - PausedTicks) * Runner.DeltaTime;
         float sineValue = (Mathf.Sin(time * speed) + 1f) / 2f;
         float directionMultiplier = isReverse ? -1f : 1f;
         float movementOffset = sineValue * distance * directionMultiplier;
@@ -93,7 +96,11 @@ public class MoveSome : NetworkBehaviour, IRideablePlatform, IBeforeTick
             // freeze ตอน pause/dialogue/tutorial หรือ JellyfishTrap ขอหยุด
             bool hold = HoldRequested || (GameManager.Instance != null && GameManager.Instance.IsGameplayFrozen);
             if (hold && HoldTick == 0) HoldTick = Runner.Tick.Raw;
-            else if (!hold && HoldTick != 0) HoldTick = 0;
+            else if (!hold && HoldTick != 0)
+            {
+                PausedTicks += Runner.Tick.Raw - HoldTick;
+                HoldTick = 0;
+            }
         }
 
         if (rb != null)

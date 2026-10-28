@@ -43,7 +43,13 @@ public class Turret_Shooter : NetworkBehaviour
     public override void FixedUpdateNetwork()
     {
         if (!HasStateAuthority) return;
-        if (GameManager.Instance != null && GameManager.Instance.IsGameplayFrozen) return; // freeze ตอน pause/dialogue/tutorial
+
+        // freeze ตอน pause/dialogue/tutorial — พักเวลายิงไว้ (เดิมเวลาหมดระหว่าง pause แล้วยิงทันทีที่เล่นต่อ) (TP-3)
+        if (GameplayPause.Frozen)
+        {
+            FireTimer = GameplayPause.Hold(FireTimer, Runner);
+            return;
+        }
 
         Vector2 originPos = firePoint != null ? (Vector2)firePoint.position : (Vector2)transform.position;
 

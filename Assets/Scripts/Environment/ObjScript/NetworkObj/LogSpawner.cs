@@ -24,7 +24,13 @@ public class LogSpawner : NetworkBehaviour
     public override void FixedUpdateNetwork()
     {
         if (!HasStateAuthority) return;
-        if (GameManager.Instance != null && GameManager.Instance.IsGameplayFrozen) return; // freeze ตอน pause/dialogue/tutorial
+
+        // freeze ตอน pause/dialogue/tutorial — พักเวลาไว้ (เดิมหมดระหว่าง pause แล้วปล่อยขอนทันทีที่เล่นต่อ) (TP-3)
+        if (GameplayPause.Frozen)
+        {
+            SpawnTimer = GameplayPause.Hold(SpawnTimer, Runner);
+            return;
+        }
 
         if (!isSpamSpawn)
         {

@@ -55,8 +55,11 @@ public class SnowBallProjectile : NetworkBehaviour
     {
         if (!HasStateAuthority) return;
 
-        if (GameManager.Instance != null && GameManager.Instance.IsGameplayFrozen)
+        if (GameplayPause.Frozen)
         {
+            // พักอายุลูกไว้ด้วย — เดิมหมดระหว่าง pause แล้วหายทันทีที่เล่นต่อ (TP-3)
+            LifeTimer = GameplayPause.Hold(LifeTimer, Runner);
+
             if (!_frozen && rb2D != null)
             {
                 _frozenVel = rb2D.linearVelocity;
