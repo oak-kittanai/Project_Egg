@@ -24,9 +24,13 @@ public class RoomCodeKeypad : MonoBehaviour
     [SerializeField] private Button backspaceButton;
     [SerializeField] private Button okButton;
     [SerializeField] private int maxLength = 6;
+    [Tooltip("ข้อความในช่องตอนยังไม่มีเลข (ตามแบบทีม UI)")]
+    [SerializeField] private string emptyText = "ENTER CODE";
+    [SerializeField] private Color emptyTextColor = new Color(0.6f, 0.63f, 0.75f, 1f);
 
     private static readonly List<RoomCodeKeypad> openable = new List<RoomCodeKeypad>();
     private readonly StringBuilder displayText = new StringBuilder();
+    private Color displayColor;
 
     public bool IsOpen => panel != null && panel.activeSelf;
 
@@ -43,6 +47,8 @@ public class RoomCodeKeypad : MonoBehaviour
 
     private void Awake()
     {
+        if (display != null) displayColor = display.color;
+
         for (int i = 0; i < digitButtons.Length; i++)
         {
             int digit = i;
@@ -126,11 +132,19 @@ public class RoomCodeKeypad : MonoBehaviour
         joinButton.onClick.Invoke();
     }
 
-    // "4 8 2 _ _ _"
+    // ว่าง = "ENTER CODE" สีจาง, มีเลขแล้ว = "4 8 2 _ _ _"
     private void RefreshDisplay()
     {
         if (display == null) return;
         string text = targetField.text;
+        if (text.Length == 0)
+        {
+            display.text = emptyText;
+            display.color = emptyTextColor;
+            return;
+        }
+
+        display.color = displayColor;
         displayText.Clear();
         for (int i = 0; i < maxLength; i++)
         {

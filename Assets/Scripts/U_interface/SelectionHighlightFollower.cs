@@ -1,11 +1,10 @@
-using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 // บอกว่า Controller เลือกอะไรอยู่ (HL-1/HL-3):
-// - ปุ่มที่มีรูป/สีตอนเมาส์ชี้ (Hover) -> ใช้หน้าตา Hover นั้นตอนถูกเลือก
-// - หลอดปรับค่า, ช่องพิมพ์ และปุ่มที่ไม่มี Hover ให้เห็น -> กรอบขาวมุมมนรอบตัว
+// - ปุ่ม/ช่องพิมพ์ที่มีรูป/สีตอนเมาส์ชี้ (Hover) -> ใช้หน้าตา Hover นั้นตอนถูกเลือก
+// - หลอดปรับค่า และปุ่ม/ช่องที่ไม่มี Hover ให้เห็น -> กรอบขาวมุมมนรอบตัว
 // รูปกรอบสร้างในโค้ด (ไม่ต้องมีไฟล์รูป); component นี้ถูกเพิ่มตอนรันโดย UIKeyboardNavigator จึงใช้ค่าเริ่มต้นด้านล่าง
 public class SelectionHighlightFollower : MonoBehaviour
 {
@@ -84,12 +83,12 @@ public class SelectionHighlightFollower : MonoBehaviour
         highlightImage.gameObject.SetActive(true);
     }
 
-    // ปุ่มที่มี Hover ให้เห็น: ใช้รูป/สี Hover เป็นหน้าตาตอนถูกเลือก (เก็บค่าเดิมไว้คืน) — หลอด/ช่องพิมพ์ใช้กรอบเสมอ
+    // ปุ่ม/ช่องพิมพ์ที่มี Hover ให้เห็น: ใช้รูป/สี Hover เป็นหน้าตาตอนถูกเลือก (เก็บค่าเดิมไว้คืน) — หลอดใช้กรอบเสมอ
     // ปุ่มที่กดไม่ได้ Unity โชว์หน้าตา Disabled ทับ Selected -> ใช้กรอบ
     private bool TryApplyHover(Selectable selectable)
     {
         if (!selectable.IsInteractable()) return false;
-        if (selectable is Slider || selectable is Scrollbar || selectable is TMP_InputField || selectable is InputField) return false;
+        if (selectable is Slider || selectable is Scrollbar) return false;
 
         switch (selectable.transition)
         {
