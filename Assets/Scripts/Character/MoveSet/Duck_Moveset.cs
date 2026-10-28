@@ -420,11 +420,13 @@ public class Duck_Moveset : MovementCharacter, IstunAble
         float impactForce = rb2D.mass;
         currentWater.Splash(transform.position, impactForce);
 
+        // ต้องสร้างก่อนตั้ง onDiving: setter เรียก OnDivingStateChanged ทันที แล้วส่ง DiveTimer ให้แถบฟอง (DV-1)
+        // — เดิมสร้างทีหลัง แถบฟองได้ timer ว่าง ขึ้นฟองหมดทั้งแถวตั้งแต่เริ่มดำ
+        DiveTimer = TickTimer.CreateFromSeconds(Runner, divingTime);
+
         onDiving = true;
         onDivingControl = true;
         emergencyToggle = true;
-
-        DiveTimer = TickTimer.CreateFromSeconds(Runner, divingTime);
     }
 
     public void OnDivingStateChanged()
