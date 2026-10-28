@@ -1311,6 +1311,9 @@ public class MovementCharacter : NetworkBehaviour, IDamageable, IBeforeTick, IAf
     public void TakeDamage(int dmg, float knockbackForce, Vector2 vec)
     {
         if (isDead || !InvincibleTimer.ExpiredOrNotRunning(Runner)) return;
+
+        // ตอน pause/dialogue/tutorial ตัวละครถูกหยุดอยู่ แต่ trigger/collision ของหนาม น้ำแข็ง ท่อนไม้ มอน ยังเรียกมาได้ (TP-7)
+        if (GameplayPause.Frozen) return;
         RPC_TakeDamage(dmg, knockbackForce, vec);
     }
 
