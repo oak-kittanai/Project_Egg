@@ -1580,3 +1580,45 @@ probe ชั่วคราว (ไม่ commit) log เสียงที่�
 | 4 | Host ในห้อง: กด B ค้างจนออก | Client หลุดกลับ lobby ตามปกติ (เหมือนกด X) | |
 | 5 | ในเกม: เมนู pause → ตั้งค่า → B; เมนู pause → B | ตั้งค่ากลับเมนู pause; หน้าแรกไม่ปิดเมนู | |
 | 6 | ใช้คีย์บอร์ด/เมาส์ | แถบไม่ขึ้น, ปุ่ม Back บนจอกดได้เหมือนเดิม | |
+
+## 28. UI ชุดใหม่ใน UI_Assets: Xbox จริง, ปุ่มตัวเลข, How to play, รูป hover + ล้าง NewUI (2026-10-28)
+
+**ที่มา:** ทีม UI ส่งไฟล์ใหม่ใน `Assets/Resources/UI_Assets/` — `xbox/` (ปุ่ม Xbox ครบชุด + ป้าย B TO CLOSE), `playstation/` และ `back*`/`how to play*` (ซ้ำกับ `NewUI`), `How to play/` (รูปสอนเล่น 5 รูปที่มีปุ่มคีย์บอร์ด + PS + Xbox), `number room join/` (ปุ่มตัวเลขใส่เลขห้อง), `change proflie L/R` (hover ลูกศรเปลี่ยนตัวละคร) พร้อมภาพแบบ popup ตัวเลข
+
+ผู้ใช้เลือก: รูป How to play แทนรูปเดิมทุกอุปกรณ์; `change proflie` = hover ของลูกศร; popup ตัวเลขตามแบบทีม UI (3×4, DEL-0-OK); ลบไฟล์ซ้ำใน NewUI ได้
+
+**Branch:** `feature/ui-assets-1028` (แตกจาก `test/all2`) → fast-forward เข้า `test/all2` — Unity compile 0 error, ไฟล์/ฉากแก้ผ่าน Unity MCP
+
+### 28.1 สิ่งที่ทำ
+| รหัส | อะไร | แก้แล้ว |
+|---|---|---|
+| AS-2 | ไฟล์ใน `NewUI` (21 ไฟล์ พิกเซลเหมือนชุดใหม่) ย้ายไปแทนไฟล์ซ้ำใน `playstation/` และ `UI_Assets/` ด้วย `AssetDatabase.MoveAsset` — GUID/การตั้งค่า import เดิม reference ไม่ต้องแก้; ลบ `NewUI` | แก้แล้ว: `feature/ui-assets-1028` `682846a1` |
+| UI-3 | รูปสอนเล่น 5 รูปเดิม (GUID เดิม) ย้ายไป `UI_Assets/How to play/` แล้วเขียนพิกเซลรูปใหม่ทับ — S1–S3, Canvas.prefab และหน้าดูย้อนหลังเปลี่ยนเอง; กรอบรูปย่อยเดิมใช้ได้ (เนื้อรูปตำแหน่งเดียวกัน) | แก้แล้ว: `feature/ui-assets-1028` `682846a1` |
+| IP-6 | `InputGlyphSet` ช่อง Xbox ใช้ art จริงจาก `UI_Assets/xbox/` ครบ 13 การกระทำ (รวม B ของแถบบอกปุ่ม และป้าย B TO CLOSE แทน placeholder) import แบบเดียวกับชุด PS | แก้แล้ว: `feature/ui-assets-1028` `7e45610b` |
+| UI-2 | popup ตัวเลข: พื้น `bg number`, ช่อง ENTER CODE, ปุ่ม 0–9/DEL/OK เป็น SpriteSwap (hold/pass), ซ่อนตัวหนังสือบนปุ่ม, DEL/OK ใหญ่ขึ้นเล็กน้อยตามแบบ; ช่องว่างแสดง "ENTER CODE" สีจาง; ข้อความวิธีกดย้ายไปใต้กรอบ | แก้แล้ว: `feature/ui-assets-1028` `d025b155` |
+| UI-4 | hover แทนกรอบขาว: ลูกศรเปลี่ยนตัวละคร ×4 (`change proflie L/R`), ช่องใส่เลขห้องหน้า Join (`code  number hold`); ช่องพิมพ์ที่มีรูป hover ใช้ hover ได้ (HL-3) | แก้แล้ว: `feature/ui-assets-1028` `d025b155` |
+
+### 28.2 ผลเทสอัตโนมัติ (Play Mode จาก `SessionScene`, Host คนเดียว, จอยเสมือน)
+- reference ไปยังไฟล์ที่ย้าย 25 รายการ (InputGlyphSet, Canvas/Dialogue prefab, SessionScene, S1–S3) resolve ก่อน 25/25 หลัง 25/25; ไม่มีโฟลเดอร์ NewUI
+- popup ตัวเลข: เปิดแล้วแสดง ENTER CODE; ปุ่มที่จอยเลือกเป็นรูป hold (ไม่มีกรอบ); พิมพ์ 1, 2 → `1 2 _ _ _ _`; DEL / X / B ใช้ได้; DEL ↔ OK วนซ้าย-ขวาได้; ภาพจอใกล้แบบทีม UI
+- หน้า Join: จอยเลือกช่อง → `code  number hold` ไม่มีกรอบ
+- ห้อง: จอยเลือกลูกศรของตัวเอง → `change proflie L/R` ไม่มีกรอบ (ลูกศรฝั่งเพื่อนกดไม่ได้ → กรอบ ตามเดิม)
+- ในเกม (Xbox): ดำน้ำ `RB` 74.0 × 51.6, ทุบ `X` 51.6, บิน `A×2` 73.9 × 45.2, ปาหิน `RB`; ป้ายเหนือของ X; ป้ายปิด `howwto xbox close_` กว้าง 440.7; หน้าสอนเล่นเป็นรูปใหม่; แถบบอกปุ่มใช้ A/B ของจริง
+- รวม 20/20 ผ่าน (รอบแรก 2 ข้อ fail เพราะ probe เลือกลูกศรฝั่งเพื่อน แก้ probe แล้วผ่าน)
+
+### 28.3 ข้อสังเกต
+- PS ยังไม่มีรูป ○ (ปิด/ย้อน) → ยังใช้ placeholder
+- placeholder Xbox/PS ใน `Art-Source/UI/InputGlyphs` ไม่ได้ใช้แล้ว (ยกเว้น `ps_circle`) — ยังไม่ลบ
+- รูปเก่าใน `Assets/Ingame/Tutorial/` (`back`, `how to play icon`, `Next`, `*_Not_available`) ไม่มีใครใช้ — ยังไม่ลบ
+- `number room join/number.png`, `number hold.png`, `number pass.png` (ปุ่มเลขทั่วไป) ไม่ได้ใช้
+- แถบบอกปุ่มยังทับปุ่ม ? ในเมนู pause (หัวข้อ 27) — รอทีม UI เลือกตำแหน่ง
+
+### 28.4 Checklist เทส — `test/all2` (MPPM หรือ build, Host + Client, จอยจริง Xbox และ PS)
+| ขั้น | ทำอะไร | ควรเห็น | ผล |
+|---|---|---|---|
+| 1 | Client: หน้า Join เลือกช่องด้วยจอย กด A ใส่เลขห้อง Host ด้วย popup → OK | popup ตามแบบทีม UI; ปุ่มที่เลือกเป็นรูป hold; เข้าห้องได้ | |
+| 2 | เมาส์คลิกปุ่มตัวเลขใน popup | กดได้ รูป pass ตอนกด | |
+| 3 | ในห้องเลื่อนไปที่ลูกศรเปลี่ยนตัวละครด้วยจอย | ลูกศรวงฟ้า ไม่มีกรอบ | |
+| 4 | เล่นด้วยจอย Xbox จริง: HUD, ป้ายเหนือของ, เปิดโน้ต, แถบบอกปุ่มในเมนู pause | ปุ่ม Xbox ของจริงทุกจุด | |
+| 5 | เปิดหน้าสอนเล่น (ครั้งแรก และดูย้อนหลังจากเมนู pause) | รูปใหม่ที่มีปุ่มทุกอุปกรณ์ | |
+| 6 | ปุ่ม back / ? / ปุ่มจอย PS | เหมือนเดิม (ย้ายไฟล์แล้วไม่หลุด) | |
