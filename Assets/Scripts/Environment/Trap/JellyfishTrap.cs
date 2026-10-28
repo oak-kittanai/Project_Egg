@@ -42,6 +42,10 @@ public class JellyfishTrap : NetworkBehaviour
     private JellyState _prevState;
     private MoveSome moveScript;
 
+    private static readonly int IdleState = Animator.StringToHash("Jelly_Idle");
+    private static readonly int ChargeState = Animator.StringToHash("Jelly_Charge");
+    private static readonly int ExplodeState = Animator.StringToHash("Jelly_Explode");
+
     private void Awake()
     {
         anim = GetComponent<Animator>();
@@ -89,7 +93,13 @@ public class JellyfishTrap : NetworkBehaviour
     public override void FixedUpdateNetwork()
     {
         if (!HasStateAuthority) return;
-        if (GameManager.Instance != null && GameManager.Instance.IsGameplayFrozen) return; // freeze ตอน pause/dialogue/tutorial
+
+        // freeze ตอน pause/dialogue/tutorial — พักเวลาไว้ (เดิมชาร์จจนเต็มระหว่าง pause แล้วระเบิดทันทีที่เล่นต่อ) (TP-2)
+        if (GameplayPause.Frozen)
+        {
+            StateTimer = GameplayPause.Hold(StateTimer, Runner);
+            return;
+        }
 
         switch (CurrentState)
         {
@@ -141,6 +151,8 @@ public class JellyfishTrap : NetworkBehaviour
 
     public override void Render()
     {
+        anim.speed = GameplayPause.Frozen ? 0f : 1f;
+
         if (_prevState != CurrentState)
         {
             UpdateVisualsForce();
@@ -160,11 +172,13 @@ public class JellyfishTrap : NetworkBehaviour
         }
     }
 
+    // เล่นท่าของสถานะตรง ๆ (TP-2) — เดิมใช้ SetTrigger ซึ่ง controller รับได้เฉพาะจากท่าก่อนหน้า:
+    // Render เห็นข้ามจาก Hidden ไป Charging (หลัง pause / client ได้ snapshot ห่าง) ไม่ได้ Reset -> ค้างท่าระเบิดและ trigger ค้างไปรอบหน้า
     private void UpdateVisualsForce()
     {
-        if (CurrentState == JellyState.Charging) anim.SetTrigger("Charge");
-        if (CurrentState == JellyState.Exploding) anim.SetTrigger("Explode");
-        if (CurrentState == JellyState.Idle) anim.SetTrigger("Reset");
+        if (CurrentState == JellyState.Charging) anim.Play(ChargeState, 0, 0f);
+        if (CurrentState == JellyState.Exploding) anim.Play(ExplodeState, 0, 0f);
+        if (CurrentState == JellyState.Idle) anim.Play(IdleState, 0, 0f);
 
         bool isVisible = CurrentState != JellyState.Hidden;
         if (sr != null) sr.enabled = isVisible;

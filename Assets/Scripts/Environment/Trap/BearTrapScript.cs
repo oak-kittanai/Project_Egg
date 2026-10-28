@@ -19,9 +19,16 @@ public class BearTrapScript : NetworkBehaviour
     [Networked] private NetworkBool IsTriggered { get; set; }
     [Networked] private NetworkBool HasPlayedFX { get; set; }
     [Networked] private TickTimer DamageWindowTimer { get; set; }
+    // นับครั้งที่กับดักทำงาน — ทุกเครื่องเล่นท่างับใหม่เมื่อค่าเปลี่ยน (TP-1)
+    [Networked] private int ArmCount { get; set; }
 
     [SerializeField] Collider2D doDamageColl2D;
     [SerializeField] private Animator trapAnimator;
+
+    private static readonly int TriggerOnState = Animator.StringToHash("Trap_trigger_on");
+    private static readonly int TriggerResetState = Animator.StringToHash("Trap_trigger_reset");
+    private int shownArmCount;
+    private bool shownTriggered;
 
     // Test
     public bool isFunctionExecuted;
@@ -31,14 +38,22 @@ public class BearTrapScript : NetworkBehaviour
         if (doDamageColl2D != null) doDamageColl2D.enabled = false;
     }
 
+    public override void Spawned()
+    {
+        shownArmCount = ArmCount;
+        shownTriggered = IsTriggered;
+    }
+
     private void OnTriggerStay2D(Collider2D other)
     {
         if (!HasStateAuthority) return;
+        if (GameplayPause.Frozen) return; // ไม่ทำงานตอน pause — เดิมยืนบนกับดักตอน pause แล้วกับดักงับเอง (TP-1)
 
         if (!IsTriggered && other.CompareTag("Player") && CooldownTimer.ExpiredOrNotRunning(Runner))
         {
             IsTriggered = true;
             HasPlayedFX = false;
+            ArmCount++;
             DelayTimer = TickTimer.CreateFromSeconds(Runner, delayBeforeSnap);
             CooldownTimer = TickTimer.CreateFromSeconds(Runner, cooldownTime);
         }
@@ -47,7 +62,16 @@ public class BearTrapScript : NetworkBehaviour
     public override void FixedUpdateNetwork()
     {
         if (!HasStateAuthority) return;
-        if (GameManager.Instance != null && GameManager.Instance.IsGameplayFrozen) return; // freeze ตอน pause/dialogue/tutorial
+
+        // freeze ตอน pause/dialogue/tutorial — พักเวลาไว้ เล่นต่อแล้วงับ/รีเซ็ตตามเวลาที่เหลือ
+        // (เดิม timer หมดระหว่าง pause: งับกับรีเซ็ตเกิดใน tick เดียว ไม่โดนดาเมจ แล้วกับดักค้างท่าหุบ)
+        if (GameplayPause.Frozen)
+        {
+            DelayTimer = GameplayPause.Hold(DelayTimer, Runner);
+            CooldownTimer = GameplayPause.Hold(CooldownTimer, Runner);
+            DamageWindowTimer = GameplayPause.Hold(DamageWindowTimer, Runner);
+            return;
+        }
 
         if (IsTriggered && !HasPlayedFX && DelayTimer.Expired(Runner))
         {
@@ -126,6 +150,18 @@ public class BearTrapScript : NetworkBehaviour
 
     public override void Render()
     {
-            trapAnimator.SetBool("Trigger", IsTriggered);
+        if (trapAnimator == null) return;
+
+        // ท่าหยุดกลางคันตอน pause แล้วเล่นต่อพร้อมเกม
+        trapAnimator.speed = GameplayPause.Frozen ? 0f : 1f;
+
+        // สั่งท่าตรงจังหวะที่ host ตั้ง — เดิมรอ exit time ของ controller อย่างเดียว:
+        // หมด cooldown แล้วโดนเหยียบซ้ำทันที Trigger เป็น false แค่ 1 tick animator ไม่ทันออกจากท่าหุบ ค้างอยู่อย่างนั้น
+        if (ArmCount != shownArmCount) trapAnimator.Play(TriggerOnState, 0, 0f);
+        else if (shownTriggered && !IsTriggered) trapAnimator.Play(TriggerResetState, 0, 0f);
+        shownArmCount = ArmCount;
+        shownTriggered = IsTriggered;
+
+        trapAnimator.SetBool("Trigger", IsTriggered);
     }
 }
