@@ -403,7 +403,7 @@ public class Duck_Moveset : MovementCharacter, IstunAble
         }
         else if (emergencySwimBool && onDiving)
         {
-            EmergencySwimup();
+            EmergencySwimup(input);
         }
     }
 
@@ -486,54 +486,34 @@ public class Duck_Moveset : MovementCharacter, IstunAble
         DiveTimer = TickTimer.None;
     }
 
-    public void EmergencySwimup()
+    // จบดำน้ำทั้งที่หัวยังอยู่ใต้น้ำ -> ถูกดันขึ้นจนกว่าหัวพ้นน้ำ (DV-2)
+    // เดิมดันแค่ emergencySwimTimer แล้วจบดำน้ำใต้น้ำ: gravity ค้าง 0 ไม่มีแรงขึ้น หัวติดรากไม้แล้วท่ากลายเป็นท่าเดิน
+    // เกินเวลา = อากาศหมด: host เริ่มดาเมจจมน้ำ และเลี้ยวซ้าย/ขวาหนีออกจากใต้สิ่งที่บังได้ (ยังเป็นท่าว่าย)
+    public void EmergencySwimup(NetworkInputData input)
     {
-        if (EmergencyTimer.Expired(Runner))
+        if (!stilldrowning)
         {
-            TimeUp();
+            EndDiveLogic();
+            return;
         }
-        else
-        {
-            if (!stilldrowning)
-            {
-                EndDiveLogic();
-                return;
-            }
 
-            if (stilldrowning)
-            {
-                Vector2 inputDir = new Vector2(0f, 1f);
-
-                if (inputDir.sqrMagnitude > 1)
-                    inputDir.Normalize();
-
-                Vector2 targetVel = inputDir * swimMaxSpeed;
-                Vector2 currentVel = rb2D.linearVelocity;
-                Vector2 speedDif = targetVel - currentVel;
-
-                float accelRate = inputDir.sqrMagnitude > 0.01f ? emergencyAcceleration : swimDeceleration;
-
-                rb2D.AddForce(speedDif * accelRate);
-            }
-            else
-            {
-                if (onDiving && currentWater != null)
-                {
-                    float exitForce = rb2D.mass * rb2D.linearVelocity.y;
-                    currentWater.Splash(transform.position, exitForce);
-                }
-
-                EndDiveLogic();
-            }
-        }
-    }
-
-    public void TimeUp()
-    {
-        EndDiveLogic();
+        bool outOfAir = EmergencyTimer.Expired(Runner);
 
         // oxygen หมด: host เห็นธงนี้แล้วเริ่มดาเมจจมน้ำ (NR-12)
-        if (stilldrowning) SetMoveFlag(MoveFlags.OxygenDepleted, true);
+        if (outOfAir) SetMoveFlag(MoveFlags.OxygenDepleted, true);
+
+        float steer = outOfAir ? input.horizontal : 0f;
+        Vector2 inputDir = new Vector2(steer, 1f);
+
+        if (inputDir.sqrMagnitude > 1)
+            inputDir.Normalize();
+
+        Vector2 targetVel = inputDir * swimMaxSpeed;
+        Vector2 speedDif = targetVel - rb2D.linearVelocity;
+
+        rb2D.AddForce(speedDif * emergencyAcceleration);
+
+        if (outOfAir) cAnimation.UpdateSwimFlip(new Vector2(steer, 0f));
     }
 
     public void HandleBuoyancy()
