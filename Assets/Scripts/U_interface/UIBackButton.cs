@@ -9,16 +9,14 @@ public class UIBackButton : MonoBehaviour
 {
     [Tooltip("ต้องกด B ค้างกี่วินาทีถึงจะกดปุ่มนี้ (0 = กดทีเดียว) — ใช้กับปุ่มที่กดพลาดแล้วเสียหาย เช่นออกจากห้อง")]
     [SerializeField] private float holdSeconds;
-    [Tooltip("คำข้างปุ่ม B บนแถบบอกปุ่ม")]
-    [SerializeField] private string label = "Back";
 
     private static readonly List<UIBackButton> enabledButtons = new List<UIBackButton>();
     private static int consumedFrame = -1;
 
     private Button button;
 
+    // แถบบอกปุ่มเลือกป้าย B TO BACK / B TO HOLD LEAVE จากค่านี้ (UI-5)
     public float HoldSeconds => holdSeconds;
-    public string Label => label;
     public Button Button => button != null ? button : button = GetComponent<Button>();
 
     // 0-1 ระหว่างกด B ค้างที่ปุ่มแบบกดค้าง — แถบบอกปุ่มวาดวงตามค่านี้

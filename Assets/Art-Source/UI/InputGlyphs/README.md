@@ -41,6 +41,9 @@
 | Pause | `key_esc` | `join Xbox option` | `option` |
 | ปิด UI (CloseUI) / ย้อน (Back) | `key_tab` / `key_esc` | `join xbox close` | **ยังไม่มี** — ใช้ placeholder `PlayStation/ps_circle` |
 | ป้าย "กด … เพื่อปิด" (CloseHint) | รูปเดิม `Note_Interface/Tab close` | `howwto xbox close_` | `join close` |
+| แถบบอกปุ่ม: ไม่มีปุ่มย้อน (HintConfirm) | — (แถบขึ้นเฉพาะตอนใช้จอย) | `confirm xbox` | `confirm playstation` |
+| แถบบอกปุ่ม: ย้อนกลับ (HintConfirmBack) | — | `confirm back xbox` | `confirm back playstation` |
+| แถบบอกปุ่ม: กดค้างออกจากห้อง (HintConfirmLeave) | — | `confirm Leave xbox` | `confirm Leave playstation` |
 
 - ยังไม่มีการกระทำไหนใช้: Y (`join xbox other`), △ (`other`)
 - ยังไม่มีรูปตอนกด: A, Menu, B ของ Xbox; ✕, OPTION ของ PS (ไม่มี = ใช้รูปปกติ)
@@ -72,7 +75,10 @@
 - ปุ่มลูกศร back (`UI_Assets/back*`): ปุ่มกลับหน้า Join, Prev/Next บทสนทนาและหน้าสอนเล่น; ปุ่ม ? (`UI_Assets/how to play*`) ในเมนู pause
 - popup ใส่เลขห้องของจอย (`SessionScene` → `RoomCodeKeypad`): รูปจาก `number room join/`; ข้อความวิธีกดอยู่ใต้กรอบ
 - รูป hover: ลูกศรเปลี่ยนตัวละคร (`change proflie L/R`), ช่องใส่เลขห้อง (`number room join/code  number hold`)
-- แถบบอกปุ่ม "[A] Confirm  [B] Back" มุมขวาล่างของเมนู (ตอนใช้จอย) — `Resources/Prefabs/Interface/ControllerHintBar.prefab`; กด B = ปุ่มที่มี component `UIBackButton`
+- แถบบอกปุ่มมุมขวาล่างของเมนู (ตอนใช้จอย) — `Resources/Prefabs/Interface/ControllerHintBar.prefab`
+  - เป็นรูปป้ายเดียวทั้งแถบ (`Bar/Banner`) สูง 72 กว้างตามสัดส่วนรูป — ป้ายใหม่ต้องสูงเท่ากัน (118 px) และวางปุ่มตำแหน่งเดิม
+  - เลือกป้ายเอง: หน้าไม่มีปุ่มย้อน = `confirm`, มีปุ่มย้อน (component `UIBackButton`) = `confirm back`, ปุ่มย้อนแบบกดค้าง (Hold Seconds > 0) = `confirm Leave`
+  - วงสีส้มรอบปุ่ม B ตอนกดค้าง (`Banner/HoldRing`) วางตามตำแหน่งปุ่ม B ในรูป `confirm Leave` (457, 55 จากรูป 906 × 118)
 - กรอบเลือกปุ่มสีขาว: ขึ้นเฉพาะตอนใช้จอย กับหลอดเสียงและปุ่มที่ยังไม่มีรูป hover
 
 ## หมายเหตุ
