@@ -39,7 +39,7 @@ public class TriggerDialogue : NetworkBehaviour
         if (!other.CompareTag("Player")) return;
         MovementCharacter character = other.GetComponent<Bird_Moveset>() as MovementCharacter
                                    ?? other.GetComponent<Duck_Moveset>() as MovementCharacter;
-        if (character != null)
+        if (character != null && IsSkillOwner(character))
         {
             if (skillToUnlock != MovementCharacter.SkillType.None)
             {
@@ -71,6 +71,25 @@ public class TriggerDialogue : NetworkBehaviour
         }
     }
 
+    // trigger ที่ปลดสกิลของตัวเดียว ทำงานเฉพาะเจ้าของสกิล (SK-1)
+    // เดิมนกเข้าโซนสกิลดำน้ำก่อน -> ปลดสกิลบนนกไม่มีผล แต่ trigger ถูกใช้ไปแล้ว เป็ดเลยไม่ได้สกิลตลอดเกม
+    private bool IsSkillOwner(MovementCharacter character)
+    {
+        if (doubleCharacterSkillUnlock) return true;
+
+        switch (skillToUnlock)
+        {
+            case MovementCharacter.SkillType.Duck_Dive:
+            case MovementCharacter.SkillType.Duck_Smash:
+                return !character.isBird;
+            case MovementCharacter.SkillType.Bird_Fly:
+            case MovementCharacter.SkillType.Bird_Throw:
+                return character.isBird;
+            default:
+                return true;
+        }
+    }
+
     private void PersistSkillUnlock(MovementCharacter.SkillType skill)
     {
         if (GameManager.Instance == null) return;
@@ -88,6 +107,7 @@ public class TriggerDialogue : NetworkBehaviour
     public void TriggerFromExternal(MovementCharacter character)
     {
         if (isOneTimeTrigger && hasTriggeredLocal) return;
+        if (!IsSkillOwner(character)) return;
 
         if (skillToUnlock != MovementCharacter.SkillType.None)
         {
