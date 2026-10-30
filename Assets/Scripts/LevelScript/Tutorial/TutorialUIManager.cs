@@ -182,14 +182,11 @@ public class TutorialUIManager : MonoBehaviour
         if (tutorialPanel != null && tutorialPanel.activeSelf && currentList != null) ApplyPageSprite();
     }
 
-    // รูปเวอร์ชันจอยถ้าใส่ไว้และกำลังใช้จอย ไม่งั้นรูปเดิม (IP-2)
+    // รูปตามอุปกรณ์ที่ใช้อยู่ แสดงเฉพาะปุ่มของอุปกรณ์นั้น (IP-8)
     private void ApplyPageSprite()
     {
         if (tutorialImage == null || currentList == null || currentIndex >= currentList.Count) return;
-        TutorialData data = currentList[currentIndex];
-        tutorialImage.sprite = InputDeviceWatcher.UsingGamepad && data.tutorialSpriteController != null
-            ? data.tutorialSpriteController
-            : data.tutorialSprite;
+        tutorialImage.sprite = TutorialSpriteSet.Resolve(currentList[currentIndex].tutorialSprite, InputDeviceWatcher.Current);
     }
 
     private void RenderCurrentPage()
