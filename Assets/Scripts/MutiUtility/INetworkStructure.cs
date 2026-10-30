@@ -56,6 +56,22 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
 
     private static bool _verifyWasBlocked; // TEMP verify H-2
 
+    private bool _lastGamepadButtons;
+
+    // TEMP verify IN-2: ใช้คีย์บอร์ดอยู่แต่จอยยังรายงานว่ากดปุ่มค้าง — ยืนยันว่าปุ่มค้างจริงบนเครื่องผู้เล่น (log เฉพาะตอนค่าเปลี่ยน)
+    private static string _verifyStuckPad = "";
+
+    private static void VerifyLogStuckPadButtons(Gamepad gp)
+    {
+        string stuck = (gp.buttonSouth.isPressed ? "A " : "") + (gp.buttonWest.isPressed ? "X " : "")
+                     + (gp.rightShoulder.isPressed ? "RB " : "") + (gp.leftShoulder.isPressed ? "LB " : "")
+                     + (gp.startButton.isPressed ? "Start " : "") + (gp.buttonEast.isPressed ? "B " : "");
+        if (stuck == _verifyStuckPad) return;
+
+        _verifyStuckPad = stuck;
+        VerifyLog.Log($"IN-2 pad '{gp.name}' ({gp.GetType().Name}) buttons held while using keyboard: [{stuck}]");
+    }
+
     public void OnInput(NetworkRunner runner, NetworkInput input)
     {
         var data = new NetworkInputData();
@@ -77,6 +93,14 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
             bool jump = false, press_F = false, press_E = false, press_ESC = false, press_TAB = false, press_Q = false, press_G = false;
             Vector2 mousePosition = Vector2.zero;
 
+            // ปุ่มอ่านจากอุปกรณ์ที่ใช้ล่าสุดเท่านั้น (IN-2) — กระโดด/สกิลดูจังหวะกด (WasPressed)
+            // ถ้า OR สองอุปกรณ์แล้วปุ่มของจอยค้างอยู่ กดคีย์บอร์ดจะไม่เกิดจังหวะกด ทั้งที่เดินได้ปกติ
+            bool gamepadButtons = InputDeviceWatcher.UsingGamepad;
+
+            // tick ที่เพิ่งสลับอุปกรณ์ไม่อ่านปุ่ม 1 tick — บิตเดิมหลุดก่อน การกดครั้งแรกของอุปกรณ์ใหม่จึงนับเป็นจังหวะกด
+            bool readButtons = gamepadButtons == _lastGamepadButtons;
+            _lastGamepadButtons = gamepadButtons;
+
             // ---- Keyboard ----
             float kbMoveX = 0f, kbMoveY = 0f;
             if (Keyboard.current != null)
@@ -86,19 +110,22 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
                 if (Keyboard.current.wKey.isPressed || Keyboard.current.upArrowKey.isPressed) kbMoveY = 1f;
                 if (Keyboard.current.sKey.isPressed || Keyboard.current.downArrowKey.isPressed) kbMoveY = -1f;
 
-                if (Keyboard.current.spaceKey.isPressed || Keyboard.current.upArrowKey.isPressed) jump = true;
-                if (Keyboard.current.fKey.isPressed) press_F = true;
-                if (Keyboard.current.eKey.isPressed) press_E = true;
-                if (Keyboard.current.escapeKey.isPressed) press_ESC = true;
-                if (Keyboard.current.tabKey.isPressed) press_TAB = true;
-                if (Keyboard.current.qKey.isPressed) press_Q = true;
-                if (Keyboard.current.gKey.isPressed) press_G = true;
+                if (!gamepadButtons && readButtons)
+                {
+                    if (Keyboard.current.spaceKey.isPressed || Keyboard.current.upArrowKey.isPressed) jump = true;
+                    if (Keyboard.current.fKey.isPressed) press_F = true;
+                    if (Keyboard.current.eKey.isPressed) press_E = true;
+                    if (Keyboard.current.escapeKey.isPressed) press_ESC = true;
+                    if (Keyboard.current.tabKey.isPressed) press_TAB = true;
+                    if (Keyboard.current.qKey.isPressed) press_Q = true;
+                    if (Keyboard.current.gKey.isPressed) press_G = true;
+                }
             }
 
             // ---- Mouse (อ่านแยกอิสระ ไม่ผูกกับว่ามี Keyboard ไหม) ----
             if (Mouse.current != null) mousePosition = Mouse.current.position.ReadValue();
 
-            // ---- Gamepad — ปุ่ม bool OR กับ Keyboard ตามปกติ, แกนเดิน Keyboard มีสิทธิ์เหนือกว่าถ้าขัดกัน ----
+            // ---- Gamepad — แกนเดินรวมกับ Keyboard (Keyboard มีสิทธิ์เหนือกว่าถ้าขัดกัน), ปุ่มอ่านเฉพาะตอนใช้จอยอยู่ ----
             float gpMoveX = 0f, gpMoveY = 0f;
             if (Gamepad.current != null)
             {
@@ -109,12 +136,19 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
                 if (gp.leftStick.up.isPressed || gp.dpad.up.isPressed) gpMoveY = 1f;
                 if (gp.leftStick.down.isPressed || gp.dpad.down.isPressed) gpMoveY = -1f;
 
-                if (gp.buttonSouth.isPressed) jump = true;       // A = Jump
-                if (gp.rightShoulder.isPressed) { press_F = true; press_Q = true; } // R1 = F (เป็ดดำน้ำ) + Throw (นกปาหิน)
-                if (gp.buttonWest.isPressed) press_E = true;     // X = Interact
-                if (gp.leftShoulder.isPressed) press_G = true;   // L1 = Drop Item
-                if (gp.startButton.isPressed) press_ESC = true;  // Start = ESC (Pause Menu)
-                if (gp.buttonEast.isPressed) press_TAB = true;   // B = Tab (ปิด UI)
+                if (gamepadButtons && readButtons)
+                {
+                    if (gp.buttonSouth.isPressed) jump = true;       // A = Jump
+                    if (gp.rightShoulder.isPressed) { press_F = true; press_Q = true; } // R1 = F (เป็ดดำน้ำ) + Throw (นกปาหิน)
+                    if (gp.buttonWest.isPressed) press_E = true;     // X = Interact
+                    if (gp.leftShoulder.isPressed) press_G = true;   // L1 = Drop Item
+                    if (gp.startButton.isPressed) press_ESC = true;  // Start = ESC (Pause Menu)
+                    if (gp.buttonEast.isPressed) press_TAB = true;   // B = Tab (ปิด UI)
+                }
+                else if (!gamepadButtons)
+                {
+                    VerifyLogStuckPadButtons(gp); // TEMP verify IN-2
+                }
             }
 
             // Keyboard ชนะถ้ามีค่า (ไม่ใช่ 0) — ถ้า Keyboard ไม่ได้กดแกนนี้เลย ค่อย fallback ไป Gamepad
