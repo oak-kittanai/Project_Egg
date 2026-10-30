@@ -23,6 +23,7 @@ public class Stepon_Pressure : NetworkBehaviour
     public SpriteRenderer sr;
     public Sprite unpressed;
     public Sprite pressed;
+    [SerializeField] private ButtonHighlight highlight = new ButtonHighlight();
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
@@ -82,6 +83,7 @@ public class Stepon_Pressure : NetworkBehaviour
         if (sr != null)
         {
             sr.sprite = IsPressed ? pressed : unpressed;
+            highlight.Show(sr, IsPressed);
         }
     }
 }

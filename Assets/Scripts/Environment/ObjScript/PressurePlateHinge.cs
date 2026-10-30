@@ -12,6 +12,7 @@ public class PressurePlateHinge : NetworkBehaviour
     public SpriteRenderer sr;
     public Sprite unpressed;
     public Sprite pressed;
+    [SerializeField] private ButtonHighlight highlight = new ButtonHighlight();
 
     private BoxCollider2D col;
     private bool _shownPressed;
@@ -81,6 +82,7 @@ public class PressurePlateHinge : NetworkBehaviour
         if (sr != null)
         {
             sr.sprite = IsPressed ? pressed : unpressed;
+            highlight.Show(sr, IsPressed);
         }
     }
 }

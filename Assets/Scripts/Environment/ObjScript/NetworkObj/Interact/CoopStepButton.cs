@@ -14,6 +14,7 @@ public class CoopStepButton : NetworkBehaviour
     public SpriteRenderer sr;
     public Sprite unpressed;
     public Sprite pressed;
+    [SerializeField] private ButtonHighlight highlight = new ButtonHighlight();
 
     private bool _shownPressed;
 
@@ -63,6 +64,7 @@ public class CoopStepButton : NetworkBehaviour
         if (sr != null)
         {
             sr.sprite = IsPressed ? pressed : unpressed;
+            highlight.Show(sr, IsPressed);
         }
     }
 }
