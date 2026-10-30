@@ -32,6 +32,12 @@ public class RockObject : NetworkBehaviour, ThrowAbleItem
     // หินที่วางอยู่/ช้าแล้ว -> ItemDrop ไม่ชนผู้เล่น (ยังชนพื้นและตัวมอน, กด E เก็บได้เหมือนเดิม)
     // เดิมหินวางอยู่ชนผู้เล่นเสมอ: ยืนบนหินแล้วหินกลิ้ง/ถูกแก้ตำแหน่งตลอด ตัวละครกระตุก (FB2-2)
     [Networked] private NetworkBool IsDangerous { get; set; }
+
+    // หินหยุดนิ่งแล้ว — host ตัดสินแล้วส่งให้ทุกเครื่อง (RK-1)
+    // บน client หินเป็น proxy แบบ kinematic ความเร็วใน rigidbody ของเครื่องนั้นไม่ใช่ความเร็วจริง ป้าย E เลยไม่ขึ้น
+    [Networked] private NetworkBool IsResting { get; set; }
+    private const float RestingSqrSpeed = 0.0001f;
+
     private int projectileLayer = -1;
     private int restingLayer = -1;
 
@@ -93,6 +99,9 @@ public class RockObject : NetworkBehaviour, ThrowAbleItem
 
         IsDangerous = ThrowerId.IsValid && isLethal && rb2D.linearVelocity.magnitude >= stunVelocityThreshold;
         ApplyCollisionLayer();
+
+        // อัปเดตเฉพาะตอนไม่ freeze — หินที่ถูกหยุดกลางอากาศยังไม่นับว่าหยุด จนกว่าจะตกถึงพื้น
+        IsResting = rb2D.linearVelocity.sqrMagnitude <= RestingSqrSpeed;
     }
 
     public override void Spawned()
@@ -233,6 +242,6 @@ public class RockObject : NetworkBehaviour, ThrowAbleItem
 
     public bool IsStationary()
     {
-        return rb2D != null && rb2D.linearVelocity.sqrMagnitude <= 0.0001f;
+        return Object != null && Object.IsValid && IsResting;
     }
 }
