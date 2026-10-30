@@ -65,8 +65,9 @@ public class SelectionHighlightFollower : MonoBehaviour
     {
         RestoreHover();
 
+        // ไม่ใช่ปุ่ม (จุดเริ่มเปล่า ๆ แบบ Empty holder หน้าห้อง) -> ไม่มีกรอบ (NV-2)
         var targetRect = currentSelected != null ? currentSelected.GetComponent<RectTransform>() : null;
-        if (targetRect == null || (currentSelectable != null && TryApplyHover(currentSelectable)))
+        if (targetRect == null || currentSelectable == null || TryApplyHover(currentSelectable))
         {
             if (highlightImage != null) highlightImage.gameObject.SetActive(false);
             return;

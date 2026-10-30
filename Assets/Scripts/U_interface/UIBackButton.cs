@@ -14,6 +14,8 @@ public class UIBackButton : MonoBehaviour
     private static int consumedFrame = -1;
 
     private Button button;
+    private Navigation authoredNavigation;
+    private bool navigationCaptured;
 
     // แถบบอกปุ่มเลือกป้าย B TO BACK / B TO HOLD LEAVE จากค่านี้ (UI-5)
     public float HoldSeconds => holdSeconds;
@@ -34,9 +36,34 @@ public class UIBackButton : MonoBehaviour
     {
         enabledButtons.Remove(this);
         enabledButtons.Add(this);
+
+        InputDeviceWatcher.Changed += OnInputSchemeChanged;
+        ApplyNavigation();
     }
 
-    private void OnDisable() => enabledButtons.Remove(this);
+    private void OnDisable()
+    {
+        enabledButtons.Remove(this);
+
+        InputDeviceWatcher.Changed -= OnInputSchemeChanged;
+        if (navigationCaptured && Button != null) Button.navigation = authoredNavigation;
+    }
+
+    private void OnInputSchemeChanged(InputScheme scheme) => ApplyNavigation();
+
+    // ตอนใช้จอยกด B แทนปุ่มนี้ได้ จึงเลื่อนข้ามปุ่มนี้ (BK-3) — ปุ่มยังกดได้ B จึงทำงานเหมือนเดิม; คีย์บอร์ดเลื่อนมาเลือกได้ตามเดิม
+    private void ApplyNavigation()
+    {
+        if (!navigationCaptured)
+        {
+            navigationCaptured = true;
+            authoredNavigation = Button.navigation;
+        }
+
+        Navigation navigation = authoredNavigation;
+        if (InputDeviceWatcher.UsingGamepad) navigation.mode = Navigation.Mode.None;
+        Button.navigation = navigation;
+    }
 
     // ปุ่มย้อนกลับของหน้าที่เปิดอยู่: ตัวที่เปิดทีหลังสุดที่ยังกดได้และมองเห็น
     public static UIBackButton Current

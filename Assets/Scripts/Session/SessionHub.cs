@@ -15,7 +15,8 @@ public class SessionHub : SingletonNetwork<SessionHub>
     [SerializeField] Selectable defaultSelected_MainMenu;
     [SerializeField] Selectable defaultSelected_Lobby;
     [SerializeField] Selectable defaultSelected_Join;
-    [SerializeField] Selectable defaultSelected_Session;
+    [Tooltip("ใส่ object ว่างได้: เข้าหน้าห้องแล้วยังไม่มีปุ่มถูกเลือก กดทิศแล้วไปปุ่มที่ใกล้สุดจากตำแหน่งของมัน")]
+    [SerializeField] GameObject defaultSelected_Session;
     [SerializeField] Selectable defaultSelected_Setting;
 
     private void SetDefaultSelection(Selectable selectable)
@@ -36,6 +37,18 @@ public class SessionHub : SingletonNetwork<SessionHub>
         }
 
         EventSystem.current.SetSelectedGameObject(selectable.gameObject);
+    }
+
+    // จุดเริ่มที่ไม่ใช่ปุ่ม (NV-2) — เดิมหน้าห้องเริ่มที่ปุ่มออก กด A บนจอยแล้วออกจากห้องทันที
+    private void SetDefaultSelection(GameObject target)
+    {
+        if (EventSystem.current == null || target == null)
+        {
+            Debug.LogWarning("[SessionHub] SetDefaultSelection ข้าม: EventSystem หรือจุดเริ่มเป็น null (ลืม assign field ใน Inspector?)");
+            return;
+        }
+
+        EventSystem.current.SetSelectedGameObject(target);
     }
 
     [Header("Session State")]

@@ -158,9 +158,29 @@ public class UIKeyboardNavigator : MonoBehaviour
         if (Time.unscaledTime < nextMoveTime) return;
         nextMoveTime = Time.unscaledTime + (nextMoveTime <= 0.0001f ? repeatDelay : repeatRate);
 
-        // ไม่มีอะไรถูกเลือก หรือหน้าที่เลือกไว้ปิดไปแล้ว (เช่นปิดเมนู pause/dialogue แล้วกำลังเล่น) — ไม่แตะ
-        // ไม่ให้คันโยกตอนเดินไปเลือกปุ่มบน HUD
-        if (selected == null || !selected.activeInHierarchy) return;
+        // ไม่มีอะไรถูกเลือก — ไม่แตะ ไม่ให้คันโยกตอนเดินไปเลือกปุ่มบน HUD
+        if (selected == null) return;
+
+        MoveDirection dir = moveDir.y > 0 ? MoveDirection.Up
+                          : moveDir.y < 0 ? MoveDirection.Down
+                          : moveDir.x > 0 ? MoveDirection.Right
+                          : MoveDirection.Left;
+
+        // จุดเริ่มที่ไม่ใช่ปุ่ม (Empty holder หน้าห้อง ปิดอยู่ก็ได้) หรือปุ่มที่ถูกข้ามแต่ยังถูกเลือกค้าง (NV-2):
+        // ไปปุ่มที่ใกล้สุดในทิศที่กดจากตำแหน่งของมัน ไม่เจอค่อยเลือกปุ่มบนสุดของหน้าจอ
+        if (IsAnchor(selected))
+        {
+            Canvas anchorRoot = RootCanvasOf(selected);
+            if (anchorRoot == null || !anchorRoot.isActiveAndEnabled) return;
+
+            Selectable start = FindInDirection(selected.transform, null, anchorRoot, dir);
+            if (start == null) start = FirstUsable(anchorRoot);
+            if (start != null) EventSystem.current.SetSelectedGameObject(start.gameObject);
+            return;
+        }
+
+        // หน้าที่เลือกไว้ปิดไปแล้ว (เช่นปิดเมนู pause/dialogue แล้วกำลังเล่น) — ไม่แตะ
+        if (!selected.activeInHierarchy) return;
 
         // ตัวที่เลือกยังอยู่บนจอแต่ใช้ไม่ได้ (กดไม่ได้/ถูกซ่อนด้วย alpha/canvas ปิด): กดทิศแล้วเลือกปุ่มบนหน้าจอเดียวกันใหม่ (NV-1)
         if (!IsUsable(selected))
@@ -170,21 +190,23 @@ public class UIKeyboardNavigator : MonoBehaviour
             return;
         }
 
-        MoveDirection dir = moveDir.y > 0 ? MoveDirection.Up
-                          : moveDir.y < 0 ? MoveDirection.Down
-                          : moveDir.x > 0 ? MoveDirection.Right
-                          : MoveDirection.Left;
-
         Canvas root = RootCanvasOf(selected);
         ExecuteEvents.Execute(selected, new AxisEventData(EventSystem.current) { moveDir = dir }, ExecuteEvents.moveHandler);
 
-        // ปุ่มถัดไปของ Unity มาจาก Selectable ทุกตัวในเกม — ถ้าหลุดไป canvas อื่นหรือของที่ซ่อนอยู่
+        // ปุ่มถัดไปของ Unity มาจาก Selectable ทุกตัวในเกม — ถ้าหลุดไป canvas อื่น ของที่ซ่อนอยู่ หรือปุ่มที่ถูกข้าม (Explicit ชี้มาตรง ๆ)
         // ให้หาปุ่มในทิศเดียวกันบนหน้าจอเดิมแทน ไม่เจอก็อยู่ที่เดิม (NV-1); สไลเดอร์ซ้าย/ขวายังปรับค่าเหมือนเดิม
         GameObject after = EventSystem.current.currentSelectedGameObject;
-        if (after == selected || (IsUsable(after) && RootCanvasOf(after) == root)) return;
+        if (after == selected || (IsUsable(after) && RootCanvasOf(after) == root && !IsAnchor(after))) return;
 
-        Selectable next = FindInDirection(selected.GetComponent<Selectable>(), root, dir);
+        Selectable from = selected.GetComponent<Selectable>();
+        Selectable next = FindInDirection(selected.transform, from, root, dir);
         EventSystem.current.SetSelectedGameObject(next != null ? next.gameObject : selected);
+    }
+
+    // ไม่ใช่ปุ่ม หรือเป็นปุ่มที่ไม่อยู่ในเส้นทางเลื่อน (navigation None — ปุ่มย้อนกลับตอนใช้จอย)
+    private static bool IsAnchor(GameObject go)
+    {
+        return !go.TryGetComponent<Selectable>(out var selectable) || selectable.navigation.mode == Navigation.Mode.None;
     }
 
     private static Canvas RootCanvasOf(GameObject go)
@@ -219,23 +241,22 @@ public class UIKeyboardNavigator : MonoBehaviour
         return Selectable.AllSelectablesNoAlloc(selectableBuffer);
     }
 
-    private static Vector3 CenterOf(Selectable selectable)
+    private static Vector3 CenterOf(Transform target)
     {
-        var rect = (RectTransform)selectable.transform;
-        return rect.TransformPoint(rect.rect.center);
+        return target is RectTransform rect ? rect.TransformPoint(rect.rect.center) : target.position;
     }
 
     // ปุ่มที่ใกล้และตรงทิศที่สุดบน canvas เดียวกัน (คะแนนแบบ Unity: ระยะตามทิศ / ระยะยกกำลังสอง)
-    private static Selectable FindInDirection(Selectable from, Canvas root, MoveDirection dir)
+    private static Selectable FindInDirection(Transform originTarget, Selectable from, Canvas root, MoveDirection dir)
     {
-        if (from == null || root == null) return null;
+        if (originTarget == null || root == null) return null;
 
         Vector3 localDir = dir == MoveDirection.Up ? Vector3.up
                          : dir == MoveDirection.Down ? Vector3.down
                          : dir == MoveDirection.Right ? Vector3.right
                          : Vector3.left;
         Vector3 worldDir = root.transform.rotation * localDir;
-        Vector3 origin = CenterOf(from);
+        Vector3 origin = CenterOf(originTarget);
 
         Selectable best = null;
         float bestScore = float.NegativeInfinity;
@@ -246,7 +267,7 @@ public class UIKeyboardNavigator : MonoBehaviour
             if (candidate == from || candidate.navigation.mode == Navigation.Mode.None) continue;
             if (!IsUsable(candidate.gameObject) || RootCanvasOf(candidate.gameObject) != root) continue;
 
-            Vector3 offset = CenterOf(candidate) - origin;
+            Vector3 offset = CenterOf(candidate.transform) - origin;
             float along = Vector3.Dot(worldDir, offset);
             if (along <= 0f) continue;
 
@@ -265,10 +286,11 @@ public class UIKeyboardNavigator : MonoBehaviour
         for (int i = 0; i < count; i++)
         {
             Selectable candidate = selectableBuffer[i];
+            if (candidate.navigation.mode == Navigation.Mode.None) continue;
             if (!IsUsable(candidate.gameObject)) continue;
             if (root != null && RootCanvasOf(candidate.gameObject) != root) continue;
 
-            float y = CenterOf(candidate).y;
+            float y = CenterOf(candidate.transform).y;
             if (y > bestY) { bestY = y; best = candidate; }
         }
         return best;
