@@ -45,7 +45,7 @@ public class SnowballShooterTrap : NetworkBehaviour
     {
         if (!HasStateAuthority || !IsActive) return;
 
-        // freeze ตอน pause/dialogue/tutorial — พักเวลายิงไว้ (เดิมเวลาหมดระหว่าง pause แล้วยิงทันทีที่เล่นต่อ) (TP-3)
+        // freeze ตอน pause/dialogue — พักเวลายิงไว้ (เดิมเวลาหมดระหว่าง pause แล้วยิงทันทีที่เล่นต่อ) (TP-3)
         if (GameplayPause.Frozen)
         {
             FireTimer = GameplayPause.Hold(FireTimer, Runner);

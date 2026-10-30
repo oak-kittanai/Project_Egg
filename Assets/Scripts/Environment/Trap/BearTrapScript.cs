@@ -63,7 +63,7 @@ public class BearTrapScript : NetworkBehaviour
     {
         if (!HasStateAuthority) return;
 
-        // freeze ตอน pause/dialogue/tutorial — พักเวลาไว้ เล่นต่อแล้วงับ/รีเซ็ตตามเวลาที่เหลือ
+        // freeze ตอน pause/dialogue — พักเวลาไว้ เล่นต่อแล้วงับ/รีเซ็ตตามเวลาที่เหลือ
         // (เดิม timer หมดระหว่าง pause: งับกับรีเซ็ตเกิดใน tick เดียว ไม่โดนดาเมจ แล้วกับดักค้างท่าหุบ)
         if (GameplayPause.Frozen)
         {

@@ -93,7 +93,7 @@ public class MoveSome : NetworkBehaviour, IRideablePlatform, IBeforeTick
     {
         if (HasStateAuthority)
         {
-            // freeze ตอน pause/dialogue/tutorial หรือ JellyfishTrap ขอหยุด
+            // freeze ตอน pause/dialogue หรือ JellyfishTrap ขอหยุด
             bool hold = HoldRequested || (GameManager.Instance != null && GameManager.Instance.IsGameplayFrozen);
             if (hold && HoldTick == 0) HoldTick = Runner.Tick.Raw;
             else if (!hold && HoldTick != 0)

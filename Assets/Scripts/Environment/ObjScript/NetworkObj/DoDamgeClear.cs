@@ -42,7 +42,7 @@ public class DoDamgeClear : NetworkBehaviour
     {
         if (!HasStateAuthority) return;
 
-        // freeze ตอน pause/dialogue/tutorial (TP-3) — เดิมแค่ return: ขอนยังกลิ้ง/ตกด้วย physics และอายุหมดระหว่าง pause
+        // freeze ตอน pause/dialogue (TP-3) — เดิมแค่ return: ขอนยังกลิ้ง/ตกด้วย physics และอายุหมดระหว่าง pause
         if (GameplayPause.Frozen)
         {
             ClearTimer = GameplayPause.Hold(ClearTimer, Runner);

@@ -1,6 +1,6 @@
 using Fusion;
 
-// ของในด่านตอน pause/dialogue/tutorial (TP-1..TP-7)
+// ของในด่านตอน pause/dialogue (TP-1..TP-7)
 // pause ไม่ได้หยุด runner: tick ยังเดิน, TickTimer ยังนับ, physics/trigger และ Animator ยังทำงาน
 // FixedUpdateNetwork ที่แค่ return เลยหยุดไม่ครบ — timer หมดระหว่าง pause แล้วทำงานทันทีที่เล่นต่อ
 public static class GameplayPause

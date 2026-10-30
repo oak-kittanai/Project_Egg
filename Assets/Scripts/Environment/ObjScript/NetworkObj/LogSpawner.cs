@@ -25,7 +25,7 @@ public class LogSpawner : NetworkBehaviour
     {
         if (!HasStateAuthority) return;
 
-        // freeze ตอน pause/dialogue/tutorial — พักเวลาไว้ (เดิมหมดระหว่าง pause แล้วปล่อยขอนทันทีที่เล่นต่อ) (TP-3)
+        // freeze ตอน pause/dialogue — พักเวลาไว้ (เดิมหมดระหว่าง pause แล้วปล่อยขอนทันทีที่เล่นต่อ) (TP-3)
         if (GameplayPause.Frozen)
         {
             SpawnTimer = GameplayPause.Hold(SpawnTimer, Runner);

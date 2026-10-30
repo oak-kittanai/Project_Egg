@@ -94,7 +94,7 @@ public class JellyfishTrap : NetworkBehaviour
     {
         if (!HasStateAuthority) return;
 
-        // freeze ตอน pause/dialogue/tutorial — พักเวลาไว้ (เดิมชาร์จจนเต็มระหว่าง pause แล้วระเบิดทันทีที่เล่นต่อ) (TP-2)
+        // freeze ตอน pause/dialogue — พักเวลาไว้ (เดิมชาร์จจนเต็มระหว่าง pause แล้วระเบิดทันทีที่เล่นต่อ) (TP-2)
         if (GameplayPause.Frozen)
         {
             StateTimer = GameplayPause.Hold(StateTimer, Runner);

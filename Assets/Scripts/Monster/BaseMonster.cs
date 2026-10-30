@@ -74,7 +74,7 @@ public class BaseMonster : NetworkBehaviour
     {
         base.FixedUpdateNetwork();
         if (!HasStateAuthority) return;
-        if (GameManager.Instance != null && GameManager.Instance.IsGameplayFrozen) return; // freeze ตอน pause/dialogue/tutorial
+        if (GameManager.Instance != null && GameManager.Instance.IsGameplayFrozen) return; // freeze ตอน pause/dialogue
 
         PlayerRadar();
         MonsterSpecificUpdate();

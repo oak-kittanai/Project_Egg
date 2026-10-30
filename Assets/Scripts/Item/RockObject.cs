@@ -74,7 +74,7 @@ public class RockObject : NetworkBehaviour, ThrowAbleItem
     {
         if (!HasStateAuthority || rb2D == null) return;
 
-        // freeze ตอน pause/dialogue/tutorial — หยุดหินที่กำลังลอย/ปาอยู่ คืนค่าเมื่อเล่นต่อ
+        // freeze ตอน pause/dialogue — หยุดหินที่กำลังลอย/ปาอยู่ คืนค่าเมื่อเล่นต่อ
         if (GameManager.Instance != null && GameManager.Instance.IsGameplayFrozen)
         {
             if (!_frozen)
@@ -167,10 +167,11 @@ public class RockObject : NetworkBehaviour, ThrowAbleItem
                     break;
                 }
 
-                // stun ได้แค่เป็ดเท่านั้น และต้องเร็วพอ
+                // stun ได้แค่เป็ดเท่านั้น และต้องเร็วพอ — เป็ดที่อ่านหน้าสอนเล่นอยู่ไม่มึน (TU-1)
                 if (!hitSomething && fastEnough
                     && hit.collider.TryGetComponent<IstunAble>(out var stunnable)
-                    && stunnable is Duck_Moveset duck)
+                    && stunnable is Duck_Moveset duck
+                    && !duck.IsReadingTutorial)
                 {
                     stunnable.TriggerStun();
 

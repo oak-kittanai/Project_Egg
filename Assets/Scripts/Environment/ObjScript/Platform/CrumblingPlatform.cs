@@ -67,7 +67,7 @@ public class CrumblingPlatform : NetworkBehaviour
     {
         if (!HasStateAuthority) return;
 
-        // freeze ตอน pause/dialogue/tutorial — เดิมไม่เช็คเลย: แท่นที่สั่นอยู่พังระหว่าง pause คนบนแท่นลอยค้างแล้วตกตอนเล่นต่อ (TP-4)
+        // freeze ตอน pause/dialogue — เดิมไม่เช็คเลย: แท่นที่สั่นอยู่พังระหว่าง pause คนบนแท่นลอยค้างแล้วตกตอนเล่นต่อ (TP-4)
         if (GameplayPause.Frozen)
         {
             StateTimer = GameplayPause.Hold(StateTimer, Runner);

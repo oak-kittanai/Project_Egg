@@ -210,6 +210,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable, IBeforeTick, IAf
     [Header("I-Frames & Effects")]
     [Networked] private TickTimer InvincibleTimer { get; set; }
     [SerializeField] private float invincibleDuration = 1.5f;
+    private bool _wasReadingTutorial; // host: ค่า tick ก่อน ไว้จับจังหวะปิดหน้าสอนเล่น (TU-1)
     [SerializeField] private DamageFlash _damageFlash;
     [SerializeField] public Color duck_Color;
     [SerializeField] public Color bird_Color;
@@ -278,6 +279,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable, IBeforeTick, IAf
         Floating = 1u << 9,
         FacingRight = 1u << 10,
         OxygenDepleted = 1u << 11,   // เป็ด: oxygen หมดแล้ว (host เริ่มดาเมจจมน้ำ)
+        ReadingTutorial = 1u << 12,  // เปิดหน้าสอนเล่นอยู่ (host ไม่ให้โดนดาเมจ/มึน)
         Diving = 1u << 16,           // เป็ด
         Flying = 1u << 20,           // นก
         AlreadyFloating = 1u << 21,
@@ -309,6 +311,9 @@ public class MovementCharacter : NetworkBehaviour, IDamageable, IBeforeTick, IAf
         MoveFlags flags = (!IsSpawnedObject || HasInputAuthority) ? _ownerFlags : (MoveFlags)RepFlags;
         return (flags & flag) != 0;
     }
+
+    // หน้าสอนเล่นเปิดเฉพาะจอคนอ่านและโลกไม่หยุด (TU-1) — host กันดาเมจ/มึนจากธงนี้แทนการ freeze
+    public bool IsReadingTutorial => GetMoveFlag(MoveFlags.ReadingTutorial);
 
     public void SetMoveFlag(MoveFlags flag, bool on)
     {
@@ -781,6 +786,9 @@ public class MovementCharacter : NetworkBehaviour, IDamageable, IBeforeTick, IAf
         JumpedThisTick = false;
         ApplyPendingOwnerEvent();
 
+        // ตั้งก่อนจุด return ด้านล่าง — ไม่งั้นตายระหว่างเปิดหน้าสอนเล่นแล้วธงค้าง (TU-1)
+        SetMoveFlag(MoveFlags.ReadingTutorial, TutorialUIManager.Instance != null && TutorialUIManager.Instance.IsTutorialOpen);
+
         if (GameManager.Instance == null || GameManager.Instance.Object == null || !GameManager.Instance.Object.IsValid
             || !GameManager.Instance.isLoadMapDone || !GameManager.Instance.IsGameReady)
         {
@@ -913,6 +921,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable, IBeforeTick, IAf
         }
 
         TickStun();
+        TickTutorialGrace();
 
         bool isMenuOpen = GameManager.Instance.IsPaused;
 
@@ -1312,7 +1321,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable, IBeforeTick, IAf
     {
         if (isDead || !InvincibleTimer.ExpiredOrNotRunning(Runner)) return;
 
-        // ตอน pause/dialogue/tutorial ตัวละครถูกหยุดอยู่ แต่ trigger/collision ของหนาม น้ำแข็ง ท่อนไม้ มอน ยังเรียกมาได้ (TP-7)
+        // ตอน pause/dialogue ตัวละครถูกหยุดอยู่ แต่ trigger/collision ของหนาม น้ำแข็ง ท่อนไม้ มอน ยังเรียกมาได้ (TP-7)
         if (GameplayPause.Frozen) return;
         RPC_TakeDamage(dmg, knockbackForce, vec);
     }
@@ -1320,6 +1329,9 @@ public class MovementCharacter : NetworkBehaviour, IDamageable, IBeforeTick, IAf
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
     public void RPC_TakeDamage(int dmg, float knockbackForce, Vector2 vec)
     {
+        // เช็คบน host จุดเดียว ครอบทั้งกับดัก มอน และดาเมจจมน้ำ (TU-1)
+        if (IsReadingTutorial) return;
+
         currentHealth -= dmg;
         if (HasInputAuthority && dmgSoundClip != null)
         {
@@ -1338,6 +1350,14 @@ public class MovementCharacter : NetworkBehaviour, IDamageable, IBeforeTick, IAf
         {
             InvincibleTimer = TickTimer.CreateFromSeconds(Runner, invincibleDuration);
         }
+    }
+
+    // host: ปิดหน้าสอนเล่นแล้วอมตะต่อสั้น ๆ — มอน/กับดักที่รออยู่ข้างตัวจะได้ไม่ตีทันทีที่ปิดหน้า (TU-1)
+    private void TickTutorialGrace()
+    {
+        bool reading = IsReadingTutorial;
+        if (_wasReadingTutorial && !reading) InvincibleTimer = TickTimer.CreateFromSeconds(Runner, invincibleDuration);
+        _wasReadingTutorial = reading;
     }
 
     protected void StartDrowningDamage()
