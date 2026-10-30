@@ -58,6 +58,7 @@ public class Duck_Moveset : MovementCharacter, IstunAble
     [SerializeField] private float emergencySwimTimer = 2f;
 
     private TickTimer DiveTimer;
+    private bool _remoteDiving; // เครื่องที่ไม่ใช่เจ้าของตัว: ค่า onDiving ล่าสุดที่แสดงแล้ว (OX-1)
 
     [Header("Floating Settings")]
     [SerializeField] private float floatOffset = -0.2f;
@@ -448,6 +449,20 @@ public class Duck_Moveset : MovementCharacter, IstunAble
         }
     }
 
+    // แถบ oxygen บนเครื่องที่ไม่ใช่เจ้าของตัว (OX-1): DiveTimer อยู่แค่เครื่องเจ้าของ จึงเริ่มนับเองตอนเห็นธงดำน้ำ
+    // ช้ากว่าเจ้าของตามเวลาเน็ต แต่ฟองลดทีละวินาทีจึงต่างกันไม่มาก
+    private void RenderRemoteOxygen()
+    {
+        if (IsOwner || localGUI == null) return;
+
+        bool diving = onDiving;
+        if (diving == _remoteDiving) return;
+        _remoteDiving = diving;
+
+        if (diving) localGUI.StartOxygenTracking(TickTimer.CreateFromSeconds(Runner, divingTime), Runner, Mathf.CeilToInt(divingTime));
+        else localGUI.StopOxygenTracking();
+    }
+
     public void EndDivingLogic()
     {
         if (stilldrowning)
@@ -577,6 +592,7 @@ public class Duck_Moveset : MovementCharacter, IstunAble
         base.Render();
 
         SyncCarryColliders();
+        RenderRemoteOxygen();
 
         if (!HasInputAuthority || PlayerInterface.Instance == null) return;
 

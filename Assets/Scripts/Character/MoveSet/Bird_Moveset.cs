@@ -210,9 +210,10 @@ public class Bird_Moveset : MovementCharacter, IstunAble
         DrownTimer = TickTimer.CreateFromSeconds(Runner, drowningTime);
     }
 
+    // แถบ oxygen ขึ้นทุกเครื่อง เพื่อนเห็นว่าใกล้จมแล้ว (OX-1) — DrownTimer sync จาก host อยู่แล้ว
     public void OnDrownTimerStateChanged()
     {
-        if (HasInputAuthority && localGUI != null)
+        if (localGUI != null)
         {
             if (startTimer)
             {
@@ -279,7 +280,7 @@ public class Bird_Moveset : MovementCharacter, IstunAble
             rb2D.sharedMaterial = defaultMaterial;
         }
 
-        if (HasInputAuthority && localGUI != null)
+        if (localGUI != null)
             localGUI.StopOxygenTracking();
     }
 
