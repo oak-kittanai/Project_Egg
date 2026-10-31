@@ -13,6 +13,7 @@ public class WarpZone : NetworkBehaviour
     [Networked] bool playerDuck { get; set; }
 
     private bool isWarping = false;
+    private const float ClearSeconds = 2.5f;
 
     private void OnTriggerEnter2D(Collider2D other)
     {
@@ -27,7 +28,8 @@ public class WarpZone : NetworkBehaviour
                 if (character.isBird) playerBird = true;
                 else playerDuck = true;
 
-                if (playerBird && playerDuck)
+                // Solo: ตัวตามหลังไม่มี collider ตัวที่คุมอยู่ถึงก็พอ
+                if ((playerBird && playerDuck) || SoloParty.IsActive)
                 {
                     isWarping = true;
                     _ = ExecuteWarp();
@@ -57,6 +59,14 @@ public class WarpZone : NetworkBehaviour
 
     private async Task ExecuteWarp()
     {
+        if (SoloParty.IsActive)
+        {
+            SoloHud.ShowHint("PROTOTYPE CLEAR", ClearSeconds);
+            await Task.Delay(Mathf.RoundToInt(ClearSeconds * 1000f));
+            RPC_ReturnToSession();
+            return;
+        }
+
         if (returnToSession)
         {
             RPC_ReturnToSession();

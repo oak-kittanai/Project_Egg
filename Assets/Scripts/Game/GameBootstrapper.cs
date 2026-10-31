@@ -49,6 +49,15 @@ public class GameBootstrapper : MonoBehaviour
             yield break;
         }
 
+        // Solo: คนเดียวคุมสองตัว เริ่มเป็นเป็ด นกไม่มีเจ้าของจึงเป็นตัวตามหลังตั้งแต่ spawn
+        if (runner.IsSinglePlayer)
+        {
+            ch.SpawnPlayer(runner.LocalPlayer, characterType.Duck, true);
+            ch.SpawnPlayer(PlayerRef.None, characterType.Bird, false);
+            SoloParty.Begin(runner);
+            yield break;
+        }
+
         characterType hostType   = sessionData != null ? sessionData.hostType   : characterType.Duck;
         characterType clientType = sessionData != null ? sessionData.clientType : characterType.Bird;
 

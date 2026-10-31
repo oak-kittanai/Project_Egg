@@ -151,7 +151,7 @@ public class CenterHost : SingletonNetwork<CenterHost>
                 obj.name = $"{Type}";
             });
 
-            hostRunner.SetPlayerObject(player, playerObj);
+            if (player != PlayerRef.None) hostRunner.SetPlayerObject(player, playerObj);
         }
         else
         {

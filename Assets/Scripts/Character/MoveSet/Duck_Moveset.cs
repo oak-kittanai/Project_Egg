@@ -232,6 +232,8 @@ public class Duck_Moveset : MovementCharacter, IstunAble
 
     private void HandleDuckInteraction(NetworkInputData input)
     {
+        if (SoloParty.IsActive) return; // Solo ยกนกด้วยปุ่ม Y ผ่าน SoloParty
+
         bool isEPressed = WasPressed(input, InputButton.Interact);
 
         if (isEPressed)
@@ -276,6 +278,7 @@ public class Duck_Moveset : MovementCharacter, IstunAble
     // แบกอยู่ = กด E โยนนกอย่างเดียว; ไม่แบก = นกชนะเมื่อใกล้กว่าของที่ใกล้สุด (IN-1)
     protected override bool FriendInteractWins(float interactDist)
     {
+        if (SoloParty.IsActive) return false;
         if (IsCarry) return true;
         return FindLiftableBird(out float birdDist) != null && birdDist < interactDist;
     }
@@ -323,6 +326,32 @@ public class Duck_Moveset : MovementCharacter, IstunAble
                 if (dropSoundClip != null) AudioManager.Instance?.PlayClipAtPosition(dropSoundClip, transform.position);
             }
         }
+    }
+
+    // Solo: ยก/วางนก ไม่มีการโยน และไม่วาร์ปนกแบบ DropFriend เพราะตำแหน่งนก SoloParty คุมอยู่
+    public void SoloSetCarrying(Bird_Moveset bird, bool carrying)
+    {
+        IsCarry = carrying;
+        CarriedFriendId = carrying ? bird.Object.Id : default;
+        bird.SoloSetCarriedBy(carrying ? this : null);
+    }
+
+    // Solo: ท่าแบกตอนห้อยใต้นก — ไม่มีตัวที่ถูกแบกจริง
+    public void SoloSetCarryPose(bool carrying)
+    {
+        IsCarry = carrying;
+        CarriedFriendId = default;
+    }
+
+    // Solo: รับช่วงต่อจากนกที่จมน้ำ — อากาศเท่าที่เหลือ ไม่เติมใหม่
+    public void SoloContinueDive(float airSeconds)
+    {
+        isMoveAble = false;
+        ReadyToDive = false;
+        DiveTimer = TickTimer.CreateFromSeconds(Runner, Mathf.Max(airSeconds, 0.02f));
+        onDiving = true;
+        onDivingControl = true;
+        emergencyToggle = true;
     }
 
     public void HandleWaterLogic(NetworkInputData input)

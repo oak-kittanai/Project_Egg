@@ -59,7 +59,8 @@ public class CutsceneManager : NetworkBehaviour
             return;
         }
 
-        if (PlayerInterface.Instance == null || PlayerInterface.Instance.introVideoPlayer == null)
+        // Solo ไม่มีคัตซีน
+        if (PlayerInterface.Instance == null || PlayerInterface.Instance.introVideoPlayer == null || Runner.IsSinglePlayer)
         {
             PlayLoadingOnly();
             return;

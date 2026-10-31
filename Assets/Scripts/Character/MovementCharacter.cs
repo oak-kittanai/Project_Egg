@@ -1546,6 +1546,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable, IBeforeTick, IAf
         // รีเซ็ตจากเมนู (DoResetToSpawn) เล่นเอฟเฟกต์เพื่อนตายก่อนเหมือนเดิม
         if (LastRespawnWasReset && lifeCycle != null) lifeCycle.PlayOnFriendDeath();
         OnRespawned();
+        SoloParty.Instance?.OnCharacterRespawned(this);
     }
 
     // ทุกเครื่องรันตอนเกิดใหม่ (host เรียกตรง, เครื่องอื่นจาก RespawnCount) — เดิมเป็น RPC_OnRespawned
@@ -1664,6 +1665,96 @@ public class MovementCharacter : NetworkBehaviour, IDamageable, IBeforeTick, IAf
         ApplyRespawnLocal();
     }
 
+    #endregion
+
+    #region Solo
+    // โหมด Solo: ตัวที่ไม่ได้คุมไม่มี input authority จึงเป็น "ตัวของอีกเครื่อง" ตามโค้ดเดิม (kinematic, วาดจาก Rep*)
+    // SoloParty เขียน Rep* ให้แทน client และปิด rb2D.simulated — ไม่ชน ไม่เหยียบปุ่ม ไม่โดนดาเมจ มอนมองไม่เห็น
+
+    // เป็ดแบกนกกลางอากาศ: ไม่มีท่าแบกตอนกระโดด จึงเล่นท่ากระโดดปกติและซ่อนนก
+    public bool SoloHideCarryPose { get; set; }
+
+    // รับช่วงต่อจาก from: ตำแหน่ง ความเร็ว สถานะกลางอากาศ เลือด เวลาอมตะ และปุ่มที่กดค้าง
+    public void SoloBecomeLeader(MovementCharacter from)
+    {
+        Vector2 position = from.rb2D.position;
+        Vector2 velocity = from.rb2D.linearVelocity;
+        const MoveFlags carried = MoveFlags.Grounded | MoveFlags.InAir | MoveFlags.Jumping | MoveFlags.WaterSurface
+            | MoveFlags.HeadUnderwater | MoveFlags.BodyOnWater | MoveFlags.StillDrowning | MoveFlags.FacingRight;
+        MoveFlags flags = from._ownerFlags & carried;
+
+        from.SoloBecomeFollower();
+
+        Object.AssignInputAuthority(Runner.LocalPlayer);
+        Local = this;
+        _ownerFlags = flags;
+        _appliedEventSeq = EventSeq; // event ที่ค้างตอนเป็นตัวตามหลังไม่ต้องทำซ้ำ
+
+        rb2D.bodyType = RigidbodyType2D.Dynamic;
+        rb2D.simulated = true;
+        rb2D.gravityScale = normalGravity;
+        rb2D.linearDamping = 0f;
+        rb2D.position = position;
+        transform.position = position;
+        rb2D.linearVelocity = velocity;
+        if (coll2D != null) coll2D.isTrigger = false;
+        SnapOwnerVisual(position);
+
+        // ไม่ได้สิทธิ์ coyote/jump buffer จากตัวเดิม และปุ่มที่กดค้างไม่นับเป็นการกดใหม่
+        PreviousButtons = from.PreviousButtons;
+        _lastGroundedTick = NoTick;
+        _jumpPressedTick = NoTick;
+        isMoveAble = true;
+        isOptional = false;
+        isSpeedoptional = false;
+
+        currentHealth = from.currentHealth;
+        InvincibleTimer = from.InvincibleTimer;
+
+        ForceUpdateUI();
+        OnHeldItemChanged();
+    }
+
+    public void SoloBecomeFollower()
+    {
+        RepFlags = (uint)(_ownerFlags & MoveFlags.FacingRight);
+        _ownerFlags = MoveFlags.None;
+        if (Object.HasInputAuthority) Object.RemoveInputAuthority();
+        if (Local == this) Local = null;
+        if (movementAudioSource != null && movementAudioSource.isPlaying) movementAudioSource.Stop();
+
+        SoloMakeFollowerBody();
+    }
+
+    public void SoloMakeFollowerBody()
+    {
+        if (rb2D != null)
+        {
+            rb2D.linearVelocity = Vector2.zero;
+            MakeRemoteBody();
+            rb2D.simulated = false;
+        }
+        if (visualTransform != null) visualTransform.localPosition = Vector3.zero;
+    }
+
+    public void SoloSetFollowerState(Vector2 position, Vector2 velocity, MoveFlags flags)
+    {
+        RepPosition = position;
+        RepVelocity = velocity;
+        RepFlags = (uint)flags;
+        rb2D.position = position;
+    }
+
+    public void SoloSetHidden(bool hidden)
+    {
+        if (spriteRenderer != null) spriteRenderer.enabled = !hidden;
+    }
+
+    public void SoloSetCarriedBy(MovementCharacter carrier)
+    {
+        IsBeingCarried = carrier != null;
+        CarrierId = carrier != null ? carrier.Object.Id : default;
+    }
     #endregion
 
     #region CarrySystem

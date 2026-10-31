@@ -91,6 +91,7 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
         if (!tutorialBlocking && !dialogueBlocking)
         {
             bool jump = false, press_F = false, press_E = false, press_ESC = false, press_TAB = false, press_Q = false, press_G = false;
+            bool press_Switch = false, press_Lift = false; // ใช้เฉพาะโหมด Solo
             Vector2 mousePosition = Vector2.zero;
 
             // ปุ่มอ่านจากอุปกรณ์ที่ใช้ล่าสุดเท่านั้น (IN-2) — กระโดด/สกิลดูจังหวะกด (WasPressed)
@@ -119,6 +120,8 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
                     if (Keyboard.current.tabKey.isPressed) press_TAB = true;
                     if (Keyboard.current.qKey.isPressed) press_Q = true;
                     if (Keyboard.current.gKey.isPressed) press_G = true;
+                    if (Keyboard.current.rKey.isPressed) press_Switch = true;
+                    if (Keyboard.current.yKey.isPressed) press_Lift = true;
                 }
             }
 
@@ -144,6 +147,8 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
                     if (gp.leftShoulder.isPressed) press_G = true;   // L1 = Drop Item
                     if (gp.startButton.isPressed) press_ESC = true;  // Start = ESC (Pause Menu)
                     if (gp.buttonEast.isPressed) press_TAB = true;   // B = Tab (ปิด UI)
+                    if (gp.rightTrigger.isPressed) press_Switch = true; // RT / R2 = สลับตัว
+                    if (gp.buttonNorth.isPressed) press_Lift = true;    // Y / △ = เป็ดยกนก
                 }
                 else if (!gamepadButtons)
                 {
@@ -165,6 +170,8 @@ public class INetworkStructure : MonoBehaviour, INetworkRunnerCallbacks
             data.Keyboard_Tab = press_TAB;
             data.KeybindThrowItem = press_Q;
             data.KeybindDropItem = press_G;
+            data.KeybindSwitch = press_Switch;
+            data.KeybindLift = press_Lift;
         }
 
         // ผลการเคลื่อนที่ของตัวเรา (NR-12): ส่งทุก tick แม้ปุ่มถูกปิดระหว่าง dialogue/สอนเล่น
@@ -303,6 +310,8 @@ public enum InputButton
     Interact = 4, // E / X
     Drop = 5,     // G / L1
     Throw = 6,    // Q / R1
+    Switch = 7,   // R / RT / R2 — Solo: สลับตัว, นกพาบิน
+    Lift = 8,     // Y / Y / △ — Solo: เป็ดยก/วางนก
 }
 
 public struct NetworkInputData : INetworkInput
@@ -327,4 +336,6 @@ public struct NetworkInputData : INetworkInput
     public bool KeybindInteract { get => Buttons.IsSet(InputButton.Interact); set => Buttons.Set(InputButton.Interact, value); }
     public bool KeybindDropItem { get => Buttons.IsSet(InputButton.Drop); set => Buttons.Set(InputButton.Drop, value); }
     public bool KeybindThrowItem { get => Buttons.IsSet(InputButton.Throw); set => Buttons.Set(InputButton.Throw, value); }
+    public bool KeybindSwitch { get => Buttons.IsSet(InputButton.Switch); set => Buttons.Set(InputButton.Switch, value); }
+    public bool KeybindLift { get => Buttons.IsSet(InputButton.Lift); set => Buttons.Set(InputButton.Lift, value); }
 }

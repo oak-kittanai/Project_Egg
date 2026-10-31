@@ -156,6 +156,8 @@ public class OffScreenIndicator : NetworkBehaviour
 
     private void FindAndSetFriendTarget()
     {
+        if (SoloParty.IsActive) return; // Solo ตัวตามหลังอยู่ใกล้ตัวหลักตลอด
+
         MovementCharacter[] allPlayers = FindObjectsByType<MovementCharacter>(FindObjectsSortMode.None);
 
         if (allPlayers.Length < 2) return;

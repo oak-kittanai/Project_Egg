@@ -252,9 +252,12 @@ public class GameManager : SingletonNetwork<GameManager>
         }
     }
 
+    // ผู้เล่นจริงในห้อง — Duo 2, Solo 1 (เป็ดกับนกของ Solo นับ PlayersReadyCount ครบ 2 อยู่แล้ว)
+    private int RequiredPlayers => Mathf.Max(1, Runner.ActivePlayers.Count());
+
     private void CheckMapLoading()
     {
-        if (MapsLoadedCount >= 2 && !isLoadMapDone)
+        if (MapsLoadedCount >= RequiredPlayers && !isLoadMapDone)
         {
             isLoadMapDone = true;
             CheckGameStart();
@@ -263,7 +266,7 @@ public class GameManager : SingletonNetwork<GameManager>
 
     private void CheckGameStart()
     {
-        if (PlayersReadyCount >= 2 && !isPlayerReady)
+        if (PlayersReadyCount >= RequiredPlayers && !isPlayerReady)
         {
             isPlayerReady = true;
         }

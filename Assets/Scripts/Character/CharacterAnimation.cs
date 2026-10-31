@@ -47,7 +47,7 @@ public class CharacterAnimation : NetworkBehaviour
     private string _airState;
     private bool _wasJumping;
 
-    [SerializeField] public bool Carrying => movement != null && movement.isCarrying;
+    [SerializeField] public bool Carrying => movement != null && movement.isCarrying && !movement.SoloHideCarryPose;
     [SerializeField] public bool BeingCarried => movement != null && movement.IsBeingCarried;
     [SerializeField] public bool isBird => movement != null && movement.isBird;
 

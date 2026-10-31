@@ -75,6 +75,12 @@ public class CameraCharacter : MonoBehaviour
         localListener.enabled = true;
     }
 
+    // โหมด Solo: กล้องตามตัวที่คุมอยู่
+    public void SetFollowTarget(Transform followTarget)
+    {
+        target = followTarget;
+    }
+
     public void DisableForRemote()
     {
         Camera cam = GetComponentInChildren<Camera>();
