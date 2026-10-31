@@ -14,7 +14,8 @@ public enum SessionState
     Setting,
     SessionSelect,
     Join,
-    CharacterSelect
+    CharacterSelect,
+    ModeSelect
 }
 
 public class SessionManager : MonoBehaviour
@@ -68,6 +69,7 @@ public class SessionManager : MonoBehaviour
     public NetworkRunner networkRunner;
 
     [SerializeField] string SceneToPlay;
+    [SerializeField] string soloScene = "Level1_solo";
 
     [Header("StoreToSpawn")]
     public List<PlayersData> Players = new List<PlayersData>();
@@ -212,6 +214,11 @@ public class SessionManager : MonoBehaviour
         ChangeState(SessionState.MainMenu);
     }
 
+    public void LoadToModeSelect()
+    {
+        ChangeState(SessionState.ModeSelect);
+    }
+
     public void LoadToLobbyMenu()
     {
         ChangeState(SessionState.Lobby);
@@ -349,6 +356,35 @@ public class SessionManager : MonoBehaviour
     public async Task LoadStartGame(string sceneName)
     {   
         await networkRunner.LoadScene(sceneName, LoadSceneMode.Single);
+    }
+
+    // Solo: ไม่ต่อเน็ตและไม่มีห้อง — ใช้ GameMode.Single ระบบในด่านจึงเป็นตัวเดียวกับ Duo
+    public async void StartSoloGame()
+    {
+        if (networkRunner == null) AddRunner();
+
+        ShowLoadingScreen(true);
+        if (GlobalLoadingManager.Instance != null) GlobalLoadingManager.Instance.ShowLoading();
+
+        var sceneManager = networkRunner.GetComponent<NetworkSceneManagerDefault>() ?? networkRunner.gameObject.AddComponent<NetworkSceneManagerDefault>();
+
+        var res = await networkRunner.StartGame(new StartGameArgs()
+        {
+            GameMode = GameMode.Single,
+            SessionName = "solo",
+            SceneManager = sceneManager
+        });
+
+        if (!res.Ok)
+        {
+            Debug.LogError($"StartSoloGame failed: {res.ShutdownReason}");
+            SessionHub.Instance.ShowDebugText($"Solo Fail: {res.ShutdownReason}");
+            ShowLoadingScreen(false);
+            return;
+        }
+
+        SessionHub.Instance.DesetButton();
+        await LoadStartGame(soloScene);
     }
 
     public void StartGame()

@@ -134,6 +134,13 @@ public class SessionHub : SingletonNetwork<SessionHub>
 
     [SerializeField] bool _gameReadyToStart => RuntimeUpdate.Instance != null && RuntimeUpdate.Instance.isHostReady && RuntimeUpdate.Instance.isClientReady;
 
+    [Header("Mode Select")]
+    [SerializeField] GameObject[] modeSelectElements;
+    [SerializeField] Button _soloButton;
+    [SerializeField] Button _duoButton;
+    [SerializeField] Button _leaveModeSelectButton;
+    [SerializeField] Selectable defaultSelected_ModeSelect;
+
     [Header("Support_Text")]
     [SerializeField] GameObject DebugTextObj;
     [SerializeField] TMP_Text DebugText;
@@ -160,14 +167,17 @@ public class SessionHub : SingletonNetwork<SessionHub>
     {
         // Lobby
         if (exitButton != null) exitButton.onClick.AddListener(ExitTheGame);
-        if (playButton != null) playButton.onClick.AddListener(ChangeStateToLobbyMenu);
+        if (playButton != null) playButton.onClick.AddListener(ChangeStateToModeSelect);
+        if (_soloButton != null) _soloButton.onClick.AddListener(StartSolo);
+        if (_duoButton != null) _duoButton.onClick.AddListener(ChangeStateToLobbyMenu);
+        if (_leaveModeSelectButton != null) _leaveModeSelectButton.onClick.AddListener(ChangeStateToMainMenu);
 
         // Session
         if (_joinSessionButton != null) _joinSessionButton.onClick.AddListener(JoinSessionRoom);
         if (_CreateSessionButton != null) _CreateSessionButton.onClick.AddListener(CreateRoom);
         if (_JoinRoomButton != null) _JoinRoomButton.onClick.AddListener(JoinRoom);
 
-        if (_leaveLobbyButton != null) _leaveLobbyButton.onClick.AddListener(ChangeStateToMainMenu);
+        if (_leaveLobbyButton != null) _leaveLobbyButton.onClick.AddListener(ChangeStateToModeSelect);
         if (_leaveButton != null) _leaveButton.onClick.AddListener(LeaveRoom);
         if (_leaveButtonJoinRoom != null) _leaveButtonJoinRoom.onClick.AddListener(ChangeStateToLobbyMenu);
 
@@ -261,6 +271,10 @@ public class SessionHub : SingletonNetwork<SessionHub>
                 OpenMainMenuUI();
                 break;
 
+            case SessionState.ModeSelect:
+                OpenModeSelectUI();
+                break;
+
             case SessionState.Setting:
                 OpenSettingUI();
                 break;
@@ -298,9 +312,19 @@ public class SessionHub : SingletonNetwork<SessionHub>
         ToggleUIElements(sessionElements, false);
         ToggleUIElements(lobbyElements, false);
         ToggleUIElements(settingElements, false);
+        ToggleUIElements(modeSelectElements, false);
 
         SetMainButtonOff(false);
         if (_startButton != null) _startButton.gameObject.SetActive(false);
+    }
+
+    public void OpenModeSelectUI()
+    {
+        HideAllPanels();
+        if (backgroundShared != null) backgroundShared.SetActive(true);
+
+        ToggleUIElements(modeSelectElements, true);
+        SetDefaultSelection(defaultSelected_ModeSelect);
     }
 
     public void OpenLobbyUI()
@@ -445,6 +469,20 @@ public class SessionHub : SingletonNetwork<SessionHub>
     public void ChangeStateToMainMenu()
     {
         SessionManager.Instance.LoadToMainMenu();
+    }
+
+    // ฉากที่ยังไม่มีปุ่มเลือกโหมดไปหน้า Lobby เหมือนเดิม
+    public void ChangeStateToModeSelect()
+    {
+        if (_soloButton == null) SessionManager.Instance.LoadToLobbyMenu();
+        else SessionManager.Instance.LoadToModeSelect();
+    }
+
+    private void StartSolo()
+    {
+        if (_soloButton != null) _soloButton.interactable = false;
+        if (_duoButton != null) _duoButton.interactable = false;
+        if (SessionManager.Instance != null) SessionManager.Instance.StartSoloGame();
     }
 
     public void ChangeStateToLobbyMenu()
