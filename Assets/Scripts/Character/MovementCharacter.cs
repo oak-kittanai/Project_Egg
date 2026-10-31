@@ -757,7 +757,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable, IBeforeTick, IAf
 
     public override void FixedUpdateNetwork()
     {
-        bool hasInput = GetInput(out NetworkInputData input);
+        bool hasInput = GetInput(out NetworkInputData input) && !IsSoloFollower;
 
         if (IsMirror)
         {
@@ -1668,8 +1668,11 @@ public class MovementCharacter : NetworkBehaviour, IDamageable, IBeforeTick, IAf
     #endregion
 
     #region Solo
-    // โหมด Solo: ตัวที่ไม่ได้คุมไม่มี input authority จึงเป็น "ตัวของอีกเครื่อง" ตามโค้ดเดิม (kinematic, วาดจาก Rep*)
-    // SoloParty เขียน Rep* ให้แทน client และปิด rb2D.simulated — ไม่ชน ไม่เหยียบปุ่ม ไม่โดนดาเมจ มอนมองไม่เห็น
+    // โหมด Solo: ตัวที่ไม่ได้คุมทำตัวเป็น "ตัวของอีกเครื่อง" ตามโค้ดเดิม (kinematic, วาดจาก Rep*)
+    // SoloParty เขียน Rep* ให้แทน client และปิด rb2D.simulated — ไม่มี collider ไม่เหยียบปุ่ม ไม่โดนดาเมจ มอนมองไม่เห็น
+    // GameMode.Single ปลด input authority ไม่ได้เลย (Remove, Assign None และ Assign ผู้เล่นอื่นไม่มีผล) จึงบังค่าที่นี่จุดเดียว
+    public bool IsSoloFollower { get; private set; }
+    public new bool HasInputAuthority => base.HasInputAuthority && !IsSoloFollower;
 
     // เป็ดแบกนกกลางอากาศ: ไม่มีท่าแบกตอนกระโดด จึงเล่นท่ากระโดดปกติและซ่อนนก
     public bool SoloHideCarryPose { get; set; }
@@ -1685,6 +1688,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable, IBeforeTick, IAf
 
         from.SoloBecomeFollower();
 
+        IsSoloFollower = false;
         Object.AssignInputAuthority(Runner.LocalPlayer);
         Local = this;
         _ownerFlags = flags;
@@ -1719,7 +1723,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable, IBeforeTick, IAf
     {
         RepFlags = (uint)(_ownerFlags & MoveFlags.FacingRight);
         _ownerFlags = MoveFlags.None;
-        if (Object.HasInputAuthority) Object.RemoveInputAuthority();
+        IsSoloFollower = true;
         if (Local == this) Local = null;
         if (movementAudioSource != null && movementAudioSource.isPlaying) movementAudioSource.Stop();
 

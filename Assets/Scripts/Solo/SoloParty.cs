@@ -1,23 +1,18 @@
-using System.Collections.Generic;
 using Fusion;
 using UnityEngine;
 
 // หัวใจของโหมด Solo: คนเดียวคุมสองตัว สลับตัว ตัวตามหลัง ยกนก และนกพาบิน
 // อยู่บน runner ไม่ใช่ NetworkObject เพราะ GameMode.Single ไม่มีเครื่องอื่นและไม่ย้อน tick — ค่าทั้งหมดเก็บเป็นตัวแปรธรรมดาได้
-// ตัวตามหลังไม่มี input authority จึงถูกวาดด้วยเส้นทางเดียวกับ "ตัวของอีกเครื่อง" ส่วนนี้เขียน Rep* ให้ทุก tick
+// ตัวตามหลัง (MovementCharacter.IsSoloFollower) ถูกวาดด้วยเส้นทางเดียวกับ "ตัวของอีกเครื่อง" ส่วนนี้เขียน Rep* ให้ทุก tick
 [DefaultExecutionOrder(100)] // หลังตัวละคร ตัวตามหลังจะได้ใช้ตำแหน่งล่าสุดของตัวหลัก
 public class SoloParty : SimulationBehaviour
 {
-    private enum FollowMode { Trail, WaitAtShore, RidingDuck, HangingFromBird }
+    private enum FollowMode { Follow, WaitAtShore, RidingDuck, HangingFromBird }
 
-    private struct TrailPoint
-    {
-        public Vector2 Position;
-        public bool Grounded;
-    }
-
-    private const int MaxTrailPoints = 300;
-    private const float MinTrailStep = 0.02f;
+    private const float GroundProbeStart = 1.2f;
+    private const float GroundProbeLength = 5f;
+    private const float MinSideGap = 0.6f;
+    private const float CatchUpPerUnit = 6f;
 
     public static SoloParty Instance { get; private set; }
     public static bool IsActive => Instance != null;
@@ -29,10 +24,9 @@ public class SoloParty : SimulationBehaviour
 
     private MovementCharacter Follower => Active == Duck ? Bird : Duck;
 
-    private readonly List<TrailPoint> _trail = new List<TrailPoint>();
     private SoloSettings _settings;
     private NetworkButtons _previousButtons;
-    private FollowMode _mode = FollowMode.Trail;
+    private FollowMode _mode = FollowMode.Follow;
     private TickTimer _switchTimer;
     private TickTimer _assistCooldown;
     private TickTimer _assistFlight;
@@ -40,7 +34,10 @@ public class SoloParty : SimulationBehaviour
     private bool _hasShorePoint;
     private bool _lifting;
     private bool _assistAirborne;
-    private bool _needsTrailReset = true;
+    private bool _needsPlacement = true;
+    private float _groundOffset = 0.5f;
+    private int _groundMask;
+    private int _waterMask;
     private bool _followerFacingRight;
 
     public static void Begin(NetworkRunner runner)
@@ -49,6 +46,8 @@ public class SoloParty : SimulationBehaviour
         runner.AddGlobal(party);
         Instance = party;
         party._settings = SoloSettings.Instance;
+        party._groundMask = LayerMask.GetMask("Ground", "Platform");
+        party._waterMask = LayerMask.GetMask("Water");
         SoloHud.Create(runner.transform);
     }
 
@@ -74,13 +73,13 @@ public class SoloParty : SimulationBehaviour
 
         if (Active.isDead || Follower.isDead) return;
 
-        if (_needsTrailReset)
+        if (_needsPlacement)
         {
-            _needsTrailReset = false;
-            ResetTrail();
+            _needsPlacement = false;
+            PlaceBehindLeader();
         }
 
-        RecordTrail();
+        RememberGround();
         UpdateFollower();
     }
 
@@ -98,7 +97,7 @@ public class SoloParty : SimulationBehaviour
         if (Duck == null || Bird == null) return false;
 
         Active = Duck;
-        Bird.SoloMakeFollowerBody();
+        Bird.SoloBecomeFollower();
         return true;
     }
 
@@ -134,7 +133,7 @@ public class SoloParty : SimulationBehaviour
         if (Active != Duck || Duck.onDiving || !Duck.IsGrounded) return;
 
         SetLifting(!_lifting);
-        if (!_lifting) ResetTrail();
+        if (!_lifting) PlaceBehindLeader();
     }
     #endregion
 
@@ -170,8 +169,8 @@ public class SoloParty : SimulationBehaviour
         if (rig != null) rig.SetFollowTarget(to.visualTransform);
 
         _switchTimer = TickTimer.CreateFromSeconds(Runner, _settings.switchCooldown);
-        _mode = FollowMode.Trail;
-        ResetTrail();
+        _mode = FollowMode.Follow;
+        PlaceBehindLeader();
     }
     #endregion
 
@@ -210,11 +209,11 @@ public class SoloParty : SimulationBehaviour
         if (Active == Bird)
         {
             if (Bird.IsFlying || Bird.AlreadyFloating || (Bird.IsAlreadyFly && !Bird.IsGrounded)) return FollowMode.HangingFromBird;
-            return InWater(Bird) ? FollowMode.WaitAtShore : FollowMode.Trail;
+            return InWater(Bird) ? FollowMode.WaitAtShore : FollowMode.Follow;
         }
 
         if (_lifting) return FollowMode.RidingDuck;
-        return InWater(Duck) ? FollowMode.WaitAtShore : FollowMode.Trail;
+        return InWater(Duck) ? FollowMode.WaitAtShore : FollowMode.Follow;
     }
 
     private void UpdateFollower()
@@ -228,7 +227,7 @@ public class SoloParty : SimulationBehaviour
 
         switch (mode)
         {
-            case FollowMode.Trail: FollowTrail(); break;
+            case FollowMode.Follow: FollowLeader(); break;
             case FollowMode.WaitAtShore: WaitAtShore(); break;
             case FollowMode.RidingDuck: RideDuck(); break;
             case FollowMode.HangingFromBird: HangFromBird(); break;
@@ -240,21 +239,46 @@ public class SoloParty : SimulationBehaviour
         if (from == FollowMode.HangingFromBird) Duck.SoloSetCarryPose(false);
         if (to == FollowMode.HangingFromBird) Duck.SoloSetCarryPose(true);
 
-        if (to != FollowMode.Trail) return;
+        if (to != FollowMode.Follow) return;
 
         float distance = Vector2.Distance(Follower.rb2D.position, Active.rb2D.position);
-        if (from != FollowMode.WaitAtShore || distance > _settings.shoreWarpDistance) ResetTrail();
+        if (from != FollowMode.WaitAtShore || distance > _settings.shoreWarpDistance) PlaceBehindLeader();
     }
 
-    private void FollowTrail()
+    // อยู่ข้างหลังตามทิศที่ตัวหลักหัน บนพื้นจริง แบบสัตว์เลี้ยง — ไม่มี collider จึงเดินซ้อนกันได้ตอนตัวหลักหันกลับ
+    private void FollowLeader()
     {
-        TrailPoint target = SampleTrail(_settings.followDistance);
+        MovementCharacter leader = Active;
+        Vector2 lead = leader.rb2D.position;
         Vector2 current = Follower.rb2D.position;
-        float speed = Mathf.Max(_settings.catchUpSpeed, Active.CurrentVelocity.magnitude + 1f);
-        Vector2 next = Vector2.MoveTowards(current, target.Position, speed * Runner.DeltaTime);
+
+        if (leader.IsGrounded && Vector2.Distance(current, lead) > _settings.shoreWarpDistance)
+        {
+            PlaceBehindLeader();
+            return;
+        }
+
+        float targetX = BehindX(lead);
+        float gap = Mathf.Abs(targetX - current.x);
+        // ยิ่งห่างจากจุดข้างหลังยิ่งเดินเร็ว ตอนตัวหลักเดินจึงไม่ทิ้งระยะ
+        float speed = Mathf.Min(_settings.walkSpeed + gap * CatchUpPerUnit, _settings.catchUpSpeed);
+        float nextX = Mathf.MoveTowards(current.x, targetX, speed * Runner.DeltaTime);
+
+        bool onGround = TryFindGround(nextX, Mathf.Max(current.y, lead.y), out float groundY);
+
+        // ข้างหน้าเป็นหลุม: รอที่ขอบจนตัวหลักลงพื้น แล้วค่อยกระโดดตามไป
+        if (!onGround && !leader.IsGrounded)
+        {
+            nextX = current.x;
+            onGround = TryFindGround(nextX, current.y, out groundY);
+        }
+
+        float targetY = onGround ? groundY : lead.y;
+        float nextY = Mathf.MoveTowards(current.y, targetY, _settings.hopSpeed * Runner.DeltaTime);
+        Vector2 next = new Vector2(nextX, nextY);
         Vector2 velocity = (next - current) / Runner.DeltaTime;
 
-        MovementCharacter.MoveFlags flags = target.Grounded
+        MovementCharacter.MoveFlags flags = onGround && Mathf.Abs(nextY - targetY) < 0.05f
             ? MovementCharacter.MoveFlags.Grounded
             : MovementCharacter.MoveFlags.InAir | (velocity.y > 0.1f ? MovementCharacter.MoveFlags.Jumping : MovementCharacter.MoveFlags.None);
 
@@ -302,66 +326,76 @@ public class SoloParty : SimulationBehaviour
     }
     #endregion
 
-    #region Trail
-    private void RecordTrail()
+    #region Placement
+    // จำจุดยืนล่าสุด (รอบนฝั่ง) และความสูงจากพื้นถึงตัว (วางตัวตามหลังให้เท้าแตะพื้น)
+    private void RememberGround()
     {
         MovementCharacter leader = Active;
+        if (!leader.IsGrounded || InWater(leader)) return;
+
         Vector2 position = leader.rb2D.position;
+        _shorePoint = position;
+        _hasShorePoint = true;
 
-        if (leader.IsGrounded && !InWater(leader))
-        {
-            _shorePoint = position;
-            _hasShorePoint = true;
-        }
-
-        if (_trail.Count > 0 && (position - _trail[_trail.Count - 1].Position).sqrMagnitude < MinTrailStep * MinTrailStep) return;
-
-        _trail.Add(new TrailPoint { Position = position, Grounded = leader.IsGrounded });
-        if (_trail.Count > MaxTrailPoints) _trail.RemoveRange(0, _trail.Count - MaxTrailPoints);
+        RaycastHit2D hit = Physics2D.Raycast(position, Vector2.down, GroundProbeLength, _groundMask);
+        if (hit.collider != null) _groundOffset = hit.distance;
     }
 
-    // จุดบนเส้นทางของตัวหลัก ย้อนกลับไปเท่า distance
-    private TrailPoint SampleTrail(float distance)
+    private float BehindX(Vector2 lead)
     {
-        if (_trail.Count == 0) return new TrailPoint { Position = Follower.rb2D.position, Grounded = true };
+        float direction = Active.GetMoveFlag(MovementCharacter.MoveFlags.FacingRight) ? -1f : 1f;
 
-        float remaining = distance;
-        for (int i = _trail.Count - 1; i > 0; i--)
+        float room = FreeDistance(lead, direction);
+        if (room < MinSideGap)
         {
-            TrailPoint near = _trail[i];
-            TrailPoint far = _trail[i - 1];
-            float step = Vector2.Distance(near.Position, far.Position);
-
-            if (step >= remaining)
-            {
-                return new TrailPoint
-                {
-                    Position = Vector2.Lerp(near.Position, far.Position, step > 0f ? remaining / step : 0f),
-                    Grounded = far.Grounded,
-                };
-            }
-            remaining -= step;
+            direction = -direction;
+            room = FreeDistance(lead, direction);
         }
-        return _trail[0];
+        return lead.x + direction * room;
     }
 
-    // เริ่มเส้นทางใหม่จากข้างหลังตัวหลัก (ไม่ทะลุกำแพง) แล้ววางตัวตามหลังตรงนั้น
-    private void ResetTrail()
+    // ระยะว่างด้านนั้นจนชนกำแพงหรือสุดขอบพื้น ไม่เกิน followDistance
+    private float FreeDistance(Vector2 lead, float direction)
     {
-        Vector2 lead = Active.rb2D.position;
-        Vector2 back = Active.GetMoveFlag(MovementCharacter.MoveFlags.FacingRight) ? Vector2.left : Vector2.right;
-
         float distance = _settings.followDistance;
-        RaycastHit2D wall = Physics2D.Raycast(lead, back, distance, LayerMask.GetMask("Ground", "Platform"));
+
+        RaycastHit2D wall = Physics2D.Raycast(lead, Vector2.right * direction, distance, _groundMask);
         if (wall.collider != null) distance = Mathf.Max(wall.distance - 0.1f, 0f);
 
-        Vector2 start = lead + back * distance;
+        if (!Active.IsGrounded) return distance;
 
-        _trail.Clear();
-        _trail.Add(new TrailPoint { Position = start, Grounded = Active.IsGrounded });
-        _trail.Add(new TrailPoint { Position = lead, Grounded = Active.IsGrounded });
+        // ยืนอยู่ปลายขอบ: ไม่ลอยออกไปนอกพื้น
+        for (float check = distance; check > 0.05f; check -= 0.2f)
+        {
+            if (TryFindGround(lead.x + direction * check, lead.y, out _)) return check;
+        }
+        return 0f;
+    }
 
-        Follower.SoloSetFollowerState(start, Vector2.zero, Active.IsGrounded ? MovementCharacter.MoveFlags.Grounded : MovementCharacter.MoveFlags.InAir);
+    private bool TryFindGround(float x, float nearY, out float y)
+    {
+        Vector2 origin = new Vector2(x, nearY + GroundProbeStart);
+        RaycastHit2D hit = Physics2D.Raycast(origin, Vector2.down, GroundProbeLength, _groundMask);
+
+        y = nearY;
+        if (hit.collider == null || hit.distance <= 0f) return false;
+
+        y = hit.point.y + _groundOffset;
+        return Physics2D.OverlapPoint(new Vector2(x, y), _waterMask) == null;
+    }
+
+    // วางตัวตามหลังข้างหลังตัวหลักทันที
+    private void PlaceBehindLeader()
+    {
+        Vector2 lead = Active.rb2D.position;
+        float x = BehindX(lead);
+        bool grounded = TryFindGround(x, lead.y, out float y);
+
+        Vector2 position = new Vector2(x, grounded ? y : lead.y);
+        MovementCharacter.MoveFlags flags = grounded ? MovementCharacter.MoveFlags.Grounded : MovementCharacter.MoveFlags.InAir;
+        if (x < lead.x) _followerFacingRight = true;
+        else if (x > lead.x) _followerFacingRight = false;
+        SetFollower(position, Vector2.zero, flags);
     }
     #endregion
 
@@ -373,9 +407,9 @@ public class SoloParty : SimulationBehaviour
         _lifting = false;
         _assistAirborne = false;
         _assistFlight = TickTimer.None;
-        _mode = FollowMode.Trail;
+        _mode = FollowMode.Follow;
         _hasShorePoint = false;
-        _needsTrailReset = true;
+        _needsPlacement = true;
 
         if (Duck != null) Duck.SoloHideCarryPose = false;
         if (Bird != null) Bird.SoloSetHidden(false);

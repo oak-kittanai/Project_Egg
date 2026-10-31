@@ -352,7 +352,7 @@ public class Bird_Moveset : MovementCharacter, IstunAble
 
     public void OnFlyingStateChanged()
     {
-        if (Object.InputAuthority == Runner.LocalPlayer)
+        if (HasInputAuthority)
         {
             if (IsFlying)
             {

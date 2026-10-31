@@ -315,7 +315,7 @@ public class Duck_Moveset : MovementCharacter, IstunAble
 
     public void OnCarryStateChanged()
     {
-        if (Object.InputAuthority == Runner.LocalPlayer)
+        if (HasInputAuthority)
         {
             if (IsCarry)
             {
@@ -461,7 +461,7 @@ public class Duck_Moveset : MovementCharacter, IstunAble
 
     public void OnDivingStateChanged()
     {
-        if (Object.InputAuthority == Runner.LocalPlayer)
+        if (HasInputAuthority)
         {
             if (onDiving)
             {

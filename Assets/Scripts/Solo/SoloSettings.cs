@@ -10,8 +10,12 @@ public class SoloSettings : ScriptableObject
     public float followDistance = 1.2f;
     [Tooltip("ขึ้นจากน้ำแล้วตัวตามหลังอยู่ไกลเกินนี้ให้วาร์ปมาหลังตัวหลัก (หน่วย)")]
     public float shoreWarpDistance = 8f;
+    [Tooltip("ความเร็วเดินปกติของตัวตามหลัง (หน่วย/วิ) ให้เท่าความเร็วตัวหลัก")]
+    public float walkSpeed = 3.5f;
     [Tooltip("ความเร็วตอนตัวตามหลังเดินตามให้ทัน (หน่วย/วิ)")]
     public float catchUpSpeed = 7f;
+    [Tooltip("ความเร็วตอนตัวตามหลังกระโดดขึ้นลงตามพื้น (หน่วย/วิ)")]
+    public float hopSpeed = 8f;
     [Tooltip("กันกดสลับตัวรัว (วินาที)")]
     public float switchCooldown = 0.3f;
 
