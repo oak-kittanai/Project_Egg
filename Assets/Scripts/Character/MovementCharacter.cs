@@ -937,7 +937,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable, IBeforeTick, IAf
 
     public override void Render()
     {
-        if (IsOwner) RenderOwnerVisual();
+        // ตัวตามหลังของ Solo ใช้ภาพแบบเจ้าของ: RenderRemoteBody เขียน root transform ย้อนหลังแล้ว physics sync ทับตำแหน่ง body (SO-7)
+        if (IsOwner || IsSoloFollower) RenderOwnerVisual();
         else RenderRemoteBody();
 
         if (HasInputAuthority) CheckInteractable();
@@ -1741,12 +1742,22 @@ public class MovementCharacter : NetworkBehaviour, IDamageable, IBeforeTick, IAf
         if (visualTransform != null) visualTransform.localPosition = Vector3.zero;
     }
 
-    public void SoloSetFollowerState(Vector2 position, Vector2 velocity, MoveFlags flags)
+    public void SoloSetFollowerState(Vector2 position, Vector2 velocity, MoveFlags flags, bool snap)
     {
         RepPosition = position;
         RepVelocity = velocity;
         RepFlags = (uint)flags;
         rb2D.position = position;
+        transform.position = position;
+
+        if (snap || !_hasOwnerVisual)
+        {
+            SnapOwnerVisual(position);
+            return;
+        }
+
+        _ownerVisualPrev = _ownerVisualCurr;
+        _ownerVisualCurr = position;
     }
 
     public void SoloSetHidden(bool hidden)

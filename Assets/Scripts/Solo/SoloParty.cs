@@ -12,7 +12,7 @@ public class SoloParty : SimulationBehaviour
     private const float GroundProbeStart = 1.2f;
     private const float GroundProbeLength = 5f;
     private const float MinSideGap = 0.6f;
-    private const float CatchUpPerUnit = 6f;
+    private const float LeaderWalkSpeed = 0.1f;
 
     public static SoloParty Instance { get; private set; }
     public static bool IsActive => Instance != null;
@@ -21,6 +21,7 @@ public class SoloParty : SimulationBehaviour
     public Bird_Moveset Bird { get; private set; }
     public MovementCharacter Active { get; private set; }
     public float AssistCooldownLeft => Runner != null ? _assistCooldown.RemainingTime(Runner) ?? 0f : 0f;
+    public bool IsLifting => _lifting;
 
     private MovementCharacter Follower => Active == Duck ? Bird : Duck;
 
@@ -258,10 +259,12 @@ public class SoloParty : SimulationBehaviour
             return;
         }
 
-        float targetX = BehindX(lead);
+        // ตัวหลักหันเฉย ๆ ไม่ได้เดิน: อยู่ฝั่งเดิม ไม่เดินทะลุไปอีกด้าน
+        bool leaderWalking = Mathf.Abs(leader.CurrentVelocity.x) > LeaderWalkSpeed;
+        float targetX = BehindX(lead, leaderWalking ? FacingBehind : Mathf.Sign(current.x - lead.x));
         float gap = Mathf.Abs(targetX - current.x);
-        // ยิ่งห่างจากจุดข้างหลังยิ่งเดินเร็ว ตอนตัวหลักเดินจึงไม่ทิ้งระยะ
-        float speed = Mathf.Min(_settings.walkSpeed + gap * CatchUpPerUnit, _settings.catchUpSpeed);
+        // ยิ่งห่างจากจุดข้างหลังยิ่งเดินเร็ว ออกตัวและหยุดจึงนุ่ม ตอนตัวหลักเดินจะห่างกว่าตอนยืนเล็กน้อย
+        float speed = Mathf.Min(gap * _settings.followResponse, _settings.catchUpSpeed);
         float nextX = Mathf.MoveTowards(current.x, targetX, speed * Runner.DeltaTime);
 
         bool onGround = TryFindGround(nextX, Mathf.Max(current.y, lead.y), out float groundY);
@@ -318,11 +321,11 @@ public class SoloParty : SimulationBehaviour
         SetFollower(position, Bird.CurrentVelocity, MovementCharacter.MoveFlags.InAir);
     }
 
-    private void SetFollower(Vector2 position, Vector2 velocity, MovementCharacter.MoveFlags flags)
+    private void SetFollower(Vector2 position, Vector2 velocity, MovementCharacter.MoveFlags flags, bool snap = false)
     {
         if (Mathf.Abs(velocity.x) > 0.05f) _followerFacingRight = velocity.x > 0f;
         if (_followerFacingRight) flags |= MovementCharacter.MoveFlags.FacingRight;
-        Follower.SoloSetFollowerState(position, velocity, flags);
+        Follower.SoloSetFollowerState(position, velocity, flags, snap);
     }
     #endregion
 
@@ -341,10 +344,10 @@ public class SoloParty : SimulationBehaviour
         if (hit.collider != null) _groundOffset = hit.distance;
     }
 
-    private float BehindX(Vector2 lead)
-    {
-        float direction = Active.GetMoveFlag(MovementCharacter.MoveFlags.FacingRight) ? -1f : 1f;
+    private float FacingBehind => Active.GetMoveFlag(MovementCharacter.MoveFlags.FacingRight) ? -1f : 1f;
 
+    private float BehindX(Vector2 lead, float direction)
+    {
         float room = FreeDistance(lead, direction);
         if (room < MinSideGap)
         {
@@ -388,14 +391,14 @@ public class SoloParty : SimulationBehaviour
     private void PlaceBehindLeader()
     {
         Vector2 lead = Active.rb2D.position;
-        float x = BehindX(lead);
+        float x = BehindX(lead, FacingBehind);
         bool grounded = TryFindGround(x, lead.y, out float y);
 
         Vector2 position = new Vector2(x, grounded ? y : lead.y);
         MovementCharacter.MoveFlags flags = grounded ? MovementCharacter.MoveFlags.Grounded : MovementCharacter.MoveFlags.InAir;
         if (x < lead.x) _followerFacingRight = true;
         else if (x > lead.x) _followerFacingRight = false;
-        SetFollower(position, Vector2.zero, flags);
+        SetFollower(position, Vector2.zero, flags, true);
     }
     #endregion
 
