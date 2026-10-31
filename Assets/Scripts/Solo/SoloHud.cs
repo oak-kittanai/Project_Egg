@@ -10,7 +10,7 @@ public class SoloHud : MonoBehaviour
     private static SoloHud instance;
 
     private TMP_Text prompt;
-    private TMP_Text flyPrompt;
+    private TMP_Text headPrompt;
     private TMP_Text hint;
     private float hintUntil;
 
@@ -29,8 +29,8 @@ public class SoloHud : MonoBehaviour
 
         instance = root.AddComponent<SoloHud>();
         instance.prompt = instance.CreateText("Prompt", new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(32f, 24f), TextAlignmentOptions.BottomLeft, 30f);
-        instance.flyPrompt = instance.CreateText("FlyPrompt", new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0f), Vector2.zero, TextAlignmentOptions.Bottom, 32f);
-        instance.flyPrompt.color = new Color(1f, 0.9f, 0.3f);
+        instance.headPrompt = instance.CreateText("HeadPrompt", new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0f), Vector2.zero, TextAlignmentOptions.Bottom, 32f);
+        instance.headPrompt.color = new Color(1f, 0.9f, 0.3f);
         instance.hint = instance.CreateText("Hint", new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -150f), TextAlignmentOptions.Center, 42f);
     }
 
@@ -72,7 +72,7 @@ public class SoloHud : MonoBehaviour
         if (party == null || party.Active == null)
         {
             prompt.text = "";
-            flyPrompt.text = "";
+            headPrompt.text = "";
             return;
         }
 
@@ -89,21 +89,45 @@ public class SoloHud : MonoBehaviour
         bool lifting = isDuck && party.IsLifting;
         bool inWater = isDuck && (duck.isWaterSurface || duck.onDiving);
         bool canFly = lifting && party.Bird.isFlyUnlocked;
+        bool birdInWater = !isDuck && (party.Bird.isWaterSurface || party.Bird.stilldrowning);
 
         float cooldown = party.AssistCooldownLeft;
-        string fly = cooldown > 0f ? $"BIRD FLY {Mathf.CeilToInt(cooldown)}s" : $"{switchKey}: BIRD FLY";
+        string waiting = $"BIRD FLY {Mathf.CeilToInt(cooldown)}s";
+        string waterFly = cooldown > 0f ? waiting : $"{switchKey}: BIRD FLY";
 
-        // บนน้ำปุ่มสลับคือสกิลเพื่อน ถ้าไม่ได้ยกนก ทั้งปุ่มสลับและปุ่มยกไม่มีผล
-        if (!isDuck) prompt.text = $"{switchKey}: SWITCH";
-        else if (inWater) prompt.text = canFly ? fly : "";
-        else prompt.text = $"{switchKey}: SWITCH    {liftKey}: {(lifting ? "PUT DOWN" : "LIFT BIRD")}";
+        string corner;
+        string head = "";
 
-        if (canFly && !duck.IsInAir)
+        if (isDuck && party.IsBirdSinking)
         {
-            flyPrompt.text = inWater ? fly : $"ON WATER: {switchKey} TO FLY";
-            PlaceAboveDuck(duck);
+            corner = party.BirdInReach ? $"{liftKey}: LIFT BIRD" : "SAVE THE BIRD";
+            head = corner;
         }
-        else flyPrompt.text = "";
+        else if (lifting && duck.onDiving)
+        {
+            corner = "";
+            head = "SWIM UP";
+        }
+        else if (!isDuck)
+        {
+            corner = !birdInWater ? $"{switchKey}: SWITCH" : duck.isDiveUnlocked ? $"{switchKey}: SWITCH TO DUCK" : "";
+        }
+        else if (inWater)
+        {
+            // บนน้ำปุ่มสลับคือสกิลเพื่อน ถ้าไม่ได้ยกนก ทั้งปุ่มสลับและปุ่มยกไม่มีผล
+            corner = canFly ? waterFly : "";
+            head = corner;
+        }
+        else
+        {
+            corner = $"{switchKey}: SWITCH    {liftKey}: {(lifting ? "PUT DOWN" : "LIFT BIRD")}";
+            if (canFly && duck.IsInAir) head = cooldown > 0f ? "" : "JUMP: BIRD FLY";
+            else if (canFly) head = cooldown > 0f ? waiting : "JUMP TWICE: BIRD FLY";
+        }
+
+        prompt.text = corner;
+        headPrompt.text = head;
+        if (head.Length > 0) PlaceAboveDuck(duck);
     }
 
     private void PlaceAboveDuck(Duck_Moveset duck)
@@ -113,7 +137,7 @@ public class SoloHud : MonoBehaviour
 
         Vector2 screen = cam.WorldToScreenPoint(duck.visualTransform.position + Vector3.up * AboveDuckHeight);
         if (RectTransformUtility.ScreenPointToLocalPointInRectangle((RectTransform)transform, screen, null, out Vector2 local))
-            flyPrompt.rectTransform.anchoredPosition = local;
+            headPrompt.rectTransform.anchoredPosition = local;
     }
 
     private void OnDestroy()

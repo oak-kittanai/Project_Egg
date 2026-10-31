@@ -18,6 +18,10 @@ public class SoloSettings : ScriptableObject
     public float hopSpeed = 8f;
     [Tooltip("กันกดสลับตัวรัว (วินาที)")]
     public float switchCooldown = 0.3f;
+    [Tooltip("ระยะที่เป็ดยกนกที่จมน้ำได้ (หน่วย)")]
+    public float rescueReach = 1.6f;
+    [Tooltip("ความเร็วที่นกจมลงตอนรอเป็ด (หน่วย/วิ) ให้เท่าตอนคุมนกอยู่")]
+    public float birdSinkSpeed = 1.5f;
 
     private static SoloSettings loaded;
 

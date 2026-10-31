@@ -343,17 +343,6 @@ public class Duck_Moveset : MovementCharacter, IstunAble
         CarriedFriendId = default;
     }
 
-    // Solo: รับช่วงต่อจากนกที่จมน้ำ — อากาศเท่าที่เหลือ ไม่เติมใหม่
-    public void SoloContinueDive(float airSeconds)
-    {
-        isMoveAble = false;
-        ReadyToDive = false;
-        DiveTimer = TickTimer.CreateFromSeconds(Runner, Mathf.Max(airSeconds, 0.02f));
-        onDiving = true;
-        onDivingControl = true;
-        emergencyToggle = true;
-    }
-
     public void HandleWaterLogic(NetworkInputData input)
     {
         if (!isDiveUnlocked) return;

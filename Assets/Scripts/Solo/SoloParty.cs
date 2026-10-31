@@ -7,7 +7,7 @@ using UnityEngine;
 [DefaultExecutionOrder(100)] // หลังตัวละคร ตัวตามหลังจะได้ใช้ตำแหน่งล่าสุดของตัวหลัก
 public class SoloParty : SimulationBehaviour
 {
-    private enum FollowMode { Follow, WaitAtShore, RidingDuck, HangingFromBird }
+    private enum FollowMode { Follow, WaitAtShore, RidingDuck, HangingFromBird, SinkingInWater }
 
     private const float GroundProbeStart = 1.2f;
     private const float GroundProbeLength = 5f;
@@ -22,6 +22,8 @@ public class SoloParty : SimulationBehaviour
     public MovementCharacter Active { get; private set; }
     public float AssistCooldownLeft => Runner != null ? _assistCooldown.RemainingTime(Runner) ?? 0f : 0f;
     public bool IsLifting => _lifting;
+    public bool IsBirdSinking => _birdSinking;
+    public bool BirdInReach => Vector2.Distance(Duck.rb2D.position, Bird.rb2D.position) <= _settings.rescueReach;
 
     private MovementCharacter Follower => Active == Duck ? Bird : Duck;
 
@@ -34,6 +36,7 @@ public class SoloParty : SimulationBehaviour
     private Vector2 _shorePoint;
     private bool _hasShorePoint;
     private bool _lifting;
+    private bool _birdSinking;
     private bool _assistAirborne;
     private bool _needsPlacement = true;
     private float _groundOffset = 0.5f;
@@ -80,6 +83,7 @@ public class SoloParty : SimulationBehaviour
             PlaceBehindLeader();
         }
 
+        ShareHealth();
         RememberGround();
         UpdateFollower();
     }
@@ -109,12 +113,14 @@ public class SoloParty : SimulationBehaviour
 
         bool switchPressed = input.Buttons.WasPressed(_previousButtons, InputButton.Switch);
         bool liftPressed = input.Buttons.WasPressed(_previousButtons, InputButton.Lift);
+        bool jumpPressed = input.Buttons.WasPressed(_previousButtons, InputButton.Jump);
         _previousButtons = input.Buttons;
 
         if (GameplayPause.Frozen || Active.isDead) return;
 
         if (switchPressed) OnSwitchPressed();
         if (liftPressed) OnLiftPressed();
+        if (jumpPressed) OnJumpPressed();
     }
 
     private void OnSwitchPressed()
@@ -131,10 +137,25 @@ public class SoloParty : SimulationBehaviour
 
     private void OnLiftPressed()
     {
-        if (Active != Duck || Duck.onDiving || !Duck.IsGrounded) return;
+        if (Active != Duck) return;
+
+        // นกจมอยู่: เป็ดลงไปยกได้ทั้งตอนดำน้ำและลอยน้ำ
+        if (_birdSinking)
+        {
+            if (BirdInReach) SetLifting(true);
+            return;
+        }
+
+        if (Duck.onDiving || !Duck.IsGrounded) return;
 
         SetLifting(!_lifting);
         if (!_lifting) PlaceBehindLeader();
+    }
+
+    // ยกนกแล้วกดกระโดดกลางอากาศ: นกพาบิน — ปุ่มที่เพิ่งใช้กระโดดใน tick นี้ไม่นับ
+    private void OnJumpPressed()
+    {
+        if (Active == Duck && Duck.IsInAir && !InWater(Duck) && !Duck.JumpedThisTick) TryAssist();
     }
     #endregion
 
@@ -144,11 +165,13 @@ public class SoloParty : SimulationBehaviour
         if (!_switchTimer.ExpiredOrNotRunning(Runner)) return false;
         if (Active.isStunned || Active.isClimbing) return false;
 
-        if (Active == Duck) return !Duck.onDiving && !Duck.emergencySwimBool && !Duck.IsHeadUnderwater;
+        if (Active == Duck) return !_birdSinking && !Duck.onDiving && !Duck.emergencySwimBool && !Duck.IsHeadUnderwater;
+
+        // ต้องเช็คก่อนเงื่อนไขบิน: นกที่บินแล้วตกน้ำยังไม่ถึงพื้น IsAlreadyFly จึงค้าง
+        if (InWater(Bird)) return Duck.isDiveUnlocked;
 
         if (Bird.IsFlying || Bird.AlreadyFloating || Bird.IsAlreadyFly) return false;
         if (Bird._prepareToThrow || Bird.IsReleasingThrow) return false;
-        if (Bird.stilldrowning && !Duck.isDiveUnlocked) return false;
         return true;
     }
 
@@ -157,21 +180,25 @@ public class SoloParty : SimulationBehaviour
         MovementCharacter from = Active;
         MovementCharacter to = Follower;
 
-        bool rescue = from == Bird && Bird.stilldrowning;
-        float air = rescue ? Bird.SoloRemainingAir : 0f;
+        // นกตกน้ำ: นกจมอยู่ที่เดิม คุมเป็ดจากจุดที่รอบนฝั่ง แล้วเป็ดต้องลงไปยกขึ้นมาให้ทันเอง
+        bool leaveBird = from == Bird && InWater(Bird);
+        if (leaveBird)
+        {
+            Bird.ForceCancelFlight();
+            _followerFacingRight = Bird.GetMoveFlag(MovementCharacter.MoveFlags.FacingRight);
+        }
 
         SetLifting(false);
-        to.SoloBecomeLeader(from);
+        to.SoloBecomeLeader(from, leaveBird);
         Active = to;
-
-        if (rescue) Duck.SoloContinueDive(air);
 
         CameraCharacter rig = CameraCharacter.LocalCamera != null ? CameraCharacter.LocalCamera.GetComponentInParent<CameraCharacter>() : null;
         if (rig != null) rig.SetFollowTarget(to.visualTransform);
 
         _switchTimer = TickTimer.CreateFromSeconds(Runner, _settings.switchCooldown);
         _mode = FollowMode.Follow;
-        PlaceBehindLeader();
+        _birdSinking = leaveBird;
+        if (!leaveBird) PlaceBehindLeader();
     }
     #endregion
 
@@ -181,6 +208,7 @@ public class SoloParty : SimulationBehaviour
         if (_lifting == on) return;
 
         _lifting = on;
+        if (on) _birdSinking = false;
         _assistAirborne = false;
         _assistFlight = TickTimer.None;
         Duck.SoloSetCarrying(Bird, on);
@@ -209,11 +237,13 @@ public class SoloParty : SimulationBehaviour
     {
         if (Active == Bird)
         {
+            if (InWater(Bird)) return FollowMode.WaitAtShore;
             if (Bird.IsFlying || Bird.AlreadyFloating || (Bird.IsAlreadyFly && !Bird.IsGrounded)) return FollowMode.HangingFromBird;
-            return InWater(Bird) ? FollowMode.WaitAtShore : FollowMode.Follow;
+            return FollowMode.Follow;
         }
 
         if (_lifting) return FollowMode.RidingDuck;
+        if (_birdSinking) return FollowMode.SinkingInWater;
         return InWater(Duck) ? FollowMode.WaitAtShore : FollowMode.Follow;
     }
 
@@ -232,6 +262,7 @@ public class SoloParty : SimulationBehaviour
             case FollowMode.WaitAtShore: WaitAtShore(); break;
             case FollowMode.RidingDuck: RideDuck(); break;
             case FollowMode.HangingFromBird: HangFromBird(); break;
+            case FollowMode.SinkingInWater: SinkBird(); break;
         }
     }
 
@@ -304,7 +335,8 @@ public class SoloParty : SimulationBehaviour
         if (_assistAirborne && !flying && (Duck.IsGrounded || Duck.isWaterSurface)) _assistAirborne = false;
 
         // กระโดดเอง: ไม่มีท่าแบกกลางอากาศ เล่นแค่ท่าเป็ดกระโดด / นกพาบิน: เห็นทั้งคู่จนลง
-        bool hideBird = Duck.IsInAir && !_assistAirborne;
+        // ใต้น้ำ IsInAir เป็นจริงด้วย แต่ต้องเห็นนกที่เพิ่งยกขึ้นมา
+        bool hideBird = Duck.IsInAir && !InWater(Duck) && !_assistAirborne;
         Duck.SoloHideCarryPose = hideBird;
         Bird.SoloSetHidden(hideBird);
 
@@ -319,6 +351,17 @@ public class SoloParty : SimulationBehaviour
     {
         Vector2 position = Bird.rb2D.position + Vector2.down * Duck.betweenCarryPosition;
         SetFollower(position, Bird.CurrentVelocity, MovementCharacter.MoveFlags.InAir);
+    }
+
+    // นกจมจนถึงพื้นน้ำ เวลาอากาศและดาเมจเดินใน Bird_Moveset.HostDrowningTimer ตามธง StillDrowning
+    private void SinkBird()
+    {
+        Vector2 current = Bird.rb2D.position;
+        RaycastHit2D bottom = Physics2D.Raycast(current, Vector2.down, GroundProbeLength, _groundMask);
+        float floorY = bottom.collider != null ? bottom.point.y + _groundOffset : float.NegativeInfinity;
+
+        Vector2 next = new Vector2(current.x, Mathf.Max(current.y - _settings.birdSinkSpeed * Runner.DeltaTime, floorY));
+        SetFollower(next, (next - current) / Runner.DeltaTime, MovementCharacter.MoveFlags.StillDrowning | MovementCharacter.MoveFlags.HeadUnderwater);
     }
 
     private void SetFollower(Vector2 position, Vector2 velocity, MovementCharacter.MoveFlags flags, bool snap = false)
@@ -403,11 +446,20 @@ public class SoloParty : SimulationBehaviour
     #endregion
 
     #region Events
+    // เลือดร่วมกัน: นกที่จมอยู่เสียเลือดเองระหว่างที่คุมเป็ด และเป็ดก็โดนดาเมจได้ระหว่างนั้น
+    private void ShareHealth()
+    {
+        int health = Mathf.Min(Duck.currentHealth, Bird.currentHealth);
+        Duck.currentHealth = health;
+        Bird.currentHealth = health;
+    }
+
     public void OnCharacterRespawned(MovementCharacter character)
     {
         if (character != Active) character.SoloMakeFollowerBody();
 
         _lifting = false;
+        _birdSinking = false;
         _assistAirborne = false;
         _assistFlight = TickTimer.None;
         _mode = FollowMode.Follow;

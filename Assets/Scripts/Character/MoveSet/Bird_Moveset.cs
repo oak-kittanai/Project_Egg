@@ -213,7 +213,6 @@ public class Bird_Moveset : MovementCharacter, IstunAble
     // แถบ oxygen ขึ้นทุกเครื่อง เพื่อนเห็นว่าใกล้จมแล้ว (OX-1) — DrownTimer sync จาก host อยู่แล้ว
     // Solo: เวลาบินตอนพาเป็ด และอากาศที่เหลือตอนสลับเป็นเป็ดใต้น้ำ
     public float CarryFlyTime => carryFlyTime;
-    public float SoloRemainingAir => startTimer ? DrownTimer.RemainingTime(Runner) ?? 0f : isDrowningDamageActive ? 0f : drowningTime;
 
     public void OnDrownTimerStateChanged()
     {

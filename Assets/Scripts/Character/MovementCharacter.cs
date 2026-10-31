@@ -104,7 +104,7 @@ public class MovementCharacter : NetworkBehaviour, IDamageable, IBeforeTick, IAf
     private int _externalForceUntilTick = NoTick;
     private bool _externalForceUntilLanding;
     // กระโดดใน tick นี้ — นกใช้กันเริ่มบินซ้อนกับ coyote jump จากขอบ
-    protected bool JumpedThisTick { get; private set; }
+    public bool JumpedThisTick { get; private set; }
     private static PhysicsMaterial2D s_airMaterial;
     #endregion
 
@@ -1679,13 +1679,14 @@ public class MovementCharacter : NetworkBehaviour, IDamageable, IBeforeTick, IAf
     public bool SoloHideCarryPose { get; set; }
 
     // รับช่วงต่อจาก from: ตำแหน่ง ความเร็ว สถานะกลางอากาศ เลือด เวลาอมตะ และปุ่มที่กดค้าง
-    public void SoloBecomeLeader(MovementCharacter from)
+    // keepPlace: ไม่รับตำแหน่ง คุมตัวนี้จากจุดที่อยู่ ส่วน from อยู่ที่เดิม (นกจมน้ำรอเป็ดลงไปยก)
+    public void SoloBecomeLeader(MovementCharacter from, bool keepPlace = false)
     {
-        Vector2 position = from.rb2D.position;
-        Vector2 velocity = from.rb2D.linearVelocity;
+        Vector2 position = keepPlace ? rb2D.position : from.rb2D.position;
+        Vector2 velocity = keepPlace ? Vector2.zero : from.rb2D.linearVelocity;
         const MoveFlags carried = MoveFlags.Grounded | MoveFlags.InAir | MoveFlags.Jumping | MoveFlags.WaterSurface
             | MoveFlags.HeadUnderwater | MoveFlags.BodyOnWater | MoveFlags.StillDrowning | MoveFlags.FacingRight;
-        MoveFlags flags = from._ownerFlags & carried;
+        MoveFlags flags = keepPlace ? (MoveFlags)RepFlags & MoveFlags.FacingRight : from._ownerFlags & carried;
 
         from.SoloBecomeFollower();
 
