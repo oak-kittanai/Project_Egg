@@ -2019,3 +2019,57 @@ Solo เล่นคนเดียว ใช้ checklist ใน `GDD_Solo.md` 
 | 8 | Client | ตายแล้วเกิดใหม่ที่ checkpoint | ไม่สั่นตอนเกิดใหม่ (เลือดเพิ่ม); กล้องไม่เหวี่ยงไปข้างหน้าแรงตอนวาร์ป | |
 | 9 | Host | เดินไป S2 (หรือ F8 บน branch ทดสอบ) | กล้องและ parallax ทำงานเหมือนเดิมในด่านใหม่ | |
 | 10 | — | Solo: SOLO → สลับเป็ด/นกขณะเดิน แล้วให้ตัวที่คุมโดนดาเมจ | สลับแล้วกล้องเลื่อนไปตัวใหม่ไม่เหวี่ยง; โดนดาเมจสั่นครั้งเดียว (ไม่ใช่สองครั้ง) | |
+
+## 36. ฉากหลังแบบหลายชั้น (Stage1-S1 / S2) ตามคลิป ref (2026-11-06)
+
+**ที่มา:** เจ้าของโปรเจกต์ส่งคลิป ref (ป่าแบบหลายชั้น) ให้วิเคราะห์ว่าทำการจัด layer / วาง background แบบนั้นใน S1–S2 ได้ไหม แล้วสั่งให้ทำทุกข้อใน "ที่ทำให้ยังไม่ได้ลุคแบบคลิป" และ "จุดที่ติด" — **ยกเว้น PPU ไว้ทีหลัง**
+**Branch:** `test/all2` (เท่ากับ `dev` ตอนเริ่ม) — commit ในเครื่องเท่านั้น **ยังไม่ push**
+- แก้ฉากผ่าน Unity MCP ทั้งหมด (ไม่แก้ YAML), compile 0 error (Console ผ่าน MCP)
+- ภาพก่อน/หลัง: `..\bg_review\before\`, `..\bg_review\after\` (นอก repo; `after` จำลอง parallax ที่ตำแหน่งกล้องนั้น ๆ, render ด้วย camera stack จริงของ `Player(Bird).prefab`)
+
+### 36.1 สิ่งที่แก้
+| รหัส | เรื่อง | การทำ (ไฟล์ : method) | แก้แล้ว |
+|---|---|---|---|
+| BG-1 | parallax แกน Y + ด่านที่สองไม่ขยับ | `ParallaxLayer`: เพิ่ม `parallaxFactorY`; `Apply(offset)` วางชั้นแบบ absolute = ตำแหน่งที่วางไว้ + (กล้อง − reference) × factor (ไม่สะสม delta → กล้องบินข้ามด่าน/วาร์ปแล้วไม่เพี้ยนถาวร), factor ติดลบ = foreground. `CameraCharacter`: เปลี่ยน `onCameraTranslate` (delegate ของ instance, ถูกล้างตอนเปลี่ยนฉากและไม่เคยผูกใหม่) เป็น `static event LocalCameraMoved(Vector2)` ส่ง x,y ก่อนสั่น. `ParallaxBackground`: สมัคร event ใน `OnEnable` / ยกเลิกใน `OnDisable` → ด่านใหม่ผูกเอง (แก้บั๊ก S1 → S2 parallax ไม่ขยับ), คุม `ParallaxLayer` ทุกระดับลูก, `useCameraReference` + `cameraReference` (ปิด = ใช้ตำแหน่งกล้องแรกในด่าน แบบเดิม สำหรับฉากที่ยังไม่ตั้ง). ตั้ง reference = `StartSpawnPoint` + offset กล้อง ใน S1, S2, S3, Level1_solo (S3/Solo ค่า factor เดิม) | แก้แล้ว: `test/all2` `f046e69a`, `63fa3bfe`, `18ae0380` |
+| BG-2 | ฟ้า/ภูเขาเลื่อนพร้อมพื้น + ความลึกไม่ชัด | sorting layer ใหม่ `ForegroundLayer` (หลัง `GroundLayer`, ก่อน `UILayer`). ราก Background ได้ `ParallaxBackground`; `BG-FarSky` 0.95/0.9 (ขยายฟ้าให้สูง ≥ 40 หน่วย), `BG-FarMountains` 0.8/0.6. Props: `Layer-3` 0.2→0.3 (y 0.15), `Layer-4` 0.3→0.45 (y 0.25), `Layer-5` 0.4→0.6 (y 0.35); ลูกทุกชิ้นถูกย้ายตาม `(1-f_new)/(1-f_old)` รอบ reference จึงยังโผล่ที่ตำแหน่งกล้องเดิม. `Layer-2` ลงไป **ไม่ใส่ parallax** — เป็นของที่ตั้งบนพื้น/platform ถ้าเลื่อนจะลอยออกจากพื้น | แก้แล้ว: `test/all2` `f4b07bfb` |
+| BG-3 | ไกลแล้วไม่จาง | `BG-Atmosphere` (factor 1/1 ติดกล้อง): `Fog-Far` (BlurLayer order 50, GO layer BlurEffect, ฟ้าโปร่ง 30%) และ `Fog-Mid` (CloseBlur order 50, GO layer CloseBlurEffect, 14%) ใช้ `Sprite-Unlit-Default`. `Global LightBlur` สี C7E3FF ×0.9, `Global LightCloseBlur` BDDBF2 ×0.78; ระนาบที่เล่น/ผู้เล่นคงเดิม | แก้แล้ว: `test/all2` `f4b07bfb` |
+| BG-4 | ลำแสง + ขอบจอ | `Layer-4/BG-LightShafts/LightShaft_1..3` (Freeform `Light2D` สีอุ่น ×0.45 falloff 2.2 ส่องเฉพาะ BlurLayer/CloseBlur) วางให้เห็นตอนกล้องอยู่ที่จุดเกิด/กลาง/ท้ายด่าน. Vignette 0.28 ใน `Global Volume Profile` (Sharp camera) | แก้แล้ว: `test/all2` `f4b07bfb` |
+| BG-5 | ไม่มีชั้นหน้าตัวละคร | `P-Props/BG-Foreground` (x −0.3, y 1 = ติดขอบล่างจอ): เงาเข้ม (ต้นสน/ก้อนหิน/พุ่มเดิม tint 0F1720, unlit, ไม่มี collider, GO layer Default) โผล่จากขอบล่างจอไม่เกิน 1.3 หน่วย เว้นระยะ 7–13 หน่วย — ไม่บังผู้เล่นที่อยู่กลางจอ. (ลองวางชิดผิวพื้นแล้ว แต่ด่านเป็น platform แยกชิ้นและหลุมเยอะ วางได้แค่ 0–1 จุด จึงเปลี่ยนเป็นแบบติดขอบล่างจอ) | แก้แล้ว: `test/all2` `f4b07bfb` |
+| BG-6 | DoF ใช้ได้ไหมเมื่อ sprite อยู่ z=0 | **ใช้ได้ ไม่ต้องแก้**: `PlayerCamera` เป็น Base (culling Nothing) + stack Overlay `Camera Blur` (GO layer BlurEffect, volume mask BlurEffect → Bokeh DoF focus 10 ที่ระยะ 13), `Camera CloseBlur`, `Camera Sharp` — เบลอแยกตาม **GameObject layer** ไม่ใช่ sorting layer. ของใหม่ที่อยากให้เบลอต้องตั้ง GO layer ให้ตรง; ลำดับวาดข้ามกล้อง: Blur < CloseBlur < Sharp เสมอ ไม่ว่า sorting layer | ✅ ตรวจด้วย render (ไม่ได้แก้) |
+
+### 36.2 ผลเทส
+- Compile 0 error, Console 0 error หลัง Play Mode
+- Play Mode (Host คนเดียว ไม่ผ่าน network): เปิด S1 ตรง ๆ สร้างกล้อง `CameraCharacter` ชั่วคราว เลื่อน target +30,+3 → ทุกชั้นอยู่ที่ base + offset × factor ตรงค่า; `SceneManager.LoadScene("Stage1-S2")` โดยกล้องเป็น DontDestroyOnLoad แล้วเลื่อน +20,+6 → ชั้นใน S2 ขยับตรงค่า (บั๊ก S1 → S2 แก้แล้ว)
+- **ยังไม่ได้เทส:** เล่นจริงผ่าน warp S1 → S2 กับ 2 คน, ความรู้สึกตอนเล่นจริง (factor อาจต้องจูนด้วยตา), S3/Level1_solo ดูด้วยตาหลังเปลี่ยน reference
+- หมายเหตุ: sorting layer ใหม่ URP 2D จะยังไม่วาดจนกว่า domain reload (เปิด Unity ใหม่/compile) — ถ้า foreground ไม่ขึ้นให้ restart Editor
+
+### 36.3 ค่าที่ปรับได้ (Inspector)
+| ที่ | field | ค่า |
+|---|---|---|
+| `ParallaxLayer` ทุกชั้น | `parallaxFactor` / `parallaxFactorY` | 0 = ติดพื้น, 1 = ติดกล้อง, ติดลบ = foreground |
+| ราก Background / Props | `ParallaxBackground.cameraReference` | ตำแหน่งกล้องที่ชั้นวางไว้ตรงพอดี — ย้ายจุดเกิดต้องแก้ค่านี้ด้วย |
+| `BG-Atmosphere/Fog-Far`, `Fog-Mid` | สี alpha | หมอกมาก/น้อย |
+| `Global LightBlur` / `Global LightCloseBlur` | สี, intensity | โทนชั้นไกล/กลาง |
+| `BG-Foreground/FG_*` | ตำแหน่ง y | ยิ่งสูงยิ่งบังจอ (อย่าเกิน r.y − 2.7) |
+
+### 36.4 ภาพที่ควรวาดเพิ่มเพื่อให้ถึงลุคคลิป ref
+1. แถบป่าไกล (far forest strip) ลำต้นสีฟ้าเทาค่าต่ำ ปูต่อกันได้ (tileable แนวนอน) — แทนภูเขาเดี่ยว ๆ
+2. ต้นไม้ระยะกลาง 3–4 แบบที่ลำต้นยาวพ้นขอบจอบน (ตอนนี้ใช้ `Test tree 4 n` / `tree 9 n` ซ้ำทั้งด่าน)
+3. ชิ้นเด่นของฉาก (hero centrepiece) 1–2 ชิ้นต่อด่าน เช่น ต้นไม้ใหญ่/ซากบ้าน
+4. ชุดพุ่ม/หญ้า foreground แบบเงา 4–6 ชิ้น (ขอบนุ่ม ไม่ต้องมีรายละเอียด) แทนต้นไม้ย่อส่วนที่ใช้อยู่
+5. sprite ลำแสง (god ray) แบบ additive และแผ่นหมอกที่มีรูปร่าง (ไม่ใช่สี่เหลี่ยมสีเรียบ)
+6. (ค้าง) PPU ของภาพที่ใช้ปนกัน 8/32/64/96/100/256 — เจ้าของโปรเจกต์สั่งไว้ทีหลัง
+
+### 36.5 Checklist เทส — `test/all2` (MPPM `DuoGamePlay_Test`, Host = Mira, Client = Kael) ~10 นาที
+| ขั้น | ใคร | ทำอะไร | ควรเห็น | ผล |
+|---|---|---|---|---|
+| 1 | — | เปิด Unity ใหม่ (domain reload) แล้วเริ่มเกมทั้งคู่ (หัวข้อ 7.3) | Console ไม่มี error สีแดง | |
+| 2 | Host | ยืนที่จุดเกิด S1 | ฟ้า/ภูเขาจางฟ้า, ต้นไม้ไกลเบลอและจางกว่าต้นใกล้, มีเงาเข้มเล็ก ๆ ที่ขอบล่างจอ, ขอบจอมืดเล็กน้อย | |
+| 3 | Host | เดินขวาค้าง ~10 วิ | ชั้นไกลเลื่อนช้า ชั้นกลางเร็วขึ้น พื้นเร็วสุด เงาขอบล่างเร็วกว่าพื้น; ไม่เห็นขอบภาพฟ้า/ภูเขา | |
+| 4 | Host | ขึ้นที่สูง/ลงหลุม | ฉากหลังขยับขึ้นลงเล็กน้อยตามกล้อง; เงาขอบล่างอยู่ขอบล่างจอเสมอ ไม่บังตัวละคร | |
+| 5 | Client | ทำขั้น 2–4 บนจอ Client | เหมือน Host; **จอ Host ไม่เปลี่ยน** (parallax เป็นภาพของแต่ละเครื่อง) | |
+| 6 | ทั้งคู่ | ไปจุด checkpoint / ตายแล้วเกิดใหม่ | ฉากหลังไม่กระโดดค้าง ตำแหน่งกลับมาถูกเมื่อกล้องนิ่ง | |
+| 7 | Host | เข้า warp ไป S2 (หรือ F8) | **ใน S2 parallax ยังขยับ** (เดิมไม่ขยับ) ทั้งสองจอ | |
+| 8 | Client | เดิน/ปีนใน S2 ช่วงที่กล้องขึ้นลงเยอะ | ไม่เห็นขอบฟ้า/ภูเขา, ไม่มีชั้นไหนลอยผิดที่ | |
+| 9 | ทั้งคู่ | ดูกับดัก/มอน/ไอเทมใกล้ขอบล่างจอ | ไม่ถูกเงา foreground บังจนมองไม่เห็นตอนที่ต้องหลบ | |
+| 10 | — | ไป S3 และเล่น Solo (`Level1_solo`) | ฉากหลังเหมือนก่อนแก้ (ค่า factor เดิม) และขยับตามกล้อง | |
