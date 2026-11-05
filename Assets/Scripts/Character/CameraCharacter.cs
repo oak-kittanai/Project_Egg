@@ -5,10 +5,10 @@ public class CameraCharacter : MonoBehaviour
 {
     public static Camera LocalCamera { get; private set; }
 
-    public delegate void ParallaxCameraDelegate(float deltaMovement);
-    public ParallaxCameraDelegate onCameraTranslate;
+    // BG-1: ตำแหน่งกล้อง local (x, y ไม่รวมการสั่น) ทุกครั้งที่ขยับ — ParallaxBackground ของด่านที่โหลดอยู่ฟังเอง
+    public static event System.Action<Vector2> LocalCameraMoved;
 
-    private float oldPosition;
+    private Vector2 oldPosition;
 
     [Header("Camera Smoothing"), Tooltip("(0.05|low value = fast follow, 0.1|high value = slow follower/Smooth)")]
     [SerializeField] private float smoothTime = 0.08f;
@@ -74,17 +74,15 @@ public class CameraCharacter : MonoBehaviour
 
         offset = transform.localPosition;
         target = followTarget;
-        oldPosition = transform.position.x;
+        oldPosition = transform.position;
 
         transform.SetParent(null);
         DontDestroyOnLoad(gameObject);
 
         SceneManager.activeSceneChanged += OnSceneChanged;
 
-        if (ParallaxBackground.Instance != null)
-            ParallaxBackground.Instance.SetCamera(this);
-
         ClaimAudioListener();
+        LocalCameraMoved?.Invoke(oldPosition);
     }
 
     private void ClaimAudioListener()
@@ -135,8 +133,6 @@ public class CameraCharacter : MonoBehaviour
 
     private void OnSceneChanged(Scene current, Scene next)
     {
-        onCameraTranslate = null;
-
         // ด่านใหม่มี AudioListener ของตัวเองติดมาด้วย — ปิดแล้วใช้ตัวของกล้อง local ต่อ
         ClaimAudioListener();
     }
@@ -176,14 +172,11 @@ public class CameraCharacter : MonoBehaviour
         if (localListener != null)
             localListener.transform.position = new Vector3(smoothed.x, smoothed.y, target.position.z);
 
-        if (transform.position.x != oldPosition)
+        Vector2 cameraPosition = transform.position;
+        if (cameraPosition != oldPosition)
         {
-            if (onCameraTranslate != null && ParallaxBackground.Instance != null)
-            {
-                float delta = oldPosition - transform.position.x;
-                onCameraTranslate(delta);
-            }
-            oldPosition = transform.position.x;
+            oldPosition = cameraPosition;
+            LocalCameraMoved?.Invoke(cameraPosition);
         }
 
         // สั่นหลังคิด parallax และ listener แล้ว — parallax ไม่สั่นตาม และ delta ไม่เพี้ยน

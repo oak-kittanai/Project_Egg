@@ -1,56 +1,47 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+// BG-1: คุม ParallaxLayer ทุกชั้นที่อยู่ใต้ตัวเอง (ทุกระดับ)
+// - ฟังกล้อง local ผ่าน event แบบ static ของ CameraCharacter → ด่านใหม่ (S1 → S2) ผูกเองตอน OnEnable ไม่ต้องรอกล้องเรียก
+// - ตำแหน่งชั้นคิดแบบ absolute จาก cameraReference ไม่สะสม delta → กล้องบินข้ามด่าน/วาร์ปแล้วชั้นไม่เพี้ยนถาวร
+// - เป็นภาพของเครื่องตัวเองล้วน ไม่มี network
 public class ParallaxBackground : MonoBehaviour
 {
-    public static ParallaxBackground Instance;
+    [Tooltip("ตำแหน่งกล้อง (x, y) ที่ชั้นทุกชั้นวางไว้ใน Scene view ตรงพอดี — ปกติคือจุดเกิด + offset ของกล้อง")]
+    public Vector2 cameraReference;
 
-    public CameraCharacter parallaxCamera;
-    List<ParallaxLayer> parallaxLayers = new List<ParallaxLayer>();
+    private readonly List<ParallaxLayer> parallaxLayers = new List<ParallaxLayer>();
 
-    void Awake()
-    {
-        if (Instance == null) Instance = this;
-    }
-
-    void Start()
+    private void Awake()
     {
         SetLayers();
     }
 
-    public void SetCamera(CameraCharacter newCamera)
+    private void OnEnable()
     {
-        if (parallaxCamera != null)
-        {
-            parallaxCamera.onCameraTranslate -= Move;
-        }
-
-        parallaxCamera = newCamera;
-
-        if (parallaxCamera != null)
-        {
-            parallaxCamera.onCameraTranslate += Move;
-        }
+        CameraCharacter.LocalCameraMoved += Move;
+        if (CameraCharacter.LocalCamera != null)
+            Move(CameraCharacter.LocalCamera.transform.position);
     }
 
-    void SetLayers()
+    private void OnDisable()
+    {
+        CameraCharacter.LocalCameraMoved -= Move;
+    }
+
+    private void SetLayers()
     {
         parallaxLayers.Clear();
-        for (int i = 0; i < transform.childCount; i++)
-        {
-            ParallaxLayer layer = transform.GetChild(i).GetComponent<ParallaxLayer>();
-            if (layer != null)
-            {
-                parallaxLayers.Add(layer);
-            }
-        }
+        GetComponentsInChildren(true, parallaxLayers);
     }
 
-    void Move(float delta)
+    private void Move(Vector2 cameraPosition)
     {
-        foreach (ParallaxLayer layer in parallaxLayers)
+        Vector2 offset = cameraPosition - cameraReference;
+        for (int i = 0; i < parallaxLayers.Count; i++)
         {
-            layer.Move(delta);
+            if (parallaxLayers[i] != null)
+                parallaxLayers[i].Apply(offset);
         }
     }
 }
