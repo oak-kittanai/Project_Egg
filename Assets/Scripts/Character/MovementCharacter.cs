@@ -677,6 +677,8 @@ public class MovementCharacter : NetworkBehaviour, IDamageable, IBeforeTick, IAf
             characterMaxHealth = stats.s_maxHealth;
         }
 
+        _lastSeenHealth = currentHealth; // CM-2: ค่าเริ่ม ไม่สั่นตอนเกิด
+
         CameraCharacter cam = GetComponentInChildren<CameraCharacter>();
         if (cam != null)
         {
@@ -1838,7 +1840,15 @@ public class MovementCharacter : NetworkBehaviour, IDamageable, IBeforeTick, IAf
         {
             PlayerInterface.Instance.UpdateHealthUI(currentHealth);
         }
+
+        // CM-2: สั่นกล้องเมื่อเลือดลด — OnChangedRender ทำงานครั้งเดียวต่อการเปลี่ยน ไม่ซ้ำตอน resimulation
+        // HasInputAuthority ตัด Solo follower ออกแล้ว จึงสั่นครั้งเดียวแม้ ShareHealth เปลี่ยนเลือดทั้งสองตัว
+        if (HasInputAuthority && _lastSeenHealth >= 0 && currentHealth < _lastSeenHealth)
+            CameraCharacter.ShakeOnDamage();
+        _lastSeenHealth = currentHealth;
     }
+
+    private int _lastSeenHealth = -1;
 
     public void OnCharacterTypeChanged()
     {
