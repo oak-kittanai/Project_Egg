@@ -7,10 +7,15 @@ using UnityEngine;
 // - เป็นภาพของเครื่องตัวเองล้วน ไม่มี network
 public class ParallaxBackground : MonoBehaviour
 {
+    [Tooltip("เปิด = ใช้ cameraReference ด้านล่าง; ปิด = ใช้ตำแหน่งกล้องครั้งแรกที่เห็นในด่านนี้ (แบบเดิม — ฉากที่ยังไม่ได้ตั้งค่า)")]
+    public bool useCameraReference;
+
     [Tooltip("ตำแหน่งกล้อง (x, y) ที่ชั้นทุกชั้นวางไว้ใน Scene view ตรงพอดี — ปกติคือจุดเกิด + offset ของกล้อง")]
     public Vector2 cameraReference;
 
     private readonly List<ParallaxLayer> parallaxLayers = new List<ParallaxLayer>();
+    private bool hasFirstCameraPosition;
+    private Vector2 firstCameraPosition;
 
     private void Awake()
     {
@@ -37,7 +42,13 @@ public class ParallaxBackground : MonoBehaviour
 
     private void Move(Vector2 cameraPosition)
     {
-        Vector2 offset = cameraPosition - cameraReference;
+        if (!useCameraReference && !hasFirstCameraPosition)
+        {
+            firstCameraPosition = cameraPosition;
+            hasFirstCameraPosition = true;
+        }
+
+        Vector2 offset = cameraPosition - (useCameraReference ? cameraReference : firstCameraPosition);
         for (int i = 0; i < parallaxLayers.Count; i++)
         {
             if (parallaxLayers[i] != null)
