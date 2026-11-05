@@ -1976,3 +1976,46 @@ Solo เล่นคนเดียว ใช้ checklist ใน `GDD_Solo.md` 
 | 5 | กด R, Y, RT หรือ Y บนจอย ในเกม Duo | ไม่เกิดอะไร | |
 | 6 | เล่นจนถึง Warp ท้ายด่าน | ต้องอยู่ครบ 2 คนถึงผ่าน | |
 | 7 | จบ S3 แล้วกลับ | กลับ Lobby ตามเดิม และออกแล้วเริ่ม Solo ต่อได้ | |
+
+---
+
+## 35. กล้อง: มองไปข้างหน้า + สั่นตอนเสียเลือด (2026-11-05)
+
+**ที่มา:** เจ้าของโปรเจกต์ถามว่าควรใช้ Cinemachine ไหม ข้อสรุปคือยังไม่เปลี่ยน เพราะ `CameraCharacter` ผูกกับ parallax (`onCameraTranslate`), ขอบด่านแบบ raycast ทั้ง 7 ฉาก, การตามภาพที่ interpolate แล้ว และ AudioListener ซึ่งจูนไว้แล้วในหัวข้อ 13 จึงเพิ่มสองอย่างที่ Cinemachine ให้ลงในกล้องเดิมแทน เจ้าของโปรเจกต์สั่งให้แก้ได้เลย
+**Branch:** `fix/camera-feel` (แตกจาก `test/all2`) → fast-forward เข้า `test/all2`
+- Compile: Roslyn (reference ชุดเดียวกับ `MainGame.Core.csproj`) 0 error — Unity MCP ไม่ได้ต่อในรอบนี้ Unity compile จริงต้องเช็คตอนเปิด Editor
+- ไม่แตะ scene / prefab: field ใหม่ใช้ค่าเริ่มจากโค้ด
+
+### 35.1 สิ่งที่แก้
+| รหัส | เรื่อง | การทำ (ไฟล์ : method) | แก้แล้ว |
+|---|---|---|---|
+| CM-1 | กล้องมองไปข้างหน้า | `CameraCharacter.UpdateLookAhead` เรียกจาก `LateUpdate`: คิดความเร็วแนวนอนจากตำแหน่ง target ทุก frame ถ้าเร็วกว่า `lookAheadMinSpeed` (1 หน่วย/วิ) ตั้งทิศ แล้วเลื่อนจุดเล็ง `lookAheadDistance` (1 หน่วย) ด้วย SmoothDamp `lookAheadSmoothTime` (0.5 วิ); หยุดแล้วทิศค้างไว้ ไม่ดีดกลับ; เปลี่ยน target (Solo สลับตัว) หรือกระโดดไกลในเฟรมเดียว (เกิดใหม่/วาร์ป) ไม่นับเป็นความเร็ว; ระยะเลื่อนรวมอยู่ในจุดเล็งก่อนขอบด่าน จึงไม่ทะลุ `OutofBound`; ปิดได้ด้วย `useLookAhead` | แก้แล้ว: `fix/camera-feel` `016fa756` |
+| CM-2 | กล้องสั่นตอนเสียเลือด | `CameraCharacter.Shake(amplitude, duration)` / `ShakeOnDamage()` (static, กล้อง local ตัวเดียว `localRig`): Perlin noise ลดลงเป็นเส้นตรง ค่าเริ่ม 0.15 หน่วย 0.25 วิ; สั่นหลังคิด parallax และ listener แล้ว และเอาออกก่อน SmoothDamp ของ frame ถัดไป → parallax, ขอบด่าน และความนุ่มไม่เพี้ยน; สั่นซ้อนใช้ค่าที่แรงกว่า. `MovementCharacter.OnHealthChanged` (OnChangedRender) เรียกเมื่อ `currentHealth` ลดลงและ `HasInputAuthority` — ครั้งเดียวต่อการเปลี่ยน ไม่ซ้ำตอน resimulation; Solo follower ถูกตัดด้วย `HasInputAuthority` แล้วจึงสั่นครั้งเดียวแม้ `ShareHealth` เปลี่ยนเลือดทั้งสองตัว; `_lastSeenHealth` ตั้งใน `Spawned` ไม่สั่นตอนเกิดหรือเลือดเพิ่ม | แก้แล้ว: `fix/camera-feel` `016fa756` |
+
+### 35.2 ค่าที่ปรับได้ใน Inspector (component `CameraCharacter` ใน `Player(Duck).prefab` / `Player(Bird).prefab`)
+| field | ค่าเริ่ม | ผล |
+|---|---|---|
+| `useLookAhead` | true | ปิด CM-1 ทั้งหมด |
+| `lookAheadDistance` | 1 | ครึ่งความกว้างจอที่ size 4 ≈ 7 หน่วย; 1 = เบา, 2 = ชัด |
+| `lookAheadMinSpeed` | 1 | ต่ำไปกล้องหันตามการขยับเล็ก ๆ |
+| `lookAheadSmoothTime` | 0.5 | มากขึ้น = เลื่อนช้าลง |
+| `damageShakeAmplitude` | 0.15 | 0 = ไม่สั่น |
+| `damageShakeDuration` | 0.25 | วินาที |
+| `shakeFrequency` | 25 | ความถี่ noise |
+
+### 35.3 ยังไม่ได้เทส
+ยังไม่ได้รันใน Unity (MCP ไม่ได้ต่อ), ยังไม่ได้เทส 2 คน, ค่าเริ่มยังไม่ได้ดูด้วยตา, ยังไม่ได้ลองกับ parallax ตอนกล้องสั่น
+
+### 35.4 Checklist เทส — `test/all2` (MPPM `DuoGamePlay_Test`, Host = Mira, Client = Kael) ~10 นาที
+| ขั้น | ใคร | ทำอะไร | ควรเห็น | ผล |
+|---|---|---|---|---|
+| 1 | ทั้งคู่ | เริ่มเกม (หัวข้อ 7.3) | Console ไม่มี error สีแดง | |
+| 2 | Host | เดินขวาค้าง 2 วิ แล้วปล่อย | กล้องค่อย ๆ เลื่อนไปข้างหน้าตัวละคร ~1 หน่วย ปล่อยแล้วกล้องไม่ดีดกลับ | |
+| 3 | Host | กลับตัวเดินซ้าย | กล้องค่อย ๆ เลื่อนไปอีกฝั่ง ไม่กระตุก; parallax ฉากหลังเลื่อนตามนุ่ม ๆ | |
+| 4 | Client | ทำขั้น 2–3 ซ้ำ | เหมือน Host บนจอ Client; **จอ Host ไม่เปลี่ยน** (กล้องแยกเครื่อง) | |
+| 5 | Client | เดินชนขอบซ้ายสุดของด่าน | กล้องไม่เลยขอบด่าน | |
+| 6 | Client | ให้ Kael โดนกับดัก/มอน 1 ครั้ง | จอ Client สั่นสั้น ๆ ครั้งเดียว; **จอ Host ไม่สั่น**; ฉากหลังไม่กระตุก | |
+| 7 | Host | ให้ Mira โดนดาเมจ 1 ครั้ง | จอ Host สั่นครั้งเดียว จอ Client ไม่สั่น | |
+| 8 | Client | ตายแล้วเกิดใหม่ที่ checkpoint | ไม่สั่นตอนเกิดใหม่ (เลือดเพิ่ม); กล้องไม่เหวี่ยงไปข้างหน้าแรงตอนวาร์ป | |
+| 9 | Host | เดินไป S2 (หรือ F8 บน branch ทดสอบ) | กล้องและ parallax ทำงานเหมือนเดิมในด่านใหม่ | |
+| 10 | — | Solo: SOLO → สลับเป็ด/นกขณะเดิน แล้วให้ตัวที่คุมโดนดาเมจ | สลับแล้วกล้องเลื่อนไปตัวใหม่ไม่เหวี่ยง; โดนดาเมจสั่นครั้งเดียว (ไม่ใช่สองครั้ง) | |
